@@ -139,6 +139,7 @@ export async function POST(req: NextRequest, { params }: Params) {
         { status: 400 },
       );
     }
+    console.log('res?.replicate_id,-->', res?.replicate_id)
     const fluxData = await prisma.fluxData.findFirst({
       where: {
         replicateId: res.replicate_id,
