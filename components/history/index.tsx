@@ -2,7 +2,7 @@
 
 import React, { useEffect, useId, useRef, useState } from "react";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 import copy from "copy-to-clipboard";
 import { debounce } from "lodash-es";
@@ -31,13 +31,11 @@ const useQueryMineFluxMutation = (config?: {
   explore?: boolean;
   onSuccess: (result: any) => void;
 }) => {
-  const { getToken } = useAuth();
-
   return useMutation({
     mutationFn: async (values: any) => {
       const path = config?.explore ? "/api/explore" : "/api/mine-flux";
       const res = await fetch(`${path}?${qs.stringify(values)}`, {
-        headers: { Authorization: `Bearer ${await getToken()}` },
+        credentials: 'include', // 使用 cookie 认证而不是 Bearer token
       });
 
       if (!res.ok && res.status >= 500) {

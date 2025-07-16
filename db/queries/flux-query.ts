@@ -26,11 +26,12 @@ export async function getFluxDataBySeed({ limit = 18 }: { limit?: number }) {
   //   })
   //   .from(face)
   //   .execute();
-  const data = await prisma.$queryRaw`
-    SELECT * FROM flux_data
-    ORDER BY RANDOM()
-    LIMIT ${limit}
-  `;
+  const data = await prisma.fluxData.findMany({
+    orderBy: {
+      id: 'desc', // SQLite doesn't support RANDOM() in the same way
+    },
+    take: limit,
+  });
   const transformedResults = data
     ? ((data as any[]).map(convertKeysToCamelCase) ?? [])
     : [];

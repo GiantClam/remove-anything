@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/use-auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -25,14 +25,14 @@ import {
 import { Input } from "@/components/ui/input";
 
 const useGiftCodeMutation = (config?: { onSuccess: (result: any) => void }) => {
-  const { getToken } = useAuth();
+  const { userId } = useAuth();
 
   return useMutation({
     mutationFn: async (values: any) => {
       const res = await fetch("/api/gift-code", {
         body: JSON.stringify(values),
         method: "POST",
-        headers: { Authorization: `Bearer ${await getToken()}` },
+        credentials: 'include',
       });
 
       if (!res.ok) {

@@ -14,7 +14,7 @@ import { FluxTaskStatus } from "@/db/type";
 import { DownloadAction } from "@/components/history/download-action";
 import { env } from "@/env.mjs";
 import { prisma } from "@/db/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth-utils";
 import { FluxHashids } from "@/db/dto/flux.dto";
 
 interface RootPageProps {
@@ -22,20 +22,9 @@ interface RootPageProps {
 }
 
 export async function generateStaticParams() {
-  const fluxs = await prisma.fluxData.findMany({
-    where: {
-      isPrivate: false,
-      taskStatus: {
-        in: [FluxTaskStatus.Succeeded],
-      },
-    },
-    select: {
-      id: true
-    }
-  });
-  return fluxs.map((flux) => ({
-    slug: FluxHashids.encode(flux.id)
-  }))
+  // 在静态导出模式下，返回空数组避免数据库连接问题
+  // 实际的路由将在运行时动态处理
+  return [];
 }
 
 export async function generateMetadata({
@@ -77,7 +66,7 @@ export default async function FluxPage({
   if (!flux) {
     return notFound();
   }
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (env.VERCEL_ENV === 'production') {
     const [fluxId] = FluxHashids.decode(flux.id)

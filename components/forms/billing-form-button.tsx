@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/use-auth";
 
 import { generateUserStripe } from "@/actions/generate-user-stripe";
 import { Icons } from "@/components/shared/icons";
@@ -22,7 +22,7 @@ export function BillingFormButton({
   btnText = "Buy Plan",
 }: BillingFormButtonProps) {
   let [isPending, startTransition] = useTransition();
-  const { getToken } = useAuth();
+  const { userId } = useAuth();
   const pathname = usePathname();
 
   const stripeSessionAction = () =>
@@ -36,7 +36,7 @@ export function BillingFormButton({
           url: url(pathname).href,
           currency: offer.currency?.toUpperCase(),
         }),
-        headers: { Authorization: `Bearer ${await getToken()}` },
+        credentials: 'include',
       }).then((res) => res.json());
       window.location.href = data.url;
     });

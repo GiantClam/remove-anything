@@ -7,9 +7,9 @@ import {
   SignedIn,
   SignedOut,
   SignInButton,
-  UserButton,
-  useUser,
-} from "@clerk/nextjs";
+} from "@/components/auth/auth-components";
+import { UserButton } from "@/components/auth/user-button";
+import { useAuth } from "@/hooks/use-auth";
 import {
   AnimatePresence,
   motion,
@@ -42,24 +42,14 @@ export function UserInfo() {
   const t = useTranslations("Navigation");
 
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user } = useAuth();
   const StrategyIcon = React.useMemo(() => {
-    const strategy = user?.primaryEmailAddress?.verification.strategy;
-    if (!strategy) {
-      return null;
+    // Since we're using Google OAuth through NextAuth, always show Google icon
+    if (user) {
+      return GoogleBrandIcon;
     }
-
-    switch (strategy) {
-      case "from_oauth_github":
-        return GitHubBrandIcon as (
-          props: React.ComponentProps<"svg">,
-        ) => JSX.Element;
-      case "from_oauth_google":
-        return GoogleBrandIcon;
-      default:
-        return MailIcon;
-    }
-  }, [user?.primaryEmailAddress?.verification.strategy]);
+    return null;
+  }, [user]);
 
   return (
     <AnimatePresence>
@@ -81,8 +71,8 @@ export function UserInfo() {
               }}
             />
             {StrategyIcon && (
-              <span className="pointer-events-none absolute -bottom-1 -right-1 flex h-4 w-4 select-none items-center justify-center rounded-full bg-white dark:bg-zinc-900">
-                <StrategyIcon className="h-3 w-3" />
+              <span className="pointer-events-none absolute -bottom-1 -right-1 flex size-4 select-none items-center justify-center rounded-full bg-white dark:bg-zinc-900">
+                <StrategyIcon className="size-3" />
               </span>
             )}
           </motion.div>
@@ -117,7 +107,7 @@ export function UserInfo() {
                       type="button"
                       className="group h-10 rounded-full bg-gradient-to-b from-zinc-50/50 to-white/90 px-3 text-sm shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur transition dark:from-zinc-900/50 dark:to-zinc-800/90 dark:ring-white/10 dark:hover:ring-white/20"
                     >
-                      <UserArrowLeftIcon className="h-5 w-5" />
+                      <UserArrowLeftIcon className="size-5" />
                     </button>
                   </TooltipTrigger>
                 </SignInButton>

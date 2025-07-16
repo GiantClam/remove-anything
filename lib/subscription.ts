@@ -1,5 +1,5 @@
 //@ts-nocheck
-import { User } from "@clerk/nextjs/dist/types/server";
+// NextAuth User interface is defined in types/next-auth.d.ts
 
 import { pricingData } from "@/config/subscriptions";
 import { prisma } from "@/db/prisma";

@@ -1,15 +1,14 @@
-import { Ratelimit } from '@upstash/ratelimit'
+
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { redis } from '@/lib/redis'
+import { kv, KVRateLimit } from '@/lib/kv'
 
 export const runtime = 'edge'
 
 export async function GET(req: NextRequest) {
-  const ratelimit = new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(5, '5 s'),
-    analytics: true,
+  const ratelimit = new KVRateLimit(kv, {
+    limit: 5,
+    window: '5s'
   })
   const { success } = await ratelimit.limit('activity:app' + `_${req.ip ?? ''}`)
   if (!success) {
@@ -18,7 +17,7 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  const app = await redis.get('activity:app')
+  const app = await kv.get('activity:app')
 
   return NextResponse.json({
     app,

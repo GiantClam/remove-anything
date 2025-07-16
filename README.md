@@ -1,128 +1,200 @@
-<a href="https://fluxaipro.art">
-  <img alt="SaaS Starter" src="https://meme-static.douni.one/WechatIMG103.png">
-  <h1 align="center">Next Money Stripe Starter</h1>
-</a>
+# 🚀 FluxAI - AI图像生成平台
 
-<p align="center">
-  Start at full speed with SaaS Starter !
-</p>
+FluxAI 是一个基于 Next.js 的现代化 AI 图像生成平台，支持多种 AI 模型，提供直观的用户界面和强大的功能。
 
-<p align="center">
-  <a href="https://twitter.com/koyaguo">
-    <img src="https://img.shields.io/twitter/follow/koyaguo?style=flat" alt="Koyaguo Twitter follower count" />
-  </a>
-</p>
+## ✨ 功能特性
 
-<p align="center">
-  <a href="#introduction"><strong>Introduction</strong></a> ·
-  <a href="#installation"><strong>Installation</strong></a> ·
-  <a href="#tech-stack--features"><strong>Tech Stack + Features</strong></a> ·
-  <a href="#author"><strong>Author</strong></a> ·
-  <a href="#credits"><strong>Credits</strong></a> ·
-  <a href="#buy-me-coffee"><strong>Buy me coffee</strong></a>
-</p>
-<br/>
+- 🎨 **AI 图像生成** - 支持多种先进的 AI 模型
+- 💎 **高级功能** - 提供专业级的图像生成选项
+- 📊 **数据分析** - 实时统计和性能监控
+- 🔐 **用户认证** - 完整的用户管理系统
+- 🌍 **多语言支持** - 支持多种语言界面
+- 💳 **支付集成** - Stripe 支付系统集成
+- 📱 **响应式设计** - 完美适配各种设备
 
-## Introduction
+## 🛠️ 技术栈
 
-Empower your next project with the stack of Next.js 14, Prisma, [Supabase](https://supabase.com/), Clerk Auth, Resend, React Email, Shadcn/ui, and Stripe.
-<br/>
-All seamlessly integrated with the SaaS Starter to accelerate your development and saas journey.
+- **前端框架**: Next.js 14 (App Router)
+- **UI 组件**: Shadcn UI + Radix UI
+- **样式**: Tailwind CSS
+- **数据库**: Cloudflare D1 (SQLite)
+- **存储**: Cloudflare R2 (S3 兼容)
+- **缓存**: Cloudflare KV
+- **AI 服务**: Cloudflare AI Gateway
+- **认证**: NextAuth.js
+- **支付**: Stripe
+- **部署**: Cloudflare Workers
 
-## Installation
+## 🚀 快速开始
 
-Clone & create this repo locally with the following command:
+### 环境要求
+
+- Node.js 18+
+- npm 或 yarn
+- Cloudflare 账户
+
+### 安装依赖
 
 ```bash
-npx create-next-app my-saas-project --example "https://github.com/virgoone/next-money"
+npm install
 ```
 
-1. Install dependencies using pnpm:
+### 环境变量配置
 
-```sh
-pnpm install
+创建 `.env.local` 文件并配置以下环境变量：
+
+```env
+# 数据库
+DATABASE_URL="file:./dev.db"
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-nextauth-secret"
+
+# Stripe
+STRIPE_SECRET_KEY="your-stripe-secret-key"
+STRIPE_PUBLISHABLE_KEY="your-stripe-publishable-key"
+STRIPE_WEBHOOK_SECRET="your-stripe-webhook-secret"
+
+# Cloudflare
+CLOUDFLARE_ACCOUNT_ID="your-cloudflare-account-id"
+CLOUDFLARE_API_TOKEN="your-cloudflare-api-token"
+
+# AI 服务
+REPLICATE_API_TOKEN="your-replicate-api-token"
 ```
 
-2. Copy `.env.example` to `.env.local` and update the variables.
+### 数据库设置
 
-```sh
-cp .env.example .env.local
+```bash
+# 生成 Prisma 客户端
+npx prisma generate
+
+# 运行数据库迁移
+npx prisma db push
+
+# 查看数据库 (可选)
+npx prisma studio
 ```
 
-3. Start the development server:
+### 开发模式
 
-```sh
-pnpm run dev
+```bash
+npm run dev
 ```
 
-> [!NOTE]  
-> I use [npm-check-updates](https://www.npmjs.com/package/npm-check-updates) package for update this project.
->
-> Use this command for update your project: `ncu -i --format group`
+访问 [http://localhost:3000](http://localhost:3000) 查看应用。
 
-> [!WARNING]  
-> You need update `.react-email` folder before use `pnpm run email`. Check the link [here](https://github.com/resend/react-email/issues/868#issuecomment-1828411325) if you have the error : `renderToReadableStream not found`
->
+### 构建和部署
 
-### Frameworks
+```bash
+# 构建应用
+npm run build
 
-- [Next.js](https://nextjs.org/) – React framework for building performant apps with the best developer experience
-- [Clerk Auth](https://clerk.com/) – The most comprehensive User Management Platform.
-- [Prisma](https://www.prisma.io/) – Typescript-first ORM for Node.js
-- [React Email](https://react.email/) – Versatile email framework for efficient and flexible email development
+# 部署到 Cloudflare Workers
+npx wrangler deploy
+```
 
-### Platforms
+## 📁 项目结构
 
-- [Vercel](https://vercel.com/) – Easily preview & deploy changes with git
-- [Resend](https://resend.com/) – A powerful email framework for streamlined email development
-- [Supabase](https://supabase.com/) – Serverless Postgres with autoscaling, branching, bottomless storage and generous free tier.
+```
+next-money/
+├── app/                    # Next.js App Router 页面
+│   ├── [locale]/          # 国际化路由
+│   │   ├── (app)/         # 应用页面
+│   │   ├── (auth)/        # 认证页面
+│   │   └── (marketing)/   # 营销页面
+│   └── api/               # API 路由
+├── components/            # React 组件
+│   ├── ui/               # 基础 UI 组件
+│   ├── forms/            # 表单组件
+│   └── sections/         # 页面区块组件
+├── lib/                  # 工具库
+├── db/                   # 数据库相关
+├── config/               # 配置文件
+├── content/              # 内容文件
+├── public/               # 静态资源
+└── styles/               # 样式文件
+```
 
-### UI
+## 🌍 国际化
 
-- [Tailwind CSS](https://tailwindcss.com/) – Utility-first CSS framework for rapid UI development
-- [Shadcn/ui](https://ui.shadcn.com/) – Re-usable components built using Radix UI and Tailwind CSS
-- [Framer Motion](https://framer.com/motion) – Motion library for React to animate components with ease
-- [Lucide](https://lucide.dev/) – Beautifully simple, pixel-perfect icons
-- [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) – Optimize custom fonts and remove external network requests for improved performance
-- [`ImageResponse`](https://nextjs.org/docs/app/api-reference/functions/image-response) – Generate dynamic Open Graph images at the edge
+项目支持多语言，使用 `next-intl` 进行国际化管理：
 
-### Hooks and Utilities
+- 英语 (en)
+- 中文 (zh)
+- 繁体中文 (tw)
+- 阿拉伯语 (ar)
+- 德语 (de)
+- 西班牙语 (es)
+- 法语 (fr)
+- 日语 (ja)
+- 韩语 (ko)
+- 葡萄牙语 (pt)
 
-- `useIntersectionObserver` – React hook to observe when an element enters or leaves the viewport
-- `useLocalStorage` – Persist data in the browser's local storage
-- `useScroll` – React hook to observe scroll position ([example](https://github.com/mickasmt/precedent/blob/main/components/layout/navbar.tsx#L12))
-- `nFormatter` – Format numbers with suffixes like `1.2k` or `1.2M`
-- `capitalize` – Capitalize the first letter of a string
-- `truncate` – Truncate a string to a specified length
-- [`use-debounce`](https://www.npmjs.com/package/use-debounce) – Debounce a function call / state update
+## 🔧 配置说明
 
-### Code Quality
+### Cloudflare Workers 配置
 
-- [TypeScript](https://www.typescriptlang.org/) – Static type checker for end-to-end typesafety
-- [Prettier](https://prettier.io/) – Opinionated code formatter for consistent code style
-- [ESLint](https://eslint.org/) – Pluggable linter for Next.js and TypeScript
+项目配置为在 Cloudflare Workers 上运行，支持：
 
-### Miscellaneous
+- **D1 数据库**: 用于数据存储
+- **R2 存储**: 用于文件存储
+- **KV 缓存**: 用于缓存数据
+- **AI Gateway**: 用于 AI 服务调用
 
-- [Vercel Analytics](https://vercel.com/analytics) – Track unique visitors, pageviews, and more in a privacy-friendly way
+### 部署配置
 
-## Author
+`wrangler.toml` 文件包含完整的部署配置，包括：
 
-Created by [@koyaguo](https://twitter.com/koyaguo) in 2023, released under the [MIT license](https://github.com/shadcn/taxonomy/blob/main/LICENSE.md).
+- Worker 名称和兼容性设置
+- 数据库绑定
+- 存储绑定
+- 环境变量配置
+- 多环境支持 (开发、预发布、生产)
 
-## Credits
+## 📊 性能优化
 
-This project was inspired by shadcn's [Taxonomy](https://github.com/shadcn-ui/taxonomy), Steven Tey’s [Precedent](https://github.com/steven-tey/precedent), and Antonio Erdeljac's [Next 13 AI SaaS](https://github.com/AntonioErdeljac/next13-ai-saas).
+- **静态生成**: 使用 Next.js 静态生成优化性能
+- **图片优化**: 自动图片压缩和格式转换
+- **代码分割**: 自动代码分割减少包大小
+- **缓存策略**: 多层缓存提升响应速度
 
-- Shadcn ([@shadcn](https://twitter.com/shadcn))
-- Steven Tey ([@steventey](https://twitter.com/steventey))
-- Antonio Erdeljac ([@YTCodeAntonio](https://twitter.com/AntonioErdeljac))
-- Next SaaS Stripe Starter([@miickasmt](https://github.com/mickasmt/next-saas-stripe-starter))
+## 🔒 安全特性
 
-## Buy me coffee
+- **认证授权**: 完整的用户认证和权限管理
+- **API 保护**: API 路由安全保护
+- **数据验证**: 输入数据验证和清理
+- **HTTPS**: 强制 HTTPS 连接
 
-<img src="https://meme-static.douni.one/paycode.png" alt="Buy me coffee" width="400">
+## 🤝 贡献指南
 
-## Star History
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开 Pull Request
 
-[![Star History Chart](https://api.star-history.com/svg?repos=virgoone/next-money&type=Date)](https://star-history.com/#virgoone/next-money&Date)
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 📞 联系我们
+
+- 项目主页: [https://fluxai.com](https://fluxai.com)
+- 问题反馈: [GitHub Issues](https://github.com/your-username/fluxai/issues)
+- 邮箱: support@fluxai.com
+
+## 🙏 致谢
+
+感谢以下开源项目的支持：
+
+- [Next.js](https://nextjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Shadcn UI](https://ui.shadcn.com/)
+- [Cloudflare](https://cloudflare.com/)
+- [Stripe](https://stripe.com/)
+
+---
+
+⭐ 如果这个项目对你有帮助，请给我们一个星标！

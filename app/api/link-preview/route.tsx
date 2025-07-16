@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.error()
   }
 
-  const { success } = await ratelimit.limit('link-preview_', req)
+  const { success } = await ratelimit.limit('link-preview_' + `_${req.ip ?? ""}`)
   if (!success) {
     return NextResponse.error()
   }

@@ -1,6 +1,6 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 
-import { PricingCards } from "@/components/pricing-cards";
+import { PricingCardsWrapper } from "@/components/pricing-cards-wrapper";
 import { PricingFaq } from "@/components/pricing-faq";
 import { getChargeProduct } from "@/db/queries/charge-product";
 
@@ -23,7 +23,7 @@ export default async function PricingPage({ params: { locale } }: Props) {
 
   return (
     <div className="flex w-full flex-col gap-16 py-8 md:py-8">
-      <PricingCards chargeProduct={chargeProduct} />
+      <PricingCardsWrapper chargeProduct={chargeProduct} />
       <hr className="container" />
       <PricingFaq />
     </div>

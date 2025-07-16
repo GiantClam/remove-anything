@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { Ratelimit } from "@upstash/ratelimit";
+import { getCurrentUser } from "@/lib/auth-utils";
+
 import { z } from "zod";
 
 import { ChargeOrderHashids } from "@/db/dto/charge-order.dto";
@@ -10,25 +10,23 @@ import { getUserCredit } from "@/db/queries/account";
 
 import { Currency, OrderPhase } from "@/db/type";
 import { getErrorMessage } from "@/lib/handle-error";
-import { redis } from "@/lib/redis";
+import { kv, KVRateLimit } from "@/lib/kv";
 
 const CreateGiftCodeOrderSchema = z.object({
   code: z.string().min(8),
 });
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(2, "5 s"),
-  analytics: true,
+const ratelimit = new KVRateLimit(kv, {
+  limit: 2,
+  window: "5s"
 });
 
 export async function POST(req: NextRequest) {
-  const { userId } = auth();
-
-  const user = await currentUser();
-  if (!userId || !user || !user.primaryEmailAddress) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  const userId = user.id;
 
   const { success } = await ratelimit.limit(
     "gift-code:redeemed" + `_${req.ip ?? ""}`,
@@ -69,11 +67,11 @@ export async function POST(req: NextRequest) {
       await tx.chargeOrder.create({
         data: {
           userId,
-          userInfo: {
-            fullName: user.fullName,
-            email: user.primaryEmailAddress?.emailAddress,
-            username: user.username,
-          },
+          userInfo: JSON.stringify({
+            fullName: user.name,
+            email: user.email,
+            username: user.email,
+          }),
           currency: Currency.USD,
           amount: 0,
           credit: giftCodeData.creditAmount,
@@ -84,7 +82,7 @@ export async function POST(req: NextRequest) {
 
       const newUserCredit = await tx.userCredit.update({
         where: {
-          id: account.id,
+          id: Number(account.id),
         },
         data: {
           credit: {

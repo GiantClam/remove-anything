@@ -7,6 +7,11 @@ import { prisma } from "@/db/prisma";
 
 import { SubbedCelebration } from "./SubbedCelebration";
 
+export async function generateStaticParams() {
+  // 在standalone模式下，返回空数组，路由将在运行时动态处理
+  return [];
+}
+
 export const metadata = {
   title: "感谢你的订阅",
 };

@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
   // Get the headers
   const headerPayload = headers();
-  const webhookKey = headerPayload.get("next-money-webhook-key");
+  const webhookKey = headerPayload.get("remove-anything-webhook-key");
 
   // If there are no headers, error out
   if (!webhookKey || webhookKey! !== TASK_HEADER_KEY) {
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
       });
       await tx.userCredit.update({
         where: {
-          id: account.id,
+          id: Number(account.id),
         },
         data: {
           credit: {

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/auth-utils";
 import { z } from "zod";
 
 import { UserBillingHashids } from "@/db/dto/billing.dto";
@@ -16,14 +16,11 @@ const searchParamsSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const { userId } = auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-  }
-  const user = await currentUser();
+  const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  const userId = user.id;
   try {
     const url = new URL(req.url);
     const values = searchParamsSchema.parse(
@@ -32,7 +29,7 @@ export async function GET(req: NextRequest) {
     const { page, pageSize, type } = values;
     const offset = (page - 1) * pageSize;
     const whereConditions: any = {
-      userId,
+      userId: user.id,
     };
     if (type) {
       whereConditions.type = type;

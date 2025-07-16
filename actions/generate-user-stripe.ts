@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 
-import { currentUser } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/auth-utils";
 
 import { stripe } from "@/lib/stripe";
 import { getUserSubscriptionPlan } from "@/lib/subscription";
@@ -22,9 +22,9 @@ export async function generateUserStripe(
   let redirectUrl: string = "";
 
   try {
-    const user = await currentUser();
+    const user = await getCurrentUser();
 
-    if (!user || !user.primaryEmailAddress) {
+    if (!user || !user.email) {
       throw new Error("Unauthorized");
     }
 
@@ -46,7 +46,7 @@ export async function generateUserStripe(
         payment_method_types: ["card"],
         mode: "payment",
         billing_address_collection: "auto",
-        customer_email: user.primaryEmailAddress.emailAddress,
+        customer_email: user.email,
         line_items: [
           {
             price: priceId,

@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { Ratelimit } from "@upstash/ratelimit";
+import { getCurrentUser } from "@/lib/auth-utils";
 import { z } from "zod";
 
 import { ChargeOrderHashids } from "@/db/dto/charge-order.dto";
@@ -9,9 +8,12 @@ import { ChargeProductHashids } from "@/db/dto/charge-product.dto";
 import { prisma } from "@/db/prisma";
 import { OrderPhase } from "@/db/type";
 import { getErrorMessage } from "@/lib/handle-error";
-import { redis } from "@/lib/redis";
+import { kv } from "@/lib/kv";
 import { stripe } from "@/lib/stripe";
 import { absoluteUrl } from "@/lib/utils";
+
+// 为这个 API 创建自定义速率限制器
+import { KVRateLimit } from "@/lib/kv";
 
 const CreateChargeOrderSchema = z.object({
   currency: z.enum(["CNY", "USD"]).default("USD"),
@@ -21,19 +23,17 @@ const CreateChargeOrderSchema = z.object({
   url: z.string().optional(),
 });
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(2, "5 s"),
-  analytics: true,
+const ratelimit = new KVRateLimit(kv, {
+  limit: 2,
+  window: "5s"
 });
 
 export async function POST(req: NextRequest) {
-  const { userId } = auth();
-
-  const user = await currentUser();
-  if (!userId || !user || !user.primaryEmailAddress) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  const userId = user.id;
 
   const { success } = await ratelimit.limit(
     "charge-order:created" + `_${req.ip ?? ""}`,
@@ -69,11 +69,11 @@ export async function POST(req: NextRequest) {
     const newChargeOrder = await prisma.chargeOrder.create({
       data: {
         userId: user.id,
-        userInfo: {
-          fullName: user.fullName,
-          email: user.primaryEmailAddress?.emailAddress,
-          username: user.username,
-        },
+        userInfo: JSON.stringify({
+          fullName: user.name,
+          email: user.email,
+          username: user.email,
+        }),
         currency,
         credit: product.credit,
         amount,
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
         payment_method_types: ["card"],
         mode: "payment",
         billing_address_collection: "auto",
-        customer_email: user.primaryEmailAddress.emailAddress,
+        customer_email: user.email || undefined,
         line_items: [
           {
             price_data: {

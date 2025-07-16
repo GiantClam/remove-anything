@@ -17,7 +17,7 @@ export default function Examples() {
         />
 
         <div className="w-full">
-          <MarqueeList />
+          <MarqueeList items={[]} />
         </div>
       </div>
     </section>

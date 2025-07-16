@@ -4,19 +4,7 @@ import "../prism.css";
 
 import Script from "next/script";
 
-import {
-  deDE,
-  enUS,
-  esES,
-  frFR,
-  jaJP,
-  koKR,
-  ptPT,
-  zhCN,
-  zhTW,
-  arSA,
-} from "@clerk/localizations";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClientSessionProvider } from "@/components/providers/session-provider";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { NextIntlClientProvider } from "next-intl";
 import {
@@ -78,18 +66,7 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-const localeMap = {
-  en: enUS,
-  zh: zhCN,
-  tw: zhTW,
-  ja: jaJP,
-  ko: koKR,
-  fr: frFR,
-  es: esES,
-  de: deDE,
-  pt: ptPT,
-  ar: arSA,
-};
+// Removed Clerk locale mappings - no longer needed
 
 export default async function RootLayout({
   children,
@@ -102,17 +79,17 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <ClerkProvider localization={localeMap[locale] ?? enUS}>
-      <html lang={locale} suppressHydrationWarning>
-        <head />
-        <body
-          className={cn(
-            "min-h-screen bg-background font-sans antialiased",
-            fontSans.variable,
-            fontUrban.variable,
-            fontHeading.variable,
-          )}
-        >
+    <html lang={locale} suppressHydrationWarning>
+      <head />
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable,
+          fontUrban.variable,
+          fontHeading.variable,
+        )}
+      >
+        <ClientSessionProvider>
           <NextIntlClientProvider messages={messages}>
             <ThemeProvider
               attribute="class"
@@ -126,21 +103,21 @@ export default async function RootLayout({
               <TailwindIndicator />
             </ThemeProvider>
           </NextIntlClientProvider>
-          {env.NEXT_PUBLIC_GA_ID && (
-            <>
-              <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />
-              <ClaritySnippet />
-            </>
-          )}
-          {env.NEXT_PUBLIC_UMAMI_DATA_ID && (
-            <Script
-              async
-              src="https://sa.douni.one/st.js"
-              data-website-id={env.NEXT_PUBLIC_UMAMI_DATA_ID}
-            />
-          )}
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClientSessionProvider>
+        {env.NEXT_PUBLIC_GA_ID && (
+          <>
+            <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />
+            <ClaritySnippet />
+          </>
+        )}
+        {env.NEXT_PUBLIC_UMAMI_DATA_ID && (
+          <Script
+            async
+            src="https://sa.douni.one/st.js"
+            data-website-id={env.NEXT_PUBLIC_UMAMI_DATA_ID}
+          />
+        )}
+      </body>
+    </html>
   );
 }

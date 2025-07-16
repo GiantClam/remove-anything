@@ -11,7 +11,7 @@ import { BLOG_CATEGORIES } from "@/config/blog";
 import { Link } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
-export async function BlogHeaderLayout(props: {
+export function BlogHeaderLayout(props: {
   title?: string;
   description?: string;
 }) {

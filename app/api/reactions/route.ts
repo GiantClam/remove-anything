@@ -1,8 +1,8 @@
-import { Ratelimit } from '@upstash/ratelimit'
+
 import { revalidateTag } from 'next/cache'
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { redis } from '@/lib/redis'
+import { kv, KVRateLimit } from '@/lib/kv'
 
 export const runtime = 'edge'
 
@@ -10,10 +10,9 @@ function getKey(id: string) {
   return `reactions:${id}`
 }
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(30, '10 s'),
-  analytics: true,
+const ratelimit = new KVRateLimit(kv, {
+  limit: 30,
+  window: '10s'
 })
 
 export async function GET(req: NextRequest) {
@@ -21,9 +20,9 @@ export async function GET(req: NextRequest) {
   const id = searchParams.get('id')
   if (!id) return new Response('Missing id', { status: 400 })
 
-  const value = await redis.get<number[]>(`reactions:${id}`)
+  const value = await kv.get<number[]>(`reactions:${id}`)
   if (!value) {
-    await redis.set(getKey(id), [0, 0, 0, 0])
+    await kv.set(getKey(id), [0, 0, 0, 0])
   }
 
   const { success } = await ratelimit.limit(getKey(id) + `_${req.ip ?? ''}`)
@@ -53,14 +52,14 @@ export async function PATCH(req: NextRequest) {
     })
   }
 
-  let current = await redis.get<number[]>(key)
+  let current = await kv.get<number[]>(key)
   if (!current) {
     current = [0, 0, 0, 0]
   }
   // increment the array value at the index
   current[parseInt(index)] += 1
 
-  await redis.set(key, current)
+  await kv.set(key, current)
 
   revalidateTag(key)
 

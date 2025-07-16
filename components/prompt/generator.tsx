@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 import copy from "copy-to-clipboard";
 import { debounce } from "lodash-es";
@@ -28,14 +28,12 @@ import SignBox from "../sign-box";
 const useCreatePromptMutation = (config?: {
   onSuccess: (result: any) => void;
 }) => {
-  const { getToken } = useAuth();
-
   return useMutation({
     mutationFn: async (values: any) => {
       const res = await fetch("/api/prompt", {
         body: JSON.stringify(values),
         method: "POST",
-        headers: { Authorization: `Bearer ${await getToken()}` },
+        credentials: 'include', // 使用 cookie 认证而不是 Bearer token
       });
 
       if (!res.ok && res.status >= 500) {

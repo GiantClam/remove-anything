@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { currentUser } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/auth-utils";
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 
 import { DashboardHeader } from "@/components/dashboard/header";
@@ -26,7 +26,7 @@ export async function generateMetadata({
 export default async function SettingsPage({ params: { locale } }: PageProps) {
   unstable_setRequestLocale(locale);
 
-  const user = await currentUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/");

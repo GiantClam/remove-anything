@@ -22,6 +22,12 @@ import {
 interface RootLayoutProps {
   params: { locale: string, page: number };
 }
+
+export async function generateStaticParams() {
+  // 在standalone模式下，返回空数组，路由将在运行时动态处理
+  return [];
+}
+
 export async function generateMetadata({
   params: { locale, page },
 }: Omit<RootLayoutProps, "children">) {

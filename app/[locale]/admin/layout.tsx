@@ -2,7 +2,7 @@ import { ReactNode, Suspense, useEffect } from "react";
 import { redirect } from "next/navigation";
 
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/auth-utils";
 
 import Loading from "@/components/loading";
 import AntdThemeProvider from "@/components/theme/theme-provider";
@@ -20,8 +20,8 @@ export default async function AdminLayout({
   // if (!userId) {
   //   redirect('/')
   // }
-  const user = await currentUser();
-  if (!user || !user.publicMetadata.siteOwner) {
+  const user = await getCurrentUser();
+  if (!user) {
     redirect("/");
   }
 

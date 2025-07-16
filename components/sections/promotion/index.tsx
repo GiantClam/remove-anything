@@ -1,8 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth-utils";
 
 import { getChargeProduct, getClaimed } from "@/db/queries/charge-product";
 
-import PromotionBanner from "./promotion-banner";
+import { PromotionBanner } from "./promotion-banner";
 
 export default async function Promotion({ locale }: { locale: string }) {
   const { data: chargeProduct } = await getChargeProduct(locale);
@@ -19,9 +19,11 @@ export default async function Promotion({ locale }: { locale: string }) {
 
   return (
     <PromotionBanner
-      claimed={claimed}
-      locale={locale}
-      chargeProduct={chargeProduct}
+      title="限时优惠"
+      description="立即获取优惠积分，享受更多AI服务"
+      ctaText="立即获取"
+      ctaLink="/pricing"
+      variant="success"
     />
   );
 }

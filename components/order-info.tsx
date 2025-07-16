@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import qs from "query-string";
@@ -50,7 +50,6 @@ const OrderBadge = {
   [OrderPhase.Failed]: "destructive",
 };
 export function OrderInfo() {
-  const { getToken } = useAuth();
   const t = useTranslations("Orders");
   const [pageParams, setPageParams] = useState({
     page: 1,
@@ -67,7 +66,7 @@ export function OrderInfo() {
           ...values,
         })}`,
         {
-          headers: { Authorization: `Bearer ${await getToken()}` },
+          credentials: 'include', // 使用 cookie 认证而不是 Bearer token
         },
       ).then((res) => res.json());
 

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/use-auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import copy from "copy-to-clipboard";
 import { debounce } from "lodash-es";
@@ -46,14 +46,12 @@ const aspectRatios = [Ratio.r1, Ratio.r2, Ratio.r3, Ratio.r4, Ratio.r5];
 const useCreateTaskMutation = (config?: {
   onSuccess: (result: any) => void;
 }) => {
-  const { getToken } = useAuth();
-
   return useMutation({
     mutationFn: async (values: any) => {
       const res = await fetch("/api/generate", {
         body: JSON.stringify(values),
         method: "POST",
-        headers: { Authorization: `Bearer ${await getToken()}` },
+        credentials: 'include', // 使用 cookie 认证而不是 Bearer token
       });
 
       if (!res.ok && res.status >= 500) {
@@ -92,7 +90,6 @@ export default function Playground({
   const useCreateTask = useCreateTaskMutation();
   const [uploadInputImage, setUploadInputImage] = useState<any[]>([]);
   const t = useTranslations("Playground");
-  const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const [pricingCardOpen, setPricingCardOpen] = useState(false);
   const [lora, setLora] = React.useState<string>(loras.wukong);
@@ -112,7 +109,7 @@ export default function Playground({
           fluxId,
         }),
         method: "POST",
-        headers: { Authorization: `Bearer ${await getToken()}` },
+        credentials: 'include', // 使用 cookie 认证而不是 Bearer token
       });
 
       if (!res.ok) {

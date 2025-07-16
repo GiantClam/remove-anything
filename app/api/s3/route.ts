@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { currentUser } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/auth-utils";
 
 import { MediaDto, MediaDtoSchema, MediaHashids } from "@/db/dto/media.dto";
 import { prisma } from "@/db/prisma";
@@ -16,8 +16,8 @@ const CreateMediaDtoSchema = MediaDtoSchema.omit({
 });
 
 export async function POST(req: NextRequest) {
-  const user = await currentUser();
-  if (!user || !user.publicMetadata.siteOwner) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 

@@ -1,30 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/auth-utils";
 import { Prisma } from "@prisma/client";
-import { Ratelimit } from "@upstash/ratelimit";
+
 import { z } from "zod";
 
 import { prisma } from "@/db/prisma";
 import { getUserCredit } from "@/db/queries/account";
 import { Currency, OrderPhase, PaymentChannelType } from "@/db/type";
 import { getErrorMessage } from "@/lib/handle-error";
-import { redis } from "@/lib/redis";
+import { kv, KVRateLimit } from "@/lib/kv";
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(2, "5 s"),
-  analytics: true,
+const ratelimit = new KVRateLimit(kv, {
+  limit: 2,
+  window: "5s"
 });
 const activityCode = "NEW_REGISTER_ACTIVITY";
 
 export async function GET() {
-  const { userId } = auth();
-
-  const user = await currentUser();
-  if (!userId || !user || !user.primaryEmailAddress) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  const userId = user.id;
   const targetDate = new Date("2024-08-20T20:20:00+08:00");
   const oneMonthLater = new Date(
     targetDate.getTime() + 30 * 24 * 60 * 60 * 1000,
@@ -68,12 +66,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = auth();
-
-  const user = await currentUser();
-  if (!userId || !user || !user.primaryEmailAddress) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  const userId = user.id;
 
   const { success } = await ratelimit.limit(
     "get-offer:redeemed" + `_${req.ip ?? ""}`,
@@ -141,11 +138,11 @@ export async function POST(req: NextRequest) {
       await tx.chargeOrder.create({
         data: {
           userId,
-          userInfo: {
-            fullName: user.fullName,
-            email: user.primaryEmailAddress?.emailAddress,
-            username: user.username,
-          },
+          userInfo: JSON.stringify({
+            fullName: user.name,
+            email: user.email,
+            username: user.email,
+          }),
           currency: Currency.USD,
           amount: 0,
           credit: totalCredit,
@@ -155,7 +152,7 @@ export async function POST(req: NextRequest) {
       });
       const newUserCredit = await tx.userCredit.update({
         where: {
-          id: account.id,
+          id: Number(account.id),
         },
         data: {
           credit: {

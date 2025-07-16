@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 import { FileIcon } from "lucide-react";
 import { nanoid } from "nanoid";
@@ -11,9 +11,8 @@ import { toast } from "sonner";
 
 import { cn, getMime } from "@/lib/utils";
 
-import Upload from "./base-upload";
+import { BaseUpload } from "./base-upload";
 import { RemoveAction } from "./remove-action";
-// import { getMd5Sign } from "./worker";
 
 let md5Worker: any;
 
@@ -27,6 +26,23 @@ export function formatSize(size: number) {
   return size.toFixed(2) + " " + units[i];
 }
 
+// Helper function to convert React Dropzone Accept type to string
+function convertAcceptToString(accept?: Accept): string {
+  if (!accept) return "image/*";
+  
+  if (typeof accept === "string") {
+    return accept;
+  }
+  
+  if (Array.isArray(accept)) {
+    return accept[0] || "image/*";
+  }
+  
+  // If it's an object, get the first key
+  const keys = Object.keys(accept);
+  return keys[0] || "image/*";
+}
+
 interface UploadValue {
   id?: string;
   url: string;
@@ -36,6 +52,7 @@ interface UploadValue {
   md5?: string;
   fileType?: string;
 }
+
 interface FormUploadProps {
   accept?: Accept;
   maxSize?: number;
@@ -52,14 +69,14 @@ interface FormUploadProps {
 export const useGetLicenseSts = (config?: {
   onSuccess: (result: any) => void;
 }) => {
-  const { getToken } = useAuth();
+  const { userId } = useAuth();
 
   return useMutation({
     mutationFn: async (values: any = {}) => {
       return fetch(`/api/s3/sts`, {
         method: "POST",
         body: JSON.stringify(values),
-        headers: { Authorization: `Bearer ${await getToken()}` },
+        credentials: 'include',
       }).then((res) => res.json());
     },
     onSuccess: async (result) => {
@@ -71,7 +88,7 @@ export const useGetLicenseSts = (config?: {
 const FormUpload = (props: FormUploadProps) => {
   const {
     value = [],
-    placeholder = "请拖拽上传文件",
+    placeholder = "Please drag and drop files to upload",
     onChange,
     className,
     previewClassName,
@@ -83,23 +100,16 @@ const FormUpload = (props: FormUploadProps) => {
   } = props;
   const getLicenseSts = useGetLicenseSts();
   const [uploadLoading, setUploadLoading] = useState(false);
-  const handleFileChange = async (files) => {
+  
+  const handleFileChange = async (files: File[]) => {
     if (files.length) {
       try {
         setUploadLoading(true);
         const file: File = files[0];
         const key = `${nanoid(12)}.${getMime(file.name) || "_"}`;
-        // md5Worker =
-        //   md5Worker ||
-        //   new Worker(new URL("~/lib/workers/md5.worker.ts", import.meta.url));
-        // const { md5, blurhash, color, width, height } = await getMd5Sign(
-        //   md5Worker,
-        //   file,
-        // );
 
         const res = await getLicenseSts.mutateAsync({
           key,
-          // md5,
           fileType: file.type,
         });
         if (res.error || !res?.data.putUrl || !res?.data.url) {
@@ -123,7 +133,6 @@ const FormUpload = (props: FormUploadProps) => {
           key: res?.data?.key,
           completedUrl: res?.data?.completedUrl,
           id: nanoid(12),
-          // md5,
           originFile: file,
         };
         onChange?.([...value, newValue]);
@@ -135,6 +144,7 @@ const FormUpload = (props: FormUploadProps) => {
       }
     }
   };
+
   return (
     <>
       {value?.length && Array.isArray(value) ? (
@@ -157,7 +167,7 @@ const FormUpload = (props: FormUploadProps) => {
                 {!disabled && (
                   <RemoveAction
                     onClick={() => {
-                      onChange?.(value.filter((_item) => item.id !== item.id));
+                      onChange?.(value.filter((_item) => _item.id !== item.id));
                     }}
                   />
                 )}
@@ -187,21 +197,13 @@ const FormUpload = (props: FormUploadProps) => {
               <img src={defaultImg} className="h-full w-full" />
             </div>
           )}
-          <Upload
+          <BaseUpload
             className={className}
-            loading={uploadLoading}
-            placeholderText={placeholder}
-            disabled={disabled}
+            onFileSelect={(file) => handleFileChange([file])}
+            onFileRemove={() => {}}
+            accept={convertAcceptToString(accept)}
             maxSize={maxSize}
-            maxFiles={maxFiles}
-            onDropRejected={() => {
-              const maxFilesTooltip = maxSize
-                ? ` or file size (max ${formatSize(maxSize)})`
-                : "";
-              toast.error(`Please check the format${maxFilesTooltip}`);
-            }}
-            accept={accept}
-            onFileChange={handleFileChange}
+            isUploading={uploadLoading}
           />
         </>
       )}
@@ -209,4 +211,4 @@ const FormUpload = (props: FormUploadProps) => {
   );
 };
 
-export default FormUpload;
+export default FormUpload; 

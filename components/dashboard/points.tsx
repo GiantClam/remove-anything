@@ -2,20 +2,20 @@
 
 import React, { useState } from "react";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { WalletIcon } from "lucide-react";
 
 import NumberTicker from "../magicui/number-ticker";
 
 export default function UserPoints() {
-  const { getToken } = useAuth();
+  const { userId } = useAuth();
 
   const { data } = useQuery({
     queryKey: ["queryUserPoints"],
     queryFn: async () => {
       return fetch(`/api/account`, {
-        headers: { Authorization: `Bearer ${await getToken()}` },
+        credentials: 'include',
       }).then((res) => res.json());
     },
   });

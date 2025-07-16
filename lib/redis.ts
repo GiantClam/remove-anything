@@ -1,16 +1,14 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+/**
+ * Redis 兼容层
+ * 在 Cloudflare 环境中使用 KV，在传统环境中使用环境变量配置的KV
+ */
 
-import { env } from "@/env.mjs";
+import { kv, ratelimit as kvRateLimit } from './kv';
 
-export const redis = new Redis({
-  url: env.UPSTASH_REDIS_REST_URL,
-  token: env.UPSTASH_REDIS_REST_TOKEN,
-});
+// 重新导出 KV 客户端作为 Redis 客户端
+// 这允许现有代码继续使用 redis.xxx 而无需修改
+export const redis = kv;
 
-// Create a new ratelimiter, that allows 30 requests per 10 seconds
-export const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(30, "10 s"),
-  analytics: true,
-});
+// 重新导出速率限制器
+// 保持与原始 @upstash/ratelimit 的兼容性
+export const ratelimit = kvRateLimit;

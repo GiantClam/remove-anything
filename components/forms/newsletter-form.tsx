@@ -2,7 +2,6 @@
 
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import va from "@vercel/analytics";
 import { TiltedSendIcon } from "@/assets";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -42,7 +41,13 @@ export default function Newsletter({ subCount }: { subCount?: string }) {
       try {
         if (isSubmitting) return;
 
-        va.track("Newsletter:Subscribe");
+        // Track newsletter subscription with Google Analytics
+        if (typeof window !== "undefined" && (window as any).gtag) {
+          (window as any).gtag("event", "subscribe", {
+            event_category: "newsletter",
+            event_label: "Newsletter Subscribe",
+          });
+        }
 
         const response = await fetch("/api/newsletter", {
           method: "POST",

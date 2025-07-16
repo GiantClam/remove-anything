@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { Ratelimit } from "@upstash/ratelimit";
+import { getCurrentUser } from "@/lib/auth-utils";
+
 import dayjs from "dayjs";
 import { z } from "zod";
 
@@ -12,12 +12,12 @@ import { getUserCredit } from "@/db/queries/account";
 import { BillingType } from "@/db/type";
 import { env } from "@/env.mjs";
 import { getErrorMessage } from "@/lib/handle-error";
-import { redis } from "@/lib/redis";
+import { kv, KVRateLimit } from "@/lib/kv";
+import { aiGateway } from "@/lib/ai-gateway";
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "10 s"),
-  analytics: true,
+const ratelimit = new KVRateLimit(kv, {
+  limit: 10,
+  window: "10s"
 });
 
 function getKey(id: string) {
@@ -52,15 +52,11 @@ const CreateGenerateSchema = z.object({
 });
 
 export async function POST(req: NextRequest, { params }: Params) {
-  const { userId } = auth();
-
-  const user = await currentUser();
-  if (!userId || !user) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
-  if (env.APP_ENV !== "production" && !user.publicMetadata.siteOwner) {
-    return NextResponse.json({ error: "no permission" }, { status: 403 });
-  }
+  const userId = user.id;
 
   const { success } = await ratelimit.limit(
     getKey(user.id) + `_${req.ip ?? ""}`,
@@ -82,7 +78,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       loraName,
       inputImageUrl,
     } = CreateGenerateSchema.parse(data);
-    const headers = new Headers();
+
     if (modelName === model.freeSchnell) {
       const thisMonthStart = dayjs().startOf("M");
       const thisMonthEnd = dayjs().endOf("M");
@@ -97,13 +93,14 @@ export async function POST(req: NextRequest, { params }: Params) {
         },
       });
       // 5 free schnell generate per month
-      if (freeSchnellCount >= 5 && !user.publicMetadata.siteOwner) {
+      if (freeSchnellCount >= 5) {
         return NextResponse.json(
           { error: "Insufficient credit", code: 1000403 },
           { status: 400 },
         );
       }
     }
+
     const account = await getUserCredit(userId);
     const needCredit = Credits[modelName];
     if (
@@ -116,70 +113,109 @@ export async function POST(req: NextRequest, { params }: Params) {
       );
     }
 
-    headers.append("Content-Type", "application/json");
-    headers.append("API-TOKEN", env.FLUX_HEADER_KEY);
+    // 先创建 fluxData 记录
+    const fluxData = await prisma.fluxData.create({
+      data: {
+        userId,
+        replicateId: "", // 暂时留空，等 AI Gateway 响应后更新
+        inputPrompt,
+        executePrompt: inputPrompt,
+        model: modelName,
+        aspectRatio,
+        taskStatus: "Processing",
+        executeStartTime: BigInt(Date.now()),
+        locale,
+        isPrivate: Boolean(isPrivate),
+        loraName,
+        ...(inputImageUrl && { inputImageUrl }),
+      },
+    });
 
-    const res = await fetch(`${env.FLUX_CREATE_URL}/flux/create`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
+    try {
+      console.log("🚀 开始调用 Cloudflare AI Gateway + Replicate 生成图片...");
+      
+      // 使用 Cloudflare AI Gateway 调用 Replicate
+      const res = await aiGateway.generateImageViaReplicate({
         model: modelName,
         input_image_url: inputImageUrl,
         input_prompt: inputPrompt,
         aspect_ratio: aspectRatio,
-        is_private: isPrivate,
+        is_private: Number(isPrivate) || 0,
         user_id: userId,
         lora_name: loraName,
         locale,
-      }),
-    }).then((res) => res.json());
-    if (!res?.replicate_id && res.error) {
-      return NextResponse.json(
-        { error: res.error || "Create Generator Error" },
-        { status: 400 },
-      );
-    }
-    console.log('res?.replicate_id,-->', res?.replicate_id)
-    const fluxData = await prisma.fluxData.findFirst({
-      where: {
-        replicateId: res.replicate_id,
-      },
-    });
-    if (!fluxData) {
-      return NextResponse.json({ error: "Create Task Error" }, { status: 400 });
-    }
-
-    await prisma.$transaction(async (tx) => {
-      const newAccount = await tx.userCredit.update({
-        where: { id: account.id },
-        data: {
-          credit: {
-            decrement: needCredit,
-          },
-        },
       });
-      const billing = await tx.userBilling.create({
+
+      if (!res?.replicate_id && res.error) {
+        // 如果 AI Gateway 调用失败，删除已创建的记录
+        await prisma.fluxData.delete({
+          where: { id: fluxData.id },
+        });
+        return NextResponse.json(
+          { error: res.error || "Create Generator Error" },
+          { status: 400 },
+        );
+      }
+
+      // 更新 fluxData 记录，添加 replicate_id
+      await prisma.fluxData.update({
+        where: { id: fluxData.id },
         data: {
-          userId,
-          fluxId: fluxData.id,
-          state: "Done",
-          amount: -needCredit,
-          type: BillingType.Withdraw,
-          description: `Generate ${modelName} - ${aspectRatio} Withdraw`,
+          replicateId: res.replicate_id,
         },
       });
 
-      await tx.userCreditTransaction.create({
-        data: {
-          userId,
-          credit: -needCredit,
-          balance: newAccount.credit,
-          billingId: billing.id,
-          type: "Generate",
-        },
+      console.log('✅ AI Gateway 调用成功，replicate_id:', res?.replicate_id);
+
+      // 检查是否为开发模式，如果是则跳过积分扣除
+      const isDevMode = env.GOOGLE_CLIENT_ID === "google-client-id-placeholder" || 
+                        env.GOOGLE_CLIENT_SECRET === "google-client-secret-placeholder";
+      
+      if (!isDevMode || userId !== "dev-user-123") {
+        // 执行积分扣除和账单记录（非开发模式用户）
+        await prisma.$transaction(async (tx) => {
+          const newAccount = await tx.userCredit.update({
+            where: { id: Number(account.id) },
+            data: {
+              credit: {
+                decrement: needCredit,
+              },
+            },
+          });
+          const billing = await tx.userBilling.create({
+            data: {
+              userId,
+              fluxId: fluxData.id,
+              state: "Done",
+              amount: -needCredit,
+              type: BillingType.Withdraw,
+              description: `Generate ${modelName} - ${aspectRatio} Withdraw`,
+            },
+          });
+
+          await tx.userCreditTransaction.create({
+            data: {
+              userId,
+              credit: -needCredit,
+              balance: newAccount.credit,
+              billingId: billing.id,
+              type: "Generate",
+            },
+          });
+        });
+      } else {
+        console.log("🔧 开发模式：跳过积分扣除，使用真实 AI 生成");
+      }
+
+      return NextResponse.json({ id: FluxHashids.encode(fluxData.id) });
+    } catch (aiError) {
+      // 如果 AI Gateway 调用过程中出错，清理已创建的记录
+      console.error("AI Gateway 调用失败:", aiError);
+      await prisma.fluxData.delete({
+        where: { id: fluxData.id },
       });
-    });
-    return NextResponse.json({ id: FluxHashids.encode(fluxData.id) });
+      throw aiError;
+    }
   } catch (error) {
     console.log("error-->", error);
     return NextResponse.json(

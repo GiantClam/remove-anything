@@ -3,7 +3,7 @@
 import { cloneElement, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton } from "@/components/auth/auth-components";
 import { useTranslations } from "next-intl";
 import { useReward } from "react-rewards";
 

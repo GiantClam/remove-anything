@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 
-import { currentUser } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/auth-utils";
 
 import { stripe } from "@/lib/stripe";
 import { getUserSubscriptionPlan } from "@/lib/subscription";
@@ -21,7 +21,7 @@ export async function openCustomerPortal(
   let redirectUrl: string = "";
 
   try {
-    const user = await currentUser();
+    const user = await getCurrentUser();
 
     if (!user) {
       throw new Error("Unauthorized");

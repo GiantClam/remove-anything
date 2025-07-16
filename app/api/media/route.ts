@@ -1,23 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { Ratelimit } from "@upstash/ratelimit";
 import { z } from "zod";
 
 import { MediaDto, MediaHashids } from "@/db/dto/media.dto";
 import { prisma } from "@/db/prisma";
 import { env } from "@/env.mjs";
 import { getErrorMessage } from "@/lib/handle-error";
-import { redis } from "@/lib/redis";
+import { kv, KVRateLimit } from "@/lib/kv";
 import { S3Service } from "@/lib/s3";
 
 function getKey(id: string) {
   return `media:${id}`;
 }
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "10 s"),
-  analytics: true,
+const ratelimit = new KVRateLimit(kv, {
+  limit: 5,
+  window: "10s"
 });
 
 const getSchema = z.object({

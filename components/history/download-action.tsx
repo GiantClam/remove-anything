@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/use-auth";
 import { ArrowDownToLine, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ export function DownloadAction({
   const t = useTranslations("History");
   const [isDownloading, startDownloadTransition] = useTransition();
   const [isPending, setIsPending] = useState(false);
-  const { getToken } = useAuth();
+  const { userId } = useAuth();
 
   const download = async (id: string) => {
     if (isDownloading || isPending) {
@@ -33,9 +33,7 @@ export function DownloadAction({
         async () => {
           setIsPending(true);
           const blob = await fetch(`/api/download?fluxId=${id}`, {
-            headers: {
-              Authorization: `Bearer ${await getToken()}`,
-            },
+            credentials: 'include',
           }).then((response) => response.blob());
           console.log("blob-->", blob);
           const url = window.URL.createObjectURL(blob);

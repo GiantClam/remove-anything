@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton } from "@/components/auth/auth-components";
 
 export default function SignBox(props: {
   children: React.ReactNode;

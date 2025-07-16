@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton } from "@/components/auth/auth-components";
 import { Eraser } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 

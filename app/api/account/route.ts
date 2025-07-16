@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { currentUser } from "@clerk/nextjs/server";
-import { Ratelimit } from "@upstash/ratelimit";
+
+import { getCurrentUser } from "@/lib/auth-utils";
 
 import { AccountHashids } from "@/db/dto/account.dto";
 import { getUserCredit } from "@/db/queries/account";
@@ -9,7 +9,7 @@ import { redis } from "@/lib/redis";
 
 export async function GET(req: NextRequest) {
   console.time("stat");
-  const user = await currentUser();
+  const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
@@ -36,6 +36,6 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     ...accountInfo,
-    id: AccountHashids.encode(accountInfo.id),
+    id: AccountHashids.encode(Number(accountInfo.id)),
   });
 }

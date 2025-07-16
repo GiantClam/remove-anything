@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import qs from "query-string";
@@ -48,7 +48,7 @@ const OrderBadge = {
   Pending: "Secondary",
 };
 export default function BillingInfo() {
-  const { getToken } = useAuth();
+  const { userId } = useAuth();
   const t = useTranslations("Billings");
   const [pageParams, setPageParams] = useState({
     page: 1,
@@ -63,7 +63,7 @@ export default function BillingInfo() {
           ...pageParams,
         })}`,
         {
-          headers: { Authorization: `Bearer ${await getToken()}` },
+          credentials: 'include', // Include cookies for NextAuth session
         },
       ).then((res) => res.json());
 

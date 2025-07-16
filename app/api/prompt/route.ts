@@ -1,36 +1,31 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { Ratelimit } from "@upstash/ratelimit";
-import OpenAI from "openai";
+import { getCurrentUser } from "@/lib/auth-utils";
+
 import { z } from "zod";
 
 import { env } from "@/env.mjs";
 import { getErrorMessage } from "@/lib/handle-error";
-import { redis } from "@/lib/redis";
+import { kv, KVRateLimit } from "@/lib/kv";
+import { aiGateway } from "@/lib/ai-gateway";
 
 const CreatePromptSchema = z.object({
   prompt: z.string(),
 });
 
-const client = new OpenAI({
-  baseURL: env.OPEN_AI_API_ENDPOINT,
-  apiKey: env.OPEN_AI_API_KEY, // This is the default and can be omitted
-});
+// 使用 AI Gateway 调用 Gemini，无需单独的客户端
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(2, "5 s"),
-  analytics: true,
+const ratelimit = new KVRateLimit(kv, {
+  limit: 2,
+  window: "5s"
 });
 
 export async function POST(req: NextRequest) {
-  const { userId } = auth();
-
-  const user = await currentUser();
-  if (!userId || !user || !user.primaryEmailAddress) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+  const userId = user.id;
 
   const { success } = await ratelimit.limit(
     "get-prompt:redeemed" + `_${req.ip ?? ""}`,
@@ -44,7 +39,9 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
     const { prompt } = CreatePromptSchema.parse(data);
-    const params: OpenAI.Chat.ChatCompletionCreateParams = {
+    
+    // 使用 AI Gateway 调用 Gemini
+    const response = await aiGateway.generateTextViaGemini({
       messages: [
         {
           role: "system",
@@ -52,14 +49,14 @@ export async function POST(req: NextRequest) {
         },
         { role: "user", content: prompt },
       ],
-      model: env.OPEN_AI_MODEL,
-    };
-    const chatCompletion: OpenAI.Chat.ChatCompletion =
-      await client.chat.completions.create(params);
+      model: env.GEMINI_MODEL,
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
 
     return NextResponse.json(
       {
-        prompt: chatCompletion.choices?.[0]?.message?.content ?? "",
+        prompt: response.choices?.[0]?.message?.content ?? "",
       },
       {
         status: 200,
