@@ -9,7 +9,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 FluxAI GitHub 仓库设置向导\n');
+console.log('🎨 Remove Anything GitHub 仓库设置向导\n');
 
 // 检查是否已安装 GitHub CLI
 function checkGitHubCLI() {
@@ -42,8 +42,8 @@ function createGitHubRepo() {
     return false;
   }
 
-  const repoName = 'fluxai';
-  const description = '🚀 FluxAI - AI图像生成平台，基于 Next.js 和 Cloudflare Workers';
+  const repoName = 'remove-anything';
+  const description = '🎨 Remove Anything - AI 背景去除工具，基于 Next.js 和 Cloudflare Workers';
   
   console.log(`📦 创建仓库: ${repoName}`);
   console.log(`📝 描述: ${description}`);
@@ -58,8 +58,8 @@ function createGitHubRepo() {
   } catch (error) {
     console.log('❌ 创建仓库失败，请手动创建：');
     console.log('   1. 访问 https://github.com/new');
-    console.log('   2. 仓库名称: fluxai');
-    console.log('   3. 描述: 🚀 FluxAI - AI图像生成平台');
+    console.log('   2. 仓库名称: remove-anything');
+    console.log('   3. 描述: 🎨 Remove Anything - AI 背景去除工具');
     console.log('   4. 选择 Public');
     console.log('   5. 不要初始化 README、.gitignore 或 License');
     return false;
@@ -76,7 +76,7 @@ function updateRemoteConfig() {
     
     // 添加新的远程仓库
     const username = execSync('gh api user --jq .login', { encoding: 'utf8' }).trim();
-    const newOrigin = `https://github.com/${username}/fluxai.git`;
+    const newOrigin = `https://github.com/${username}/remove-anything.git`;
     
     execSync(`git remote add origin ${newOrigin}`);
     console.log(`✅ 远程仓库已更新: ${newOrigin}`);
@@ -86,14 +86,14 @@ function updateRemoteConfig() {
     execSync('git push -u origin main', { stdio: 'inherit' });
     
     console.log('\n🎉 代码已成功推送到 GitHub！');
-    console.log(`🌐 访问: https://github.com/${username}/fluxai`);
+    console.log(`🌐 访问: https://github.com/${username}/remove-anything`);
     
     return true;
   } catch (error) {
     console.log('❌ 更新远程配置失败');
     console.log('请手动执行以下命令：');
     console.log('   git remote remove origin');
-    console.log('   git remote add origin https://github.com/YOUR_USERNAME/fluxai.git');
+    console.log('   git remote add origin https://github.com/YOUR_USERNAME/remove-anything.git');
     console.log('   git push -u origin main');
     return false;
   }

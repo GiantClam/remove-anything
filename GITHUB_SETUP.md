@@ -1,6 +1,6 @@
 # 🐙 GitHub 仓库设置指南
 
-本指南将帮助你创建 GitHub 仓库并推送 FluxAI 项目代码。
+本指南将帮助你创建 GitHub 仓库并推送 Remove Anything 项目代码。
 
 ## 📋 前置要求
 
@@ -50,8 +50,8 @@ node scripts/setup-github-repo.js
 ### 1. 在 GitHub 上创建仓库
 
 1. 访问 [https://github.com/new](https://github.com/new)
-2. 仓库名称：`fluxai`
-3. 描述：`🚀 FluxAI - AI图像生成平台，基于 Next.js 和 Cloudflare Workers`
+2. 仓库名称：`remove-anything`
+3. 描述：`🎨 Remove Anything - AI 背景去除工具，基于 Next.js 和 Cloudflare Workers`
 4. 选择 **Public**
 5. **不要**勾选 "Add a README file"
 6. **不要**勾选 "Add .gitignore"
@@ -65,7 +65,7 @@ node scripts/setup-github-repo.js
 git remote remove origin
 
 # 添加新的远程仓库 (替换 YOUR_USERNAME)
-git remote add origin https://github.com/YOUR_USERNAME/fluxai.git
+git remote add origin https://github.com/YOUR_USERNAME/remove-anything.git
 
 # 推送代码
 git push -u origin main
@@ -143,7 +143,7 @@ jobs:
 
 ## 📝 验证设置
 
-1. 访问你的 GitHub 仓库：`https://github.com/YOUR_USERNAME/fluxai`
+1. 访问你的 GitHub 仓库：`https://github.com/YOUR_USERNAME/remove-anything`
 2. 确认代码已成功推送
 3. 检查 GitHub Actions 是否正常工作
 4. 验证仓库设置中的 Secrets 已配置
@@ -191,4 +191,4 @@ A: 使用 `git remote set-url origin NEW_URL`
 
 ---
 
-🎉 恭喜！你的 FluxAI 项目已成功上传到 GitHub！ 
+🎉 恭喜！你的 Remove Anything 项目已成功上传到 GitHub！ 
