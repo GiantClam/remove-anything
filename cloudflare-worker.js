@@ -10,7 +10,7 @@ export default {
     // 设置环境变量
     env.DATABASE_URL = env.DB ? `file:./dev.db` : undefined;
     env.NEXTAUTH_URL = url.origin;
-    env.NEXTAUTH_SECRET = env.NEXTAUTH_SECRET || 'your-nextauth-secret';
+    env.NEXTAUTH_SECRET = env.NEXTAUTH_SECRET || 'your-nextauth-secret-placeholder';
     
     // 处理静态文件
     if (url.pathname.startsWith('/_next/') || url.pathname.startsWith('/static/')) {

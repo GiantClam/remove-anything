@@ -6,17 +6,17 @@
 
 ```env
 # Cloudflare AI Gateway 配置
-CLOUDFLARE_AI_GATEWAY_URL="https://gateway.ai.cloudflare.com/v1/9630806d5a588fc350ee64c395005cfa/openai"
-CLOUDFLARE_AI_GATEWAY_TOKEN="bjGAwxEZi18PDSYjjUxWntZLDhq6fXp8wLlUp3wh"
+CLOUDFLARE_AI_GATEWAY_URL="https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai"
+CLOUDFLARE_AI_GATEWAY_TOKEN="your-cloudflare-ai-gateway-token"
 
 # Replicate API 配置
-REPLICATE_API_TOKEN="r8_XVqdElM4gHp9s393WV7X5IlA0GmgJz54X80Nt"
-REPLICATE_WEBHOOK_SECRET=""
+REPLICATE_API_TOKEN="your-replicate-api-token"
+REPLICATE_WEBHOOK_SECRET="your-replicate-webhook-secret"
 
 # Cloudflare 基础配置
-CLOUDFLARE_KV_NAMESPACE_ID="6c1c975a74a048cea8fa67bc2db4a1c7"
-CLOUDFLARE_KV_ACCOUNT_ID="9630806d5a588fc350ee64c395005cfa"
-CLOUDFLARE_KV_API_TOKEN="bjGAwxEZi18PDSYjjUxWntZLDhq6fXp8wLlUp3wh"
+CLOUDFLARE_KV_NAMESPACE_ID="your-kv-namespace-id"
+CLOUDFLARE_KV_ACCOUNT_ID="your-cloudflare-account-id"
+CLOUDFLARE_KV_API_TOKEN="your-cloudflare-api-token"
 ```
 
 ## 完整 .env.local 配置
@@ -34,30 +34,30 @@ GOOGLE_CLIENT_ID="google-client-id-placeholder"
 GOOGLE_CLIENT_SECRET="google-client-secret-placeholder"
 
 # Cloudflare 配置
-CLOUDFLARE_KV_NAMESPACE_ID="6c1c975a74a048cea8fa67bc2db4a1c7"
-CLOUDFLARE_KV_ACCOUNT_ID="9630806d5a588fc350ee64c395005cfa"
-CLOUDFLARE_KV_API_TOKEN="bjGAwxEZi18PDSYjjUxWntZLDhq6fXp8wLlUp3wh"
+CLOUDFLARE_KV_NAMESPACE_ID="your-kv-namespace-id"
+CLOUDFLARE_KV_ACCOUNT_ID="your-cloudflare-account-id"
+CLOUDFLARE_KV_API_TOKEN="your-cloudflare-api-token"
 
 # Cloudflare AI Gateway 配置
-CLOUDFLARE_AI_GATEWAY_URL="https://gateway.ai.cloudflare.com/v1/9630806d5a588fc350ee64c395005cfa/openai"
-CLOUDFLARE_AI_GATEWAY_TOKEN="bjGAwxEZi18PDSYjjUxWntZLDhq6fXp8wLlUp3wh"
+CLOUDFLARE_AI_GATEWAY_URL="https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai"
+CLOUDFLARE_AI_GATEWAY_TOKEN="your-cloudflare-ai-gateway-token"
 
 # Replicate API 配置
-REPLICATE_API_TOKEN="r8_XVqdElM4gHp9s393WV7X5IlA0GmgJz54X80Nt"
-REPLICATE_WEBHOOK_SECRET=""
+REPLICATE_API_TOKEN="your-replicate-api-token"
+REPLICATE_WEBHOOK_SECRET="your-replicate-webhook-secret"
 
 # Gemini API 配置
 GEMINI_API_KEY="gemini-api-key-placeholder"
 GEMINI_MODEL="gemini-1.5-flash"
 
 # R2 存储配置
-R2_ENDPOINT="https://9630806d5a588fc350ee64c395005cfa.r2.cloudflarestorage.com"
+R2_ENDPOINT="https://{account_id}.r2.cloudflarestorage.com"
 R2_REGION="auto"
-R2_ACCESS_KEY="r2-access-key-placeholder"
-R2_SECRET_KEY="r2-secret-key-placeholder"
-R2_URL_BASE="https://remove-anything.9630806d5a588fc350ee64c395005cfa.r2.cloudflarestorage.com"
-R2_BUCKET="remove-anything"
-R2_ACCOUNT_ID="9630806d5a588fc350ee64c395005cfa"
+R2_ACCESS_KEY="your-r2-access-key"
+R2_SECRET_KEY="your-r2-secret-key"
+R2_URL_BASE="https://{bucket_name}.{account_id}.r2.cloudflarestorage.com"
+R2_BUCKET="your-r2-bucket-name"
+R2_ACCOUNT_ID="your-cloudflare-account-id"
 
 # Stripe 配置
 STRIPE_API_KEY="sk_test_placeholder"
@@ -107,9 +107,9 @@ https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/replicate
 ```
 
 在你的配置中：
-- **Account ID**: `9630806d5a588fc350ee64c395005cfa`
+- **Account ID**: `your-cloudflare-account-id`
 - **Gateway ID**: `openai`
-- **完整端点**: `https://gateway.ai.cloudflare.com/v1/9630806d5a588fc350ee64c395005cfa/openai`
+- **完整端点**: `https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai`
 
 ### Replicate 认证
 
