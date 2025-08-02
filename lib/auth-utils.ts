@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
 import { env } from "@/env.mjs";
 import { prisma } from "@/db/prisma";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 export async function getUser() {
   const session = await getServerSession(authOptions);
@@ -11,7 +12,7 @@ export async function getUser() {
 
 export async function getCurrentUser() {
   // 在构建时或没有数据库连接时返回null
-  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
+  if (shouldSkipDatabaseQuery()) {
     return null;
   }
 

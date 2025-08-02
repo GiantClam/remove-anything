@@ -1,8 +1,21 @@
 import { prisma } from "@/db/prisma";
+import { shouldSkipDatabaseQuery, getBuildTimeFallback } from "@/lib/build-check";
 
 import NewsLatterCard from "./_mods/card";
 
 export default async function AdminNewslettersPage() {
+  // 在构建时或没有数据库连接时返回默认值
+  if (shouldSkipDatabaseQuery()) {
+    const defaultCount = {
+      today_count: 0,
+      this_month_count: 0,
+      total: 0
+    };
+    const defaultData = [];
+    
+    return <NewsLatterCard count={defaultCount} dataSource={defaultData} />;
+  }
+
   // Get counts using Prisma queries instead of raw SQL for SQLite compatibility  
   const today = new Date();
   today.setHours(0, 0, 0, 0);

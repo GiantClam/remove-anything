@@ -1,16 +1,17 @@
 import { prisma } from "@/db/prisma";
 import { env } from "@/env.mjs";
+import { shouldSkipDatabaseQuery, getBuildTimeFallback } from "@/lib/build-check";
 
 export async function getUserCredit(userId: string) {
   // 在构建时或没有数据库连接时返回默认值
-  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
-    return {
+  if (shouldSkipDatabaseQuery()) {
+    return getBuildTimeFallback({
       id: "build-credit-123",
       userId: userId,
       credit: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    });
   }
 
   // 开发模式：为测试用户提供无限信用

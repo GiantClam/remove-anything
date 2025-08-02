@@ -1,5 +1,6 @@
 import { ChargeProductHashids } from "@/db/dto/charge-product.dto";
 import { prisma } from "@/db/prisma";
+import { shouldSkipDatabaseQuery, getBuildTimeFallback } from "@/lib/build-check";
 
 import {
   OrderPhase,
@@ -8,6 +9,13 @@ import {
 } from "../type";
 
 export async function getChargeProduct(locale?: string) {
+  // 在构建时或没有数据库连接时返回默认值
+  if (shouldSkipDatabaseQuery()) {
+    return getBuildTimeFallback({
+      data: [] as ChargeProductSelectDto[],
+    });
+  }
+
   const data = await prisma.chargeProduct.findMany({
     where: {
       locale,

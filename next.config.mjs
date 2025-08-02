@@ -17,6 +17,11 @@ const nextConfig = {
   output: 'standalone',
   // trailingSlash: true, // 注释掉，standalone模式不需要
   
+  // 禁用API路由的静态生成，避免构建时数据库查询
+  generateBuildId: async () => {
+    return 'build-' + Date.now();
+  },
+  
   // Use Cloudflare Functions instead of static export to support API routes
   // output: 'export', // Removed for NextAuth compatibility
   // trailingSlash: true, // Removed for NextAuth compatibility

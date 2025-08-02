@@ -2,6 +2,7 @@ import { MetadataRoute } from "next";
 import { prisma } from "@/db/prisma";
 import { FluxTaskStatus } from "@/db/type";
 import { FluxHashids } from "@/db/dto/flux.dto";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 import { allPosts } from "contentlayer/generated";
 
@@ -10,6 +11,11 @@ import { env } from "@/env.mjs";
 import { getPathname } from "@/lib/navigation";
 
 const getFluxUrl = async () => {
+  // 在构建时或没有数据库连接时返回空数组
+  if (shouldSkipDatabaseQuery()) {
+    return [];
+  }
+
   const fluxs = await prisma.fluxData.findMany({
     where: {
       isPrivate: false,
@@ -31,14 +37,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .sort((a, b) => b.date.localeCompare(a.date))
       .map((post) => post.slug?.replace(`/${defaultLocale}`, "")),
   );
-  const fluxDataCount = await prisma.fluxData.count({
-    where: {
-      isPrivate: false,
-      taskStatus: {
-        in: [FluxTaskStatus.Succeeded],
-      },
-    }
-  });
+  // 在构建时或没有数据库连接时使用默认值
+  let fluxDataCount = 0;
+  if (!shouldSkipDatabaseQuery()) {
+    fluxDataCount = await prisma.fluxData.count({
+      where: {
+        isPrivate: false,
+        taskStatus: {
+          in: [FluxTaskStatus.Succeeded],
+        },
+      }
+    });
+  }
   const pageCount = Math.ceil(fluxDataCount / 24);
   const explorePages = Array.from({ length: pageCount }, (_, i) => i === 0 ? `/explore` : `/explore/${i + 1}`);
 

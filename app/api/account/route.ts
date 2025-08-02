@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-
 import { getCurrentUser } from "@/lib/auth-utils";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 import { AccountHashids } from "@/db/dto/account.dto";
 import { getUserCredit } from "@/db/queries/account";
@@ -9,7 +9,7 @@ import { redis } from "@/lib/redis";
 
 export async function GET(req: NextRequest) {
   // 在构建时跳过数据库查询
-  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
+  if (shouldSkipDatabaseQuery()) {
     return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
   }
 

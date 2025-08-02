@@ -1,10 +1,23 @@
 import React from "react";
 
 import { prisma } from "@/db/prisma";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 import SubscribersCard from "./_mods/card";
 
 export default async function AdminSubscribersPage() {
+  // 在构建时或没有数据库连接时返回默认值
+  if (shouldSkipDatabaseQuery()) {
+    const defaultCount = {
+      today_count: 0,
+      this_month_count: 0,
+      total: 0
+    };
+    const defaultData = [];
+    
+    return <SubscribersCard count={defaultCount} dataSource={defaultData} />;
+  }
+
   // Get counts using Prisma queries instead of raw SQL for SQLite compatibility
   const today = new Date();
   today.setHours(0, 0, 0, 0);
