@@ -8,6 +8,11 @@ import { getUserCredit } from "@/db/queries/account";
 import { redis } from "@/lib/redis";
 
 export async function GET(req: NextRequest) {
+  // 在构建时跳过数据库查询
+  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
+    return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
+  }
+
   console.time("stat");
   const user = await getCurrentUser();
   if (!user) {

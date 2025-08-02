@@ -10,6 +10,11 @@ export async function getUser() {
 }
 
 export async function getCurrentUser() {
+  // 在构建时或没有数据库连接时返回null
+  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
+    return null;
+  }
+
   // 开发模式：如果 Google OAuth 配置是占位符，创建一个测试用户
   const isDevMode = env.GOOGLE_CLIENT_ID === "google-client-id-placeholder" || 
                     env.GOOGLE_CLIENT_SECRET === "google-client-secret-placeholder";
