@@ -134,6 +134,6 @@ export const env = createEnv({
     NEXT_PUBLIC_UMAMI_DATA_ID: process.env.NEXT_PUBLIC_UMAMI_DATA_ID,
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
   },
-  skipValidation: process.env.NODE_ENV === 'development', // 在开发环境中跳过环境变量验证
+  skipValidation: process.env.NODE_ENV === 'development' || process.env.SKIP_ENV_VALIDATION === 'true', // 在开发环境或设置SKIP_ENV_VALIDATION时跳过环境变量验证
   emptyStringAsUndefined: true,
 });
