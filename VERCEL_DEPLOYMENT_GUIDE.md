@@ -25,6 +25,7 @@
 5. **禁用了Sentry** 避免Vercel部署时的警告和错误
 6. **添加了全局错误处理器** (`app/global-error.tsx`) 提供更好的错误处理
 7. **强制API路由动态渲染** 使用`export const dynamic = 'force-dynamic'`避免构建时静态生成
+8. **修改Prisma客户端初始化** (`db/prisma.ts`) 在构建时跳过数据库连接
 
 ### 📋 Vercel 环境变量
 
@@ -74,6 +75,7 @@ WEBHOOK_SECRET=your-webhook-secret
 - ✅ 构建时保护机制正常工作
 - ✅ 强制动态渲染API路由成功
 - ✅ NextAuth路由强制动态渲染成功
+- ✅ Prisma客户端构建时跳过初始化成功
 
 构建现在应该会成功，没有数据库连接错误！🎉
 
