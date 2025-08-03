@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth-utils";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 import { z } from "zod";
 
 import { model } from "@/config/constants";
@@ -17,6 +18,11 @@ const searchParamsSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+  // 在构建时跳过数据库查询
+  if (shouldSkipDatabaseQuery()) {
+    return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
