@@ -1,8 +1,13 @@
 import NextAuth from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
-// 为静态导出生成参数
+// 在构建时跳过静态参数生成
 export async function generateStaticParams() {
+  if (shouldSkipDatabaseQuery()) {
+    return [];
+  }
+  
   return [
     { nextauth: ['signin'] },
     { nextauth: ['signout'] },
