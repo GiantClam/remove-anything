@@ -1,16 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 
 import "server-only";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 declare global {
   // eslint-disable-next-line no-var
   var cachedPrisma: PrismaClient;
-}
-
-// 构建时检查函数
-function shouldSkipDatabaseQuery(): boolean {
-  return process.env.VERCEL === "1" || 
-         (process.env.NODE_ENV === "production" && process.env.SKIP_DB_BUILD === "1");
 }
 
 export let prisma: PrismaClient;

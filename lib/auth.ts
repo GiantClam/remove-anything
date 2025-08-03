@@ -24,6 +24,7 @@ export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma) as any,
   }),
   providers,
+  debug: process.env.NODE_ENV === "development",
   callbacks: {
     session: async ({ session, token }) => {
       if (session?.user) {
@@ -37,6 +38,14 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
+    signIn: async ({ user, account, profile }) => {
+      console.log("🔐 登录回调:", { 
+        user: user?.email, 
+        provider: account?.provider,
+        hasProfile: !!profile 
+      });
+      return true;
+    },
   },
   pages: {
     signIn: "/signin",
@@ -45,6 +54,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   ...(env.NEXTAUTH_SECRET && { secret: env.NEXTAUTH_SECRET }),
 }; 

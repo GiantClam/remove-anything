@@ -10,6 +10,7 @@
    - 检测Vercel构建环境并强制跳过数据库查询
    - 支持本地生产构建时跳过数据库查询
    - 添加了详细的日志输出用于调试
+   - **修复了运行时API返回503错误的问题**
 
 2. **修改了关键文件** 以支持构建时跳过数据库查询：
    - **NextAuth配置** (`lib/auth.ts`) - 条件性配置适配器和提供者
@@ -25,7 +26,7 @@
 5. **禁用了Sentry** 避免Vercel部署时的警告和错误
 6. **添加了全局错误处理器** (`app/global-error.tsx`) 提供更好的错误处理
 7. **强制API路由动态渲染** 使用`export const dynamic = 'force-dynamic'`避免构建时静态生成
-8. **修改Prisma客户端初始化** (`db/prisma.ts`) 在构建时跳过数据库连接
+8. **修改Prisma客户端初始化** (`db/prisma.ts`) 在构建时跳过数据库连接，统一使用`lib/build-check.ts`中的函数
 
 ### 📋 Vercel 环境变量
 
@@ -37,8 +38,8 @@ SKIP_ENV_VALIDATION=true
 
 # 🔒 身份验证
 NEXTAUTH_SECRET=your-secret-key
-NEXTAUTH_URL=https://your-app.vercel.app
-NEXT_PUBLIC_SITE_URL=https://your-app.vercel.app
+NEXTAUTH_URL=https://remove-anything.com
+NEXT_PUBLIC_SITE_URL=https://remove-anything.com
 
 # 🚫 禁用Sentry警告
 SENTRY_SUPPRESS_GLOBAL_ERROR_HANDLER_FILE_WARNING=1
@@ -46,6 +47,10 @@ SENTRY_SUPPRESS_GLOBAL_ERROR_HANDLER_FILE_WARNING=1
 # 🗄️ Supabase数据库配置
 DATABASE_URL=postgres://postgres.ofmwvapsmsokwvqhwhtf:xHcTqScsqTrxDs4Y@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true
 POSTGRES_URL_NON_POOLING=postgres://postgres.ofmwvapsmsokwvqhwhtf:xHcTqScsqTrxDs4Y@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require
+
+# 🔑 Google OAuth配置
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 # Supabase配置
 NEXT_PUBLIC_SUPABASE_URL=https://ofmwvapsmsokwvqhwhtf.supabase.co
@@ -57,6 +62,31 @@ SUPABASE_JWT_SECRET=your-jwt-secret
 HASHID_SALT=your-hashid-salt
 WEBHOOK_SECRET=your-webhook-secret
 ```
+
+### 🔑 Google OAuth配置步骤
+
+1. **创建Google OAuth应用**：
+   - 访问 [Google Cloud Console](https://console.cloud.google.com/)
+   - 创建新项目或选择现有项目
+   - 启用 Google+ API
+   - 在"凭据"页面创建OAuth 2.0客户端ID
+
+2. **配置重定向URI**：
+   - 在Google OAuth配置中添加以下重定向URI：
+     ```
+     http://localhost:3000/api/auth/callback/google  (本地开发)
+     https://remove-anything.com/api/auth/callback/google  (生产环境)
+     ```
+
+3. **获取客户端ID和密钥**：
+   - 复制生成的客户端ID和客户端密钥
+   - 在Vercel环境变量中设置：
+     - `GOOGLE_CLIENT_ID`
+     - `GOOGLE_CLIENT_SECRET`
+
+4. **重要：设置NEXTAUTH_URL**：
+   - 确保在Vercel中设置：`NEXTAUTH_URL=https://remove-anything.com`
+   - 这个变量对于OAuth state管理至关重要
 
 ### 🚀 部署步骤
 
@@ -78,6 +108,55 @@ WEBHOOK_SECRET=your-webhook-secret
 - ✅ Prisma客户端构建时跳过初始化成功
 
 构建现在应该会成功，没有数据库连接错误！🎉
+
+### 🔧 故障排除
+
+#### Google OAuth错误
+
+**错误**: `redirect_uri_mismatch`
+
+**解决方案**:
+1. 确保在Google Cloud Console中配置了正确的重定向URI
+2. 检查`NEXTAUTH_URL`环境变量是否正确设置
+3. 确保重定向URI格式正确：
+   ```
+   https://remove-anything.com/api/auth/callback/google
+   ```
+
+**常见问题**:
+- 重定向URI末尾有多余的斜杠
+- 域名不匹配（localhost vs 生产域名）
+- 协议不匹配（http vs https）
+
+**错误**: `state missing from the response`
+
+**解决方案**:
+1. **确保设置NEXTAUTH_URL**：这是最常见的原因
+   ```bash
+   NEXTAUTH_URL=https://remove-anything.com
+   ```
+2. 检查会话配置是否正确
+3. 确保没有代理或CDN干扰OAuth流程
+4. 清除浏览器缓存和Cookie
+5. 检查Google OAuth应用配置是否正确
+
+**错误**: `Service Unavailable` (503错误)
+
+**解决方案**:
+1. **确保构建时保护机制正确配置**：检查`lib/build-check.ts`中的`shouldSkipDatabaseQuery()`函数
+2. **统一使用构建检查函数**：确保所有文件都使用`lib/build-check.ts`中的函数，而不是重复定义
+3. **检查Prisma客户端初始化**：确保`db/prisma.ts`使用正确的构建检查逻辑
+4. **验证API路由配置**：确保所有API路由都正确使用`export const dynamic = 'force-dynamic'`
+
+#### 其他常见错误
+
+**错误**: `Configuration error`
+- 检查`NEXTAUTH_SECRET`是否正确设置
+- 确保所有必需的环境变量都已配置
+
+**错误**: `Database connection failed`
+- 检查Supabase连接字符串是否正确
+- 确保数据库服务正在运行
 
 ### 📝 注意事项
 
