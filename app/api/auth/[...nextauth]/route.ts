@@ -1,21 +1,8 @@
 import NextAuth from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
-// 在构建时跳过静态参数生成
-export async function generateStaticParams() {
-  if (shouldSkipDatabaseQuery()) {
-    return [];
-  }
-  
-  return [
-    { nextauth: ['signin'] },
-    { nextauth: ['signout'] },
-    { nextauth: ['callback'] },
-    { nextauth: ['session'] },
-    { nextauth: ['csrf'] },
-  ];
-}
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
 
 const handler = NextAuth(authOptions);
 
