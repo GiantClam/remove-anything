@@ -14,7 +14,7 @@
 2. **修改了关键文件** 以支持构建时跳过数据库查询：
    - **NextAuth配置** (`lib/auth.ts`) - 条件性配置适配器和提供者
    - **API路由** (`app/api/auth/[...nextauth]/route.ts`) - 跳过静态参数生成
-   - **API路由** (`app/api/account/route.ts`, `app/api/billings/route.ts`, `app/api/mine-flux/route.ts`, `app/api/order/route.ts`) - 构建时跳过数据库查询
+   - **API路由** (`app/api/account/route.ts`, `app/api/billings/route.ts`, `app/api/mine-flux/route.ts`, `app/api/order/route.ts`) - 强制动态渲染，避免构建时静态生成
    - **认证工具** (`lib/auth-utils.ts`) - 构建时返回null，添加调试日志
    - **数据库查询** (`db/queries/account.ts`, `db/queries/charge-product.ts`) - 返回默认值
    - **管理页面** (`app/[locale]/admin/newsletters/page.tsx`, `app/[locale]/admin/subscribers/page.tsx`) - 跳过数据库查询
@@ -24,6 +24,7 @@
 4. **优化了构建时检查逻辑** 确保在Vercel环境中可靠工作
 5. **禁用了Sentry** 避免Vercel部署时的警告和错误
 6. **添加了全局错误处理器** (`app/global-error.tsx`) 提供更好的错误处理
+7. **强制API路由动态渲染** 使用`export const dynamic = 'force-dynamic'`避免构建时静态生成
 
 ### 📋 Vercel 环境变量
 

@@ -2,6 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth-utils";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
+
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
 import { z } from "zod";
 
 import { UserBillingHashids } from "@/db/dto/billing.dto";

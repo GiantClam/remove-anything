@@ -7,6 +7,9 @@ import { AccountHashids } from "@/db/dto/account.dto";
 import { getUserCredit } from "@/db/queries/account";
 import { redis } from "@/lib/redis";
 
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   // 在构建时跳过数据库查询
   if (shouldSkipDatabaseQuery()) {
