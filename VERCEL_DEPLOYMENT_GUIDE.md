@@ -22,6 +22,8 @@
 
 3. **配置了条件性认证** 避免构建时数据库连接失败
 4. **优化了构建时检查逻辑** 确保在Vercel环境中可靠工作
+5. **禁用了Sentry** 避免Vercel部署时的警告和错误
+6. **添加了全局错误处理器** (`app/global-error.tsx`) 提供更好的错误处理
 
 ### 📋 Vercel 环境变量
 
@@ -35,6 +37,9 @@ SKIP_ENV_VALIDATION=true
 NEXTAUTH_SECRET=your-secret-key
 NEXTAUTH_URL=https://your-app.vercel.app
 NEXT_PUBLIC_SITE_URL=https://your-app.vercel.app
+
+# 🚫 禁用Sentry警告
+SENTRY_SUPPRESS_GLOBAL_ERROR_HANDLER_FILE_WARNING=1
 
 # 🗄️ Supabase数据库配置
 DATABASE_URL=postgres://postgres.ofmwvapsmsokwvqhwhtf:xHcTqScsqTrxDs4Y@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true
