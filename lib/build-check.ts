@@ -12,6 +12,14 @@ export function isVercelBuild(): boolean {
 }
 
 export function shouldSkipDatabaseQuery(): boolean {
+  // 添加详细的调试日志
+  console.log("🔍 构建检查调试信息:", {
+    NODE_ENV: process.env.NODE_ENV,
+    VERCEL: process.env.VERCEL,
+    SKIP_DB_BUILD: process.env.SKIP_DB_BUILD,
+    DATABASE_URL: process.env.DATABASE_URL ? "已设置" : "未设置"
+  });
+  
   // 只在构建时跳过数据库查询，运行时应该正常工作
   
   // 在Vercel构建环境中，总是跳过数据库查询
@@ -26,6 +34,14 @@ export function shouldSkipDatabaseQuery(): boolean {
     return true;
   }
   
+  // 额外的安全检查：确保我们不在运行时跳过查询
+  // 如果NODE_ENV是production但没有设置SKIP_DB_BUILD，说明这是运行时
+  if (process.env.NODE_ENV === "production" && process.env.SKIP_DB_BUILD !== "1") {
+    console.log("✅ 生产环境运行时：允许数据库查询");
+    return false;
+  }
+  
+  console.log("✅ 运行时：允许数据库查询");
   // 运行时不应该跳过数据库查询
   return false;
 }

@@ -147,6 +147,13 @@ WEBHOOK_SECRET=your-webhook-secret
 2. **统一使用构建检查函数**：确保所有文件都使用`lib/build-check.ts`中的函数，而不是重复定义
 3. **检查Prisma客户端初始化**：确保`db/prisma.ts`使用正确的构建检查逻辑
 4. **验证API路由配置**：确保所有API路由都正确使用`export const dynamic = 'force-dynamic'`
+5. **检查环境变量**：确保在Vercel中正确设置了所有必需的环境变量
+6. **重新部署**：推送最新的代码修复到Vercel
+
+**常见原因**:
+- Vercel构建时`shouldSkipDatabaseQuery()`返回true
+- 本地生产环境设置了`SKIP_DB_BUILD=1`
+- 环境变量配置不正确
 
 #### 其他常见错误
 
