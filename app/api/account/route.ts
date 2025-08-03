@@ -11,39 +11,51 @@ import { redis } from "@/lib/redis";
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  // 在构建时跳过数据库查询
-  if (shouldSkipDatabaseQuery()) {
-    return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
+  try {
+    // 在构建时跳过数据库查询
+    if (shouldSkipDatabaseQuery()) {
+      console.log("🔧 构建时：跳过 /api/account 查询");
+      return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
+    }
+
+    console.time("stat");
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+    // console.timeLog("stat");
+
+    // const ratelimit = new Ratelimit({
+    //   redis,
+    //   limiter: Ratelimit.slidingWindow(5, "5 s"),
+    //   analytics: true,
+    // });
+    // const { success } = await ratelimit.limit(
+    //   "account:info" + `_${req.ip ?? ""}`,
+    // );
+    console.timeLog("stat");
+
+    // if (!success) {
+    //   return new Response("Too Many Requests", {
+    //     status: 429,
+    //   });
+    // }
+
+    const accountInfo = await getUserCredit(user.id);
+    console.timeEnd("stat");
+
+    return NextResponse.json({
+      ...accountInfo,
+      id: AccountHashids.encode(Number(accountInfo.id)),
+    });
+  } catch (error) {
+    console.error("❌ /api/account 错误:", error);
+    
+    // 在构建时或出现错误时返回503
+    if (shouldSkipDatabaseQuery()) {
+      return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
+    }
+    
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  console.time("stat");
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-  // console.timeLog("stat");
-
-  // const ratelimit = new Ratelimit({
-  //   redis,
-  //   limiter: Ratelimit.slidingWindow(5, "5 s"),
-  //   analytics: true,
-  // });
-  // const { success } = await ratelimit.limit(
-  //   "account:info" + `_${req.ip ?? ""}`,
-  // );
-  console.timeLog("stat");
-
-  // if (!success) {
-  //   return new Response("Too Many Requests", {
-  //     status: 429,
-  //   });
-  // }
-
-  const accountInfo = await getUserCredit(user.id);
-  console.timeEnd("stat");
-
-  return NextResponse.json({
-    ...accountInfo,
-    id: AccountHashids.encode(Number(accountInfo.id)),
-  });
 }

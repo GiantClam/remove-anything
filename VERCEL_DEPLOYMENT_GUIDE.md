@@ -11,15 +11,17 @@
    - 支持本地生产构建时跳过数据库查询
    - 添加了详细的日志输出用于调试
    - **修复了运行时API返回503错误的问题**
+   - **修复了Vercel构建时`Failed to collect page data`错误**
 
 2. **修改了关键文件** 以支持构建时跳过数据库查询：
    - **NextAuth配置** (`lib/auth.ts`) - 条件性配置适配器和提供者
    - **API路由** (`app/api/auth/[...nextauth]/route.ts`) - 强制动态渲染，移除静态参数生成
    - **API路由** (`app/api/account/route.ts`, `app/api/billings/route.ts`, `app/api/mine-flux/route.ts`, `app/api/order/route.ts`) - 强制动态渲染，避免构建时静态生成
-   - **认证工具** (`lib/auth-utils.ts`) - 构建时返回null，添加调试日志
+   - **认证工具** (`lib/auth-utils.ts`) - 构建时返回null，添加调试日志和错误处理
    - **数据库查询** (`db/queries/account.ts`, `db/queries/charge-product.ts`) - 返回默认值
    - **管理页面** (`app/[locale]/admin/newsletters/page.tsx`, `app/[locale]/admin/subscribers/page.tsx`) - 跳过数据库查询
    - **站点地图** (`app/sitemap.ts`) - 使用默认值
+   - **Hashids工具** (`lib/hashid.ts`) - 构建时使用默认salt
 
 3. **配置了条件性认证** 避免构建时数据库连接失败
 4. **优化了构建时检查逻辑** 确保在Vercel环境中可靠工作
@@ -159,6 +161,14 @@ WEBHOOK_SECRET=your-webhook-secret
 - 本地生产环境设置了`SKIP_DB_BUILD=1`
 - 环境变量配置不正确
 - **在Vercel中错误设置了`SKIP_DB_BUILD=1`**
+
+**错误**: `Failed to collect page data for /api/account`
+
+**解决方案**:
+1. **确保所有依赖项在构建时安全**：检查`lib/hashid.ts`、`lib/auth-utils.ts`等文件
+2. **添加错误处理**：在所有可能失败的函数中添加try-catch块
+3. **使用构建时默认值**：确保所有需要环境变量的函数在构建时使用默认值
+4. **检查导入链**：确保没有循环导入或构建时无法解析的依赖
 
 #### 其他常见错误
 
