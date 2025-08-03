@@ -161,3 +161,6 @@ test-results/
 playwright-report/
 test-results.xml
 test-api.sh
+DEPLOYMENT_CHECKLIST.md
+VERCEL_DEPLOYMENT_GUIDE.md
+VERCEL_DEPLOYMENT_GUIDE.md

@@ -22,8 +22,8 @@ export function shouldSkipDatabaseQuery(): boolean {
   
   // 只在构建时跳过数据库查询，运行时应该正常工作
   
-  // 在Vercel构建环境中，总是跳过数据库查询
-  if (process.env.VERCEL === "1" && process.env.NODE_ENV === "production") {
+  // 在Vercel构建环境中，如果设置了SKIP_DB_BUILD，跳过数据库查询
+  if (process.env.VERCEL === "1" && process.env.NODE_ENV === "production" && process.env.SKIP_DB_BUILD === "1") {
     console.log("🔧 Vercel构建环境：跳过数据库查询");
     return true;
   }
@@ -32,13 +32,6 @@ export function shouldSkipDatabaseQuery(): boolean {
   if (process.env.NODE_ENV === "production" && process.env.SKIP_DB_BUILD === "1") {
     console.log("🔧 本地生产构建：跳过数据库查询");
     return true;
-  }
-  
-  // 额外的安全检查：确保我们不在运行时跳过查询
-  // 如果NODE_ENV是production但没有设置SKIP_DB_BUILD，说明这是运行时
-  if (process.env.NODE_ENV === "production" && process.env.SKIP_DB_BUILD !== "1") {
-    console.log("✅ 生产环境运行时：允许数据库查询");
-    return false;
   }
   
   console.log("✅ 运行时：允许数据库查询");

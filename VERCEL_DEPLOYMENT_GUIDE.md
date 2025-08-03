@@ -61,6 +61,9 @@ SUPABASE_JWT_SECRET=your-jwt-secret
 # 🔑 基础安全
 HASHID_SALT=your-hashid-salt
 WEBHOOK_SECRET=your-webhook-secret
+
+# ⚠️ 重要：不要设置SKIP_DB_BUILD=1
+# 这个变量只在本地构建时使用，在Vercel中设置会导致API返回503错误
 ```
 
 ### 🔑 Google OAuth配置步骤
@@ -149,11 +152,13 @@ WEBHOOK_SECRET=your-webhook-secret
 4. **验证API路由配置**：确保所有API路由都正确使用`export const dynamic = 'force-dynamic'`
 5. **检查环境变量**：确保在Vercel中正确设置了所有必需的环境变量
 6. **重新部署**：推送最新的代码修复到Vercel
+7. **移除SKIP_DB_BUILD环境变量**：在Vercel中不要设置`SKIP_DB_BUILD=1`
 
 **常见原因**:
 - Vercel构建时`shouldSkipDatabaseQuery()`返回true
 - 本地生产环境设置了`SKIP_DB_BUILD=1`
 - 环境变量配置不正确
+- **在Vercel中错误设置了`SKIP_DB_BUILD=1`**
 
 #### 其他常见错误
 
