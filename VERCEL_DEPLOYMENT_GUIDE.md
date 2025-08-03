@@ -170,6 +170,19 @@ WEBHOOK_SECRET=your-webhook-secret
 3. **使用构建时默认值**：确保所有需要环境变量的函数在构建时使用默认值
 4. **检查导入链**：确保没有循环导入或构建时无法解析的依赖
 
+**错误**: `PrismaClientInitializationError: Prisma has detected that this project was built on Vercel`
+
+**解决方案**:
+1. **添加postinstall脚本**：在`package.json`中添加`"postinstall": "prisma generate"`
+2. **修改构建脚本**：将`"build": "next build"`改为`"build": "prisma generate && next build"`
+3. **确保环境变量**：在Vercel中设置正确的`DATABASE_URL`和`POSTGRES_URL_NON_POOLING`
+4. **检查Prisma schema**：确保`prisma/schema.prisma`配置正确
+
+**常见原因**:
+- Vercel缓存了过时的Prisma Client
+- 构建过程中没有运行`prisma generate`
+- 数据库连接字符串配置错误
+
 #### 其他常见错误
 
 **错误**: `Configuration error`
