@@ -7,18 +7,20 @@
 ### 🔧 关键修复
 
 1. **创建了构建时保护机制** (`lib/build-check.ts`)
-   - 检测构建环境并跳过数据库查询
-   - 支持Vercel和本地构建环境
+   - 检测Vercel构建环境并强制跳过数据库查询
+   - 支持本地生产构建时跳过数据库查询
+   - 添加了详细的日志输出用于调试
 
 2. **修改了关键文件** 以支持构建时跳过数据库查询：
-   - NextAuth配置 (`lib/auth.ts`)
-   - API路由 (`app/api/auth/[...nextauth]/route.ts`)
-   - 认证工具 (`lib/auth-utils.ts`)
-   - 数据库查询 (`db/queries/account.ts`, `db/queries/charge-product.ts`)
-   - 管理页面 (`app/[locale]/admin/newsletters/page.tsx`, `app/[locale]/admin/subscribers/page.tsx`)
-   - 站点地图 (`app/sitemap.ts`)
+   - **NextAuth配置** (`lib/auth.ts`) - 条件性配置适配器和提供者
+   - **API路由** (`app/api/auth/[...nextauth]/route.ts`) - 跳过静态参数生成
+   - **认证工具** (`lib/auth-utils.ts`) - 构建时返回null，添加调试日志
+   - **数据库查询** (`db/queries/account.ts`, `db/queries/charge-product.ts`) - 返回默认值
+   - **管理页面** (`app/[locale]/admin/newsletters/page.tsx`, `app/[locale]/admin/subscribers/page.tsx`) - 跳过数据库查询
+   - **站点地图** (`app/sitemap.ts`) - 使用默认值
 
 3. **配置了条件性认证** 避免构建时数据库连接失败
+4. **优化了构建时检查逻辑** 确保在Vercel环境中可靠工作
 
 ### 📋 Vercel 环境变量
 

@@ -12,6 +12,18 @@ export function isVercelBuild(): boolean {
 }
 
 export function shouldSkipDatabaseQuery(): boolean {
+  // 在Vercel构建环境中，总是跳过数据库查询
+  if (process.env.VERCEL === "1") {
+    console.log("🔧 Vercel构建环境：跳过数据库查询");
+    return true;
+  }
+  
+  // 在本地生产构建时，如果设置了SKIP_DB_BUILD，跳过查询
+  if (process.env.NODE_ENV === "production" && process.env.SKIP_DB_BUILD === "1") {
+    console.log("🔧 本地生产构建：跳过数据库查询");
+    return true;
+  }
+  
   // 在构建时，如果数据库连接失败，跳过查询
   if (process.env.NODE_ENV === "production") {
     // 检查是否有有效的数据库连接
@@ -19,9 +31,11 @@ export function shouldSkipDatabaseQuery(): boolean {
                          process.env.DATABASE_URL !== "file:./dev.db" &&
                          process.env.DATABASE_URL !== "file:./prod.db";
     
-    // 如果没有有效的数据库URL，或者是在Vercel构建环境中，跳过查询
-    // 或者在本地构建时强制跳过（因为Supabase连接可能不稳定）
-    return !hasValidDbUrl || process.env.VERCEL === "1" || process.env.SKIP_DB_BUILD === "1";
+    // 如果没有有效的数据库URL，跳过查询
+    if (!hasValidDbUrl) {
+      console.log("🔧 生产环境：没有有效的数据库URL，跳过查询");
+      return true;
+    }
   }
   
   return false;

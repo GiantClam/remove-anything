@@ -13,6 +13,7 @@ export async function getUser() {
 export async function getCurrentUser() {
   // 在构建时或没有数据库连接时返回null
   if (shouldSkipDatabaseQuery()) {
+    console.log("🔧 构建时：跳过用户认证，返回null");
     return null;
   }
 
