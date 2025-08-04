@@ -43,7 +43,7 @@ class CloudflareAIGateway {
 
   constructor() {
     // 根据 Cloudflare AI Gateway 文档，URL 格式为：
-    // https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/replicate
+    // https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}
     this.baseUrl = env.CLOUDFLARE_AI_GATEWAY_URL;
     this.apiToken = env.REPLICATE_API_TOKEN;
   }
@@ -82,7 +82,7 @@ class CloudflareAIGateway {
 
       // 根据 Cloudflare 文档，URL 结构为 /replicate/predictions
       const response = await this.makeRequestWithRetry(
-        `${this.baseUrl}/predictions`,
+        `${this.baseUrl}/replicate/predictions`,
         {
           method: "POST",
           headers,
@@ -212,7 +212,7 @@ class CloudflareAIGateway {
 
       // 根据 Cloudflare 文档，URL 结构为 /replicate/predictions/{id}
       const response = await this.makeRequestWithRetry(
-        `${this.baseUrl}/predictions/${replicateId}`,
+        `${this.baseUrl}/replicate/predictions/${replicateId}`,
         {
           method: "GET",
           headers,
