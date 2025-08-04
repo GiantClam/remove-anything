@@ -132,7 +132,7 @@ class CloudflareAIGateway {
       const payload = {
         contents: request.messages.map((msg) => ({
           parts: [{ text: msg.content }],
-          role: msg.role === "user" ? "user" : "assistant",
+          role: msg.role === "user" ? "user" : "model",
         })),
         generationConfig: {
           temperature: request.temperature || 0.7,

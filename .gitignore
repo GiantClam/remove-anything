@@ -216,3 +216,4 @@ GEMINI_2_5_FLASH_INTEGRATION.md
 lib/ai-gateway.ts
 test-gemini-connection.js
 GEMINI_EMPTY_RESPONSE_FIX.md
+GEMINI_ROLE_MAPPING_FIX.md
