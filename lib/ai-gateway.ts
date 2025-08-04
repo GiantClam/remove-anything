@@ -42,6 +42,8 @@ class CloudflareAIGateway {
   private retryDelay: number = 1000;
 
   constructor() {
+    // 根据 Cloudflare AI Gateway 文档，URL 格式为：
+    // https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/replicate
     this.baseUrl = env.CLOUDFLARE_AI_GATEWAY_URL;
     this.apiToken = env.REPLICATE_API_TOKEN;
   }
@@ -60,6 +62,7 @@ class CloudflareAIGateway {
       
       const headers = new Headers();
       headers.append("Content-Type", "application/json");
+      // 根据 Cloudflare 文档，使用 Token 认证
       headers.append("Authorization", `Token ${this.apiToken}`);
 
       const payload = {
@@ -77,8 +80,9 @@ class CloudflareAIGateway {
         webhook_events_filter: ["start", "output", "logs", "completed"],
       };
 
+      // 根据 Cloudflare 文档，URL 结构为 /replicate/predictions
       const response = await this.makeRequestWithRetry(
-        `${this.baseUrl}/replicate/predictions`,
+        `${this.baseUrl}/predictions`,
         {
           method: "POST",
           headers,
@@ -206,8 +210,9 @@ class CloudflareAIGateway {
       const headers = new Headers();
       headers.append("Authorization", `Token ${this.apiToken}`);
 
+      // 根据 Cloudflare 文档，URL 结构为 /replicate/predictions/{id}
       const response = await this.makeRequestWithRetry(
-        `${this.baseUrl}/replicate/predictions/${replicateId}`,
+        `${this.baseUrl}/predictions/${replicateId}`,
         {
           method: "GET",
           headers,

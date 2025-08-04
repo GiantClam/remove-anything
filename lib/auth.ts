@@ -19,8 +19,8 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
 }
 
 export const authOptions: NextAuthOptions = {
-  // 只在数据库URL存在且不在构建时使用Prisma适配器
-  ...(env.DATABASE_URL && !shouldSkipDatabaseQuery() && {
+  // 只在数据库URL存在且不在构建时且prisma客户端可用时使用Prisma适配器
+  ...(env.DATABASE_URL && !shouldSkipDatabaseQuery() && prisma && typeof prisma === 'object' && Object.keys(prisma).length > 0 && {
     adapter: PrismaAdapter(prisma) as any,
   }),
   providers,
