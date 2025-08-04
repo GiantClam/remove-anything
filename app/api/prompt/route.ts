@@ -51,6 +51,13 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
     const { prompt } = CreatePromptSchema.parse(data);
     
+    console.log("🔧 开始生成提示词:", { 
+      userInput: prompt,
+      model: env.GEMINI_MODEL,
+      systemPrompt: env.FLUX_AI_PROMPT?.substring(0, 100) + "...",
+      gatewayUrl: env.CLOUDFLARE_AI_GATEWAY_URL
+    });
+    
     // 使用 AI Gateway 调用 Gemini
     const response = await aiGateway.generateTextViaGemini({
       messages: [
@@ -65,6 +72,10 @@ export async function POST(req: NextRequest) {
       max_tokens: 1000,
     });
 
+    console.log("✅ 提示词生成成功:", { 
+      responseLength: response.choices?.[0]?.message?.content?.length || 0 
+    });
+
     return NextResponse.json(
       {
         prompt: response.choices?.[0]?.message?.content ?? "",
@@ -74,6 +85,13 @@ export async function POST(req: NextRequest) {
       },
     );
   } catch (error) {
+    console.error("❌ 提示词生成失败:", error);
+    console.error("❌ 错误详情:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
     return NextResponse.json(
       { error: getErrorMessage(error) },
       { status: 400 },

@@ -209,3 +209,7 @@ debug-flux-id.js
 test-download-fix.js
 PROMPT_GENERATOR_AUTH_FIX.md
 TRANSLATION_FIX_SUMMARY.md
+AI_GATEWAY_AUTH_FIX.md
+.gitignore
+.gitignore
+GEMINI_2_5_FLASH_INTEGRATION.md

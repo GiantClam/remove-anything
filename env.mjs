@@ -55,7 +55,7 @@ export const env = createEnv({
     OPEN_AI_API_ENDPOINT: z.string().url().optional(),
     OPEN_AI_API_KEY: z.string().optional(),
     FLUX_AI_PROMPT: z.string().min(1).default("placeholder"),
-    GEMINI_MODEL: z.string().default("gemini-1.5-flash"),
+    GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
   },
   client: {
     NEXT_PUBLIC_SITE_URL: z.string().min(1).default("http://localhost:3000"),
