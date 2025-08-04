@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       });
       return NextResponse.json({
         data: {
-          id: fluxData.id,
+          id: FluxHashids.encode(fluxData.id),
           taskStatus: fluxData.taskStatus.toLowerCase(),
           imageUrl: fluxData.imageUrl,
           error: fluxData.errorMsg,
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
         
         return NextResponse.json({
           data: {
-            id: fluxData.id,
+            id: FluxHashids.encode(fluxData.id),
             taskStatus: responseStatus,
             imageUrl: imageUrl,
             error: updateData.errorMsg || fluxData.errorMsg,
@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
         // 如果查询失败，返回数据库中的当前状态
         return NextResponse.json({
           data: {
-            id: fluxData.id,
+            id: FluxHashids.encode(fluxData.id),
             taskStatus: fluxData.taskStatus.toLowerCase(),
             imageUrl: fluxData.imageUrl,
             error: fluxData.errorMsg || "Failed to query task status",
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
     // 默认返回数据库中的状态
     return NextResponse.json({
       data: {
-        id: fluxData.id,
+        id: FluxHashids.encode(fluxData.id),
         taskStatus: fluxData.taskStatus.toLowerCase(),
         imageUrl: fluxData.imageUrl,
         error: fluxData.errorMsg,
