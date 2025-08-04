@@ -5,7 +5,22 @@ import { env } from "@/env.mjs";
 
 export async function POST(req: NextRequest) {
   try {
+    console.log("🚀 Webhook 开始处理");
+    console.log("🔍 环境检查:", {
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL: process.env.VERCEL,
+      DATABASE_URL: !!process.env.DATABASE_URL,
+      POSTGRES_URL_NON_POOLING: !!process.env.POSTGRES_URL_NON_POOLING,
+      prismaType: prisma.constructor.name
+    });
+
     const body = await req.json();
+    console.log("📨 Webhook 数据:", {
+      id: body.id,
+      status: body.status,
+      hasOutput: !!body.output,
+      hasError: !!body.error
+    });
     
     // 验证 webhook 签名（生产环境应该验证）
     const signature = req.headers.get('replicate-signature');
@@ -86,10 +101,23 @@ export async function POST(req: NextRequest) {
     }
     
     // 更新数据库记录
-    await prisma.fluxData.update({
-      where: { id: fluxData.id },
-      data: updateData,
-    });
+    try {
+      await prisma.fluxData.update({
+        where: { id: fluxData.id },
+        data: updateData,
+      });
+      console.log(`🔄 已更新 FluxData 记录: ${fluxData.id}，状态: ${updateData.taskStatus}`);
+    } catch (dbError) {
+      console.error("❌ 数据库更新失败:", {
+        error: dbError.message,
+        fluxDataId: fluxData.id,
+        updateData: updateData
+      });
+      return NextResponse.json(
+        { error: "Database update failed", details: dbError.message },
+        { status: 500 }
+      );
+    }
     
     console.log(`🔄 已更新 FluxData 记录: ${fluxData.id}，状态: ${updateData.taskStatus}`);
     
@@ -100,7 +128,12 @@ export async function POST(req: NextRequest) {
     }, { status: 200 });
     
   } catch (error) {
-    console.error("❌ Replicate webhook 处理错误:", error);
+    console.error("❌ Webhook 详细错误:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      constructor: error.constructor.name
+    });
     return NextResponse.json(
       { error: getErrorMessage(error) },
       { status: 500 }
