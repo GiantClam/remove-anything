@@ -64,20 +64,37 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    console.log("📋 数据库查询结果:", {
+      id: fluxData?.id,
+      replicateId: fluxData?.replicateId,
+      taskStatus: fluxData?.taskStatus,
+      imageUrl: fluxData?.imageUrl,
+      hasImageUrl: !!fluxData?.imageUrl,
+      errorMsg: fluxData?.errorMsg
+    });
+
     if (!fluxData) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
     // 如果任务已经完成或失败，直接返回数据库中的结果
     if (fluxData.taskStatus === "Succeeded" || fluxData.taskStatus === "Failed") {
-      return NextResponse.json({
+      console.log("📋 任务已完成，返回数据库状态:", {
         id: fluxData.id,
-        status: fluxData.taskStatus.toLowerCase(),
+        status: fluxData.taskStatus,
         imageUrl: fluxData.imageUrl,
-        error: fluxData.errorMsg,
-        prompt: fluxData.inputPrompt,
-        model: fluxData.model,
-        aspectRatio: fluxData.aspectRatio,
+        hasImageUrl: !!fluxData.imageUrl
+      });
+      return NextResponse.json({
+        data: {
+          id: fluxData.id,
+          taskStatus: fluxData.taskStatus.toLowerCase(),
+          imageUrl: fluxData.imageUrl,
+          error: fluxData.errorMsg,
+          prompt: fluxData.inputPrompt,
+          model: fluxData.model,
+          aspectRatio: fluxData.aspectRatio,
+        }
       });
     }
 
@@ -150,39 +167,45 @@ export async function POST(req: NextRequest) {
         }
         
         return NextResponse.json({
-          id: fluxData.id,
-          status: responseStatus,
-          imageUrl: imageUrl,
-          error: updateData.errorMsg || fluxData.errorMsg,
-          prompt: fluxData.inputPrompt,
-          model: fluxData.model,
-          aspectRatio: fluxData.aspectRatio,
+          data: {
+            id: fluxData.id,
+            taskStatus: responseStatus,
+            imageUrl: imageUrl,
+            error: updateData.errorMsg || fluxData.errorMsg,
+            prompt: fluxData.inputPrompt,
+            model: fluxData.model,
+            aspectRatio: fluxData.aspectRatio,
+          }
         });
         
       } catch (error) {
         console.error("❌ 查询 Replicate 状态失败:", error);
         // 如果查询失败，返回数据库中的当前状态
         return NextResponse.json({
-          id: fluxData.id,
-          status: fluxData.taskStatus.toLowerCase(),
-          imageUrl: fluxData.imageUrl,
-          error: fluxData.errorMsg || "Failed to query task status",
-          prompt: fluxData.inputPrompt,
-          model: fluxData.model,
-          aspectRatio: fluxData.aspectRatio,
+          data: {
+            id: fluxData.id,
+            taskStatus: fluxData.taskStatus.toLowerCase(),
+            imageUrl: fluxData.imageUrl,
+            error: fluxData.errorMsg || "Failed to query task status",
+            prompt: fluxData.inputPrompt,
+            model: fluxData.model,
+            aspectRatio: fluxData.aspectRatio,
+          }
         });
       }
     }
 
     // 默认返回数据库中的状态
     return NextResponse.json({
-      id: fluxData.id,
-      status: fluxData.taskStatus.toLowerCase(),
-      imageUrl: fluxData.imageUrl,
-      error: fluxData.errorMsg,
-      prompt: fluxData.inputPrompt,
-      model: fluxData.model,
-      aspectRatio: fluxData.aspectRatio,
+      data: {
+        id: fluxData.id,
+        taskStatus: fluxData.taskStatus.toLowerCase(),
+        imageUrl: fluxData.imageUrl,
+        error: fluxData.errorMsg,
+        prompt: fluxData.inputPrompt,
+        model: fluxData.model,
+        aspectRatio: fluxData.aspectRatio,
+      }
     });
     
   } catch (error) {

@@ -198,7 +198,7 @@ class CloudflareAIGateway {
       "flux-freeSchnell": "black-forest-labs/flux-schnell", // 免费版本使用 schnell
     };
 
-    return modelVersions[model] || modelVersions["flux-dev"];
+    return modelVersions[model] || modelVersions["flux-freeSchnell"];
   }
 
   /**

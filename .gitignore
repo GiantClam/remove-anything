@@ -200,3 +200,7 @@ LOCAL_FIX_SUCCESS.md
 test-local-fix.js
 WEBHOOK_LOGS_FIX_SUCCESS.md
 test-webhook-fix.js
+TASK_API_COMPLETION.md
+TASK_API_FIX_SUCCESS.md
+.gitignore
+test-task-api.js
