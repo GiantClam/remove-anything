@@ -85,8 +85,20 @@ export async function POST(req: NextRequest) {
     if (fluxData.replicateId && fluxData.taskStatus === "Processing") {
       try {
         console.log("🔍 查询 Replicate 任务状态:", fluxData.replicateId);
+        console.log("🔍 环境检查:", {
+          NODE_ENV: process.env.NODE_ENV,
+          VERCEL: process.env.VERCEL,
+          CLOUDFLARE_AI_GATEWAY_URL: !!process.env.CLOUDFLARE_AI_GATEWAY_URL,
+          REPLICATE_API_TOKEN: !!process.env.REPLICATE_API_TOKEN
+        });
         
         const replicateResult = await aiGateway.getTaskStatus(fluxData.replicateId);
+        console.log("📨 Replicate 响应:", {
+          id: replicateResult.id,
+          status: replicateResult.status,
+          hasOutput: !!replicateResult.output,
+          outputType: replicateResult.output ? typeof replicateResult.output : 'undefined'
+        });
         
         // 根据 Replicate 返回的状态更新数据库
         let updateData: any = {};

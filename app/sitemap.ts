@@ -16,18 +16,23 @@ const getFluxUrl = async () => {
     return [];
   }
 
-  const fluxs = await prisma.fluxData.findMany({
-    where: {
-      isPrivate: false,
-      taskStatus: {
-        in: [FluxTaskStatus.Succeeded],
+  try {
+    const fluxs = await prisma.fluxData.findMany({
+      where: {
+        isPrivate: false,
+        taskStatus: {
+          in: [FluxTaskStatus.Succeeded],
+        },
       },
-    },
-    select: {
-      id: true
-    }
-  });
-  return fluxs.map((flux) => `/d/${FluxHashids.encode(flux.id)}`)
+      select: {
+        id: true
+      }
+    });
+    return fluxs.map((flux) => `/d/${FluxHashids.encode(flux.id)}`)
+  } catch (error) {
+    console.error("❌ getFluxUrl 数据库查询错误:", error);
+    return [];
+  }
 }
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const keys = Object.keys(pathnames) as Array<keyof typeof pathnames>;
@@ -40,14 +45,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 在构建时或没有数据库连接时使用默认值
   let fluxDataCount = 0;
   if (!shouldSkipDatabaseQuery()) {
-    fluxDataCount = await prisma.fluxData.count({
-      where: {
-        isPrivate: false,
-        taskStatus: {
-          in: [FluxTaskStatus.Succeeded],
-        },
-      }
-    });
+    try {
+      fluxDataCount = await prisma.fluxData.count({
+        where: {
+          isPrivate: false,
+          taskStatus: {
+            in: [FluxTaskStatus.Succeeded],
+          },
+        }
+      });
+    } catch (error) {
+      console.error("❌ sitemap fluxDataCount 数据库查询错误:", error);
+      fluxDataCount = 0;
+    }
   }
   const pageCount = Math.ceil(fluxDataCount / 24);
   const explorePages = Array.from({ length: pageCount }, (_, i) => i === 0 ? `/explore` : `/explore/${i + 1}`);

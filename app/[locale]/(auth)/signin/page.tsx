@@ -2,13 +2,11 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { unstable_setRequestLocale } from "next-intl/server";
-import { signIn } from "next-auth/react";
 
 import { authOptions } from "@/lib/auth";
 import { Container } from "@/components/layout/container";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GoogleIcon } from "@/assets/icons/GoogleIcon";
+import { SignInForm } from "./signin-form";
 
 type Props = {
   params: { locale: string };
@@ -42,18 +40,4 @@ export default async function SignInPage({ params: { locale } }: Props) {
   );
 }
 
-async function SignInForm() {
-  return (
-    <form
-      action={async () => {
-        "use server";
-        await signIn("google", { redirectTo: "/app" });
-      }}
-    >
-      <Button type="submit" className="w-full" size="lg">
-        <GoogleIcon className="mr-2 h-4 w-4" />
-        使用 Google 登录
-      </Button>
-    </form>
-  );
-} 
+ 

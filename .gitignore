@@ -189,3 +189,12 @@ IMAGE_STORAGE_GUIDE.md
 KV_USAGE_ANALYSIS.md
 WEBHOOK_500_ERROR_FIX.md
 diagnose-webhook.js
+DEV_MODE_COMPLETE_FIX.md
+diagnose-vercel-webhook.js
+.gitignore
+test-production-webhook.sh
+test-dev-mode-final.js
+VERCEL_WEBHOOK_FIX_GUIDE.md
+WEBHOOK_FIX_SUCCESS.md
+LOCAL_FIX_SUCCESS.md
+test-local-fix.js

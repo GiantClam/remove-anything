@@ -11,7 +11,8 @@ export async function POST(req: NextRequest) {
       VERCEL: process.env.VERCEL,
       DATABASE_URL: !!process.env.DATABASE_URL,
       POSTGRES_URL_NON_POOLING: !!process.env.POSTGRES_URL_NON_POOLING,
-      prismaType: prisma.constructor.name
+      prismaType: prisma.constructor.name,
+      timestamp: new Date().toISOString()
     });
 
     const body = await req.json();
@@ -40,17 +41,32 @@ export async function POST(req: NextRequest) {
     });
     
     // 查找对应的 FluxData 记录
-    const fluxData = await prisma.fluxData.findFirst({
-      where: {
-        replicateId: body.id,
-      },
-    });
+    console.log(`🔍 查找 FluxData 记录，replicateId: ${body.id}`);
+    let fluxData;
+    try {
+      fluxData = await prisma.fluxData.findFirst({
+        where: {
+          replicateId: body.id,
+        },
+      });
+    } catch (dbError) {
+      console.error("❌ 数据库查询失败:", {
+        error: dbError.message,
+        replicateId: body.id
+      });
+      // 即使数据库查询失败，也返回 200 避免 webhook 重试
+      return NextResponse.json({ 
+        message: "Database query failed, but webhook received",
+        error: dbError.message
+      }, { status: 200 });
+    }
     
     if (!fluxData) {
       console.warn(`⚠️ 未找到对应的 FluxData 记录，replicateId: ${body.id}`);
+      // 返回 200 而不是 404，避免 webhook 重试
       return NextResponse.json({ 
-        message: "Task not found" 
-      }, { status: 404 });
+        message: "Task not found, but webhook received" 
+      }, { status: 200 });
     }
     
     // 根据 Replicate 状态更新数据库

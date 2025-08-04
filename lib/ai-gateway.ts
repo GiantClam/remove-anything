@@ -76,8 +76,11 @@ class CloudflareAIGateway {
           prompt_upsampling: false,
           ...(request.lora_name && { lora: request.lora_name }),
         },
-        webhook: `${env.NEXTAUTH_URL}/api/webhooks/replicate`,
-        webhook_events_filter: ["start", "output", "logs", "completed"],
+        // 开发模式下暂时禁用 webhook，生产环境使用真实 webhook
+        ...(process.env.NODE_ENV !== "development" && {
+          webhook: `${env.NEXTAUTH_URL}/api/webhooks/replicate`,
+          webhook_events_filter: ["start", "output", "logs", "completed"],
+        }),
       };
 
       // 根据 Cloudflare 文档，URL 结构为 /replicate/predictions
