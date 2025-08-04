@@ -132,7 +132,7 @@ class CloudflareAIGateway {
       const payload = {
         contents: request.messages.map((msg) => ({
           parts: [{ text: msg.content }],
-          role: msg.role === "user" ? "user" : "model",
+          role: msg.role === "user" ? "user" : "assistant",
         })),
         generationConfig: {
           temperature: request.temperature || 0.7,
@@ -151,8 +151,15 @@ class CloudflareAIGateway {
       };
 
       // 根据 Cloudflare 文档，Google AI Studio 的 URL 结构
+      const fullUrl = `${this.baseUrl}/google-ai-studio/v1/models/${request.model}:generateContent`;
+      console.log("🔗 调用 Gemini API:", {
+        url: fullUrl,
+        model: request.model,
+        payload: JSON.stringify(payload, null, 2)
+      });
+      
       const response = await this.makeRequestWithRetry(
-        `${this.baseUrl}/google-ai-studio/v1/models/${request.model}:generateContent`,
+        fullUrl,
         {
           method: "POST",
           headers,
@@ -160,7 +167,14 @@ class CloudflareAIGateway {
         }
       );
 
+      console.log("📡 Gemini API 响应状态:", {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
       const data = await response.json();
+      console.log("📄 Gemini API 响应数据:", JSON.stringify(data, null, 2));
       
       if (data.error) {
         throw new Error(`Gemini API error: ${data.error.message || data.error}`);
