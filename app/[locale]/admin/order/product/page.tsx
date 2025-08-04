@@ -8,6 +8,9 @@ import { searchParamsSchema } from "./_lib/validations";
 import { getColumns } from "./_mods/columns";
 import { TableToolbarActions } from "./_mods/toolbar-action";
 
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
+
 export interface IndexPageProps {
   searchParams: SearchParams;
 }

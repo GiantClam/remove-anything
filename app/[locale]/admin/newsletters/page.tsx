@@ -3,6 +3,9 @@ import { shouldSkipDatabaseQuery, getBuildTimeFallback } from "@/lib/build-check
 
 import NewsLatterCard from "./_mods/card";
 
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
+
 export default async function AdminNewslettersPage() {
   // 在构建时或没有数据库连接时返回默认值
   if (shouldSkipDatabaseQuery()) {
