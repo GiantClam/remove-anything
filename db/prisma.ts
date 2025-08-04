@@ -10,10 +10,12 @@ declare global {
 
 export let prisma: PrismaClient;
 
-// 在构建时跳过Prisma初始化
-if (shouldSkipDatabaseQuery()) {
-  // 创建一个虚拟的Prisma客户端，避免构建时数据库连接
-  prisma = {} as PrismaClient;
+// 检查是否在构建时
+const isBuildTime = shouldSkipDatabaseQuery();
+
+if (isBuildTime) {
+  // 在构建时创建一个虚拟的Prisma客户端，避免构建时数据库连接
+  prisma = {} as any;
   console.log("🔧 构建时：跳过Prisma客户端初始化");
 } else if (process.env.NODE_ENV === "production") {
   prisma = new PrismaClient();

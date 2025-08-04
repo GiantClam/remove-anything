@@ -4,6 +4,9 @@ import { PricingCardsWrapper } from "@/components/pricing-cards-wrapper";
 import { PricingFaq } from "@/components/pricing-faq";
 import { getChargeProduct } from "@/db/queries/charge-product";
 
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
+
 type Props = {
   params: { locale: string };
 };

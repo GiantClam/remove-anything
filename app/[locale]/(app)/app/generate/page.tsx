@@ -3,6 +3,9 @@ import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import Playground from "@/components/playground";
 import { getChargeProduct } from "@/db/queries/charge-product";
 
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
   params: { locale: string };
 }

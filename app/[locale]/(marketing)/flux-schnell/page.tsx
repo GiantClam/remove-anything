@@ -6,6 +6,9 @@ import FluxFreeGenerator from "@/components/playground/flux-free";
 import { PlaygroundFaq } from "@/components/playground/playground-faq";
 import { getChargeProduct } from "@/db/queries/charge-product";
 
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
+
 interface RootLayoutProps {
   params: { locale: string };
 }
