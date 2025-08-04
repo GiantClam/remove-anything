@@ -37,7 +37,12 @@ export async function POST(req: NextRequest) {
       id: body.id,
       status: body.status,
       output: body.output ? "有输出" : "无输出",
-      error: body.error
+      outputType: body.output ? typeof body.output : "undefined",
+      logs: body.logs ? "有日志" : "无日志",
+      logsType: body.logs ? typeof body.logs : "undefined",
+      logsIsArray: body.logs ? Array.isArray(body.logs) : "undefined",
+      error: body.error ? "有错误" : "无错误",
+      errorType: body.error ? typeof body.error : "undefined"
     });
     
     // 查找对应的 FluxData 记录
@@ -90,21 +95,46 @@ export async function POST(req: NextRequest) {
         
       case "succeeded":
         const imageUrl = Array.isArray(body.output) ? body.output[0] : body.output;
+        
+        // 安全处理 logs 字段
+        let logsText = "";
+        if (body.logs) {
+          if (Array.isArray(body.logs)) {
+            logsText = body.logs.join("\n");
+          } else if (typeof body.logs === "string") {
+            logsText = body.logs;
+          } else {
+            logsText = JSON.stringify(body.logs);
+          }
+        }
+        
         updateData = {
           taskStatus: "Succeeded",
           imageUrl: imageUrl,
           executeEndTime: BigInt(Date.now()),
-          errorMsg: body.logs?.join("\n") || "",
+          errorMsg: logsText,
         };
         console.log(`✅ 任务成功完成: ${body.id}，图片URL: ${imageUrl}`);
         break;
         
       case "failed":
       case "canceled":
+        // 安全处理错误信息
+        let errorMsg = "Task failed";
+        if (body.error) {
+          if (typeof body.error === "string") {
+            errorMsg = body.error;
+          } else if (body.error.message) {
+            errorMsg = body.error.message;
+          } else {
+            errorMsg = JSON.stringify(body.error);
+          }
+        }
+        
         updateData = {
           taskStatus: "Failed",
           executeEndTime: BigInt(Date.now()),
-          errorMsg: body.error?.message || body.error || "Task failed",
+          errorMsg: errorMsg,
         };
         console.log(`❌ 任务失败: ${body.id}，错误: ${updateData.errorMsg}`);
         break;
