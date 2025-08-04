@@ -11,8 +11,54 @@ import {
 export async function getChargeProduct(locale?: string) {
   // 在构建时或没有数据库连接时返回默认值
   if (shouldSkipDatabaseQuery()) {
+    // 返回默认的套餐数据用于构建时
+    const defaultProducts: ChargeProductSelectDto[] = [
+      {
+        id: "build-starter-123",
+        amount: 500,
+        originalAmount: 600,
+        credit: 150,
+        currency: "USD",
+        locale: locale || "en",
+        title: locale === "zh" ? "入门版" : "Starter",
+        tag: locale === "zh" ? "热门" : "Popular",
+        message: locale === "zh" ? "150积分,基础模型,标准支持" : "150 credits,Basic models,Standard support",
+        state: "active",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: "build-pro-456",
+        amount: 2000,
+        originalAmount: 2400,
+        credit: 600,
+        currency: "USD",
+        locale: locale || "en",
+        title: locale === "zh" ? "专业版" : "Pro",
+        tag: locale === "zh" ? "超值" : "Best Value",
+        message: locale === "zh" ? "600积分,所有模型,优先支持,商业许可" : "600 credits,All models,Priority support,Commercial license",
+        state: "active",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: "build-business-789",
+        amount: 5000,
+        originalAmount: 6000,
+        credit: 1500,
+        currency: "USD",
+        locale: locale || "en",
+        title: locale === "zh" ? "企业版" : "Business",
+        tag: locale === "zh" ? "企业级" : "Enterprise",
+        message: locale === "zh" ? "1500积分,所有模型,优先支持,商业许可,API访问" : "1500 credits,All models,Priority support,Commercial license,API access",
+        state: "active",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+    
     return getBuildTimeFallback({
-      data: [] as ChargeProductSelectDto[],
+      data: defaultProducts,
     });
   }
 

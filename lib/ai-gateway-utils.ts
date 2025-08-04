@@ -16,9 +16,9 @@ export interface ModelMapping {
 export const modelMappings: ModelMapping = {
   [model.pro]: {
     provider: 'replicate',
-    model: 'black-forest-labs/flux-pro',
+    model: 'black-forest-labs/flux-1.1-pro',
     credits: 20,
-    description: 'FLUX Pro - 最高质量，适合专业用途'
+    description: 'FLUX 1.1 Pro - 最高质量，适合专业用途'
   },
   [model.dev]: {
     provider: 'replicate',
