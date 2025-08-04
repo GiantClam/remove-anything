@@ -37,7 +37,8 @@ export interface GeminiTextResponse {
 
 class CloudflareAIGateway {
   private baseUrl: string;
-  private apiToken: string;
+  private replicateApiToken: string;
+  private geminiApiKey: string;
   private maxRetries: number = 3;
   private retryDelay: number = 1000;
 
@@ -45,8 +46,9 @@ class CloudflareAIGateway {
     // 根据 Cloudflare AI Gateway 文档，URL 格式为：
     // https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}
     this.baseUrl = env.CLOUDFLARE_AI_GATEWAY_URL;
-    // 根据文档，Google AI Studio 使用 x-goog-api-key 头而不是 Authorization
-    this.apiToken = env.GEMINI_API_KEY;
+    // 分别存储两种不同的 API token
+    this.replicateApiToken = env.REPLICATE_API_TOKEN;
+    this.geminiApiKey = env.GEMINI_API_KEY;
   }
 
   /**
@@ -63,8 +65,8 @@ class CloudflareAIGateway {
       
       const headers = new Headers();
       headers.append("Content-Type", "application/json");
-      // 根据 Cloudflare 文档，使用 Bearer Token 认证
-      headers.append("Authorization", `Bearer ${this.apiToken}`);
+      // 根据 Cloudflare 文档，Replicate 使用 Bearer Token 认证
+      headers.append("Authorization", `Bearer ${this.replicateApiToken}`);
 
       const payload = {
         version: this.getReplicateModelVersion(request.model),
@@ -127,7 +129,7 @@ class CloudflareAIGateway {
       const headers = new Headers();
       headers.append("Content-Type", "application/json");
       // 根据 Cloudflare 文档，Google AI Studio 使用 x-goog-api-key 头
-      headers.append("x-goog-api-key", this.apiToken);
+      headers.append("x-goog-api-key", this.geminiApiKey);
 
       const payload = {
         contents: request.messages.map((msg) => ({
@@ -228,7 +230,7 @@ class CloudflareAIGateway {
       this.logRequest('Get Task Status', { replicateId });
       
       const headers = new Headers();
-      headers.append("Authorization", `Bearer ${this.apiToken}`);
+      headers.append("Authorization", `Bearer ${this.replicateApiToken}`);
 
       // 根据 Cloudflare 文档，URL 结构为 /replicate/predictions/{id}
       const response = await this.makeRequestWithRetry(
