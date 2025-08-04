@@ -21,11 +21,22 @@ const ratelimit = new KVRateLimit(kv, {
 });
 
 export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      console.log("❌ 用户未认证，返回401错误");
+      return NextResponse.json({ 
+        error: "Authentication required. Please sign in to use the prompt generator." 
+      }, { status: 401 });
+    }
+    const userId = user.id;
+    console.log("✅ 用户认证成功:", { userId: user.id, email: user.email });
+  } catch (error) {
+    console.error("❌ 认证过程出错:", error);
+    return NextResponse.json({ 
+      error: "Authentication error. Please try signing in again." 
+    }, { status: 401 });
   }
-  const userId = user.id;
 
   const { success } = await ratelimit.limit(
     "get-prompt:redeemed" + `_${req.ip ?? ""}`,

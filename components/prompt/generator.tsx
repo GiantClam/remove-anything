@@ -66,11 +66,19 @@ export default function Generator() {
       if (!res.error) {
         setGeneratedPrompt(res.prompt);
       } else {
-        toast.error(res.error);
+        if (res.error.includes("Authentication") || res.error.includes("sign in")) {
+          toast.error("Please sign in to use the prompt generator");
+        } else {
+          toast.error(res.error);
+        }
       }
     } catch (error) {
       console.log("error", error);
-      toast.error("An error occurred");
+      if (error.message?.includes("401") || error.message?.includes("Authentication")) {
+        toast.error("Please sign in to use the prompt generator");
+      } else {
+        toast.error("An error occurred while generating the prompt");
+      }
     } finally {
       setLoading(false);
     }

@@ -207,3 +207,5 @@ test-task-api.js
 DOWNLOAD_API_FIX.md
 debug-flux-id.js
 test-download-fix.js
+PROMPT_GENERATOR_AUTH_FIX.md
+TRANSLATION_FIX_SUMMARY.md

@@ -393,6 +393,7 @@
     "blog": "Blog",
     "prompt": "Générateur de Prompts Flux AI",
     "dashboard": "Tableau de bord",
+    "Support": "Support",
     "tooltip": {
       "login": "Connexion"
     }
