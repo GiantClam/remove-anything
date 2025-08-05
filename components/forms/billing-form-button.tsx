@@ -31,7 +31,7 @@ export function BillingFormButton({
         method: "POST",
         body: JSON.stringify({
           amount: offer.amount,
-          chanel: "Stripe",
+          channel: "Stripe",
           productId: offer.id,
           url: url(pathname).href,
           currency: offer.currency?.toUpperCase(),
