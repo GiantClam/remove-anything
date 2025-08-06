@@ -19,10 +19,10 @@
   },
 
   "IndexPage": {
-    "intro": "介绍 Flux AI 图像生成器",
-    "description": "革新下一代高级文本到图像的开放模型，支持 flux.1 pro/dev和 flux.1 schnell模型。",
-    "title": "Flux AI 图像生成器",
-    "subtitle": "高级文本图像生成",
+    "intro": "🎉 免费 AI 背景去除器",
+    "description": "使用我们的免费 AI 驱动工具立即去除任何图片的背景。高质量、快速且易于使用。上传您的照片，几秒钟内即可获得透明背景。",
+    "title": "免费 AI 背景去除器",
+    "subtitle": "几秒钟内去除图片背景",
     "powered": {
       "title": "技术支持"
     },
@@ -33,50 +33,101 @@
     },
     "examples": {
       "label": "示例",
-      "title": "Flux AI 生成示例 - 高级文本图像转换",
-      "subtitle": "浏览 Flux AI 生成示例，从文本提示生成图像。体验下一代高级文本到图像的开放模型。"
+      "title": "背景去除示例",
+      "subtitle": "查看 AI 背景去除的神奇效果。"
     },
     "features": {
-      "title": "产品特点",
+      "title": "为什么选择我们的背景去除器？",
       "action": {
-        "visit": "去生成"
+        "visit": "去除背景"
       },
-      "description": "Flux AI 图像生成器是一个强大的工具，可以根据文本提示生成图像。它使用先进的 AI 模型创建出色的图像，非常适合任何项目。",
+      "description": "我们的 AI 驱动背景去除工具提供专业级结果，具有无与伦比的速度和易用性。非常适合需要干净透明背景的任何项目。",
       "item1": {
-        "title": "FLUX.1 [pro]",
-        "description": "FLUX.1 的最佳版本，提供先进的性能图像生成，具有一流的提示跟随、视觉质量、图像细节和输出多样性。"
+        "title": "出色质量",
+        "description": "得益于我们先进的 AI 技术，获得干净、清晰的抠图效果。非常适合人像、产品和图形，提供专业级结果。"
       },
       "item2": {
-        "title": "FLUX.1 [dev]",
-        "description": "FLUX.1 [dev] 具有类似的质量和提示遵循能力，同时比相同大小的标准模型更高效。"
+        "title": "极速处理",
+        "description": "不要浪费时间使用复杂的软件。通过我们优化的 AI 处理，在约5秒内去除背景。"
       },
       "item3": {
-        "title": "FLUX.1 [schnell]",
-        "description": "专为本地开发和个人使用而量身定制的最快图像生成模型，价格成本更低，高效，文本提示生成图像"
+        "title": "完全免费",
+        "description": "我们的背景去除工具100%免费使用。无需注册，无隐藏费用，结果无水印。"
       },
       "item4": {
-        "title": "极速生成",
-        "description": "Flux AI 在几秒钟内生成高质量图像，比 Stable Diffusion 3 和 Midjourney 快得多。凭借其极速生成能力，Flux AI 确保快速高效生成，为您节省宝贵的时间资源。"
+        "title": "注重隐私",
+        "description": "我们处理您的图片，然后在几小时内从我们的服务器删除。您的数据在我们这里安全可靠。"
       },
       "item5": {
-        "title": "可定制化",
-        "description": "先进的 Flux.1 模型比竞争对手生成更详细、更连贯的图像。凭借其可定制化的功能和用户友好的界面，Flux AI 图像生成器是从文本提示生成惊人图像的终极工具。"
+        "title": "易于使用",
+        "description": "只需上传您的图片，让我们的 AI 完成工作。无需技术技能 - 非常适合初学者和专业人士。"
       },
       "item6": {
-        "title": "易于使用",
-        "description": "比 ComfyUI 更易于使用，适合初学者和专业人士。Flux AI 图像生成器是从文本提示生成惊人图像的终极工具。Flux AI 让初学者和专业人士轻松创建出色视觉效果。"
+        "title": "多格式支持",
+        "description": "支持所有常见图片格式，包括 JPG、PNG 和 WEBP。以高分辨率下载您的结果，带有透明背景。"
       }
     },
-    "schnell": {
-      "title": "Flux.1 [Schnell]",
-      "description": "Flux.1 [schnell] 是基础模型的精炼版本，运行速度比原版快10倍。它采用 Apache 2.0 许可，针对速度和效率进行了优化，满足那些需要快速生成图像而不影响质量的用户。这个模型非常适合本地开发和个人使用，在性能和可访问性之间达到了完美平衡。我们每月为用户提供5次免费机会，体验 Flux.1 [schnell] 模型的闪电般快速图像生成，让您亲身感受其令人难以置信的速度。",
-      "action": "立即尝试"
+    "howto": {
+      "title": "如何去除图片背景",
+      "description": "按照这些简单步骤，在几秒钟内去除图片背景。",
+      "step1": {
+        "title": "1. 上传您的图片",
+        "description": "点击\"上传图片\"按钮，从您的电脑或手机中选择要编辑的照片。我们支持 PNG、JPG 和其他格式。"
+      },
+      "step2": {
+        "title": "2. AI 自动去除背景",
+        "description": "我们的智能 AI 将自动检测主体并准确去除背景。无需手动操作！"
+      },
+      "step3": {
+        "title": "3. 下载您的新图片",
+        "description": "您的新图片已准备就绪！只需点击\"下载\"按钮即可保存高分辨率图片。"
+      }
+    },
+    "usecases": {
+      "title": "适用于任何项目",
+      "description": "我们的背景去除工具用途广泛，可用于各种目的。",
+      "ecommerce": {
+        "title": "电商用途",
+        "description": "为亚马逊、Shopify 等平台创建专业的产品照片。"
+      },
+      "marketing": {
+        "title": "营销用途",
+        "description": "设计引人注目的社交媒体帖子、横幅和广告。"
+      },
+      "photography": {
+        "title": "摄影用途",
+        "description": "加快您的照片编辑工作流程。"
+      },
+      "personal": {
+        "title": "个人用途",
+        "description": "制作有趣的头像、表情包或贺卡。"
+      }
+    },
+    "faq": {
+      "title": "常见问题",
+      "description": "获取有关我们背景去除工具的常见问题答案。",
+      "q1": {
+        "question": "如何在 iPhone 上去除图片背景？",
+        "answer": "我们的网站在您的 iPhone 浏览器上完美运行。只需打开 Safari 或 Chrome，导航到我们的网站，上传您的图片，然后直接下载结果到您的手机。"
+      },
+      "q2": {
+        "question": "去除图片背景是否免费？",
+        "answer": "是的，我们的工具完全免费。您可以处理任意数量的图片，无需任何费用。"
+      },
+      "q3": {
+        "question": "我可以去除 Logo 的背景吗？",
+        "answer": "当然可以。我们的 AI 经过训练可以处理锐利的边缘，非常适合去除 Logo 和图形的背景。上传您的 Logo 即可获得透明版本。"
+      },
+      "q4": {
+        "question": "支持哪些图片格式？",
+        "answer": "我们支持所有常见的图片格式，包括 JPG、PNG 和 WEBP。"
+      }
     },
     "action": {
       "pricing": "购买积分",
       "login": "登录",
       "dashboard": "去使用",
-      "generate": "去使用",
+      "generate": "上传图片",
       "github": {
         "sm": "在 Github 上加星",
         "normal": "Github"
