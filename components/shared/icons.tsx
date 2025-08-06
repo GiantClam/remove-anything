@@ -48,7 +48,7 @@ export const Icons = {
   ellipsis: MoreVertical,
   lineChart: LineChart,
   Gift,
-  Eraser,
+  eraser: Eraser,
   History,
   Languages,
   HomeIcon,

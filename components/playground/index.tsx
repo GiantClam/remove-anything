@@ -266,7 +266,7 @@ export default function Playground({
               </>
             ) : (
               <>
-                <Icons.Eraser className="mr-2 h-4 w-4" />
+                <Icons.eraser className="mr-2 h-4 w-4" />
                 Remove Background
               </>
             )}
@@ -355,8 +355,8 @@ export default function Playground({
 
           {!loading && !fluxData && (
             <EmptyPlaceholder>
-                            <EmptyPlaceholder.Icon name="Eraser">
-                <Icons.Eraser className="h-8 w-8" />
+                            <EmptyPlaceholder.Icon name="eraser">
+                <Icons.eraser className="h-8 w-8" />
               </EmptyPlaceholder.Icon>
               <EmptyPlaceholder.Title>No result yet</EmptyPlaceholder.Title>
               <EmptyPlaceholder.Description>

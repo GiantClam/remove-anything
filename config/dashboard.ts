@@ -20,7 +20,7 @@ export const dashboardConfig: DashboardConfig = {
                        {
                  title: "BackgroundRemoval",
                  href: "/app/generate",
-                 icon: "Eraser"
+                 icon: "eraser"
                },
                {
                  title: "BatchBackgroundRemoval",
