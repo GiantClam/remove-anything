@@ -18,22 +18,16 @@ export default async function HeroLanding() {
   return (
     <section className="space-y-6 py-12 sm:py-20 lg:py-20">
       <div className="container flex max-w-5xl flex-col items-center gap-5 text-center">
-        <Link
-          href="https://x.com/koyaguo/status/1825891501639086219"
-          target="_blank"
-        >
-          <AnimatedGradientText>
-            <span className="mr-3">🎉</span>
-            <span
-              className={cn(
-                `inline animate-gradient bg-gradient-to-r from-[#ffaa40] via-[#9c40ff] to-[#ffaa40] bg-[length:var(--bg-size)_100%] bg-clip-text text-transparent`,
-              )}
-            >
-              {t("intro")}
-            </span>
-            <Icons.twitter className="ml-2 size-3.5" />
-          </AnimatedGradientText>
-        </Link>
+        <AnimatedGradientText>
+          <span className="mr-3">🎉</span>
+          <span
+            className={cn(
+              `inline animate-gradient bg-gradient-to-r from-[#ffaa40] via-[#9c40ff] to-[#ffaa40] bg-[length:var(--bg-size)_100%] bg-clip-text text-transparent`,
+            )}
+          >
+            {t("intro")}
+          </span>
+        </AnimatedGradientText>
 
         <h1 className="text-balance font-urban text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-[66px]">
           <span>{t("subtitle")}</span>

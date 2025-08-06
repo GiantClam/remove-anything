@@ -4,9 +4,9 @@ import Examples from "@/components/sections/examples";
 import Features from "@/components/sections/features";
 import HeroLanding from "@/components/sections/hero-landing";
 import PricingCard from "@/components/sections/pricing-card";
-import TwitterList from "@/components/sections/twitter-list";
-import SchnellIntro from "@/components/sections/schnell-intro";
-import { infos } from "@/config/landing";
+import HowTo from "@/components/sections/how-to";
+import UseCases from "@/components/sections/use-cases";
+import FAQWrapper from "@/components/sections/faq-wrapper";
 
 type Props = {
   params: { locale: string };
@@ -19,15 +19,12 @@ export default function IndexPage({ params: { locale } }: Props) {
   return (
     <>
       <HeroLanding />
-      {/* <Powered /> */}
-      {/* <BentoGrid /> */}
-      {/* <InfoLanding data={infos[0]} reverse={true} /> */}
-      {/* <InfoLanding data={infos[1]} /> */}
       <Features />
       <Examples />
-      <SchnellIntro />
+      <HowTo />
+      <UseCases />
+      <FAQWrapper />
       <PricingCard locale={locale} />
-      {process.env.NODE_ENV === "production" && <TwitterList />}
     </>
   );
 }

@@ -19,44 +19,44 @@
   },
 
   "IndexPage": {
-    "intro": "Introducing Flux AI Image Generator",
-    "description": "Revolutionizing Next-Generation Advanced Text-to-Image open model, support flux.1 pro/dev and flux.1 schnell models.",
-    "title": "Flux AI Image Generator",
-    "subtitle": "Advanced Text-to-Image",
+    "intro": "🎉 Free AI Background Remover",
+    "description": "Instantly remove the background from any image with our free AI-powered tool. High-quality, fast, and easy to use. Upload your photo and get a transparent background in seconds.",
+    "title": "Free AI Background Remover",
+    "subtitle": "Remove Image Backgrounds in Seconds",
     "examples": {
       "label": "Example",
-      "title": "Flux AI Image Examples",
-      "subtitle": "Generate images from text prompts."
+      "title": "Background Removal Examples",
+      "subtitle": "See the magic of AI background removal in action."
     },
     "features": {
-      "title": "Features",
-      "description": "Flux AI Image Generator is a powerful tool that allows you to generate images from text prompts. It uses advanced AI models to create stunning images that are perfect for any project.",
+      "title": "Why Choose Our Background Remover?",
+      "description": "Our AI-powered background removal tool offers professional-quality results with unmatched speed and ease of use. Perfect for any project that requires clean, transparent backgrounds.",
       "action": {
-        "visit": "Generate"
+        "visit": "Remove Background"
       },
       "item1": {
-        "title": "FLUX.1 [pro]",
-        "description": "The best of FLUX.1, offering state-of-the-art performance image generation with top of the line prompt following, visual quality, image detail and output diversity."
+        "title": "Stunning Quality",
+        "description": "Get clean, crisp cutouts thanks to our advanced AI technology. Perfect for portraits, products, and graphics with professional-grade results."
       },
       "item2": {
-        "title": "FLUX.1 [dev]",
-        "description": "Directly distilled from FLUX.1 [pro], FLUX.1 [dev] obtains similar quality and prompt adherence capabilities, while being more efficient than a standard model of the same size. "
+        "title": "Incredibly Fast",
+        "description": "Don't waste time with complex software. Get your background removed in about 5 seconds with our optimized AI processing."
       },
       "item3": {
-        "title": "FLUX.1 [schnell]",
-        "description": "The fastest image generation model tailored for local development and personal use"
+        "title": "Completely Free",
+        "description": "Our background removal tool is 100% free to use. No sign-up required, no hidden costs, and no watermarks on your results."
       },
       "item4": {
-        "title": "Lightning-Fast",
-        "description": "Flux AI generates high-quality images in seconds, significantly faster than Stable Diffusion 3 and Midjourney. With its lightning-fast image generation capabilities, Flux AI ensures quick and efficient results, saving you valuable time and resources."
+        "title": "Privacy Focused",
+        "description": "We process your images and then delete them from our servers within a few hours. Your data is safe and secure with us."
       },
       "item5": {
-        "title": "Customizable",
-        "description": "The advanced Flux.1 model produces more detailed and coherent images than competitors. With its customizable features and user-friendly interface, Flux AI Image Generator is the ultimate tool for generating stunning images from text prompts. Whether you're a beginner or a professional, Flux AI has got you covered. Experience the power of AI and revolutionize your image generation process today!"
+        "title": "Easy to Use",
+        "description": "Simply upload your image and let our AI do the work. No technical skills required - perfect for beginners and professionals alike."
       },
       "item6": {
-        "title": "User-Friendly Interface",
-        "description": "Easier to use than ComfyUI, perfect for beginners and pros alike. Flux AI Image Generator is the ultimate tool for generating stunning images from text prompts. With its user-friendly interface and powerful AI models, Flux AI makes it easy for both beginners and professionals to create amazing visuals."
+        "title": "Multiple Formats",
+        "description": "Support for all common image formats including JPG, PNG, and WEBP. Download your results in high resolution with transparent backgrounds."
       }
     },
     "powered": {
@@ -67,16 +67,67 @@
         "title": "Customizable"
       }
     },
-    "schnell": {
-      "title": "Flux.1 [Schnell]",
-      "description": "Flux.1 [schnell] is a refined version of the base model, operating up to 10 times faster than the original. Licensed under Apache 2.0, it's optimized for speed and efficiency, catering to users who demand rapid image generation without compromising on quality. This model is ideal for local development and personal use, striking the perfect balance between performance and accessibility. We offer users 5 free opportunities each month to experience the lightning-fast image generation of the Flux.1 [schnell] model, allowing you to witness its incredible speed firsthand.",
-      "action": "Try Now"
+    "howto": {
+      "title": "How to Remove Background from Image",
+      "description": "Follow these simple steps to remove backgrounds from your images in seconds.",
+      "step1": {
+        "title": "1. Upload Your Image",
+        "description": "Click the 'Upload Image' button and select the photo you want to edit from your computer or phone. We support PNG, JPG, and other formats."
+      },
+      "step2": {
+        "title": "2. AI Automatically Removes Background",
+        "description": "Our intelligent AI will automatically detect the subject and accurately remove the background. No manual work needed!"
+      },
+      "step3": {
+        "title": "3. Download Your New Image",
+        "description": "Your new image with a transparent background is ready! Just click the 'Download' button to save it in high resolution."
+      }
+    },
+    "usecases": {
+      "title": "Perfect for Any Project",
+      "description": "Our background removal tool is versatile and can be used for various purposes.",
+      "ecommerce": {
+        "title": "For E-commerce",
+        "description": "Create professional product photos for Amazon, Shopify, and more."
+      },
+      "marketing": {
+        "title": "For Marketers",
+        "description": "Design eye-catching social media posts, banners, and ads."
+      },
+      "photography": {
+        "title": "For Photographers",
+        "description": "Speed up your photo editing workflow."
+      },
+      "personal": {
+        "title": "For Personal Use",
+        "description": "Make fun profile pictures, memes, or greeting cards."
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "description": "Get answers to common questions about our background removal tool.",
+      "q1": {
+        "question": "How to remove background from an image on iPhone?",
+        "answer": "Our website works perfectly on your iPhone's browser. Just open Safari or Chrome, navigate to our site, upload your picture, and download the result directly to your phone."
+      },
+      "q2": {
+        "question": "Is it free to remove a background from a picture?",
+        "answer": "Yes, our tool is completely free. You can process as many images as you like without any charge."
+      },
+      "q3": {
+        "question": "Can I remove the background from a logo?",
+        "answer": "Absolutely. Our AI is trained to handle sharp edges, making it ideal for removing the background from logos and graphics. Upload your logo to get a transparent version."
+      },
+      "q4": {
+        "question": "What image formats are supported?",
+        "answer": "We support all common image formats, including JPG, PNG, and WEBP."
+      }
     },
     "action": {
       "pricing": "Buy Credits",
       "login": "Login",
       "dashboard": "Dashboard",
-      "generate": "Generate",
+      "generate": "Upload Image",
       "github": {
         "sm": "Star on",
         "normal": "Github"
@@ -314,16 +365,16 @@
     }
   },
   "LocaleLayout": {
-    "title": "Remove Anything - AI Background Removal & Image Generation",
-    "description": "Transform your visuals with advanced AI tools: Background removal, image generation, and professional editing capabilities.",
-    "keywords": "remove anything, AI background removal, image generation, AI tools, artificial intelligence, machine learning, AI applications, background removal, image editing, AI technology"
+    "title": "Free Background Remover - Remove Background from Image AI",
+    "description": "Instantly remove the background from any image with our free AI-powered tool. High-quality, fast, and easy to use. Upload your photo and get a transparent background in seconds.",
+    "keywords": "free background remover, remove background from image, AI background removal, transparent background, image editing, photo background removal, online background remover, free AI tool, background removal tool, remove image background"
   },
   "LocaleSwitcher": {
     "label": "Change language",
     "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
   },
   "Manifest": {
-    "name": "Remove Anything"
+    "name": "Free Background Remover"
   },
   "AppNavigation": {
     "Index": "Home",
@@ -336,10 +387,9 @@
   "Navigation": {
     "pricing": "Pricing",
     "schnell": "Background Removal",
-    "explore": "Explore",
+    "explore": "Examples",
     "title": "Remove Anything",
     "blog": "Blog",
-    "prompt": "AI Image Generator",
     "dashboard": "Dashboard",
     "Support": "Support",
     "tooltip": {
