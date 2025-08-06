@@ -380,7 +380,8 @@
   },
   "AppNavigation": {
     "Index": "Inicio",
-    "Generate": "Generar",
+    "BackgroundRemoval": "Eliminación de fondo",
+    "BatchBackgroundRemoval": "Eliminación de fondo por lotes",
     "History": "Historial",
     "GiftCode": "Código de Regalo",
     "ChargeOrder": "Orden de Carga"

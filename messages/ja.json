@@ -380,7 +380,8 @@
   },
   "AppNavigation": {
     "Index": "ホーム",
-    "Generate": "生成",
+    "BackgroundRemoval": "背景除去",
+    "BatchBackgroundRemoval": "バッチ背景除去",
     "History": "履歴",
     "GiftCode": "ギフトコード",
     "ChargeOrder": "チャージオーダー"

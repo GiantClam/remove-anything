@@ -10,8 +10,10 @@ import { RadialStackedChart } from "@/components/charts/radial-stacked-chart";
 import { RadialTextChart } from "@/components/charts/radial-text-chart";
 import { DashboardHeader } from "@/components/dashboard/header";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = constructMetadata({
-  title: "Charts – Next Template",
+  title: "Charts – Next Template",
   description: "List of charts by shadcn-ui",
 });
 

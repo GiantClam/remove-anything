@@ -387,7 +387,7 @@ const createKVClient = (kvBinding?: any): KVClient => {
       - CLOUDFLARE_KV_API_TOKEN=${apiToken || '你的API_Token'}
       
       💡 获取这些值：
-      1. 运行: wrangler kv:namespace create "next-money-kv"
+      1. 运行: wrangler kv:namespace create "remove-anything-kv"
       2. 复制返回的 Namespace ID
       3. 运行: wrangler whoami 查看 Account ID
       4. 在 Cloudflare Dashboard 创建 API Token

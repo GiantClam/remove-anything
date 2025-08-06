@@ -6,6 +6,8 @@ interface PageProps {
   params: { locale: string };
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   params: { locale },
 }: PageProps) {

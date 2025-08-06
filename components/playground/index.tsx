@@ -11,9 +11,6 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import BlurFade from "@/components/magicui/blur-fade";
-import { AspectRatioSelector } from "@/components/playground/aspect-selector";
-import { ModelSelector } from "@/components/playground/model-selector";
-import { Model, models, types } from "@/components/playground/models";
 import { PrivateSwitch } from "@/components/playground/private-switch";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,15 +20,15 @@ import {
 } from "@/components/ui/hover-card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Locale } from "@/config";
-import { Credits, loras, model, ModelName, Ratio } from "@/config/constants";
+import { Credits, model, ModelName } from "@/config/constants";
 import {
   ChargeProductSelectDto,
   FluxSelectDto,
   UserCreditSelectDto,
 } from "@/db/type";
-import { cn, createRatio } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 import { DownloadAction } from "../history/download-action";
 import { PricingCardDialog } from "../pricing-cards";
@@ -40,8 +37,6 @@ import { Icons } from "../shared/icons";
 import Upload from "../upload";
 import ComfortingMessages from "./comforting";
 import Loading from "./loading";
-
-const aspectRatios = [Ratio.r1, Ratio.r2, Ratio.r3, Ratio.r4, Ratio.r5];
 
 const useCreateTaskMutation = (config?: {
   onSuccess: (result: any) => void;
@@ -81,302 +76,301 @@ export default function Playground({
   chargeProduct?: ChargeProductSelectDto[];
 }) {
   const [isPublic, setIsPublic] = React.useState(true);
-  const [selectedModel, setSelectedModel] = React.useState<Model>(models[0]);
-  const [ratio, setRatio] = React.useState<Ratio>(Ratio.r1);
-  const [inputPrompt, setInputPrompt] = React.useState<string>("");
   const [loading, setLoading] = useState(false);
   const [fluxId, setFluxId] = useState("");
   const [fluxData, setFluxData] = useState<FluxSelectDto>();
   const useCreateTask = useCreateTaskMutation();
   const [uploadInputImage, setUploadInputImage] = useState<any[]>([]);
+  const [inputImageUrl, setInputImageUrl] = useState<string>("");
   const t = useTranslations("Playground");
   const queryClient = useQueryClient();
   const [pricingCardOpen, setPricingCardOpen] = useState(false);
-  const [lora, setLora] = React.useState<string>(loras.wukong);
 
   const queryTask = useQuery({
     queryKey: ["queryFluxTask", fluxId],
     enabled: !!fluxId,
     refetchInterval: (query) => {
-      if (query.state.data?.data?.taskStatus === FluxTaskStatus.Processing) {
-        return 2000;
+      const data = query.state.data as FluxSelectDto;
+      if (data?.taskStatus === FluxTaskStatus.Processing) {
+        return 1000;
       }
       return false;
     },
     queryFn: async () => {
-      const res = await fetch("/api/task", {
-        body: JSON.stringify({
-          fluxId,
-        }),
-        method: "POST",
-        credentials: 'include', // 使用 cookie 认证而不是 Bearer token
+      const res = await fetch(`/api/task/${fluxId}`, {
+        credentials: 'include',
       });
-
       if (!res.ok) {
-        throw new Error("Network response error");
+        throw new Error("Failed to fetch task");
       }
+      return res.json();
+    },
+  });
 
+  const { data: userCredit } = useQuery<UserCreditSelectDto>({
+    queryKey: ["userCredit"],
+    queryFn: async () => {
+      const res = await fetch("/api/account", {
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        throw new Error("Failed to fetch user credit");
+      }
       return res.json();
     },
   });
 
   useEffect(() => {
-    const key = "GENERATOR_PROMPT";
-    const _prompt = window.sessionStorage.getItem(key);
-    if (_prompt) {
-      setInputPrompt(_prompt);
-      window.sessionStorage.removeItem(key);
-    }
-  }, []);
-
-  useEffect(() => {
-    const onBeforeunload = () => {
-      if (inputPrompt) {
-        window.sessionStorage.setItem("GENERATOR_PROMPT", inputPrompt);
+    if (queryTask.data) {
+      setFluxData(queryTask.data);
+      if (queryTask.data.taskStatus === FluxTaskStatus.Succeeded) {
+        setLoading(false);
+        toast.success("Background removal completed!");
+      } else if (queryTask.data.taskStatus === FluxTaskStatus.Failed) {
+        setLoading(false);
+        toast.error("Background removal failed. Please try again.");
       }
-    };
-    window.addEventListener("beforeunload", onBeforeunload);
-  }, [inputPrompt]);
-
-  useEffect(() => {
-    if (!queryTask.data?.data?.id) {
-      return;
     }
-    setFluxData(queryTask?.data?.data);
   }, [queryTask.data]);
 
-  const handleSubmit = async () => {
-    if (!inputPrompt) {
-      return toast.error("Please enter a prompt");
+  const onBeforeunload = () => {
+    if (loading) {
+      return "Are you sure you want to leave? Your background removal is still processing.";
     }
-    const queryData = queryClient.getQueryData([
-      "queryUserPoints",
-    ]) as UserCreditSelectDto;
-    if (queryData?.credit <= 0) {
-      t("error.insufficientCredits") &&
-        toast.error(t("error.insufficientCredits"));
-      setPricingCardOpen(true);
+  };
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", onBeforeunload);
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeunload);
+    };
+  }, [loading]);
+
+  const handleSubmit = async () => {
+    if (!inputImageUrl.trim()) {
+      toast.error("Please provide an image URL");
       return;
     }
+
     setLoading(true);
+    setFluxData(undefined);
 
     try {
-      const inputImageUrl = uploadInputImage
-        ? uploadInputImage?.[0]?.completedUrl
-        : undefined;
-      const loraName = selectedModel.id === model.general ? lora : undefined;
-      const res = await useCreateTask.mutateAsync({
-        model: selectedModel.id,
-        inputPrompt,
-        aspectRatio: ratio,
-        inputImageUrl,
+      const result = await useCreateTask.mutateAsync({
+        model: model.backgroundRemoval,
+        inputImageUrl: inputImageUrl.trim(),
         isPrivate: isPublic ? 0 : 1,
-        loraName,
         locale,
       });
-      console.log("res--->", res);
-      if (!res.error) {
-        setFluxId(res.id);
-        queryClient.invalidateQueries({ queryKey: ["queryUserPoints"] });
-      } else {
-        let error = res.error;
-        if (res.code === 1000402) {
-          setPricingCardOpen(true);
-          error = t("error.insufficientCredits") ?? res.error;
-        }
-        toast.error(error);
+
+      if (result.error) {
+        toast.error(result.error);
+        setLoading(false);
+        return;
       }
+
+      setFluxId(result.id);
+      toast.success("Background removal started!");
     } catch (error) {
-      console.log("error", error);
-      toast.error("An error occurred");
-    } finally {
+      console.error("Background removal error:", error);
+      toast.error("Failed to start background removal. Please try again.");
       setLoading(false);
     }
   };
-  const debounceHandleSubmit = debounce(handleSubmit, 800);
-
-  const generateLoading = useMemo(() => {
-    return (
-      queryTask.isPending ||
-      queryTask.isLoading ||
-      fluxData?.taskStatus === FluxTaskStatus.Processing
-    );
-  }, [fluxData, queryTask]);
 
   const copyPrompt = (prompt: string) => {
     copy(prompt);
-    toast.success(t("action.copySuccess"));
+    toast.success("Copied to clipboard!");
   };
 
-  return (
-    <div className="overflow-hidden rounded-[0.5rem] border bg-background shadow">
-      <div className="container h-full p-6">
-        <div className="grid h-full items-stretch gap-6 md:grid-cols-[1fr_240px]">
-          <div className="flex-col space-y-4 sm:flex md:order-2">
-            <ModelSelector
-              selectedModel={selectedModel}
-              onChange={(model) => setSelectedModel(model)}
-              types={types}
-              lora={lora}
-              onLoraChange={setLora}
-              models={models}
-            />
-            <AspectRatioSelector
-              aspectRatios={aspectRatios}
-              ratio={ratio}
-              onChange={setRatio}
-            />
-            {selectedModel.id === model.dev && (
-              <div className="flx flex-col gap-4">
-                <HoverCard openDelay={200}>
-                  <HoverCardTrigger asChild>
-                    <Label htmlFor="model">{t("form.inputImage")}</Label>
-                  </HoverCardTrigger>
-                  <HoverCardContent
-                    align="start"
-                    className="w-[260px] text-sm"
-                    side="left"
-                  >
-                    {t("form.inputImageTooltip")}
-                  </HoverCardContent>
-                </HoverCard>
-                <Upload
-                  maxFiles={1}
-                  maxSize={2 * 1024 * 1024}
-                  placeholder={t("form.inputImagePlaceholder")}
-                  value={uploadInputImage}
-                  onChange={setUploadInputImage}
-                  previewClassName="h-[120px]"
-                  accept={{
-                    "image/*": [],
-                  }}
-                />
-              </div>
-            )}
+  const needCredit = Credits[model.backgroundRemoval];
+  const hasEnoughCredit = userCredit && userCredit.credit >= needCredit;
 
-            {/* <TemperatureSelector defaultValue={[0.56]} /> */}
-            {/* <MaxLengthSelector defaultValue={[256]} /> */}
-          </div>
-          <div className="md:order-1">
-            <div className="flex flex-col space-y-4">
-              <div className="grid h-full gap-6 lg:grid-cols-2">
-                <div className="flex flex-col space-y-4">
-                  <div className="flex flex-1 flex-col space-y-2">
-                    <Label htmlFor="input">{t("form.input")}</Label>
-                    <Textarea
-                      id="input"
-                      placeholder={t("form.placeholder")}
-                      className="flex-1 lg:min-h-[320px]"
-                      value={inputPrompt}
-                      onChange={(e) => setInputPrompt(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-1 flex-col space-y-2">
-                  <Label htmlFor="Result">{t("form.result")}</Label>
-                  <div className="min-h-20 rounded-md border-0 md:min-h-[400px] md:border lg:min-h-[450px]">
-                    {loading || (generateLoading && fluxId) ? (
-                      <div className="flex size-full flex-col items-center justify-center">
-                        <Loading />
-                        <div className="text-content-light mt-3 px-4 text-center text-sm">
-                          <ComfortingMessages language={locale as Locale} />
-                        </div>
-                      </div>
-                    ) : fluxData?.id &&
-                      fluxData.taskStatus === FluxTaskStatus.Succeeded ? (
-                      <div
-                        className={cn("size-full", {
-                          "bg-muted": !fluxData?.imageUrl || !fluxId,
-                        })}
-                      >
-                        <div
-                          className={`w-full rounded-md ${createRatio(fluxData?.aspectRatio as Ratio)}`}
-                        >
-                          {fluxData?.imageUrl && fluxId && (
-                            <BlurFade key={fluxData?.imageUrl} inView>
-                              <img
-                                src={fluxData?.imageUrl}
-                                alt="Generated Image"
-                                className={`pointer-events-none w-full rounded-md ${createRatio(fluxData?.aspectRatio as Ratio)}`}
-                              />
-                            </BlurFade>
-                          )}
-                        </div>
-                        <div className="text-content-light inline-block px-4 py-2 text-sm">
-                          <p className="line-clamp-4 italic md:line-clamp-6 lg:line-clamp-[8]">
-                            {fluxData?.inputPrompt}
-                          </p>
-                        </div>
-                        <div className="flex flex-row flex-wrap space-x-1 px-4">
-                          <div className="bg-surface-alpha-strong text-content-base inline-flex items-center rounded-md border border-transparent px-1.5 py-0.5 font-mono text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                            {ModelName[fluxData?.model]}
-                          </div>
-                        </div>
-                        <div className="flex flex-row justify-between space-x-2 p-4">
-                          <button
-                            className="focus-ring text-content-strong border-stroke-strong hover:border-stroke-stronger data-[state=open]:bg-surface-alpha-light inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border bg-transparent px-2.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
-                            onClick={() => copyPrompt(fluxData.inputPrompt!)}
-                          >
-                            <Copy className="icon-xs me-1" />
-                            {t("action.copy")}
-                          </button>
-                          <DownloadAction id={fluxData.id} />
-                        </div>
-                      </div>
-                    ) : fluxData?.taskStatus === FluxTaskStatus.Failed ? (
-                      <div className="flex min-h-96 items-center justify-center">
-                        <EmptyPlaceholder>
-                          <EmptyPlaceholder.Icon name="Eraser" />
-                          <EmptyPlaceholder.Title>
-                            {t("empty.title")}
-                          </EmptyPlaceholder.Title>
-                          <EmptyPlaceholder.Description>
-                            {t("empty.description", {
-                              error:
-                                fluxData?.errorMsg ??
-                                t("empty.errorPlaceholder"),
-                            })}
-                          </EmptyPlaceholder.Description>
-                        </EmptyPlaceholder>
-                      </div>
-                    ) : (
-                      <div />
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-5">
-                <Button
-                  className="w-40"
-                  disabled={
-                    !inputPrompt.length ||
-                    loading ||
-                    (generateLoading && !!fluxId)
-                  }
-                  onClick={debounceHandleSubmit}
-                >
-                  {loading ? (
-                    <>
-                      <Icons.spinner className="mr-2 size-4 animate-spin" />{" "}
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      {t("form.submit")}
-                      <Icons.PointIcon className="size-[14px]" />
-                      <span>{Credits[selectedModel.id]}</span>
-                    </>
-                  )}
-                </Button>
-                <PrivateSwitch isPublic={isPublic} onChange={setIsPublic} />
+  return (
+    <div className="container mx-auto max-w-4xl p-6">
+      <div className="mb-8 text-center">
+        <h1 className="mb-4 text-3xl font-bold">Background Removal</h1>
+        <p className="text-muted-foreground">
+          Remove backgrounds from your images using AI. Simply upload an image and get a clean result.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* 左侧：输入区域 */}
+        <div className="space-y-6">
+          <div className="rounded-lg border bg-card p-6">
+            <div className="mb-4">
+              <Label htmlFor="image-url" className="text-base font-semibold">
+                Image URL
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Enter the URL of the image you want to remove the background from.
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <Input
+                id="image-url"
+                type="url"
+                placeholder="https://example.com/image.jpg"
+                value={inputImageUrl}
+                onChange={(e) => setInputImageUrl(e.target.value)}
+                className="w-full"
+              />
+              
+              <div className="text-sm text-muted-foreground">
+                <p>Supported formats: JPG, PNG, WebP</p>
+                <p>Maximum file size: 10MB</p>
               </div>
             </div>
           </div>
+
+          <div className="rounded-lg border bg-card p-6">
+            <div className="mb-4">
+              <Label className="text-base font-semibold">Settings</Label>
+            </div>
+            
+            <div className="space-y-4">
+              <PrivateSwitch
+                isPublic={isPublic}
+                onChange={setIsPublic}
+              />
+              
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="font-medium">Cost</p>
+                  <p className="text-sm text-muted-foreground">
+                    {needCredit} credits per image
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium">Your Credits</p>
+                  <p className="text-sm text-muted-foreground">
+                    {userCredit?.credit || 0} credits
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || !inputImageUrl.trim() || !hasEnoughCredit}
+            className="w-full"
+            size="lg"
+          >
+            {loading ? (
+              <>
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Icons.Eraser className="mr-2 h-4 w-4" />
+                Remove Background
+              </>
+            )}
+          </Button>
+
+          {!hasEnoughCredit && (
+            <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
+              <div className="flex items-center gap-2">
+                <Icons.warning className="h-4 w-4 text-orange-600" />
+                <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                  Insufficient credits
+                </p>
+              </div>
+              <p className="mt-1 text-sm text-orange-700 dark:text-orange-300">
+                You need {needCredit} credits to remove background. 
+                <button
+                  onClick={() => setPricingCardOpen(true)}
+                  className="ml-1 underline hover:no-underline"
+                >
+                  Buy credits
+                </button>
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* 右侧：结果区域 */}
+        <div className="space-y-6">
+          {loading && <Loading />}
+          
+          {fluxData && (
+            <div className="rounded-lg border bg-card p-6">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold">Result</h3>
+                <p className="text-sm text-muted-foreground">
+                  {fluxData.taskStatus === FluxTaskStatus.Succeeded
+                    ? "Background removed successfully!"
+                    : fluxData.taskStatus === FluxTaskStatus.Failed
+                    ? "Background removal failed"
+                    : "Processing..."}
+                </p>
+              </div>
+
+              {fluxData.taskStatus === FluxTaskStatus.Succeeded && fluxData.imageUrl && (
+                <div className="space-y-4">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-muted">
+                    <img
+                      src={fluxData.imageUrl}
+                      alt="Background removed"
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <DownloadAction
+                      id={fluxData.id}
+                      showText={true}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyPrompt(fluxData.imageUrl || "")}
+                    >
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy URL
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {fluxData.taskStatus === FluxTaskStatus.Failed && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
+                  <div className="flex items-center gap-2">
+                    <Icons.close className="h-4 w-4 text-red-600" />
+                    <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                      Background removal failed
+                    </p>
+                  </div>
+                  <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                    {fluxData.errorMsg || "Please try again with a different image."}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!loading && !fluxData && (
+            <EmptyPlaceholder>
+                            <EmptyPlaceholder.Icon name="Eraser">
+                <Icons.Eraser className="h-8 w-8" />
+              </EmptyPlaceholder.Icon>
+              <EmptyPlaceholder.Title>No result yet</EmptyPlaceholder.Title>
+              <EmptyPlaceholder.Description>
+                Upload an image and click "Remove Background" to get started.
+              </EmptyPlaceholder.Description>
+            </EmptyPlaceholder>
+          )}
         </div>
       </div>
+
+      {/* 定价卡片对话框 */}
       <PricingCardDialog
-        onClose={setPricingCardOpen}
         isOpen={pricingCardOpen}
+        onClose={setPricingCardOpen}
         chargeProduct={chargeProduct}
       />
     </div>

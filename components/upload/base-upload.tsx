@@ -16,6 +16,7 @@ interface BaseUploadProps {
   uploadProgress?: number;
   selectedFile?: File | null;
   className?: string;
+  multiple?: boolean; // 新增：支持多文件上传
 }
 
 export function BaseUpload({
@@ -27,6 +28,7 @@ export function BaseUpload({
   uploadProgress = 0,
   selectedFile,
   className,
+  multiple = false, // 默认单文件上传
 }: BaseUploadProps) {
   const [dragOver, setDragOver] = useState(false);
 
@@ -46,7 +48,15 @@ export function BaseUpload({
     
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      handleFileSelect(files[0]);
+      if (multiple) {
+        // 多文件模式：处理所有文件
+        Array.from(files).forEach(file => {
+          handleFileSelect(file);
+        });
+      } else {
+        // 单文件模式：只处理第一个文件
+        handleFileSelect(files[0]);
+      }
     }
   };
 
@@ -60,9 +70,17 @@ export function BaseUpload({
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileSelect(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      if (multiple) {
+        // 多文件模式：处理所有文件
+        Array.from(files).forEach(file => {
+          handleFileSelect(file);
+        });
+      } else {
+        // 单文件模式：只处理第一个文件
+        handleFileSelect(files[0]);
+      }
     }
   };
 
@@ -124,6 +142,7 @@ export function BaseUpload({
                 type="file"
                 className="hidden"
                 accept={accept}
+                multiple={multiple}
                 onChange={handleFileInput}
               />
             </label>

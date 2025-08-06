@@ -62,6 +62,7 @@ export default function History({ locale, explore }: { locale: string, explore?:
   const [init, setInit] = useState(false);
   const t = useTranslations("History");
   const id = useId();
+  const { isLoaded } = useAuth();
   const [pageParams, setPageParams] = useState({
     page: 1,
     pageSize: 12,
@@ -80,11 +81,13 @@ export default function History({ locale, explore }: { locale: string, explore?:
   });
 
   useEffect(() => {
-    useQueryMineFlux.mutateAsync({
-      page: pageParams.page,
-      pageSize: pageParams.pageSize,
-    });
-  }, []);
+    if (isLoaded) {
+      useQueryMineFlux.mutateAsync({
+        page: pageParams.page,
+        pageSize: pageParams.pageSize,
+      });
+    }
+  }, [isLoaded]);
 
   const loadMore = () => {
     console.log("load more");
@@ -100,6 +103,20 @@ export default function History({ locale, explore }: { locale: string, explore?:
   };
 
   const debounceLoadMore = debounce(loadMore, 500);
+
+  // Don't render until auth is loaded to prevent SSR issues
+  if (!isLoaded) {
+    return (
+      <Container className={cn({
+        "h-[calc(100vh_-_76px)]": !explore,
+        "min-h-screen": explore,
+      })}>
+        <div className="flex h-full min-h-96 w-full items-center justify-center">
+          <Loading />
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container className={
@@ -188,14 +205,14 @@ export default function History({ locale, explore }: { locale: string, explore?:
                           </p>
                         </div>
                         <div className="flex flex-row flex-wrap space-x-1 px-2">
-                          {ModelName[item.model] && (
+                          {ModelName[item.model as keyof typeof ModelName] && (
                             <div className="bg-surface-alpha-strong text-content-base inline-flex items-center rounded-md border border-transparent px-1.5 py-0.5 font-mono text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                              {ModelName[item.model]}
+                              {ModelName[item.model as keyof typeof ModelName]}
                             </div>
                           )}
-                          {item.loraName && LoraConfig[item.loraName]?.styleName && (
+                          {item.loraName && LoraConfig[item.loraName as keyof typeof LoraConfig]?.styleName && (
                             <div className="bg-surface-alpha-strong text-content-base inline-flex items-center rounded-md border border-transparent px-1.5 py-0.5 font-mono text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                              {LoraConfig[item.loraName]?.styleName}
+                              {LoraConfig[item.loraName as keyof typeof LoraConfig]?.styleName}
                             </div>
                           )}
                         </div>

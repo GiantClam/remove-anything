@@ -14,35 +14,11 @@ export interface ModelMapping {
 }
 
 export const modelMappings: ModelMapping = {
-  [model.pro]: {
+  [model.backgroundRemoval]: {
     provider: 'replicate',
-    model: 'black-forest-labs/flux-1.1-pro',
-    credits: 20,
-    description: 'FLUX 1.1 Pro - 最高质量，适合专业用途'
-  },
-  [model.dev]: {
-    provider: 'replicate',
-    model: 'black-forest-labs/flux-dev',
-    credits: 10,
-    description: 'FLUX Dev - 平衡质量和速度'
-  },
-  [model.schnell]: {
-    provider: 'replicate',
-    model: 'black-forest-labs/flux-schnell',
-    credits: 5,
-    description: 'FLUX Schnell - 最快速度，适合快速原型'
-  },
-  [model.general]: {
-    provider: 'replicate',
-    model: 'black-forest-labs/flux-dev',
-    credits: 10,
-    description: 'FLUX General - 通用模型，支持 LoRA'
-  },
-  [model.freeSchnell]: {
-    provider: 'replicate',
-    model: 'black-forest-labs/flux-schnell',
-    credits: 0,
-    description: 'FLUX Schnell - 免费版本（每月限制）'
+    model: 'men1scus/birefnet',
+    credits: 2,
+    description: 'Background Removal - 智能去背景，保留主体'
   },
 };
 

@@ -380,7 +380,8 @@
   },
   "AppNavigation": {
     "Index": "Startseite",
-    "Generate": "Generieren",
+    "BackgroundRemoval": "Hintergrund entfernen",
+    "BatchBackgroundRemoval": "Batch Hintergrund entfernen",
     "History": "Geschichte",
     "GiftCode": "Geschenkgutschein",
     "ChargeOrder": "Aufladungsbestellung"

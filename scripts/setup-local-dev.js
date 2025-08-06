@@ -104,8 +104,8 @@ async function createKVNamespace() {
   heading('创建 KV 命名空间');
   
   return new Promise((resolve) => {
-    rl.question('请输入KV命名空间名称 [next-money-kv]: ', (name) => {
-      const namespaceName = name || 'next-money-kv';
+      rl.question('请输入KV命名空间名称 [remove-anything-kv]: ', (name) => {
+    const namespaceName = name || 'remove-anything-kv';
       
       try {
         log(`正在创建KV命名空间: ${namespaceName}...`);
@@ -147,8 +147,8 @@ async function createR2Bucket() {
   heading('创建 R2 存储桶');
   
   return new Promise((resolve) => {
-    rl.question('请输入R2存储桶名称 [next-money-storage]: ', (name) => {
-      const bucketName = name || 'next-money-storage';
+      rl.question('请输入R2存储桶名称 [remove-anything-storage]: ', (name) => {
+    const bucketName = name || 'remove-anything-storage';
       
       try {
         log(`正在创建R2存储桶: ${bucketName}...`);

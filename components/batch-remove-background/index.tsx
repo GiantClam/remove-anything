@@ -1,0 +1,364 @@
+"use client";
+
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Icons } from "@/components/shared/icons";
+import { EmptyPlaceholder } from "@/components/shared/empty-placeholder";
+import { PricingCardDialog } from "@/components/pricing-cards";
+import { PrivateSwitch } from "@/components/playground/private-switch";
+import { DownloadAction } from "@/components/history/download-action";
+import { useAuth } from "@/hooks/use-auth";
+import { Credits, model } from "@/config/constants";
+import type { ChargeProductSelectDto } from "@/db/type";
+import { Copy } from "lucide-react";
+import FormUpload from "@/components/upload";
+
+interface BatchRemoveBackgroundProps {
+  locale: string;
+  chargeProduct?: ChargeProductSelectDto[];
+}
+
+interface UploadValue {
+  id?: string;
+  url: string;
+  completedUrl: string;
+  key?: string;
+  originFile?: File;
+  md5?: string;
+  fileType?: string;
+  status?: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error';
+  error?: string;
+}
+
+interface BatchResult {
+  id: string;
+  index: number;
+  status: string;
+  originalImageUrl: string;
+  processedImageUrl?: string;
+  error?: string;
+}
+
+export default function BatchRemoveBackground({
+  locale,
+  chargeProduct,
+}: BatchRemoveBackgroundProps) {
+  const { userId } = useAuth();
+  const [uploadedImages, setUploadedImages] = useState<UploadValue[]>([]);
+  const [isPublic, setIsPublic] = useState(false);
+  const [pricingCardOpen, setPricingCardOpen] = useState(false);
+  const [batchResults, setBatchResults] = useState<BatchResult[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // 获取用户积分
+  const { data: userCreditData } = useQuery({
+    queryKey: ["user-credit", userId],
+    queryFn: async () => {
+      const response = await fetch("/api/user/credit");
+      if (!response.ok) {
+        throw new Error("Failed to fetch user credit");
+      }
+      return response.json();
+    },
+    enabled: !!userId,
+  });
+  const userCredit = userCreditData?.credit;
+
+  // 批量背景去除
+  const batchRemoveBackground = useMutation({
+    mutationFn: async (data: {
+      imageUrls: string[];
+      isPrivate: number;
+      locale: string;
+    }) => {
+      const response = await fetch("/api/batch-remove-background", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to process images");
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setBatchResults(data.results);
+      setIsProcessing(false);
+      toast.success(`Successfully processed ${data.completedImages} images`);
+    },
+    onError: (error) => {
+      setIsProcessing(false);
+      toast.error(getErrorMessage(error));
+    },
+  });
+
+  const handleSubmit = async () => {
+    if (!uploadedImages.length) {
+      toast.error("Please upload at least one image");
+      return;
+    }
+
+    const imageUrls = uploadedImages
+      .filter(img => img.status === 'uploaded')
+      .map(img => img.url);
+
+    if (!imageUrls.length) {
+      toast.error("Please wait for all images to finish uploading");
+      return;
+    }
+
+    const needCredit = Credits[model.backgroundRemoval] * imageUrls.length;
+    if (!userCredit || userCredit.credit < needCredit) {
+      setPricingCardOpen(true);
+      return;
+    }
+
+    setIsProcessing(true);
+    setBatchResults([]);
+
+    try {
+      await batchRemoveBackground.mutateAsync({
+        imageUrls,
+        isPrivate: isPublic ? 0 : 1,
+        locale,
+      });
+    } catch (error) {
+      console.error("Batch processing error:", error);
+    }
+  };
+
+  const copyPrompt = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("URL copied to clipboard");
+  };
+
+  const needCredit = Credits[model.backgroundRemoval] * uploadedImages.filter(img => img.status === 'uploaded').length;
+  const hasEnoughCredit = userCredit && userCredit.credit >= needCredit;
+
+  return (
+    <div className="container mx-auto max-w-6xl p-6">
+      <div className="mb-8 text-center">
+        <h1 className="mb-4 text-3xl font-bold">Batch Background Removal</h1>
+        <p className="text-muted-foreground">
+          Remove backgrounds from multiple images at once. Upload up to 10 images and get clean results.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Left: Upload Area */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload Images</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <FormUpload
+                  accept={{ "image/*": [] }}
+                  maxSize={10 * 1024 * 1024}
+                  maxFiles={10}
+                  multiple={true}
+                  value={uploadedImages}
+                  onChange={setUploadedImages}
+                  className="min-h-[200px]"
+                />
+                <div className="text-sm text-muted-foreground">
+                  <p>Supported formats: JPG, PNG, WebP</p>
+                  <p>Maximum file size: 10MB per image</p>
+                  <p>Maximum files: 10 images</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <PrivateSwitch
+                  isPublic={isPublic}
+                  onChange={setIsPublic}
+                />
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="font-medium">Cost</p>
+                    <p className="text-sm text-muted-foreground">
+                      {Credits[model.backgroundRemoval]} credits per image
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">Your Credits</p>
+                    <p className="text-sm text-muted-foreground">
+                      {userCredit?.credit || 0} credits
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={isProcessing || !uploadedImages.length || !hasEnoughCredit}
+            className="w-full"
+            size="lg"
+          >
+            {isProcessing ? (
+              <>
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Icons.Eraser className="mr-2 h-4 w-4" />
+                Remove Backgrounds ({uploadedImages.filter(img => img.status === 'uploaded').length} images)
+              </>
+            )}
+          </Button>
+
+          {!hasEnoughCredit && uploadedImages.length > 0 && (
+            <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
+              <div className="flex items-center gap-2">
+                <Icons.warning className="h-4 w-4 text-orange-600" />
+                <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                  Insufficient credits
+                </p>
+              </div>
+              <p className="mt-1 text-sm text-orange-700 dark:text-orange-300">
+                You need {needCredit} credits to remove backgrounds from {uploadedImages.filter(img => img.status === 'uploaded').length} images. 
+                <button
+                  onClick={() => setPricingCardOpen(true)}
+                  className="ml-1 underline hover:no-underline"
+                >
+                  Buy credits
+                </button>
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Results Area */}
+        <div className="space-y-6">
+          {isProcessing && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Processing Images</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <Progress value={0} className="h-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Processing {uploadedImages.filter(img => img.status === 'uploaded').length} images...
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {batchResults.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Results</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {batchResults.map((result, index) => (
+                    <div key={result.id} className="rounded-lg border p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <h4 className="font-medium">Image {result.index + 1}</h4>
+                        <span className={`text-sm px-2 py-1 rounded ${
+                          result.status === 'Succeeded' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {result.status}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Original</p>
+                          <img 
+                            src={result.originalImageUrl} 
+                            alt={`Original ${index + 1}`}
+                            className="w-full h-32 object-cover rounded"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Processed</p>
+                          {result.status === 'Succeeded' && result.processedImageUrl ? (
+                            <div className="relative">
+                              <img 
+                                src={result.processedImageUrl} 
+                                alt={`Processed ${index + 1}`}
+                                className="w-full h-32 object-cover rounded"
+                              />
+                              <div className="absolute top-2 right-2 flex gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => copyPrompt(result.processedImageUrl!)}
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                                <DownloadAction
+                                  id={result.id}
+                                  showText={false}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="w-full h-32 bg-gray-100 rounded flex items-center justify-center">
+                              <p className="text-sm text-gray-500">
+                                {result.error || 'Processing failed'}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {!isProcessing && !batchResults.length && (
+            <EmptyPlaceholder>
+              <EmptyPlaceholder.Icon name="Eraser">
+                <Icons.Eraser className="h-8 w-8" />
+              </EmptyPlaceholder.Icon>
+              <EmptyPlaceholder.Title>No results yet</EmptyPlaceholder.Title>
+              <EmptyPlaceholder.Description>
+                Upload images and click "Remove Backgrounds" to get started.
+              </EmptyPlaceholder.Description>
+            </EmptyPlaceholder>
+          )}
+        </div>
+      </div>
+
+      <PricingCardDialog
+        isOpen={pricingCardOpen}
+        onClose={setPricingCardOpen}
+        chargeProduct={chargeProduct}
+      />
+    </div>
+  );
+}
+
+function getErrorMessage(error: any): string {
+  if (typeof error === 'string') return error;
+  if (error?.message) return error.message;
+  return 'An unexpected error occurred';
+} 

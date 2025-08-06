@@ -29,26 +29,11 @@ export const maxDuration = 60;
 type Params = { params: { key: string } };
 const CreateGenerateSchema = z.object({
   model: z.enum([
-    model.pro,
-    model.schnell,
-    model.dev,
-    model.general,
-    model.freeSchnell,
+    model.backgroundRemoval,
   ]),
-  inputPrompt: z.string(),
-  aspectRatio: z.enum([
-    Ratio.r1,
-    Ratio.r2,
-    Ratio.r3,
-    Ratio.r4,
-    Ratio.r5,
-    Ratio.r6,
-    Ratio.r7,
-  ]),
+  inputImageUrl: z.string().url(), // 去背景功能必须提供图片
   isPrivate: z.number().default(0),
   locale: z.string().default("en"),
-  loraName: z.string().optional(),
-  inputImageUrl: z.string().url().optional(),
 });
 
 export async function POST(req: NextRequest, { params }: Params) {
@@ -71,42 +56,14 @@ export async function POST(req: NextRequest, { params }: Params) {
     const data = await req.json();
     const {
       model: modelName,
-      inputPrompt,
-      aspectRatio,
+      inputImageUrl,
       isPrivate,
       locale,
-      loraName,
-      inputImageUrl,
     } = CreateGenerateSchema.parse(data);
-
-    if (modelName === model.freeSchnell) {
-      const thisMonthStart = dayjs().startOf("M");
-      const thisMonthEnd = dayjs().endOf("M");
-      const freeSchnellCount = await prisma.fluxData.count({
-        where: {
-          model: model.freeSchnell,
-          userId,
-          createdAt: {
-            gte: thisMonthStart.toDate(),
-            lte: thisMonthEnd.toDate(),
-          },
-        },
-      });
-      // 5 free schnell generate per month
-      if (freeSchnellCount >= 5) {
-        return NextResponse.json(
-          { error: "Insufficient credit", code: 1000403 },
-          { status: 400 },
-        );
-      }
-    }
 
     const account = await getUserCredit(userId);
     const needCredit = Credits[modelName];
-    if (
-      (!account.credit && modelName !== model.freeSchnell) ||
-      account.credit < needCredit
-    ) {
+    if (account.credit < needCredit) {
       return NextResponse.json(
         { error: "Insufficient credit", code: 1000402 },
         { status: 400 },
@@ -118,16 +75,15 @@ export async function POST(req: NextRequest, { params }: Params) {
       data: {
         userId,
         replicateId: "", // 暂时留空，等 AI Gateway 响应后更新
-        inputPrompt,
-        executePrompt: inputPrompt,
+        inputPrompt: "Background removal",
+        executePrompt: "Background removal",
         model: modelName,
-        aspectRatio,
+        aspectRatio: "1:1", // 去背景功能使用默认比例
         taskStatus: "Processing",
         executeStartTime: BigInt(Date.now()),
         locale,
         isPrivate: Boolean(isPrivate),
-        loraName,
-        ...(inputImageUrl && { inputImageUrl }),
+        inputImageUrl,
       },
     });
 
@@ -138,11 +94,9 @@ export async function POST(req: NextRequest, { params }: Params) {
       const res = await aiGateway.generateImageViaReplicate({
         model: modelName,
         input_image_url: inputImageUrl,
-        input_prompt: inputPrompt,
-        aspect_ratio: aspectRatio,
+        input_prompt: "Background removal",
         is_private: Number(isPrivate) || 0,
         user_id: userId,
-        lora_name: loraName,
         locale,
       });
 
@@ -189,7 +143,7 @@ export async function POST(req: NextRequest, { params }: Params) {
               state: "Done",
               amount: -needCredit,
               type: BillingType.Withdraw,
-              description: `Generate ${modelName} - ${aspectRatio} Withdraw`,
+              description: `Background removal - Withdraw`,
             },
           });
 

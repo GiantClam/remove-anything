@@ -5,11 +5,7 @@ export const Prefix = "meme";
 export const IconPrefix = Prefix + "-icon";
 
 export enum model {
-  pro = "black-forest-labs/flux-pro",
-  schnell = "black-forest-labs/flux-schnell",
-  dev = "black-forest-labs/flux-dev",
-  general = "lucataco/flux-dev-lora",
-  freeSchnell = "siliconflow/flux-schnell",
+  backgroundRemoval = "men1scus/birefnet",
 }
 
 export enum loras {
@@ -34,19 +30,11 @@ export const LoraConfig = {
 };
 
 export const Credits = {
-  [model.pro]: 10,
-  [model.schnell]: 1,
-  [model.dev]: 5,
-  [model.general]: 8,
-  [model.freeSchnell]: 0,
+  [model.backgroundRemoval]: 2, // 666 runs per $1, 合理定价为2积分
 };
 
 export const ModelName = {
-  [model.pro]: "FLUX.1 [pro]",
-  [model.schnell]: "FLUX.1 [schnell]",
-  [model.dev]: "FLUX.1 [dev]",
-  [model.general]: "FLUX.1 General",
-  [model.freeSchnell]: "FLUX.1 [schnell]",
+  [model.backgroundRemoval]: "Background Removal",
 };
 
 export enum Ratio {
@@ -60,28 +48,7 @@ export enum Ratio {
 }
 
 export const ModelDefaultAdVancedSetting = {
-  [model.pro]: {
-    steps: {
-      default: 25,
-      min: 1,
-      max: 50,
-    },
-    guidance: {
-      default: 3,
-      min: 2,
-      max: 5,
-    },
-    interval: {
-      default: 2,
-      min: 1,
-      max: 4,
-    },
-    safety_tolerance: {
-      default: 2,
-      min: 1,
-      max: 5,
-    },
+  [model.backgroundRemoval]: {
+    description: "Background removal model - no advanced settings needed",
   },
-  [model.schnell]: "FLUX.1 [schnell]",
-  [model.dev]: "FLUX.1 [dev]",
 };

@@ -380,7 +380,8 @@
   },
   "AppNavigation": {
     "Index": "Accueil",
-    "Generate": "Générer",
+    "BackgroundRemoval": "Suppression d'arrière-plan",
+    "BatchBackgroundRemoval": "Suppression d'arrière-plan par lot",
     "History": "Historique",
     "GiftCode": "Code cadeau",
     "ChargeOrder": "Recharger"

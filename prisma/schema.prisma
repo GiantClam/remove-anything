@@ -65,6 +65,7 @@ model User {
   userCredits            UserCredit[]
   userCreditTransactions UserCreditTransaction[]
   userPaymentInfos       UserPaymentInfo[]
+  batchTasks             BatchTask[]
 
   @@map("users")
 }
@@ -129,6 +130,24 @@ model ChargeProduct {
   @@map(name: "charge_product")
 }
 
+model BatchTask {
+  id              Int      @id @default(autoincrement())
+  userId          String   @map(name: "user_id")
+  taskType        String   @map(name: "task_type")
+  totalImages     Int      @map(name: "total_images")
+  completedImages Int      @default(0) @map(name: "completed_images")
+  failedImages    Int      @default(0) @map(name: "failed_images")
+  status          String   @default("Processing")
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map(name: "created_at")
+  completedAt     DateTime? @map(name: "completed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fluxData FluxData[]
+
+  @@map(name: "batch_tasks")
+}
+
 model FluxData {
   id               Int      @id @default(autoincrement())
   userId           String   @map(name: "user_id")
@@ -157,8 +176,11 @@ model FluxData {
   loraUrl          String?  @map("lora_url")
   loraName         String?  @map("lora_name")
   loraScale        Float?   @map("lora_scale")
+  batchTaskId      Int?     @map(name: "batch_task_id")
+  batchIndex       Int?     @map(name: "batch_index")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  batchTask BatchTask? @relation(fields: [batchTaskId], references: [id], onDelete: Cascade)
 
   @@map(name: "flux_data")
 }

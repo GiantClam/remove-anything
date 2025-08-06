@@ -203,22 +203,34 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   }
 
   try {
-    await prisma.userPaymentInfo.upsert({
+    // 先查找现有的支付信息记录
+    const existingPaymentInfo = await prisma.userPaymentInfo.findFirst({
       where: { userId: userId },
-      update: {
-        stripeCustomerId: subscription.customer as string,
-        stripeSubscriptionId: subscription.id,
-        stripePriceId: subscription.items.data[0]?.price.id,
-        stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      },
-      create: {
-        userId: userId,
-        stripeCustomerId: subscription.customer as string,
-        stripeSubscriptionId: subscription.id,
-        stripePriceId: subscription.items.data[0]?.price.id,
-        stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      },
     });
+
+    if (existingPaymentInfo) {
+      // 更新现有记录
+      await prisma.userPaymentInfo.update({
+        where: { id: existingPaymentInfo.id },
+        data: {
+          stripeCustomerId: subscription.customer as string,
+          stripeSubscriptionId: subscription.id,
+          stripePriceId: subscription.items.data[0]?.price.id,
+          stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        },
+      });
+    } else {
+      // 创建新记录
+      await prisma.userPaymentInfo.create({
+        data: {
+          userId: userId,
+          stripeCustomerId: subscription.customer as string,
+          stripeSubscriptionId: subscription.id,
+          stripePriceId: subscription.items.data[0]?.price.id,
+          stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        },
+      });
+    }
 
     console.log("✅ Subscription created successfully");
   } catch (error) {
@@ -237,12 +249,19 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   }
 
   try {
-    await prisma.userPaymentInfo.update({
+    // 先查找现有的支付信息记录
+    const existingPaymentInfo = await prisma.userPaymentInfo.findFirst({
       where: { userId: userId },
-      data: {
-        stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      },
     });
+
+    if (existingPaymentInfo) {
+      await prisma.userPaymentInfo.update({
+        where: { id: existingPaymentInfo.id },
+        data: {
+          stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        },
+      });
+    }
 
     console.log("✅ Subscription updated successfully");
   } catch (error) {
@@ -261,14 +280,21 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   }
 
   try {
-    await prisma.userPaymentInfo.update({
+    // 先查找现有的支付信息记录
+    const existingPaymentInfo = await prisma.userPaymentInfo.findFirst({
       where: { userId: userId },
-      data: {
-        stripeSubscriptionId: null,
-        stripePriceId: null,
-        stripeCurrentPeriodEnd: null,
-      },
     });
+
+    if (existingPaymentInfo) {
+      await prisma.userPaymentInfo.update({
+        where: { id: existingPaymentInfo.id },
+        data: {
+          stripeSubscriptionId: null,
+          stripePriceId: null,
+          stripeCurrentPeriodEnd: null,
+        },
+      });
+    }
 
     console.log("✅ Subscription deleted successfully");
   } catch (error) {

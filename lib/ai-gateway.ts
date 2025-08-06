@@ -4,7 +4,7 @@ export interface ReplicateImageRequest {
   model: string;
   input_image_url?: string;
   input_prompt: string;
-  aspect_ratio: string;
+  aspect_ratio?: string; // 去背景功能不需要长宽比
   is_private: number;
   user_id: string;
   lora_name?: string;
@@ -13,6 +13,7 @@ export interface ReplicateImageRequest {
 
 export interface ReplicateImageResponse {
   replicate_id: string;
+  output?: string[];
   error?: string;
 }
 
@@ -68,9 +69,16 @@ class CloudflareAIGateway {
       // 根据 Cloudflare 文档，Replicate 使用 Bearer Token 认证
       headers.append("Authorization", `Bearer ${this.replicateApiToken}`);
 
+      // 根据模型类型构建不同的输入参数
+      const isBackgroundRemoval = request.model === "background-removal";
+      
       const payload = {
         version: this.getReplicateModelVersion(request.model),
-        input: {
+        input: isBackgroundRemoval ? {
+          // 去背景模型只需要输入图片
+          image: request.input_image_url,
+        } : {
+          // FLUX 模型需要完整的参数
           prompt: request.input_prompt,
           aspect_ratio: request.aspect_ratio,
           ...(request.input_image_url && { image: request.input_image_url }),
@@ -104,6 +112,7 @@ class CloudflareAIGateway {
 
       const result = {
         replicate_id: data.id,
+        output: data.output,
         error: data.error,
       };
 
@@ -210,14 +219,10 @@ class CloudflareAIGateway {
    */
   private getReplicateModelVersion(model: string): string {
     const modelVersions = {
-      "flux-pro": "black-forest-labs/flux-pro",
-      "flux-dev": "black-forest-labs/flux-dev", 
-      "flux-schnell": "black-forest-labs/flux-schnell",
-      "flux-general": "black-forest-labs/flux-dev", // 使用 dev 版本作为通用模型
-      "flux-freeSchnell": "black-forest-labs/flux-schnell", // 免费版本使用 schnell
+      "background-removal": "men1scus/birefnet",
     };
 
-    return modelVersions[model] || modelVersions["flux-freeSchnell"];
+    return modelVersions[model] || "men1scus/birefnet";
   }
 
   /**

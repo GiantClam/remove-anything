@@ -51,6 +51,8 @@ interface UploadValue {
   originFile?: File;
   md5?: string;
   fileType?: string;
+  status?: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error';
+  error?: string;
 }
 
 interface FormUploadProps {
@@ -64,6 +66,7 @@ interface FormUploadProps {
   disabled?: boolean;
   placeholder?: string | React.ReactNode;
   onChange?: (values: UploadValue[]) => void;
+  multiple?: boolean; // 新增：支持多文件上传
 }
 
 export const useGetLicenseSts = (config?: {
@@ -95,8 +98,9 @@ const FormUpload = (props: FormUploadProps) => {
     disabled,
     accept,
     maxSize,
-    maxFiles,
+    maxFiles = 10, // 默认最多10个文件
     defaultImg,
+    multiple = false, // 默认单文件上传
   } = props;
   const getLicenseSts = useGetLicenseSts();
   const [uploadLoading, setUploadLoading] = useState(false);
@@ -105,37 +109,94 @@ const FormUpload = (props: FormUploadProps) => {
     if (files.length) {
       try {
         setUploadLoading(true);
-        const file: File = files[0];
-        const key = `${nanoid(12)}.${getMime(file.name) || "_"}`;
-
-        const res = await getLicenseSts.mutateAsync({
-          key,
-          fileType: file.type,
-        });
-        if (res.error || !res?.data.putUrl || !res?.data.url) {
-          toast.error(res.error || "Failed to get upload information. Please try again later.");
+        
+        // 检查文件数量限制
+        if (multiple && value.length + files.length > maxFiles) {
+          toast.error(`最多只能上传 ${maxFiles} 个文件`);
           return;
         }
-        const formData = new FormData();
-        formData.append("file", file);
-        await Promise.all([
-          fetch(res.data.putUrl, {
-            body: file,
-            method: "PUT",
-            headers: {
-              "Content-Type": file.type,
-            },
-          }),
-        ]);
+        
+        // 如果不是多文件模式，只处理第一个文件
+        const filesToProcess = multiple ? files : [files[0]];
+        
+        const uploadPromises = filesToProcess.map(async (file) => {
+          const key = `${nanoid(12)}.${getMime(file.name) || "_"}`;
+          
+          // 先添加到列表中，状态为上传中
+          const tempValue = {
+            url: "",
+            key: "",
+            completedUrl: "",
+            id: nanoid(12),
+            originFile: file,
+            status: 'uploading' as const,
+          };
+          
+          const currentValues = [...value];
+          if (!multiple) {
+            // 单文件模式，替换现有文件
+            onChange?.([tempValue]);
+          } else {
+            // 多文件模式，添加到列表
+            onChange?.([...currentValues, tempValue]);
+          }
 
-        const newValue = {
-          url: res?.data?.url,
-          key: res?.data?.key,
-          completedUrl: res?.data?.completedUrl,
-          id: nanoid(12),
-          originFile: file,
-        };
-        onChange?.([...value, newValue]);
+          try {
+            const res = await getLicenseSts.mutateAsync({
+              key,
+              fileType: file.type,
+            });
+            
+            if (res.error || !res?.data.putUrl || !res?.data.url) {
+              throw new Error(res.error || "Failed to get upload information");
+            }
+            
+            const formData = new FormData();
+            formData.append("file", file);
+            await fetch(res.data.putUrl, {
+              body: file,
+              method: "PUT",
+              headers: {
+                "Content-Type": file.type,
+              },
+            });
+
+            const newValue = {
+              url: res?.data?.url,
+              key: res?.data?.key,
+              completedUrl: res?.data?.completedUrl,
+              id: tempValue.id,
+              originFile: file,
+              status: 'uploaded' as const,
+            };
+            
+            // 更新对应的文件状态
+            const updatedValues = multiple 
+              ? value.map(v => v.id === tempValue.id ? newValue : v)
+              : [newValue];
+            onChange?.(updatedValues);
+            
+            return newValue;
+          } catch (error) {
+            console.log("upload error->", error);
+            const errorValue = {
+              ...tempValue,
+              status: 'error' as const,
+              error: error + "" || "Upload failed!",
+            };
+            
+            const updatedValues = multiple 
+              ? value.map(v => v.id === tempValue.id ? errorValue : v)
+              : [errorValue];
+            onChange?.(updatedValues);
+            
+            toast.error(error + "" || "Upload failed! Please try again later.");
+            throw error;
+          }
+        });
+        
+        await Promise.all(uploadPromises);
+        
       } catch (error) {
         console.log("error->", error);
         toast.error(error + "" || "Upload failed! Please try again later.");
@@ -157,33 +218,77 @@ const FormUpload = (props: FormUploadProps) => {
             },
           )}
         >
-          {value.map((item) => {
-            const type = item?.fileType || item?.originFile?.type;
-            return (
-              <div
-                className="group relative h-full w-full overflow-hidden flex justify-center"
-                key={item.id}
-              >
-                {!disabled && (
-                  <RemoveAction
-                    onClick={() => {
-                      onChange?.(value.filter((_item) => _item.id !== item.id));
-                    }}
-                  />
-                )}
-                {type?.includes("image") ? (
-                  <img src={item.url} className="aspect-auto h-full object-cover" />
-                ) : type?.includes("video") ? (
-                  <video src={item.url} className="aspect-auto" />
-                ) : (
-                  <div className="dark:!bg-navy-700 flex aspect-auto flex-col items-center justify-center border-gray-200 bg-gray-100 dark:!border-none">
-                    <FileIcon fontSize={24} />
-                    <p className="max-w-[50%] truncate">{item.url}</p>
+          {multiple ? (
+            // 多文件模式：显示网格布局
+            <div className="grid grid-cols-2 gap-2 p-2 w-full h-full overflow-auto">
+              {value.map((item) => {
+                const type = item?.fileType || item?.originFile?.type;
+                return (
+                  <div
+                    className="group relative h-32 w-full overflow-hidden rounded-lg border"
+                    key={item.id}
+                  >
+                    {!disabled && (
+                      <RemoveAction
+                        onClick={() => {
+                          onChange?.(value.filter((_item) => _item.id !== item.id));
+                        }}
+                      />
+                    )}
+                    {item.status === 'uploading' && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <div className="text-white text-sm">上传中...</div>
+                      </div>
+                    )}
+                    {item.status === 'error' && (
+                      <div className="absolute inset-0 bg-red-500 bg-opacity-50 flex items-center justify-center">
+                        <div className="text-white text-xs text-center">上传失败</div>
+                      </div>
+                    )}
+                    {type?.includes("image") ? (
+                      <img src={item.url || URL.createObjectURL(item.originFile!)} className="h-full w-full object-cover" />
+                    ) : type?.includes("video") ? (
+                      <video src={item.url} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="dark:!bg-navy-700 flex h-full w-full flex-col items-center justify-center border-gray-200 bg-gray-100 dark:!border-none">
+                        <FileIcon fontSize={24} />
+                        <p className="max-w-[80%] truncate text-xs">{item.originFile?.name}</p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          ) : (
+            // 单文件模式：保持原有布局
+            value.map((item) => {
+              const type = item?.fileType || item?.originFile?.type;
+              return (
+                <div
+                  className="group relative h-full w-full overflow-hidden flex justify-center"
+                  key={item.id}
+                >
+                  {!disabled && (
+                    <RemoveAction
+                      onClick={() => {
+                        onChange?.(value.filter((_item) => _item.id !== item.id));
+                      }}
+                    />
+                  )}
+                  {type?.includes("image") ? (
+                    <img src={item.url} className="aspect-auto h-full object-cover" />
+                  ) : type?.includes("video") ? (
+                    <video src={item.url} className="aspect-auto" />
+                  ) : (
+                    <div className="dark:!bg-navy-700 flex aspect-auto flex-col items-center justify-center border-gray-200 bg-gray-100 dark:!border-none">
+                      <FileIcon fontSize={24} />
+                      <p className="max-w-[50%] truncate">{item.url}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       ) : (
         <>
@@ -204,6 +309,7 @@ const FormUpload = (props: FormUploadProps) => {
             accept={convertAcceptToString(accept)}
             maxSize={maxSize}
             isUploading={uploadLoading}
+            multiple={multiple}
           />
         </>
       )}

@@ -380,7 +380,8 @@
   },
   "AppNavigation": {
     "Index": "الرئيسية",
-    "Generate": "توليد",
+    "BackgroundRemoval": "إزالة الخلفية",
+    "BatchBackgroundRemoval": "إزالة الخلفية المجمعة",
     "History": "السجل",
     "GiftCode": "كود الهدية",
     "ChargeOrder": "طلب الشحن"

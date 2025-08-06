@@ -380,7 +380,8 @@
   },
   "AppNavigation": {
     "Index": "홈",
-    "Generate": "생성",
+    "BackgroundRemoval": "배경 제거",
+    "BatchBackgroundRemoval": "배치 배경 제거",
     "History": "역사",
     "GiftCode": "선물 코드",
     "ChargeOrder": "충전 주문"

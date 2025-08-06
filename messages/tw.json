@@ -397,7 +397,8 @@
   },
   "AppNavigation": {
     "Index": "首頁",
-    "Generate": "AI 生圖",
+    "BackgroundRemoval": "背景移除",
+    "BatchBackgroundRemoval": "批量背景移除",
     "History": "歷史記錄",
     "GiftCode": "兌換",
     "ChargeOrder": "充值訂單"
