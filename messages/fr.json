@@ -17,60 +17,6 @@
       "close": "Fermer"
     }
   },
-  "PromptGenerator": {
-    "layout": {
-      "title": "Générateur de Prompts Flux AI Gratuit : Améliorez votre Créativité avec des Prompts Alimentés par l'IA",
-      "description": "Découvrez la puissance du Générateur de Prompts Flux AI, votre outil ultime pour créer des prompts AI sur mesure sans effort. Que vous soyez écrivain, développeur ou penseur créatif, notre plateforme intuitive transforme vos idées en prompts captivants, augmentant la productivité et inspirant l'innovation. Commencez à générer du contenu convaincant dès aujourd'hui et élevez vos projets avec Flux AI !",
-      "keywords": "générateur de prompts flux ai, générateur de prompts AI, créateur de prompts flux, génération de contenu AI, outils d'écriture AI, prompts d'écriture créative, outils flux AI, générer des prompts avec AI, génération de prompts pilotée par AI, améliorer la créativité avec AI, logiciel de génération de prompts"
-    },
-    "title": "Générateur de Prompts Flux AI Gratuit",
-    "subtitle": "Transformez vos idées en prompts puissants de génération d'images AI avec notre guide complet",
-    "form": {
-      "input": {
-        "title": "Entrez Votre Idée de Prompt",
-        "placeholder": "Entrez votre idée de prompt ici..."
-      },
-      "output": {
-        "title": "Prompt Généré"
-      },
-      "action": {
-        "generate": "Générer un Prompt AI",
-        "generating": "Génération en cours...",
-        "copy": "Copier le prompt",
-        "copySuccess": "Prompt copié dans le presse-papiers.",
-        "to_generate": "Pour générer"
-      }
-    },
-    "faq": {
-      "label": "Questions",
-      "title": "Questions Fréquemment Posées sur le Générateur de Prompts Flux AI",
-      "subtitle": "Explorez notre FAQ complète pour trouver des réponses rapides aux questions courantes. Si vous avez besoin d'une assistance supplémentaire, n'hésitez pas à nous contacter pour obtenir de l'aide personnalisée.",
-      "item1": {
-        "question": "Qu'est-ce que le Générateur de Prompts Flux AI ?",
-        "answer": "Le Générateur de Prompts Flux AI est un outil innovant conçu pour aider les utilisateurs à créer des prompts engageants et efficaces pour diverses applications, y compris l'écriture, le marketing et la création de contenu. En exploitant des algorithmes AI avancés, il génère des suggestions qui stimulent la créativité et améliorent la productivité."
-      },
-      "item2": {
-        "question": "Comment fonctionne Flux AI ?",
-        "answer": "Flux AI utilise des techniques d'intelligence artificielle et d'apprentissage automatique pour analyser les entrées des utilisateurs et générer des prompts pertinents. Les utilisateurs peuvent personnaliser les paramètres pour adapter la sortie, s'assurant que les prompts générés répondent à leurs besoins spécifiques, qu'il s'agisse de projets personnels ou de tâches professionnelles."
-      },
-      "item3": {
-        "question": "Qui peut bénéficier de l'utilisation de Flux AI ?",
-        "answer": "Flux AI est idéal pour les écrivains, les marketeurs, les éducateurs et les créateurs de contenu à la recherche d'inspiration et de guidance. Il peut aider les utilisateurs à surmonter le blocage de l'écrivain, à développer des stratégies de marketing ou à créer des plans de leçons, ce qui en fait un outil précieux pour quiconque a besoin d'idées fraîches."
-      },
-      "item4": {
-        "question": "Flux AI est-il convivial ?",
-        "answer": "Oui, Flux AI est conçu en tenant compte de l'expérience utilisateur. Son interface intuitive permet aux utilisateurs de tous niveaux de compétence de naviguer facilement dans l'outil. Avec des options d'entrée simples et des instructions claires, même ceux ayant une expérience technique minimale peuvent commencer à générer des prompts en un rien de temps."
-      },
-      "item5": {
-        "question": "Puis-je utiliser Flux AI pour plusieurs projets ?",
-        "answer": "Absolument ! Le Générateur de Prompts Flux AI est polyvalent et prend en charge un large éventail de projets. Que vous élaboriez des articles de blog, du contenu de médias sociaux ou des idées pour l'écriture créative, vous pouvez utiliser l'outil plusieurs fois pour générer des prompts uniques pour différentes besoins."
-      },
-      "item6": {
-        "question": "Y a-t-il un coût associé à l'utilisation du Générateur de Prompts Flux AI ?",
-        "answer": "Le Générateur de Prompts Flux AI est actuellement gratuit. Les utilisateurs peuvent accéder à la plateforme à tout moment, entrer des prompts et générer des suggestions pertinentes sans frais."
-      }
-    }
-  },
   "IndexPage": {
     "intro": "Découvrez Flux AI, le générateur d'images",
     "description": "Révolutionnez la création d'images avec notre modèle avancé de texte vers image, compatible avec flux.1 pro/dev et flux.1 schnell.",
@@ -133,6 +79,62 @@
       "github": {
         "sm": "Étoile sur",
         "normal": "Github"
+      }
+    },
+    "howto": {
+      "title": "How to Remove Background from Image",
+      "description": "Follow these simple steps to remove backgrounds from your images in seconds.",
+      "step1": {
+        "title": "1. Upload Your Image",
+        "description": "Click the 'Upload Image' button and select the photo you want to edit from your computer or phone. We support PNG, JPG, and other formats."
+      },
+      "step2": {
+        "title": "2. AI Automatically Removes Background",
+        "description": "Our intelligent AI will automatically detect the subject and accurately remove the background. No manual work needed!"
+      },
+      "step3": {
+        "title": "3. Download Your New Image",
+        "description": "Your new image with a transparent background is ready! Just click the 'Download' button to save it in high resolution."
+      }
+    },
+    "usecases": {
+      "title": "Perfect for Any Project",
+      "description": "Our background removal tool is versatile and can be used for various purposes.",
+      "ecommerce": {
+        "title": "For E-commerce",
+        "description": "Create professional product photos for Amazon, Shopify, and more."
+      },
+      "marketing": {
+        "title": "For Marketers",
+        "description": "Design eye-catching social media posts, banners, and ads."
+      },
+      "photography": {
+        "title": "For Photographers",
+        "description": "Speed up your photo editing workflow."
+      },
+      "personal": {
+        "title": "For Personal Use",
+        "description": "Make fun profile pictures, memes, or greeting cards."
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "description": "Get answers to common questions about our background removal tool.",
+      "q1": {
+        "question": "How to remove background from an image on iPhone?",
+        "answer": "Our website works perfectly on your iPhone's browser. Just open Safari or Chrome, navigate to our site, upload your picture, and download the result directly to your phone."
+      },
+      "q2": {
+        "question": "Is it free to remove a background from a picture?",
+        "answer": "Yes, our tool is completely free. You can process as many images as you like without any charge."
+      },
+      "q3": {
+        "question": "Can I remove the background from a logo?",
+        "answer": "Absolutely. Our AI is trained to handle sharp edges, making it ideal for removing the background from logos and graphics. Upload your logo to get a transparent version."
+      },
+      "q4": {
+        "question": "What image formats are supported?",
+        "answer": "We support all common image formats, including JPG, PNG, and WEBP."
       }
     }
   },
@@ -388,7 +390,8 @@
   },
   "Navigation": {
     "pricing": "Tarifs",
-    "schnell": "Flux Schnell",
+    "schnell": "Suppression d'arrière-plan",
+    "BatchBackgroundRemoval": "Suppression d'arrière-plan par lot",
     "explore": "Explorer",
     "title": "Flux AI Générateur d'Images",
     "blog": "Blog",

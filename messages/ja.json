@@ -17,60 +17,6 @@
       "close": "閉じる"
     }
   },
-  "PromptGenerator": {
-    "layout": {
-      "title": "無料のFlux AIプロンプトジェネレーター：AI駆動のプロンプトで創造性を向上させる",
-      "description": "Flux AIプロンプトジェネレーターの力を発見し、手間をかけずにカスタマイズされたAIプロンプトを作成するための究極のツールです。作家、開発者、クリエイティブな考え方の方であれ、私たちの直感的なプラットフォームはあなたのアイデアを魅力的なプロンプトに変え、生産性を向上させ、イノベーションを刺激します。今日から説得力のあるコンテンツを生成し、Flux AIでプロジェクトを引き上げましょう！",
-      "keywords": "flux aiプロンプトジェネレーター, AIプロンプトジェネレーター, fluxプロンプトクリエイター, AIコンテンツ生成, AIライティングツール, クリエイティブライティングプロンプト, flux AIツール, AIでプロンプトを生成, AI駆動プロンプト生成, AIで創造性を向上, プロンプト生成ソフトウェア"
-    },
-    "title": "無料のFlux AIプロンプトジェネレーター",
-    "subtitle": "アイデアを包括的なガイドで強力なAI画像生成プロンプトに変換",
-    "form": {
-      "input": {
-        "title": "プロンプトのアイデアを入力",
-        "placeholder": "ここにプロンプトのアイデアを入力してください..."
-      },
-      "output": {
-        "title": "生成されたプロンプト"
-      },
-      "action": {
-        "generate": "AIプロンプトを生成",
-        "generating": "生成中...",
-        "copy": "プロンプトをコピー",
-        "copySuccess": "プロンプトがクリップボードにコピーされました。",
-        "to_generate": "生成するには"
-      }
-    },
-    "faq": {
-      "label": "質問",
-      "title": "Flux AIプロンプトジェネレーターに関するよくある質問",
-      "subtitle": "よくある質問に対する迅速な回答を見つけるために、私たちの包括的なFAQをご覧ください。さらに支援が必要な場合は、お気軽にお問い合わせください。",
-      "item1": {
-        "question": "Flux AIプロンプトジェネレーターとは何ですか？",
-        "answer": "Flux AIプロンプトジェネレーターは、ユーザーが魅力的で効果的なプロンプトを作成するのを支援する革新的なツールです。高度なAIアルゴリズムを活用することで、創造性を刺激し、生産性を向上させる提案を生成します。"
-      },
-      "item2": {
-        "question": "Flux AIはどのように機能しますか？",
-        "answer": "Flux AIは、ユーザーの入力を分析し、関連性の高いプロンプトを生成するために、人工知能と機械学習技術を利用しています。ユーザーはパラメータをカスタマイズして出力を調整し、生成されたプロンプトが特定のニーズに合うようにすることができます。"
-      },
-      "item3": {
-        "question": "誰がFlux AIを利用できますか？",
-        "answer": "Flux AIは、作家、マーケター、教育者、コンテンツクリエイターに最適です。ブロックバスターを克服し、マーケティング戦略を立てたり、レッスンプランを作成したりするのに役立ちます。"
-      },
-      "item4": {
-        "question": "Flux AIは使いやすいですか？",
-        "answer": "はい、Flux AIはユーザー体験を重視して設計されています。直感的なインターフェースで、技術経験の有無に関わらず、誰でも簡単にツールを操作できます。"
-      },
-      "item5": {
-        "question": "複数のプロジェクトでFlux AIを使用できますか？",
-        "answer": "もちろんです！Flux AIプロンプトジェネレーターは、ブログ記事、ソーシャルメディアコンテンツ、クリエイティブライティングのアイデアなど、幅広いプロジェクトに対応しています。"
-      },
-      "item6": {
-        "question": "Flux AIプロンプトジェネレーターの使用に費用はかかりますか？",
-        "answer": "Flux AIプロンプトジェネレーターは現在無料です。ユーザーはいつでもプラットフォームにアクセスし、プロンプトを入力して、関連性の高い提案を無料で生成できます。"
-      }
-    }
-  },
   "IndexPage": {
     "intro": "Flux AI画像生成ツールのご紹介",
     "description": "次世代の高度なテキストから画像への変換を革新する先進的なオープンモデルです。flux.1 pro/devとflux.1 schnellモデルをサポートしています。",
@@ -133,6 +79,62 @@
       "github": {
         "sm": "スターを付ける",
         "normal": "GitHub"
+      }
+    },
+    "howto": {
+      "title": "How to Remove Background from Image",
+      "description": "Follow these simple steps to remove backgrounds from your images in seconds.",
+      "step1": {
+        "title": "1. Upload Your Image",
+        "description": "Click the 'Upload Image' button and select the photo you want to edit from your computer or phone. We support PNG, JPG, and other formats."
+      },
+      "step2": {
+        "title": "2. AI Automatically Removes Background",
+        "description": "Our intelligent AI will automatically detect the subject and accurately remove the background. No manual work needed!"
+      },
+      "step3": {
+        "title": "3. Download Your New Image",
+        "description": "Your new image with a transparent background is ready! Just click the 'Download' button to save it in high resolution."
+      }
+    },
+    "usecases": {
+      "title": "Perfect for Any Project",
+      "description": "Our background removal tool is versatile and can be used for various purposes.",
+      "ecommerce": {
+        "title": "For E-commerce",
+        "description": "Create professional product photos for Amazon, Shopify, and more."
+      },
+      "marketing": {
+        "title": "For Marketers",
+        "description": "Design eye-catching social media posts, banners, and ads."
+      },
+      "photography": {
+        "title": "For Photographers",
+        "description": "Speed up your photo editing workflow."
+      },
+      "personal": {
+        "title": "For Personal Use",
+        "description": "Make fun profile pictures, memes, or greeting cards."
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "description": "Get answers to common questions about our background removal tool.",
+      "q1": {
+        "question": "How to remove background from an image on iPhone?",
+        "answer": "Our website works perfectly on your iPhone's browser. Just open Safari or Chrome, navigate to our site, upload your picture, and download the result directly to your phone."
+      },
+      "q2": {
+        "question": "Is it free to remove a background from a picture?",
+        "answer": "Yes, our tool is completely free. You can process as many images as you like without any charge."
+      },
+      "q3": {
+        "question": "Can I remove the background from a logo?",
+        "answer": "Absolutely. Our AI is trained to handle sharp edges, making it ideal for removing the background from logos and graphics. Upload your logo to get a transparent version."
+      },
+      "q4": {
+        "question": "What image formats are supported?",
+        "answer": "We support all common image formats, including JPG, PNG, and WEBP."
       }
     }
   },
@@ -396,7 +398,9 @@
     "dashboard": "ダッシュボード",
     "tooltip": {
       "login": "ログイン"
-    }
+    },
+    "Support": "Support",
+    "BatchBackgroundRemoval": "バッチ背景除去"
   },
   "NotFoundPage": {
     "description": "ブラウザのアドレスバーを再確認するか、ナビゲーションを使用して既知のページに移動してください。",

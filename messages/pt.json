@@ -17,60 +17,6 @@
       "close": "Fechar"
     }
   },
-  "PromptGenerator": {
-    "layout": {
-      "title": "Gerador de Prompts Flux AI Gratuito: Aumente sua Criatividade com Prompts Movidos a IA",
-      "description": "Descubra o poder do Gerador de Prompts Flux AI, sua ferramenta definitiva para criar prompts de IA personalizados sem esforço. Seja você um escritor, desenvolvedor ou pensador criativo, nossa plataforma intuitiva transforma suas ideias em prompts envolventes, aumentando a produtividade e inspirando inovação. Comece a gerar conteúdo convincente hoje e eleve seus projetos com Flux AI!",
-      "keywords": "gerador de prompts flux ai, gerador de prompts de IA, criador de prompts flux, geração de conteúdo de IA, ferramentas de escrita de IA, prompts de escrita criativa, ferramentas flux AI, gerar prompts com IA, geração de prompts movida por IA, aumentar a criatividade com IA, software de geração de prompts"
-    },
-    "title": "Gerador de Prompts Flux AI Gratuito",
-    "subtitle": "Transforme suas ideias em prompts poderosos de geração de imagens AI com nosso guia completo",
-    "form": {
-      "input": {
-        "title": "Insira Sua Ideia de Prompt",
-        "placeholder": "Insira sua ideia de prompt aqui..."
-      },
-      "output": {
-        "title": "Prompt Gerado"
-      },
-      "action": {
-        "generate": "Gerar Prompt de IA",
-        "generating": "Gerando...",
-        "copy": "Copiar prompt",
-        "copySuccess": "Prompt copiado para a área de transferência.",
-        "to_generate": "Gerar"
-      }
-    },
-    "faq": {
-      "label": "Perguntas",
-      "title": "Perguntas Frequentes sobre o Gerador de Prompts Flux AI",
-      "subtitle": "Explore nosso FAQ abrangente para encontrar respostas rápidas para perguntas comuns. Se precisar de mais assistência, não hesite em entrar em contato conosco para obter ajuda personalizada.",
-      "item1": {
-        "question": "O que é o Gerador de Prompts Flux AI?",
-        "answer": "O Gerador de Prompts Flux AI é uma ferramenta inovadora projetada para ajudar os usuários a criar prompts envolventes e eficazes para várias aplicações, incluindo escrita, marketing e criação de conteúdo. Ao aproveitar algoritmos avançados de IA, ele gera sugestões que estimulam a criatividade e melhoram a produtividade."
-      },
-      "item2": {
-        "question": "Como funciona o Flux AI?",
-        "answer": "O Flux AI utiliza técnicas de inteligência artificial e aprendizado de máquina para analisar as entradas dos usuários e gerar prompts relevantes. Os usuários podem personalizar parâmetros para adaptar a saída, garantindo que os prompts gerados atendam às suas necessidades específicas, sejam para projetos pessoais ou tarefas profissionais."
-      },
-      "item3": {
-        "question": "Quem pode se beneficiar de usar Flux AI?",
-        "answer": "Flux AI é ideal para escritores, especialistas em marketing, educadores e criadores de conteúdo que buscam inspiração e orientação. Pode ajudar os usuários a superar o bloqueio de escritor, desenvolver estratégias de marketing ou criar planos de aula, tornando-se uma ferramenta valiosa para qualquer pessoa que precise de ideias frescas."
-      },
-      "item4": {
-        "question": "O Flux AI é fácil de usar?",
-        "answer": "Sim, o Flux AI é projetado com a experiência do usuário em mente. Sua interface intuitiva permite que usuários de todos os níveis de habilidade naveguem facilmente pela ferramenta. Com opções de entrada simples e instruções claras, até mesmo aqueles com experiência técnica mínima podem começar a gerar prompts rapidamente."
-      },
-      "item5": {
-        "question": "Posso usar Flux AI para múltiplos projetos?",
-        "answer": "Absolutamente! O Gerador de Prompts Flux AI é versátil e suporta uma ampla gama de projetos. Seja você elaborando postagens de blog, conteúdo de mídias sociais ou ideias para escrita criativa, você pode utilizar a ferramenta várias vezes para gerar prompts únicos para diferentes necessidades."
-      },
-      "item6": {
-        "question": "Há um custo associado ao uso do Gerador de Prompts Flux AI?",
-        "answer": "O Gerador de Prompts Flux AI é atualmente gratuito. Os usuários podem acessar a plataforma a qualquer momento, inserir prompts e gerar sugestões relevantes sem nenhum custo."
-      }
-    }
-  },
   "IndexPage": {
     "intro": "Apresentando o Gerador de Imagens Flux AI",
     "description": "Revolutionando o modelo avançado de texto para imagem de próxima geração, suporte para os modelos flux.1 pro/dev e flux.1 schnell.",
@@ -133,6 +79,62 @@
       "github": {
         "sm": "Estrela no",
         "normal": "Github"
+      }
+    },
+    "howto": {
+      "title": "How to Remove Background from Image",
+      "description": "Follow these simple steps to remove backgrounds from your images in seconds.",
+      "step1": {
+        "title": "1. Upload Your Image",
+        "description": "Click the 'Upload Image' button and select the photo you want to edit from your computer or phone. We support PNG, JPG, and other formats."
+      },
+      "step2": {
+        "title": "2. AI Automatically Removes Background",
+        "description": "Our intelligent AI will automatically detect the subject and accurately remove the background. No manual work needed!"
+      },
+      "step3": {
+        "title": "3. Download Your New Image",
+        "description": "Your new image with a transparent background is ready! Just click the 'Download' button to save it in high resolution."
+      }
+    },
+    "usecases": {
+      "title": "Perfect for Any Project",
+      "description": "Our background removal tool is versatile and can be used for various purposes.",
+      "ecommerce": {
+        "title": "For E-commerce",
+        "description": "Create professional product photos for Amazon, Shopify, and more."
+      },
+      "marketing": {
+        "title": "For Marketers",
+        "description": "Design eye-catching social media posts, banners, and ads."
+      },
+      "photography": {
+        "title": "For Photographers",
+        "description": "Speed up your photo editing workflow."
+      },
+      "personal": {
+        "title": "For Personal Use",
+        "description": "Make fun profile pictures, memes, or greeting cards."
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "description": "Get answers to common questions about our background removal tool.",
+      "q1": {
+        "question": "How to remove background from an image on iPhone?",
+        "answer": "Our website works perfectly on your iPhone's browser. Just open Safari or Chrome, navigate to our site, upload your picture, and download the result directly to your phone."
+      },
+      "q2": {
+        "question": "Is it free to remove a background from a picture?",
+        "answer": "Yes, our tool is completely free. You can process as many images as you like without any charge."
+      },
+      "q3": {
+        "question": "Can I remove the background from a logo?",
+        "answer": "Absolutely. Our AI is trained to handle sharp edges, making it ideal for removing the background from logos and graphics. Upload your logo to get a transparent version."
+      },
+      "q4": {
+        "question": "What image formats are supported?",
+        "answer": "We support all common image formats, including JPG, PNG, and WEBP."
       }
     }
   },
@@ -278,7 +280,8 @@
       "copySuccess": "Prompt copiado para a área de transferência.",
       "download": "Baixar Imagem",
       "downloadSuccess": "Imagem baixada.",
-      "downloadLoading": "Baixando..."
+      "downloadLoading": "Baixando...",
+      "upgrade": "Elevate your artistry with Schnell's limited monthly free trials. For watermark-free, premium model experiences, click here to upgrade."
     }
   },
   "GiftCode": {
@@ -396,7 +399,9 @@
     "dashboard": "Painel de Controle",
     "tooltip": {
       "login": "Login"
-    }
+    },
+    "Support": "Support",
+    "BatchBackgroundRemoval": "Remoção de fundo em lote"
   },
   "NotFoundPage": {
     "description": "Por favor, verifique a barra de endereço do navegador ou use a navegação para ir para uma página conhecida.",

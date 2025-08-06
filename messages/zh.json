@@ -17,7 +17,6 @@
       "close": "关闭"
     }
   },
-
   "IndexPage": {
     "intro": "🎉 免费 AI 背景去除器",
     "description": "使用我们的免费 AI 驱动工具立即去除任何图片的背景。高质量、快速且易于使用。上传您的照片，几秒钟内即可获得透明背景。",
@@ -377,9 +376,18 @@
   "Manifest": {
     "name": "Flux AI 图像生成器"
   },
+  "AppNavigation": {
+    "Index": "首页",
+    "BackgroundRemoval": "去背景",
+    "BatchBackgroundRemoval": "批量去背景",
+    "History": "历史记录",
+    "GiftCode": "兑换",
+    "ChargeOrder": "充值订单"
+  },
   "Navigation": {
     "pricing": "定价",
-    "schnell": "Flux Schnell",
+    "schnell": "去背景",
+    "BatchBackgroundRemoval": "批量去背景",
     "explore": "发现",
     "title": "Flux AI 图像生成器",
     "prompt": "Flux AI 提示词生成器",
@@ -393,14 +401,6 @@
   "NotFoundPage": {
     "description": "请检查浏览器地址栏或使用导航前往已知页面。",
     "title": "页面未找到"
-  },
-  "AppNavigation": {
-    "Index": "首页",
-    "BackgroundRemoval": "去背景",
-    "BatchBackgroundRemoval": "批量去背景",
-    "History": "历史记录",
-    "GiftCode": "兑换",
-    "ChargeOrder": "充值订单"
   },
   "PageLayout": {
     "footer": {

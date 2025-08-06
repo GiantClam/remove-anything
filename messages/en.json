@@ -387,6 +387,7 @@
   "Navigation": {
     "pricing": "Pricing",
     "schnell": "Background Removal",
+    "BatchBackgroundRemoval": "Batch Background Removal",
     "explore": "Examples",
     "title": "Remove Anything",
     "blog": "Blog",

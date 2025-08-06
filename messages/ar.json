@@ -17,60 +17,6 @@
       "close": "إغلاق"
     }
   },
-  "PromptGenerator": {
-    "layout": {
-      "title": "مولد الإشعارات Flux AI المجاني: زيادة الإبداع بإشعارات مدعومة بالذكاء الاصطناعي",
-      "description": "اكتشف قوة مولد الإشعارات Flux AI، أداتك النهائية لإنشاء إشعارات AI مخصصة بسهولة. سواء كنت كاتبًا، مطورًا، أو مفكرًا إبداعيًا، فإن منصتنا البديهية تحول أفكارك إلى إشعارات جذابة، مما يعزز الإنتاجية ويلهم الابتكار. ابدأ في إنشاء محتوى جذاب اليوم وارفع مشاريعك مع Flux AI!",
-      "keywords": "مولد إشعارات flux ai, مولد إشعارات AI, منشئ إشعارات flux, إنشاء محتوى AI, أدوات كتابة AI, إشعارات كتابة إبداعية, أدوات flux AI, إنشاء إشعارات بـ AI, إنشاء إشعارات مدعومة بـ AI, تعزيز الإبداع بـ AI, برنامج إنشاء إشعارات"
-    },
-    "title": "مولد الإشعارات Flux AI المجاني",
-    "subtitle": "حول أفكارك إلى إشعارات إنشاء صور AI قوية مع دليلنا الشامل",
-    "form": {
-      "input": {
-        "title": "أدخل فكرة الإشعار الخاصة بك",
-        "placeholder": "أدخل فكرة الإشعار هنا..."
-      },
-      "output": {
-        "title": "الإشعار المُنشأ"
-      },
-      "action": {
-        "generate": "إنشاء إشعار AI",
-        "generating": "جارٍ الإنشاء...",
-        "copy": "نسخ الإشعار",
-        "copySuccess": "تم نسخ الإشعار إلى الحافظة.",
-        "to_generate": "للإنشاء"
-      }
-    },
-    "faq": {
-      "label": "أسئلة",
-      "title": "الأسئلة الشائعة حول مولد الإشعارات Flux AI",
-      "subtitle": "استكشف الأسئلة الشائعة التي يتم طرحها للعثور على إجابات سريعة. إذا كنت بحاجة إلى مزيد من المساعدة، لا تتردد في الاتصال بنا للحصول على مساعدة مخصصة.",
-      "item1": {
-        "question": "ما هو مولد الإشعارات Flux AI؟",
-        "answer": "مولد الإشعارات Flux AI هو أداة تقنية جديدة تهدف إلى مساعدة المستخدمين على إنشاء إشعارات جذابة وفعالة لتطبيقات متنوعة، بما في ذلك الكتابة والتسويق وإنشاء المحتوى. من خلال الاستفادة من خوارزميات AI المتقدمة، فإنه يولد اقتراحات تحفز الإبداع وتحسن الإنتاجية."
-      },
-      "item2": {
-        "question": "كيف يعمل Flux AI؟",
-        "answer": "يستخدم Flux AI تقنيات الذكاء الاصطناعي وتعلم الآلة لتحليل مدخلات المستخدم وإنشاء إشعارات ذات صلة. يمكن للمستخدمين تخصيص المعلمات لتخصيص الإخراج، مما يضمن أن الإشعارات المُنشأة تلبي احتياجاتهم المحددة، سواء كانت للمشاريع الشخصية أو المهام المهنية."
-      },
-      "item3": {
-        "question": "من يمكنه الاستفادة من استخدام Flux AI؟",
-        "answer": "Flux AI مثالي للكتاب والمسوقين والمعلمين ومنشئي المحتوى الذين يبحثون عن الإلهام والتوجيه. يمكن أن يساعد المستخدمين على التغلب على عقبة الكاتب، وتطوير استراتيجيات التسويق، أو إنشاء خطط الدروس، مما يجعله أداة قيمة لأي شخص يحتاج إلى أفكار جديدة."
-      },
-      "item4": {
-        "question": "هل Flux AI سهل الاستخدام؟",
-        "answer": "نعم، تم تصميم Flux AI بالاعتبار تجربة المستخدم. واجهته البديهية تسمح لمستخدمي كل مستويات المهارة بالتنقل بسهولة في الأداة. مع خيارات إدخال بسيطة وتعليمات واضحة، يمكن لأولئك الذين لديهم خبرة تقنية محدودة بدء إنشاء الإشعارات في وقت قصير."
-      },
-      "item5": {
-        "question": "هل يمكنني استخدام Flux AI لمشاريع متعددة؟",
-        "answer": "بالتأكيد! مولد الإشعارات Flux AI متعدد الاستخدامات ويدعم مجموعة واسعة من المشاريع. سواء كنت تصنع مشاركات مدونة، محتوى مواقع التواصل الاجتماعي، أو ياهو أفكار للكتابة الإبداعية، يمكنك استخدام الأداة عدة مرات لإنشاء إشعارات فريدة لاحتياجات مختلفة."
-      },
-      "item6": {
-        "question": "هل هناك تكلفة لاستخدام مولد كلمات الإشعار Flux AI؟",
-        "answer": "مولد كلمات الإشعار Flux AI حاليًا مجاني. يمكن للمستخدمين الوصول إلى المنصة في أي وقت، وإدخال الإشعارات وإنشاء اقتراحات ذات صلة دون أي تكلفة."
-      }
-    }
-  },
   "IndexPage": {
     "intro": "تقديم مولد الصور Flux AI",
     "description": "إحداث ثورة في الجيل التالي من النماذج المفتوحة المتقدمة من النص إلى الصورة، تدعم نماذج flux.1 pro/dev و flux.1 schnell.",
@@ -133,6 +79,62 @@
       "github": {
         "sm": "تقديم نجمة على",
         "normal": "GitHub"
+      }
+    },
+    "howto": {
+      "title": "How to Remove Background from Image",
+      "description": "Follow these simple steps to remove backgrounds from your images in seconds.",
+      "step1": {
+        "title": "1. Upload Your Image",
+        "description": "Click the 'Upload Image' button and select the photo you want to edit from your computer or phone. We support PNG, JPG, and other formats."
+      },
+      "step2": {
+        "title": "2. AI Automatically Removes Background",
+        "description": "Our intelligent AI will automatically detect the subject and accurately remove the background. No manual work needed!"
+      },
+      "step3": {
+        "title": "3. Download Your New Image",
+        "description": "Your new image with a transparent background is ready! Just click the 'Download' button to save it in high resolution."
+      }
+    },
+    "usecases": {
+      "title": "Perfect for Any Project",
+      "description": "Our background removal tool is versatile and can be used for various purposes.",
+      "ecommerce": {
+        "title": "For E-commerce",
+        "description": "Create professional product photos for Amazon, Shopify, and more."
+      },
+      "marketing": {
+        "title": "For Marketers",
+        "description": "Design eye-catching social media posts, banners, and ads."
+      },
+      "photography": {
+        "title": "For Photographers",
+        "description": "Speed up your photo editing workflow."
+      },
+      "personal": {
+        "title": "For Personal Use",
+        "description": "Make fun profile pictures, memes, or greeting cards."
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "description": "Get answers to common questions about our background removal tool.",
+      "q1": {
+        "question": "How to remove background from an image on iPhone?",
+        "answer": "Our website works perfectly on your iPhone's browser. Just open Safari or Chrome, navigate to our site, upload your picture, and download the result directly to your phone."
+      },
+      "q2": {
+        "question": "Is it free to remove a background from a picture?",
+        "answer": "Yes, our tool is completely free. You can process as many images as you like without any charge."
+      },
+      "q3": {
+        "question": "Can I remove the background from a logo?",
+        "answer": "Absolutely. Our AI is trained to handle sharp edges, making it ideal for removing the background from logos and graphics. Upload your logo to get a transparent version."
+      },
+      "q4": {
+        "question": "What image formats are supported?",
+        "answer": "We support all common image formats, including JPG, PNG, and WEBP."
       }
     }
   },
@@ -396,7 +398,9 @@
     "dashboard": "لوحة التحكم",
     "tooltip": {
       "login": "تسجيل الدخول"
-    }
+    },
+    "Support": "Support",
+    "BatchBackgroundRemoval": "إزالة الخلفية المجمعة"
   },
   "NotFoundPage": {
     "description": "يرجى التحقق مرة أخرى من شريط عنوان المتصفح أو استخدام التنقل للذهاب إلى صفحة معروفة.",
