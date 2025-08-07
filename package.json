@@ -99,6 +99,7 @@
     "@vercel/edge-config": "^1.2.1",
     "@vercel/og": "^0.6.2",
     "antd": "^5.20.1",
+    "aws-sdk": "^2.1692.0",
     "blurhash": "^2.0.5",
     "cheerio": "1.0.0",
     "class-variance-authority": "^0.7.0",

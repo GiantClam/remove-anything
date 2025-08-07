@@ -225,3 +225,4 @@ scripts/test-stripe-config.js
 scripts/setup-stripe.js
 PROJECT_UPDATE_SUMMARY.md
 R2_SETUP_GUIDE.md
+scripts/check-r2-config.js

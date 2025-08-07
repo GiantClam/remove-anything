@@ -7,6 +7,8 @@ import { getErrorMessage } from "@/lib/handle-error";
 import { kv, KVRateLimit } from "@/lib/kv";
 import { aiGateway } from "@/lib/ai-gateway";
 import { env } from "@/env.mjs";
+import AWS from 'aws-sdk';
+import crypto from 'crypto';
 
 const ratelimit = new KVRateLimit(kv, {
   limit: 10,
@@ -31,30 +33,41 @@ async function uploadToR2(file: File): Promise<string> {
     const filename = `${nanoid(12)}.${fileExtension}`;
     const key = `background-removal/${filename}`;
     
-    // 转换文件为ArrayBuffer
+    // 转换文件为Buffer
     const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     
-    // 构建R2上传URL
-    const uploadUrl = `${env.R2_ENDPOINT}/${env.R2_BUCKET}/${key}`;
+    // 根据Cloudflare官方文档，需要对secret access key进行SHA-256哈希
+    const hashedSecretKey = crypto.createHash('sha256').update(env.R2_SECRET_KEY).digest('hex');
     
-    // 上传文件到R2
-    const response = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${env.R2_ACCESS_KEY}`,
-        'Content-Type': file.type,
-        'x-amz-acl': 'public-read',
-      },
-      body: arrayBuffer,
+    // 配置AWS S3客户端用于Cloudflare R2
+    const s3Client = new AWS.S3({
+      endpoint: env.R2_ENDPOINT,
+      accessKeyId: env.R2_ACCESS_KEY,
+      secretAccessKey: hashedSecretKey,
+      signatureVersion: 'v4',
+      region: 'auto' // Cloudflare R2不使用区域，但SDK需要这个参数
     });
     
-    if (!response.ok) {
-      throw new Error(`R2 upload failed: ${response.status} ${response.statusText}`);
-    }
+    console.log("文件大小:", buffer.length, "bytes");
+    console.log("文件类型:", file.type);
+    console.log("上传键:", key);
+    
+    // 上传文件到R2
+    const uploadParams = {
+      Bucket: env.R2_BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type,
+      ACL: 'public-read'
+    };
+    
+    const result = await s3Client.upload(uploadParams).promise();
     
     // 构建公共访问URL
     const publicUrl = `${env.R2_URL_BASE}/${key}`;
     console.log("✅ 文件上传成功:", publicUrl);
+    console.log("S3结果:", result);
     
     return publicUrl;
   } catch (error) {
@@ -62,6 +75,8 @@ async function uploadToR2(file: File): Promise<string> {
     throw error;
   }
 }
+
+
 
 export async function POST(req: NextRequest, { params }: Params) {
   const user = await getCurrentUser();
