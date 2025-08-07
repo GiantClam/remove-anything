@@ -226,3 +226,8 @@ scripts/setup-stripe.js
 PROJECT_UPDATE_SUMMARY.md
 R2_SETUP_GUIDE.md
 scripts/check-r2-config.js
+ASYNC_TASK_FIXES.md
+.gitignore
+.gitignore
+ASYNC_TASK_IMPLEMENTATION.md
+POLLING_FIXES.md

@@ -1,17 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
-import { prisma } from "@/db/prisma";
 import { env } from "@/env.mjs";
+import { findBackgroundRemovalTaskByReplicateId, updateBackgroundRemovalTask } from "@/db/queries/background-removal";
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("🚀 Webhook 开始处理");
+    console.log("🚀 Replicate Webhook 开始处理");
     console.log("🔍 环境检查:", {
       NODE_ENV: process.env.NODE_ENV,
       VERCEL: process.env.VERCEL,
-      DATABASE_URL: !!process.env.DATABASE_URL,
-      POSTGRES_URL_NON_POOLING: !!process.env.POSTGRES_URL_NON_POOLING,
-      prismaType: prisma.constructor.name,
       timestamp: new Date().toISOString()
     });
 
@@ -45,15 +42,11 @@ export async function POST(req: NextRequest) {
       errorType: body.error ? typeof body.error : "undefined"
     });
     
-    // 查找对应的 FluxData 记录
-    console.log(`🔍 查找 FluxData 记录，replicateId: ${body.id}`);
-    let fluxData;
+    // 查找对应的 BackgroundRemovalTask 记录
+    console.log(`🔍 查找 BackgroundRemovalTask 记录，replicateId: ${body.id}`);
+    let taskRecord;
     try {
-      fluxData = await prisma.fluxData.findFirst({
-        where: {
-          replicateId: body.id,
-        },
-      });
+      taskRecord = await findBackgroundRemovalTaskByReplicateId(body.id);
     } catch (dbError) {
       console.error("❌ 数据库查询失败:", {
         error: dbError.message,
@@ -66,8 +59,8 @@ export async function POST(req: NextRequest) {
       }, { status: 200 });
     }
     
-    if (!fluxData) {
-      console.warn(`⚠️ 未找到对应的 FluxData 记录，replicateId: ${body.id}`);
+    if (!taskRecord) {
+      console.warn(`⚠️ 未找到对应的 BackgroundRemovalTask 记录，replicateId: ${body.id}`);
       // 返回 200 而不是 404，避免 webhook 重试
       return NextResponse.json({ 
         message: "Task not found, but webhook received" 
@@ -80,7 +73,7 @@ export async function POST(req: NextRequest) {
     switch (body.status) {
       case "starting":
         updateData = {
-          taskStatus: "Processing",
+          taskStatus: "starting",
           executeStartTime: BigInt(Date.now()),
         };
         console.log(`🚀 任务开始处理: ${body.id}`);
@@ -88,7 +81,7 @@ export async function POST(req: NextRequest) {
         
       case "processing":
         updateData = {
-          taskStatus: "Processing",
+          taskStatus: "processing",
         };
         console.log(`⚙️ 任务处理中: ${body.id}`);
         break;
@@ -109,8 +102,8 @@ export async function POST(req: NextRequest) {
         }
         
         updateData = {
-          taskStatus: "Succeeded",
-          imageUrl: imageUrl,
+          taskStatus: "succeeded",
+          outputImageUrl: imageUrl,
           executeEndTime: BigInt(Date.now()),
           errorMsg: logsText,
         };
@@ -132,11 +125,11 @@ export async function POST(req: NextRequest) {
         }
         
         updateData = {
-          taskStatus: "Failed",
+          taskStatus: "failed",
           executeEndTime: BigInt(Date.now()),
           errorMsg: errorMsg,
         };
-        console.log(`❌ 任务失败: ${body.id}，错误: ${updateData.errorMsg}`);
+        console.log(`❌ 任务失败: ${body.id}，错误: ${errorMsg}`);
         break;
         
       default:
@@ -148,15 +141,12 @@ export async function POST(req: NextRequest) {
     
     // 更新数据库记录
     try {
-      await prisma.fluxData.update({
-        where: { id: fluxData.id },
-        data: updateData,
-      });
-      console.log(`🔄 已更新 FluxData 记录: ${fluxData.id}，状态: ${updateData.taskStatus}`);
+      await updateBackgroundRemovalTask(body.id, updateData);
+      console.log(`🔄 已更新 BackgroundRemovalTask 记录: ${taskRecord.id}，状态: ${updateData.taskStatus}`);
     } catch (dbError) {
       console.error("❌ 数据库更新失败:", {
         error: dbError.message,
-        fluxDataId: fluxData.id,
+        taskRecordId: taskRecord.id,
         updateData: updateData
       });
       return NextResponse.json(
@@ -165,11 +155,12 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    console.log(`🔄 已更新 FluxData 记录: ${fluxData.id}，状态: ${updateData.taskStatus}`);
+    console.log(`✅ Webhook 处理完成: ${body.id}，状态: ${body.status}`);
     
     return NextResponse.json({ 
       message: "Webhook processed successfully",
-      fluxDataId: fluxData.id,
+      taskId: body.id,
+      taskRecordId: taskRecord.id,
       status: updateData.taskStatus
     }, { status: 200 });
     

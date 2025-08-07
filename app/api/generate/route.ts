@@ -9,6 +9,7 @@ import { aiGateway } from "@/lib/ai-gateway";
 import { env } from "@/env.mjs";
 import AWS from 'aws-sdk';
 import crypto from 'crypto';
+import { createBackgroundRemovalTask } from "@/db/queries/background-removal";
 
 const ratelimit = new KVRateLimit(kv, {
   limit: 10,
@@ -20,8 +21,6 @@ function getKey(id: string) {
 }
 
 export const maxDuration = 60;
-
-type Params = { params: { key: string } };
 
 // 简化的文件上传到R2的函数
 async function uploadToR2(file: File): Promise<string> {
@@ -37,21 +36,21 @@ async function uploadToR2(file: File): Promise<string> {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    // 根据Cloudflare官方文档，需要对secret access key进行SHA-256哈希
-    const hashedSecretKey = crypto.createHash('sha256').update(env.R2_SECRET_KEY).digest('hex');
-    
     // 配置AWS S3客户端用于Cloudflare R2
     const s3Client = new AWS.S3({
       endpoint: env.R2_ENDPOINT,
       accessKeyId: env.R2_ACCESS_KEY,
-      secretAccessKey: hashedSecretKey,
+      secretAccessKey: env.R2_SECRET_KEY,
       signatureVersion: 'v4',
-      region: 'auto' // Cloudflare R2不使用区域，但SDK需要这个参数
+      region: 'auto', // Cloudflare R2使用auto作为区域
+      s3ForcePathStyle: true, // 强制使用路径样式
     });
     
     console.log("文件大小:", buffer.length, "bytes");
     console.log("文件类型:", file.type);
     console.log("上传键:", key);
+    console.log("R2端点:", env.R2_ENDPOINT);
+    console.log("R2存储桶:", env.R2_BUCKET);
     
     // 上传文件到R2
     const uploadParams = {
@@ -72,13 +71,22 @@ async function uploadToR2(file: File): Promise<string> {
     return publicUrl;
   } catch (error) {
     console.error("❌ 文件上传失败:", error);
+    
+    // 如果是认证错误，提供更详细的调试信息
+    if (error.code === 'SignatureDoesNotMatch') {
+      console.error("🔍 R2认证调试信息:");
+      console.error("- R2_ENDPOINT:", env.R2_ENDPOINT);
+      console.error("- R2_BUCKET:", env.R2_BUCKET);
+      console.error("- R2_ACCESS_KEY长度:", env.R2_ACCESS_KEY?.length);
+      console.error("- R2_SECRET_KEY长度:", env.R2_SECRET_KEY?.length);
+      console.error("- R2_URL_BASE:", env.R2_URL_BASE);
+    }
+    
     throw error;
   }
 }
 
-
-
-export async function POST(req: NextRequest, { params }: Params) {
+export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   const userId = user?.id || "anonymous"; // 允许匿名用户
 
@@ -123,41 +131,42 @@ export async function POST(req: NextRequest, { params }: Params) {
       }
     }
 
-    // 调用AI Gateway进行背景移除
-    try {
-      console.log("🚀 开始调用 Cloudflare AI Gateway + Replicate 进行背景移除...");
-      console.log("图片URL:", imageUrl);
-      
-      const result = await aiGateway.removeBackground({
-        image: imageUrl,
-        resolution: "", // 使用默认分辨率
-      });
+    console.log("🚀 开始调用 Cloudflare AI Gateway + Replicate 进行背景移除...");
+    console.log("图片URL:", imageUrl);
 
-      if (result.error) {
-        return NextResponse.json(
-          { error: result.error || "Background removal failed" },
-          { status: 400 },
-        );
-      }
+    // 使用异步调用
+    const result = await aiGateway.removeBackgroundAsync({
+      image: imageUrl,
+      resolution: "1024x1024", // 使用默认分辨率
+    });
 
-      console.log('✅ AI Gateway 调用成功，结果:', result);
+    // 创建任务记录
+    const taskRecord = await createBackgroundRemovalTask({
+      userId: userId,
+      replicateId: result.id,
+      inputImageUrl: imageUrl,
+      resolution: "1024x1024",
+      model: "men1scus/birefnet"
+    });
+    
+    console.log("✅ 异步任务创建成功:", result);
+    console.log("✅ 任务记录创建成功:", taskRecord);
 
-      // 返回处理结果
-      return NextResponse.json({ 
-        success: true,
-        data: {
-          url: result.output || imageUrl, // 返回处理后的图片URL
-        }
-      });
-    } catch (aiError) {
-      console.error("AI Gateway 调用失败:", aiError);
-      throw aiError;
-    }
+    // 返回任务信息
+    return NextResponse.json({
+      success: true,
+      taskId: result.id,
+      status: result.status,
+      message: "Background removal task created successfully",
+      urls: result.urls,
+      taskRecordId: taskRecord?.id
+    });
+
   } catch (error) {
-    console.log("error-->", error);
+    console.error("❌ 处理失败:", error);
     return NextResponse.json(
       { error: getErrorMessage(error) },
-      { status: 400 },
+      { status: 500 }
     );
   }
 }

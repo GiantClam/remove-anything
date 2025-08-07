@@ -99,23 +99,26 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       const formData = new FormData();
       formData.append('image', file);
 
-      // 调用API
+      // 调用API创建异步任务
       const response = await fetch('/api/generate', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to process image');
+        throw new Error('Failed to create background removal task');
       }
 
       const result = await response.json();
       
-      if (result.success && result.data?.url) {
-        setProcessedImage(result.data.url);
-        toast.success('Background removed successfully!');
+      if (result.success && result.taskId) {
+        console.log("✅ 任务创建成功，任务ID:", result.taskId);
+        toast.success('Background removal task created! Processing...');
+        
+        // 开始轮询任务状态
+        await pollTaskStatus(result.taskId);
       } else {
-        throw new Error('No processed image received');
+        throw new Error('No task ID received');
       }
     } catch (error) {
       console.error('Error processing image:', error);
@@ -132,6 +135,68 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // 轮询任务状态
+  const pollTaskStatus = async (taskId: string) => {
+    const maxAttempts = 60; // 最多轮询60次（5分钟）
+    let attempts = 0;
+    
+    const poll = async (): Promise<void> => {
+      try {
+        console.log(`🔍 第 ${attempts + 1} 次查询任务状态: ${taskId}`);
+        
+        const response = await fetch(`/api/task/${taskId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to get task status');
+        }
+        
+        const taskStatus = await response.json();
+        console.log("任务状态:", taskStatus);
+        
+        switch (taskStatus.status) {
+          case 'starting':
+          case 'processing':
+            // 继续轮询
+            if (attempts < maxAttempts) {
+              attempts++;
+              console.log(`⏳ 任务处理中，${attempts}/${maxAttempts}，5秒后再次查询...`);
+              setTimeout(() => poll(), 5000); // 5秒后再次查询
+            } else {
+              console.log(`⏰ 任务超时，已轮询 ${maxAttempts} 次`);
+              throw new Error('Task timeout');
+            }
+            break;
+            
+          case 'succeeded':
+            console.log('✅ 任务成功完成!');
+            if (taskStatus.output) {
+              setProcessedImage(taskStatus.output);
+              toast.success('Background removed successfully!');
+            } else {
+              throw new Error('No output received');
+            }
+            break;
+            
+          case 'failed':
+          case 'canceled':
+            console.log(`❌ 任务失败: ${taskStatus.error || 'Task failed'}`);
+            throw new Error(taskStatus.error || 'Task failed');
+            
+          default:
+            console.log(`⚠️ 未知状态: ${taskStatus.status}`);
+            throw new Error(`Unknown task status: ${taskStatus.status}`);
+        }
+      } catch (error) {
+        console.error('Error polling task status:', error);
+        toast.error('Failed to get task status. Please try again.');
+        // 不再继续轮询
+      }
+    };
+    
+    // 开始轮询
+    await poll();
   };
 
   const handleDownload = () => {
