@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,13 +14,52 @@ interface MarketingRemoveBackgroundProps {
 }
 
 export default function MarketingRemoveBackground({ locale }: MarketingRemoveBackgroundProps) {
+  // 所有hooks必须在组件顶层调用，不能在任何条件语句中
   const t = useTranslations('IndexPage');
   const { data: session, status } = useSession();
-  const isAuthenticated = !!session?.user;
+  
+  // 状态管理
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [hasError, setHasError] = useState(false);
+  
+  // 使用useMemo来避免重复计算，添加安全检查
+  const isAuthenticated = useMemo(() => {
+    try {
+      return !!session?.user;
+    } catch (error) {
+      console.error('Session error:', error);
+      return false;
+    }
+  }, [session?.user]);
+
+  // 安全地获取翻译文本
+  const title = useMemo(() => {
+    try {
+      return t('title');
+    } catch (error) {
+      console.error('Translation error:', error);
+      return 'Free AI Background Remover';
+    }
+  }, [t]);
+
+  const description = useMemo(() => {
+    try {
+      return t('description');
+    } catch (error) {
+      console.error('Translation error:', error);
+      return 'Instantly remove the background from any image with our free AI-powered tool.';
+    }
+  }, [t]);
+
+  // 添加错误处理
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      console.log('User is not authenticated');
+    }
+  }, [status]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -56,6 +95,22 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     setProcessedImage(null);
 
     try {
+      // 如果用户未登录，提供演示功能
+      if (!isAuthenticated) {
+        // 模拟处理延迟
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // 为演示目的，直接使用原始图片作为"处理结果"
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setProcessedImage(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+        
+        toast.success('演示模式：背景移除完成！请登录以使用完整功能。');
+        return;
+      }
+
       // 创建FormData
       const formData = new FormData();
       formData.append('image', file);
@@ -97,7 +152,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
 
   const handleDownload = () => {
     if (!isAuthenticated) {
-      toast.info('Please sign in to download the processed image');
+      toast.info('请登录以下载处理后的图片');
       window.location.href = '/sign-in';
       return;
     }
@@ -129,10 +184,10 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4">
-          {t('title')}
+          {title}
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          {t('description')}
+          {description}
         </p>
       </div>
 
@@ -183,7 +238,10 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             Upload Image
           </CardTitle>
           <CardDescription>
-            Upload an image to remove its background. Supports JPG, PNG, and WebP formats up to 5MB.
+            {isAuthenticated 
+              ? "Upload an image to remove its background. Supports JPG, PNG, and WebP formats up to 5MB."
+              : "演示模式：上传图片体验背景移除功能。登录后可使用完整功能。"
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -254,7 +312,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                       ) : (
                         <>
                           <LogIn className="w-4 h-4" />
-                          Sign In to Download
+                          登录下载
                         </>
                       )}
                     </Button>
@@ -277,7 +335,9 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                   <div className="w-full h-full flex items-center justify-center">
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                      <p className="text-sm text-muted-foreground">Removing background...</p>
+                      <p className="text-sm text-muted-foreground">
+                        {isAuthenticated ? 'Removing background...' : '演示处理中...'}
+                      </p>
                     </div>
                   </div>
                 ) : processedImage ? (
