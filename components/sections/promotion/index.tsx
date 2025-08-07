@@ -6,7 +6,15 @@ import { PromotionBanner } from "./promotion-banner";
 
 export default async function Promotion({ locale }: { locale: string }) {
   try {
-    const { data: chargeProduct } = await getChargeProduct(locale);
+    // 添加超时处理
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Database query timeout')), 5000);
+    });
+
+    const queryPromise = getChargeProduct(locale);
+    
+    const { data: chargeProduct } = await Promise.race([queryPromise, timeoutPromise]) as any;
+    
     let claimed = true;
     const targetDate = new Date("2024-08-20T20:20:00+08:00");
     const oneMonthLater = new Date(
@@ -29,7 +37,7 @@ export default async function Promotion({ locale }: { locale: string }) {
     );
   } catch (error) {
     console.error("❌ Promotion 组件错误:", error);
-    // 如果出错，不显示促销横幅
+    // 如果出错，不显示促销横幅，但不影响页面加载
     return null;
   }
 }

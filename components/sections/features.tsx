@@ -54,7 +54,7 @@ export default function Features() {
                       className="rounded-xl px-4"
                     >
                       <Link
-                        href="/app/generate"
+                        href="/app/remove-background"
                         className="flex items-center gap-2"
                       >
                         <span>{t("features.action.visit")}</span>

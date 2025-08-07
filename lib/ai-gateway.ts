@@ -5,6 +5,7 @@ export interface ReplicateImageRequest {
   input_image_url?: string;
   input_prompt: string;
   aspect_ratio?: string; // 去背景功能不需要长宽比
+  resolution?: string; // 去背景功能的分辨率参数
   is_private: number;
   user_id: string;
   lora_name?: string;
@@ -75,8 +76,9 @@ class CloudflareAIGateway {
       const payload = {
         version: this.getReplicateModelVersion(request.model),
         input: isBackgroundRemoval ? {
-          // 去背景模型只需要输入图片
+          // 去背景模型参数：只需要图片URL和分辨率
           image: request.input_image_url,
+          resolution: request.resolution || "", // 使用传入的分辨率或默认空字符串
         } : {
           // FLUX 模型需要完整的参数
           prompt: request.input_prompt,

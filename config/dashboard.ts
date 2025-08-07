@@ -19,7 +19,7 @@ export const dashboardConfig: DashboardConfig = {
         },
                        {
                  title: "BackgroundRemoval",
-                 href: "/app/generate",
+                 href: "/app/remove-background",
                  icon: "eraser"
                },
                {
