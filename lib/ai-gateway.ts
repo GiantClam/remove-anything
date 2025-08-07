@@ -39,7 +39,7 @@ class CloudflareAIGateway {
       headers.append("Authorization", `Bearer ${this.replicateApiToken}`);
 
       const payload = {
-        version: "men1scus/birefnet",
+        version: "men1scus/birefnet:f3e7ae8430032db9e9923c65f95ddf9f5b7ded8b7780163f18d1db67215dbd6d",
         input: {
           image: request.image,
           resolution: request.resolution || "",
