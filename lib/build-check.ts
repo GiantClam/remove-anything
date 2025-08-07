@@ -21,23 +21,21 @@ export function shouldSkipDatabaseQuery(): boolean {
     IS_BUILD_TIME: process.env.NODE_ENV === "production" && !process.env.DATABASE_URL
   });
   
-  // 只在构建时跳过数据库查询，运行时应该正常工作
-  
-  // 检查是否在构建时（没有数据库连接）
-  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
-    console.log("🔧 构建时（无数据库连接）：跳过数据库查询");
-    return true;
-  }
-  
-  // 在Vercel构建环境中，如果设置了SKIP_DB_BUILD，跳过数据库查询
-  if (process.env.VERCEL === "1" && process.env.NODE_ENV === "production" && process.env.SKIP_DB_BUILD === "1") {
+  // 在Vercel构建环境中，跳过数据库查询
+  if (process.env.VERCEL === "1" && process.env.NODE_ENV === "production") {
     console.log("🔧 Vercel构建环境：跳过数据库查询");
     return true;
   }
   
-  // 在本地生产构建时，如果设置了SKIP_DB_BUILD，跳过查询
-  if (process.env.NODE_ENV === "production" && process.env.SKIP_DB_BUILD === "1") {
-    console.log("🔧 本地生产构建：跳过数据库查询");
+  // 如果设置了SKIP_DB_BUILD，跳过数据库查询
+  if (process.env.SKIP_DB_BUILD === "1") {
+    console.log("🔧 SKIP_DB_BUILD已设置：跳过数据库查询");
+    return true;
+  }
+  
+  // 在本地生产构建时，跳过数据库查询
+  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
+    console.log("🔧 本地生产构建（无数据库连接）：跳过数据库查询");
     return true;
   }
   
