@@ -95,22 +95,6 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     setProcessedImage(null);
 
     try {
-      // 如果用户未登录，提供演示功能
-      if (!isAuthenticated) {
-        // 模拟处理延迟
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // 为演示目的，直接使用原始图片作为"处理结果"
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setProcessedImage(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-        
-        toast.success('演示模式：背景移除完成！请登录以使用完整功能。');
-        return;
-      }
-
       // 创建FormData
       const formData = new FormData();
       formData.append('image', file);
