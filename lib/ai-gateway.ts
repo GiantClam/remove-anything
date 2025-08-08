@@ -165,8 +165,9 @@ class CloudflareAIGateway {
       const headers = new Headers();
       headers.append("Authorization", `Bearer ${this.replicateApiToken}`);
 
+      // 直接调用Replicate API，不通过Cloudflare AI Gateway
       const response = await this.makeRequestWithRetry(
-        `${this.baseUrl}/replicate/predictions/${replicateId}`,
+        `https://api.replicate.com/v1/predictions/${replicateId}`,
         {
           method: "GET",
           headers,

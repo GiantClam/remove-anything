@@ -27,7 +27,10 @@ export async function GET(
     // 如果任务还在进行中，从Replicate获取最新状态
     if (['pending', 'starting', 'processing'].includes(taskRecord.taskStatus)) {
       try {
+        console.log(`🔍 任务状态为 ${taskRecord.taskStatus}，从Replicate获取最新状态...`);
         const replicateStatus = await aiGateway.getTaskStatus(taskId);
+        
+        console.log(`📊 Replicate状态: ${replicateStatus.status}, 数据库状态: ${taskRecord.taskStatus}`);
         
         // 同步数据库状态与Replicate状态
         let updateData: any = {};
@@ -35,15 +38,18 @@ export async function GET(
         
         switch (replicateStatus.status) {
           case 'starting':
+            // 如果数据库状态是pending，更新为starting
             if (taskRecord.taskStatus === 'pending') {
               updateData = {
                 taskStatus: 'starting',
                 executeStartTime: BigInt(Date.now())
               };
             }
+            // 如果数据库状态已经是starting，不需要更新
             break;
             
           case 'processing':
+            // 无论数据库状态是什么，都更新为processing
             updateData = {
               taskStatus: 'processing'
             };
@@ -56,6 +62,7 @@ export async function GET(
               outputImageUrl: imageUrl,
               executeEndTime: BigInt(Date.now())
             };
+            console.log(`✅ 任务成功完成，输出URL: ${imageUrl}`);
             break;
             
           case 'failed':
@@ -65,8 +72,11 @@ export async function GET(
               executeEndTime: BigInt(Date.now()),
               errorMsg: replicateStatus.error?.message || replicateStatus.error || 'Task failed'
             };
+            console.log(`❌ 任务失败: ${updateData.errorMsg}`);
             break;
         }
+        
+        console.log(`🔄 需要更新的数据:`, updateData);
         
         // 更新数据库状态
         if (Object.keys(updateData).length > 0) {
@@ -79,6 +89,8 @@ export async function GET(
           } catch (dbError) {
             console.error("❌ 数据库状态更新失败:", dbError);
           }
+        } else {
+          console.log(`ℹ️ 无需更新数据库状态`);
         }
         
         return NextResponse.json({
@@ -96,7 +108,10 @@ export async function GET(
           taskRecordId: taskRecord.id,
           inputImageUrl: taskRecord.inputImageUrl,
           outputImageUrl: updateData.outputImageUrl || taskRecord.outputImageUrl,
-          dbTaskStatus: updateData.taskStatus || taskRecord.taskStatus
+          dbTaskStatus: updateData.taskStatus || taskRecord.taskStatus,
+          // 修复BigInt序列化问题
+          executeStartTime: taskRecord.executeStartTime ? taskRecord.executeStartTime.toString() : null,
+          executeEndTime: taskRecord.executeEndTime ? taskRecord.executeEndTime.toString() : null
         });
       } catch (replicateError) {
         console.error("❌ 从Replicate获取状态失败:", replicateError);
@@ -113,8 +128,8 @@ export async function GET(
           outputImageUrl: taskRecord.outputImageUrl,
           dbTaskStatus: taskRecord.taskStatus,
           createdAt: taskRecord.createdAt,
-          executeStartTime: taskRecord.executeStartTime,
-          executeEndTime: taskRecord.executeEndTime
+          executeStartTime: taskRecord.executeStartTime ? taskRecord.executeStartTime.toString() : null,
+          executeEndTime: taskRecord.executeEndTime ? taskRecord.executeEndTime.toString() : null
         });
       }
     } else {
@@ -131,8 +146,8 @@ export async function GET(
         outputImageUrl: taskRecord.outputImageUrl,
         dbTaskStatus: taskRecord.taskStatus,
         createdAt: taskRecord.createdAt,
-        executeStartTime: taskRecord.executeStartTime,
-        executeEndTime: taskRecord.executeEndTime
+        executeStartTime: taskRecord.executeStartTime ? taskRecord.executeStartTime.toString() : null,
+        executeEndTime: taskRecord.executeEndTime ? taskRecord.executeEndTime.toString() : null
       });
     }
 
