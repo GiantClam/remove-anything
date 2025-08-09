@@ -31,4 +31,4 @@ export const apiAuthPrefix = "/api/auth";
  * The default redirect path after logging in
  * @type {string}
  */
-export const DEFAULT_LOGIN_REDIRECT = "/app";
+export const DEFAULT_LOGIN_REDIRECT = "/app"; // 会被app/page.tsx重定向到正确的locale

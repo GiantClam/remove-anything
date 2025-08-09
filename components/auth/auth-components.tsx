@@ -33,7 +33,7 @@ interface SignInButtonProps {
 export function SignInButton({ children, mode, forceRedirectUrl }: SignInButtonProps) {
   const handleClick = () => {
     signIn("google", { 
-      callbackUrl: forceRedirectUrl || window.location.href 
+      callbackUrl: forceRedirectUrl || "/app" // 将被app/page.tsx重定向到正确的locale
     });
   };
 

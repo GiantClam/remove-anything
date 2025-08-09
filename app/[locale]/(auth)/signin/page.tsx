@@ -18,7 +18,7 @@ export default async function SignInPage({ params: { locale } }: Props) {
   const session = await getServerSession(authOptions);
   
   if (session) {
-    redirect("/app");
+    redirect("/app"); // 将被app/page.tsx重定向到正确的locale
   }
 
   return (

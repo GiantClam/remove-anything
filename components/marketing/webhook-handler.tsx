@@ -25,7 +25,7 @@ export function WebhookHandler({ taskId, onComplete, onError }: WebhookHandlerPr
       console.log("🔗 生产环境：使用数据库状态检查模式");
       
       let attempts = 0;
-      const maxAttempts = 120; // 增加最大尝试次数（10分钟）
+      const maxAttempts = 60; // 增加最大尝试次数（10分钟）
       
       const checkDatabaseStatus = async () => {
         try {

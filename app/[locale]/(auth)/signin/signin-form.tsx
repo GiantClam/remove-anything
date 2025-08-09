@@ -8,7 +8,7 @@ export function SignInForm() {
   const handleSignIn = async () => {
     try {
       await signIn("google", { 
-        callbackUrl: "/app",
+        callbackUrl: "/app", // 将被app/page.tsx重定向到正确的locale
         redirect: true 
       });
     } catch (error) {
