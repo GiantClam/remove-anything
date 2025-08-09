@@ -10,12 +10,14 @@ export async function GET(
 ) {
   try {
     const taskId = params.id;
+    const { searchParams } = new URL(req.url);
+    const dbOnly = searchParams.get('dbOnly') === 'true';
     
     if (!taskId) {
       return NextResponse.json({ error: "Task ID is required" }, { status: 400 });
     }
 
-    console.log("🔍 查询任务状态:", taskId);
+    console.log("🔍 查询任务状态:", taskId, dbOnly ? "(仅数据库)" : "(包含Replicate)");
 
     // 首先从数据库查询任务记录
     const taskRecord = await findBackgroundRemovalTaskByReplicateId(taskId);
@@ -30,6 +32,24 @@ export async function GET(
       userId: taskRecord.userId || "anonymous",
       status: taskRecord.taskStatus
     });
+
+    // 如果只查询数据库状态，直接返回
+    if (dbOnly) {
+      return NextResponse.json({
+        success: true,
+        taskId: taskId,
+        status: taskRecord.taskStatus,
+        output: taskRecord.outputImageUrl,
+        error: taskRecord.errorMsg,
+        taskRecordId: taskRecord.id,
+        inputImageUrl: taskRecord.inputImageUrl,
+        outputImageUrl: taskRecord.outputImageUrl,
+        dbTaskStatus: taskRecord.taskStatus,
+        createdAt: taskRecord.createdAt,
+        executeStartTime: taskRecord.executeStartTime ? taskRecord.executeStartTime.toString() : null,
+        executeEndTime: taskRecord.executeEndTime ? taskRecord.executeEndTime.toString() : null
+      });
+    }
 
     // 如果任务还在进行中，从Replicate获取最新状态
     if (['pending', 'starting', 'processing'].includes(taskRecord.taskStatus)) {
