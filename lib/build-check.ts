@@ -12,18 +12,11 @@ export function isVercelBuild(): boolean {
 }
 
 export function shouldSkipDatabaseQuery(): boolean {
-  // 添加详细的调试日志
-  console.log("🔍 构建检查调试信息:", {
-    NODE_ENV: process.env.NODE_ENV,
-    VERCEL: process.env.VERCEL,
-    SKIP_DB_BUILD: process.env.SKIP_DB_BUILD,
-    DATABASE_URL: process.env.DATABASE_URL ? "已设置" : "未设置",
-    IS_BUILD_TIME: process.env.NODE_ENV === "production" && !process.env.DATABASE_URL
-  });
-  
-  // 在Vercel构建环境中，跳过数据库查询
-  if (process.env.VERCEL === "1" && process.env.NODE_ENV === "production") {
-    console.log("🔧 Vercel构建环境：跳过数据库查询");
+  // 只有在构建阶段才跳过数据库查询
+  // VERCEL_ENV只有在运行时才会被设置（preview, production等）
+  // 构建时VERCEL_ENV是undefined
+  if (process.env.VERCEL === "1" && process.env.NODE_ENV === "production" && !process.env.VERCEL_ENV) {
+    console.log("🔧 Vercel构建阶段：跳过数据库查询");
     return true;
   }
   
@@ -39,7 +32,6 @@ export function shouldSkipDatabaseQuery(): boolean {
     return true;
   }
   
-  console.log("✅ 运行时：允许数据库查询");
   // 运行时不应该跳过数据库查询
   return false;
 }

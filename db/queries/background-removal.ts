@@ -27,8 +27,6 @@ export async function createBackgroundRemovalTask(data: CreateBackgroundRemovalT
   }
 
   try {
-    console.log("🔄 创建背景移除任务，userId:", data.userId || "null");
-    
     const taskData: any = {
       replicateId: data.replicateId,
       inputImageUrl: data.inputImageUrl,
@@ -38,8 +36,6 @@ export async function createBackgroundRemovalTask(data: CreateBackgroundRemovalT
       userId: data.userId || null // 显式设置为null而不是undefined
     };
 
-    console.log("🔄 准备创建任务，数据:", taskData);
-
     const task = await prisma.backgroundRemovalTask.create({
       data: taskData
     });
@@ -48,7 +44,6 @@ export async function createBackgroundRemovalTask(data: CreateBackgroundRemovalT
     return task;
   } catch (error) {
     console.error("❌ 创建背景移除任务失败:", error);
-    console.error("错误详情:", error);
     throw error;
   }
 }

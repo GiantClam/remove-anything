@@ -142,10 +142,6 @@ export async function POST(req: NextRequest) {
     });
 
     // 创建任务记录
-    console.log("🔄 准备创建数据库任务记录...");
-    console.log("用户ID:", userId || "null");
-    console.log("Replicate任务ID:", result.id);
-    
     const taskRecord = await createBackgroundRemovalTask({
       userId: userId || undefined, // 对于匿名用户，传递undefined
       replicateId: result.id,

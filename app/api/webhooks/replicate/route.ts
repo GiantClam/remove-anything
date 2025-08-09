@@ -47,7 +47,6 @@ export async function POST(req: NextRequest) {
     let taskRecord;
     try {
       taskRecord = await findBackgroundRemovalTaskByReplicateId(body.id);
-      console.log("🔍 数据库查询结果:", taskRecord ? "找到记录" : "未找到记录");
     } catch (dbError) {
       console.error("❌ 数据库查询失败:", {
         error: dbError.message,
@@ -62,10 +61,6 @@ export async function POST(req: NextRequest) {
     
     if (!taskRecord) {
       console.warn(`⚠️ 未找到对应的 BackgroundRemovalTask 记录，replicateId: ${body.id}`);
-      console.warn("可能的原因：");
-      console.warn("1. 任务记录创建失败");
-      console.warn("2. replicateId不匹配");
-      console.warn("3. 数据库连接问题");
       // 返回 200 而不是 404，避免 webhook 重试
       return NextResponse.json({ 
         message: "Task not found, but webhook received" 
