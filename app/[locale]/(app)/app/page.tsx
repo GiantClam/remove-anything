@@ -11,11 +11,9 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({
   params: { locale },
 }: PageProps) {
-  const t = await getTranslations({ locale, namespace: "Billings" });
-
   return {
-    title: t("page.title"),
-    description: t("page.description"),
+    title: "App - Dashboard",
+    description: "View your account dashboard and billing information",
   };
 }
 export default async function DashboardPage({ params: { locale } }: PageProps) {
