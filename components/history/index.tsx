@@ -13,7 +13,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import Masonry from "react-masonry-css";
 import { toast } from "sonner";
 import Link from "next/link";
-import Loading from "@/components/loading";
+import Loading from "@/components/loading/index";
 import BlurFade from "@/components/magicui/blur-fade";
 import PlaygroundLoading from "@/components/playground/loading";
 import { EmptyPlaceholder } from "@/components/shared/empty-placeholder";

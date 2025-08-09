@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { getCurrentUser } from "@/lib/auth-utils";
 
-import Loading from "@/components/loading";
+import Loading from "@/components/loading/index";
 import AntdThemeProvider from "@/components/theme/theme-provider";
 
 import Header from "./Header";

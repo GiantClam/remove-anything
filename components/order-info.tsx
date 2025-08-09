@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import qs from "query-string";
 
 import { UserSubscriptionPlan } from "types";
-import Loading from "@/components/loading";
+import Loading from "@/components/loading/index";
 import { EmptyPlaceholder } from "@/components/shared/empty-placeholder";
 import {
   Card,

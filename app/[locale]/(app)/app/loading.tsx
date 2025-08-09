@@ -1,4 +1,4 @@
-import Loading from "@/components/loading";
+import Loading from "@/components/loading/index";
 
 export default function DashboardLoading() {
   return (
