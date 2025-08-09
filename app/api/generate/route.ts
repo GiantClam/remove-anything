@@ -88,10 +88,10 @@ async function uploadToR2(file: File): Promise<string> {
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
-  const userId = user?.id || "anonymous"; // 允许匿名用户
+  const userId = user?.id || null; // 对于匿名用户，使用null而不是"anonymous"
 
   const { success } = await ratelimit.limit(
-    getKey(userId) + `_${req.ip ?? ""}`,
+    getKey(userId || "anonymous") + `_${req.ip ?? ""}`,
   );
   if (!success) {
     return new Response("Too Many Requests", {
@@ -133,6 +133,7 @@ export async function POST(req: NextRequest) {
 
     console.log("🚀 开始调用 Cloudflare AI Gateway + Replicate 进行背景移除...");
     console.log("图片URL:", imageUrl);
+    console.log("用户ID:", userId || "anonymous");
 
     // 使用异步调用
     const result = await aiGateway.removeBackgroundAsync({
@@ -142,7 +143,7 @@ export async function POST(req: NextRequest) {
 
     // 创建任务记录
     const taskRecord = await createBackgroundRemovalTask({
-      userId: userId,
+      userId: userId || undefined, // 对于匿名用户，传递undefined
       replicateId: result.id,
       inputImageUrl: imageUrl,
       resolution: "1024x1024",

@@ -67,6 +67,12 @@ export async function POST(req: NextRequest) {
       }, { status: 200 });
     }
     
+    console.log("✅ 找到任务记录:", {
+      id: taskRecord.id,
+      userId: taskRecord.userId || "anonymous",
+      status: taskRecord.taskStatus
+    });
+    
     // 根据 Replicate 状态更新数据库
     let updateData: any = {};
     

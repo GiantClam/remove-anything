@@ -21,8 +21,15 @@ export async function GET(
     const taskRecord = await findBackgroundRemovalTaskByReplicateId(taskId);
     
     if (!taskRecord) {
+      console.log("❌ 未找到任务记录:", taskId);
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
+
+    console.log("✅ 找到任务记录:", {
+      id: taskRecord.id,
+      userId: taskRecord.userId || "anonymous",
+      status: taskRecord.taskStatus
+    });
 
     // 如果任务还在进行中，从Replicate获取最新状态
     if (['pending', 'starting', 'processing'].includes(taskRecord.taskStatus)) {

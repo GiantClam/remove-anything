@@ -188,7 +188,7 @@ model FluxData {
 
 model BackgroundRemovalTask {
   id               Int       @id @default(autoincrement())
-  userId           String    @map(name: "user_id")
+  userId           String?   @map(name: "user_id")
   replicateId      String    @unique @map(name: "replicate_id")
   inputImageUrl    String    @map(name: "input_image_url")
   outputImageUrl   String?   @map(name: "output_image_url")
@@ -204,7 +204,7 @@ model BackgroundRemovalTask {
   createdAt        DateTime  @default(now()) @map(name: "created_at")
   updatedAt        DateTime  @updatedAt @map(name: "updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map(name: "background_removal_tasks")
   @@index([userId])

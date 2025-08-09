@@ -2,7 +2,7 @@ import { prisma } from "@/db/prisma";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 export interface CreateBackgroundRemovalTaskData {
-  userId: string;
+  userId?: string;
   replicateId: string;
   inputImageUrl: string;
   resolution?: string;
@@ -27,15 +27,21 @@ export async function createBackgroundRemovalTask(data: CreateBackgroundRemovalT
   }
 
   try {
+    const taskData: any = {
+      replicateId: data.replicateId,
+      inputImageUrl: data.inputImageUrl,
+      resolution: data.resolution || "1024x1024",
+      model: data.model || "men1scus/birefnet",
+      taskStatus: "pending"
+    };
+
+    // 只有当userId存在且不为"anonymous"时才添加userId
+    if (data.userId && data.userId !== "anonymous") {
+      taskData.userId = data.userId;
+    }
+
     const task = await prisma.backgroundRemovalTask.create({
-      data: {
-        userId: data.userId,
-        replicateId: data.replicateId,
-        inputImageUrl: data.inputImageUrl,
-        resolution: data.resolution || "1024x1024",
-        model: data.model || "men1scus/birefnet",
-        taskStatus: "pending"
-      }
+      data: taskData
     });
 
     console.log("✅ 背景移除任务创建成功:", task.id);
