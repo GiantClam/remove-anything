@@ -56,12 +56,39 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     }
   }, [t]);
 
-  // 添加错误处理
+  // 添加错误处理和登录后处理逻辑
   useEffect(() => {
     if (status === 'unauthenticated') {
       console.log('User is not authenticated');
+    } else if (status === 'authenticated') {
+      // 检查是否有待下载的任务
+      const pendingTaskId = sessionStorage.getItem('pendingDownloadTaskId');
+      if (pendingTaskId) {
+        console.log('Found pending download task:', pendingTaskId);
+        sessionStorage.removeItem('pendingDownloadTaskId');
+        // 设置当前任务ID，这样用户可以下载
+        setCurrentTaskId(pendingTaskId);
+        // 尝试获取任务状态和图片
+        fetchTaskResult(pendingTaskId);
+      }
     }
   }, [status]);
+
+  // 获取任务结果的函数
+  const fetchTaskResult = async (taskId: string) => {
+    try {
+      const response = await fetch(`/api/task/${taskId}?dbOnly=true`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'succeeded' && data.output) {
+          setProcessedImage(data.output);
+          toast.success('Found your processed image! You can now download it.');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching task result:', error);
+    }
+  };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -212,10 +239,14 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     await poll();
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!isAuthenticated) {
       toast.info('请登录以下载处理后的图片');
-      window.location.href = '/sign-in';
+      // 保存当前任务ID到sessionStorage，登录后可以继续下载
+      if (currentTaskId) {
+        sessionStorage.setItem('pendingDownloadTaskId', currentTaskId);
+      }
+      window.location.href = `/${locale}/signin`;
       return;
     }
 
@@ -224,15 +255,52 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       return;
     }
 
-    // 创建下载链接
-    const link = document.createElement('a');
-    link.href = processedImage;
-    link.download = 'removed-background.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success('Image downloaded successfully!');
+    try {
+      // 如果有任务ID，使用API下载（支持统计和权限控制）
+      if (currentTaskId) {
+        const response = await fetch(`/api/download-background?taskId=${currentTaskId}`, {
+          credentials: 'include',
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `background-removed-${currentTaskId}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          
+          toast.success('Image downloaded successfully!');
+          return;
+        } else {
+          console.warn('API download failed, falling back to direct download');
+        }
+      }
+      
+      // 降级方案：直接下载图片URL
+      const link = document.createElement('a');
+      link.href = processedImage;
+      link.download = 'removed-background.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Image downloaded successfully!');
+    } catch (error) {
+      console.error('Download error:', error);
+      // 降级方案：直接下载图片URL
+      const link = document.createElement('a');
+      link.href = processedImage;
+      link.download = 'removed-background.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Image downloaded successfully!');
+    }
   };
 
   const handleTryAgain = () => {
@@ -448,7 +516,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
-              onClick={() => window.location.href = '/sign-in'}
+              onClick={() => window.location.href = `/${locale}/signin`}
               size="lg"
               className="flex items-center gap-2"
             >

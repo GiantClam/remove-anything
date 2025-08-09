@@ -11,6 +11,9 @@ interface WebhookHandlerProps {
 
 export function WebhookHandler({ taskId, onComplete, onError }: WebhookHandlerProps) {
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let intervalId: NodeJS.Timeout;
+    
     // 检查是否是生产环境
     const isProduction = typeof window !== 'undefined' && 
       (window.location.hostname === 'www.remove-anything.com' || 
@@ -18,11 +21,11 @@ export function WebhookHandler({ taskId, onComplete, onError }: WebhookHandlerPr
        window.location.hostname.includes('vercel.app'));
 
     if (isProduction) {
-      // 生产环境：使用Server-Sent Events或定期检查数据库状态
+      // 生产环境：优化检查策略
       console.log("🔗 生产环境：使用数据库状态检查模式");
       
       let attempts = 0;
-      const maxAttempts = 60; // 最多检查60次（5分钟）
+      const maxAttempts = 120; // 增加最大尝试次数（10分钟）
       
       const checkDatabaseStatus = async () => {
         try {
@@ -31,10 +34,14 @@ export function WebhookHandler({ taskId, onComplete, onError }: WebhookHandlerPr
           if (response.ok) {
             const data = await response.json();
             
+            console.log(`🔍 生产环境状态检查 ${attempts + 1}/${maxAttempts}:`, data.status);
+            
             if (data.status === 'succeeded' && data.output) {
+              console.log("✅ 任务完成，输出:", data.output);
               onComplete(data.output);
               return;
             } else if (data.status === 'failed') {
+              console.log("❌ 任务失败:", data.error);
               onError(data.error || 'Task failed');
               return;
             }
@@ -42,9 +49,17 @@ export function WebhookHandler({ taskId, onComplete, onError }: WebhookHandlerPr
           
           attempts++;
           if (attempts < maxAttempts) {
-            // 继续检查，间隔时间递增
-            const delay = Math.min(5000 + attempts * 1000, 10000); // 5-10秒间隔
-            setTimeout(checkDatabaseStatus, delay);
+            // 动态调整检查间隔：开始频繁，后来递减
+            let delay;
+            if (attempts <= 10) {
+              delay = 2000; // 前10次每2秒检查一次
+            } else if (attempts <= 30) {
+              delay = 3000; // 11-30次每3秒检查一次  
+            } else {
+              delay = 5000; // 之后每5秒检查一次
+            }
+            
+            timeoutId = setTimeout(checkDatabaseStatus, delay);
           } else {
             onError('Task timeout - no webhook received');
           }
@@ -52,44 +67,49 @@ export function WebhookHandler({ taskId, onComplete, onError }: WebhookHandlerPr
           console.error('Error checking database status:', error);
           attempts++;
           if (attempts < maxAttempts) {
-            setTimeout(checkDatabaseStatus, 5000);
+            timeoutId = setTimeout(checkDatabaseStatus, 3000);
           } else {
             onError('Task timeout - database check failed');
           }
         }
       };
       
-      // 延迟5秒后开始检查，给webhook时间处理
-      const timer = setTimeout(checkDatabaseStatus, 5000);
+      // 立即开始第一次检查，不等待
+      checkDatabaseStatus();
       
-      return () => clearTimeout(timer);
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+      };
     }
 
-    // 开发环境：使用轮询模式
+    // 开发环境：使用更频繁的轮询
     const checkTaskStatus = async () => {
       try {
         const response = await fetch(`/api/task/${taskId}`);
         if (response.ok) {
           const data = await response.json();
           
+          console.log("🔍 开发环境状态检查:", data.status);
+          
           if (data.status === 'succeeded' && data.output) {
             onComplete(data.output);
           } else if (data.status === 'failed') {
             onError(data.error || 'Task failed');
-          } else {
-            // 任务还在处理中，5秒后再检查一次
-            setTimeout(checkTaskStatus, 5000);
           }
+          // 继续轮询直到任务完成
         }
       } catch (error) {
         console.error('Error checking task status:', error);
       }
     };
 
-    // 开发环境中，延迟3秒后开始检查状态
-    const timer = setTimeout(checkTaskStatus, 3000);
+    // 开发环境：立即开始检查，然后每3秒检查一次
+    checkTaskStatus();
+    intervalId = setInterval(checkTaskStatus, 3000);
     
-    return () => clearTimeout(timer);
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [taskId, onComplete, onError]);
 
   return null;
