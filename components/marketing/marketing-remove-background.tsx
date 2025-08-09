@@ -8,6 +8,7 @@ import { Upload, Download, LogIn, Sparkles, CheckCircle, AlertCircle, ArrowRight
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { WebhookHandler } from './webhook-handler';
 
 interface MarketingRemoveBackgroundProps {
   locale: string;
@@ -24,6 +25,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [hasError, setHasError] = useState(false);
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   
   // 使用useMemo来避免重复计算，添加安全检查
   const isAuthenticated = useMemo(() => {
@@ -113,7 +115,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       
       if (result.success && result.taskId) {
         console.log("✅ 任务创建成功，任务ID:", result.taskId);
-        toast.success('Background removal task created! Processing...');
+        setCurrentTaskId(result.taskId);
         
         // 开始轮询任务状态
         await pollTaskStatus(result.taskId);
@@ -137,9 +139,23 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     }
   };
 
-  // 轮询任务状态
+  // 轮询任务状态（仅在开发环境中使用）
   const pollTaskStatus = async (taskId: string) => {
-    const maxAttempts = 60; // 最多轮询60次（5分钟）
+    // 在生产环境中，使用webhook模式，不进行轮询
+    const isProduction = typeof window !== 'undefined' && 
+      (window.location.hostname === 'www.remove-anything.com' || 
+       window.location.hostname === 'remove-anything.com' ||
+       window.location.hostname === 'vercel.app');
+    
+    if (isProduction) {
+      console.log("🔗 生产环境：使用webhook模式，不进行轮询");
+      console.log("📝 任务已创建，ID:", taskId);
+      toast.success('Background removal task created! Processing in the background...');
+      return;
+    }
+
+    // 开发环境：使用轮询模式
+    const maxAttempts = 60;
     let attempts = 0;
     
     const poll = async (): Promise<void> => {
@@ -158,11 +174,10 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         switch (taskStatus.status) {
           case 'starting':
           case 'processing':
-            // 继续轮询
             if (attempts < maxAttempts) {
               attempts++;
               console.log(`⏳ 任务处理中，${attempts}/${maxAttempts}，5秒后再次查询...`);
-              setTimeout(() => poll(), 5000); // 5秒后再次查询
+              setTimeout(() => poll(), 5000);
             } else {
               console.log(`⏰ 任务超时，已轮询 ${maxAttempts} 次`);
               throw new Error('Task timeout');
@@ -191,11 +206,9 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       } catch (error) {
         console.error('Error polling task status:', error);
         toast.error('Failed to get task status. Please try again.');
-        // 不再继续轮询
       }
     };
     
-    // 开始轮询
     await poll();
   };
 
@@ -404,6 +417,24 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Webhook Handler */}
+      {currentTaskId && (
+        <WebhookHandler
+          taskId={currentTaskId}
+          onComplete={(imageUrl) => {
+            setProcessedImage(imageUrl);
+            setIsProcessing(false);
+            setCurrentTaskId(null);
+            toast.success('Background removed successfully!');
+          }}
+          onError={(error) => {
+            setIsProcessing(false);
+            setCurrentTaskId(null);
+            toast.error(`Background removal failed: ${error}`);
+          }}
+        />
       )}
 
       {/* CTA Section */}

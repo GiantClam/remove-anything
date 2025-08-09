@@ -77,6 +77,13 @@ export async function POST(req: NextRequest) {
     let updateData: any = {};
     
     switch (body.status) {
+      case "pending":
+        updateData = {
+          taskStatus: "pending",
+        };
+        console.log(`⏳ 任务等待中: ${body.id}`);
+        break;
+        
       case "starting":
         updateData = {
           taskStatus: "starting",

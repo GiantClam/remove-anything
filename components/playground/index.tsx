@@ -90,6 +90,17 @@ export default function Playground({
     queryKey: ["queryFluxTask", fluxId],
     enabled: !!fluxId,
     refetchInterval: (query) => {
+      // 在生产环境中，使用webhook模式，不进行轮询
+      const isProduction = typeof window !== 'undefined' && 
+        (window.location.hostname === 'www.remove-anything.com' || 
+         window.location.hostname === 'remove-anything.com' ||
+         window.location.hostname === 'vercel.app');
+      
+      if (isProduction) {
+        return false;
+      }
+      
+      // 开发环境：使用轮询模式
       const data = query.state.data as FluxSelectDto;
       if (data?.taskStatus === FluxTaskStatus.Processing) {
         return 1000;
