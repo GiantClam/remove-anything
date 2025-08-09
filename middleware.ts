@@ -40,6 +40,7 @@ function createRouteMatcher(routes: string[]) {
 const isProtectedRoute = createRouteMatcher([
   "/:locale/app(.*)",
   "/:locale/admin(.*)",
+  "/app", // 添加/app路由为受保护路由
 ]);
 const isPublicRoute = createRouteMatcher(["/api/webhooks(.*)"]);
 
@@ -113,6 +114,12 @@ export default withAuth(
     }
     
     if (isApi) {
+      return;
+    }
+    
+    // 处理特殊的/app路由重定向
+    if (nextUrl.pathname === '/app') {
+      // 让/app路由通过到app/page.tsx，不被next-intl拦截
       return;
     }
 

@@ -1,6 +1,6 @@
 import './style.css'
 
-export default function () {
+export default function Loading() {
   return (
     <div className="flex h-full w-full items-center justify-center">
       <svg className="loading-ring" viewBox="25 25 50 50" strokeWidth="5">
