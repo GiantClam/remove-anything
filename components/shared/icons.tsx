@@ -15,6 +15,7 @@ import {
   History,
   HomeIcon,
   Image,
+  Images,
   Languages,
   Laptop,
   LineChart,
@@ -50,6 +51,7 @@ export const Icons = {
   Gift,
   eraser: Eraser,
   History,
+  Images,
   Languages,
   HomeIcon,
   gitHub: ({ ...props }: LucideProps) => (

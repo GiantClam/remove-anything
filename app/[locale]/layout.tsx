@@ -17,6 +17,7 @@ import { ThemeProvider } from "next-themes";
 import { fontHeading, fontSans, fontUrban } from "@/assets/fonts";
 import { Analytics } from "@/components/analytics";
 import ClaritySnippet from "@/components/ClaritySnippet";
+import { DevAuthIndicator } from "@/components/dev/dev-auth-indicator";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
 import { Toaster } from "@/components/ui/toaster";
 import { locales } from "@/config";
@@ -101,6 +102,7 @@ export default async function RootLayout({
               <Analytics />
               <Toaster />
               <TailwindIndicator />
+              <DevAuthIndicator />
             </ThemeProvider>
           </NextIntlClientProvider>
         </ClientSessionProvider>

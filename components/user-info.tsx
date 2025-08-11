@@ -40,6 +40,11 @@ import { LocaleSwitcher } from "./layout/locale-switcher";
 
 export function UserInfo() {
   const t = useTranslations("Navigation");
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const pathname = usePathname();
   const { user } = useAuth();
@@ -51,10 +56,66 @@ export function UserInfo() {
     return null;
   }, [user]);
 
+  // 避免framer-motion在服务器端和客户端行为不一致
+  if (!isClient) {
+    return (
+      <div>
+        <SignedIn key="user-info">
+          <div className="flex items-center space-x-3">
+            <LocaleSwitcher />
+            <div className="pointer-events-auto relative flex h-10 items-center">
+              <UserButton
+                afterSignOutUrl={url(pathname).href}
+                appearance={{
+                  elements: {
+                    avatarBox: "w-9 h-9 ring-2 ring-white/20",
+                  },
+                }}
+              />
+              {StrategyIcon && (
+                <span className="pointer-events-none absolute -bottom-1 -right-1 flex size-4 select-none items-center justify-center rounded-full bg-white dark:bg-zinc-900">
+                  <StrategyIcon className="size-3" />
+                </span>
+              )}
+            </div>
+            {!pathname?.includes("app") && (
+              <Link href="/app" className="size-full">
+                <ShimmerButton>
+                  <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10">
+                    {t("dashboard")}
+                  </span>
+                </ShimmerButton>
+              </Link>
+            )}
+          </div>
+        </SignedIn>
+        <SignedOut key="sign-in">
+          <div className="flex items-center space-x-3">
+            <LocaleSwitcher />
+            <div className="pointer-events-auto">
+              <SignInButton
+                mode="modal"
+                forceRedirectUrl={url(pathname).href}
+              >
+                <button
+                  type="button"
+                  className="group h-10 rounded-full bg-gradient-to-b from-zinc-50/50 to-white/90 px-3 text-sm shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur transition dark:from-zinc-900/50 dark:to-zinc-800/90 dark:ring-white/10 dark:hover:ring-white/20"
+                >
+                  <UserArrowLeftIcon className="size-5" />
+                </button>
+              </SignInButton>
+            </div>
+          </div>
+        </SignedOut>
+      </div>
+    );
+  }
+
   return (
-    <AnimatePresence>
-      <SignedIn key="user-info">
-        <div className="flex items-center space-x-3">
+    <div suppressHydrationWarning>
+      <AnimatePresence>
+        <SignedIn key="user-info">
+          <div className="flex items-center space-x-3">
           <LocaleSwitcher />
           <motion.div
             className="pointer-events-auto relative flex h-10 items-center"
@@ -87,7 +148,7 @@ export function UserInfo() {
           )}
         </div>
       </SignedIn>
-      <SignedOut key="sign-in">
+              <SignedOut key="sign-in">
         <div className="flex items-center space-x-3">
           <LocaleSwitcher />
           <motion.div
@@ -124,8 +185,9 @@ export function UserInfo() {
               </Tooltip>
             </TooltipProvider>
           </motion.div>
-        </div>
-      </SignedOut>
-    </AnimatePresence>
+          </div>
+        </SignedOut>
+      </AnimatePresence>
+    </div>
   );
 }

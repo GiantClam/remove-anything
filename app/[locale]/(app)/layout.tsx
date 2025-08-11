@@ -1,11 +1,18 @@
 import { unstable_setRequestLocale } from "next-intl/server";
+import dynamic from "next/dynamic";
 
 import UserPoints from "@/components/dashboard/points";
 import { SearchCommand } from "@/components/dashboard/search-command";
-import {
-  DashboardSidebar,
-  MobileSheetSidebar,
-} from "@/components/layout/dashboard-sidebar";
+
+// 使用动态导入避免SSR问题
+const DashboardSidebar = dynamic(() => 
+  import("@/components/layout/dashboard-sidebar").then(mod => ({ default: mod.DashboardSidebar })), 
+  { ssr: false }
+);
+const MobileSheetSidebar = dynamic(() => 
+  import("@/components/layout/dashboard-sidebar").then(mod => ({ default: mod.MobileSheetSidebar })), 
+  { ssr: false }
+);
 import { DashboardNav } from "@/components/layout/dashboard-sidenav";
 import { ModeToggle } from "@/components/layout/mode-toggle";
 import { NavBar, NavbarUserInfo } from "@/components/layout/navbar";

@@ -51,14 +51,17 @@ export function DashboardSidebar({ links }: DashboardSidebarProps) {
   // }, [isSidebarExpanded]);
 
   const { isTablet } = useMediaQuery();
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(!isTablet);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true); // 默认展开状态，避免SSR问题
 
   const toggleSidebar = () => {
     setIsSidebarExpanded(!isSidebarExpanded);
   };
 
   useEffect(() => {
-    setIsSidebarExpanded(!isTablet);
+    // 只在客户端才根据屏幕大小调整侧边栏状态
+    if (typeof window !== 'undefined') {
+      setIsSidebarExpanded(!isTablet);
+    }
   }, [isTablet]);
 
   return (

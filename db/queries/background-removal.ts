@@ -13,8 +13,8 @@ export interface UpdateBackgroundRemovalTaskData {
   taskStatus?: string;
   outputImageUrl?: string;
   errorMsg?: string;
-  executeStartTime?: bigint;
-  executeEndTime?: bigint;
+  executeStartTime?: number;
+  executeEndTime?: number;
 }
 
 /**

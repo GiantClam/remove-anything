@@ -51,7 +51,7 @@ if (isBuildTime) {
           url: process.env.DATABASE_URL,
         },
       },
-      // 添加连接池配置
+      // 添加连接池配置和错误处理
       log: ['error', 'warn'],
     });
   } else {
@@ -62,7 +62,7 @@ if (isBuildTime) {
             url: process.env.DATABASE_URL,
           },
         },
-        // 添加连接池配置
+        // 添加连接池配置和错误处理
         log: ['error', 'warn'],
       });
     }

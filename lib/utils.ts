@@ -83,11 +83,14 @@ export function constructMetadata({
 
 export function formatDate(input: Date | string): string {
   const date = typeof input === "string" ? new Date(input) : input;
-  return date.toLocaleDateString("en-US", {
+  
+  // 使用Intl.DateTimeFormat确保一致性
+  return new Intl.DateTimeFormat("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
-  });
+    timeZone: "UTC" // 强制使用UTC避免时区差异
+  }).format(date);
 }
 
 export function absoluteUrl(path: string) {

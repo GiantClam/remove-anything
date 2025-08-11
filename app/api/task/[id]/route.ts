@@ -46,8 +46,8 @@ export async function GET(
         outputImageUrl: taskRecord.outputImageUrl,
         dbTaskStatus: taskRecord.taskStatus,
         createdAt: taskRecord.createdAt,
-        executeStartTime: taskRecord.executeStartTime ? taskRecord.executeStartTime.toString() : null,
-        executeEndTime: taskRecord.executeEndTime ? taskRecord.executeEndTime.toString() : null
+        executeStartTime: taskRecord.executeStartTime,
+        executeEndTime: taskRecord.executeEndTime
       });
     }
 
@@ -69,7 +69,7 @@ export async function GET(
             if (taskRecord.taskStatus === 'pending') {
               updateData = {
                 taskStatus: 'starting',
-                executeStartTime: BigInt(Date.now())
+                executeStartTime: Date.now()
               };
             }
             // 如果数据库状态已经是starting，不需要更新
@@ -87,7 +87,7 @@ export async function GET(
             updateData = {
               taskStatus: 'succeeded',
               outputImageUrl: imageUrl,
-              executeEndTime: BigInt(Date.now())
+              executeEndTime: Date.now()
             };
             console.log(`✅ 任务成功完成，输出URL: ${imageUrl}`);
             break;
@@ -96,7 +96,7 @@ export async function GET(
           case 'canceled':
             updateData = {
               taskStatus: 'failed',
-              executeEndTime: BigInt(Date.now()),
+              executeEndTime: Date.now(),
               errorMsg: replicateStatus.error?.message || replicateStatus.error || 'Task failed'
             };
             console.log(`❌ 任务失败: ${updateData.errorMsg}`);
@@ -136,9 +136,8 @@ export async function GET(
           inputImageUrl: taskRecord.inputImageUrl,
           outputImageUrl: updateData.outputImageUrl || taskRecord.outputImageUrl,
           dbTaskStatus: updateData.taskStatus || taskRecord.taskStatus,
-          // 修复BigInt序列化问题
-          executeStartTime: taskRecord.executeStartTime ? taskRecord.executeStartTime.toString() : null,
-          executeEndTime: taskRecord.executeEndTime ? taskRecord.executeEndTime.toString() : null
+          executeStartTime: taskRecord.executeStartTime,
+          executeEndTime: taskRecord.executeEndTime
         });
       } catch (replicateError) {
         console.error("❌ 从Replicate获取状态失败:", replicateError);
@@ -155,8 +154,8 @@ export async function GET(
           outputImageUrl: taskRecord.outputImageUrl,
           dbTaskStatus: taskRecord.taskStatus,
           createdAt: taskRecord.createdAt,
-          executeStartTime: taskRecord.executeStartTime ? taskRecord.executeStartTime.toString() : null,
-          executeEndTime: taskRecord.executeEndTime ? taskRecord.executeEndTime.toString() : null
+          executeStartTime: taskRecord.executeStartTime,
+          executeEndTime: taskRecord.executeEndTime
         });
       }
     } else {
@@ -173,8 +172,8 @@ export async function GET(
         outputImageUrl: taskRecord.outputImageUrl,
         dbTaskStatus: taskRecord.taskStatus,
         createdAt: taskRecord.createdAt,
-        executeStartTime: taskRecord.executeStartTime ? taskRecord.executeStartTime.toString() : null,
-        executeEndTime: taskRecord.executeEndTime ? taskRecord.executeEndTime.toString() : null
+        executeStartTime: taskRecord.executeStartTime,
+        executeEndTime: taskRecord.executeEndTime
       });
     }
 

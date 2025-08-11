@@ -71,6 +71,19 @@ export async function getChargeProduct(locale?: string) {
     try {
       console.log(`🔍 getChargeProduct 尝试 ${attempt}/${maxRetries}`);
       
+      // 对于prepared statement错误，先尝试重新连接
+      if (attempt > 1 && lastError?.message?.includes('prepared statement')) {
+        console.log("🔄 检测到prepared statement错误，重新连接数据库...");
+        try {
+          await prisma.$disconnect();
+          // 等待一下确保连接完全断开
+          await new Promise(resolve => setTimeout(resolve, 100));
+          await prisma.$connect();
+        } catch (reconnectError) {
+          console.error("重连失败:", reconnectError);
+        }
+      }
+      
       const data = await prisma.chargeProduct.findMany({
         where: {
           locale,

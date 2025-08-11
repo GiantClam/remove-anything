@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { signOut } from "next-auth/react";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,13 +26,25 @@ interface UserButtonProps {
 
 export function UserButton({ afterSignOutUrl, appearance }: UserButtonProps) {
   const { user } = useAuth();
+  const [isClient, setIsClient] = React.useState(false);
 
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // 避免水合错误：只在客户端渲染，服务器端始终返回null
+  if (!isClient) {
+    return null;
+  }
+
+  // 客户端：正常检查user
   if (!user) return null;
 
   const handleSignOut = () => {
     signOut({ callbackUrl: afterSignOutUrl || "/" });
   };
 
+  // 客户端：渲染完整的DropdownMenu
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

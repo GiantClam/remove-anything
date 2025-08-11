@@ -25,6 +25,11 @@ export function LocaleSwitcher() {
   const [isPending, startTransition] = React.useTransition();
   const pathname = usePathname();
   const params = useParams();
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const changeLocale = (nextLocale: Locale) => {
     startTransition(() => {
@@ -41,14 +46,29 @@ export function LocaleSwitcher() {
     });
   };
 
+  // 使用一致的基础按钮，避免HTML结构差异
+  const buttonContent = (
+    <Button variant="ghost" size="sm" className="size-8 px-0">
+      <Icons.Languages className="rotate-0 scale-100 transition-all" />
+      <span className="sr-only">{isClient ? t("label") : "Language"}</span>
+    </Button>
+  );
+
+  // 服务器端：只渲染按钮，无交互
+  if (!isClient) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        {buttonContent}
+      </div>
+    );
+  }
+
+  // 客户端：渲染完整的DropdownMenu
   return (
     <div className="flex h-full items-center justify-center">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="size-8 px-0">
-            <Icons.Languages className="rotate-0 scale-100 transition-all" />
-            <span className="sr-only">{t("label")}</span>
-          </Button>
+          {buttonContent}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {locales.map((cur) => (

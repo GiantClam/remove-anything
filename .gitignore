@@ -236,3 +236,10 @@ CLOUDFLARE_AI_GATEWAY_VS_REPLICATE_API.md
 ENVIRONMENT_VARIABLE_ISSUE.md
 TASK_STATUS_ANALYSIS.md
 TASK_STATUS_FINAL_FIX.md
+DEV_MODE_LOGIN_GUIDE.md
+dev.env.example
+.gitignore
+lib/dev-auth.ts
+components/dev/
+LOCAL_DEV_FIX_GUIDE.md
+temp-seed.js

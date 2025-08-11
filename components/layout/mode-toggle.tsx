@@ -14,15 +14,31 @@ import { Icons } from "@/components/shared/icons"
 
 export function ModeToggle() {
   const { setTheme } = useTheme()
+  const [isClient, setIsClient] = React.useState(false)
 
+  React.useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // 使用一致的基础按钮，避免HTML结构差异
+  const buttonContent = (
+    <Button variant="ghost" size="sm" className="size-8 px-0">
+      <Icons.sun className="rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Icons.moon className="absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      <span className="sr-only">Toggle theme</span>
+    </Button>
+  );
+
+  // 服务器端：只渲染按钮，无交互
+  if (!isClient) {
+    return buttonContent;
+  }
+
+  // 客户端：渲染完整的DropdownMenu
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="size-8 px-0">
-          <Icons.sun className="rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Icons.moon className="absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
+        {buttonContent}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme("light")}>
