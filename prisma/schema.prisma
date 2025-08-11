@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -160,8 +160,8 @@ model FluxData {
   inputImageUrl    String?  @map(name: "input_image_url")
   imageUrl         String?  @map(name: "image_url")
   model            String
-  executeStartTime Int?  @map(name: "execute_start_time")
-  executeEndTime   Int?  @map(name: "execute_end_time")
+  executeStartTime BigInt?  @map(name: "execute_start_time")
+  executeEndTime   BigInt?  @map(name: "execute_end_time")
   locale           String?
   aspectRatio      String   @map("aspect_ratio")
   safetyTolerance  Int?     @map("safety_tolerance")
@@ -194,8 +194,8 @@ model BackgroundRemovalTask {
   resolution       String?   @default("1024x1024")
   model            String    @default("men1scus/birefnet")
   taskStatus       String    @map(name: "task_status") @default("pending")
-  executeStartTime Int?   @map(name: "execute_start_time")
-  executeEndTime   Int?   @map(name: "execute_end_time")
+  executeStartTime BigInt?   @map(name: "execute_start_time")
+  executeEndTime   BigInt?   @map(name: "execute_end_time")
   errorMsg         String?   @map(name: "error_msg")
   downloadCount    Int       @default(0) @map(name: "download_count")
   viewCount        Int       @default(0) @map(name: "view_count")

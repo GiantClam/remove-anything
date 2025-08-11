@@ -46,8 +46,8 @@ export async function GET(
         outputImageUrl: taskRecord.outputImageUrl,
         dbTaskStatus: taskRecord.taskStatus,
         createdAt: taskRecord.createdAt,
-        executeStartTime: taskRecord.executeStartTime,
-        executeEndTime: taskRecord.executeEndTime
+        executeStartTime: taskRecord.executeStartTime?.toString(),
+        executeEndTime: taskRecord.executeEndTime?.toString()
       });
     }
 
@@ -69,7 +69,7 @@ export async function GET(
             if (taskRecord.taskStatus === 'pending') {
               updateData = {
                 taskStatus: 'starting',
-                executeStartTime: Date.now()
+                executeStartTime: BigInt(Date.now())
               };
             }
             // 如果数据库状态已经是starting，不需要更新
@@ -172,8 +172,8 @@ export async function GET(
         outputImageUrl: taskRecord.outputImageUrl,
         dbTaskStatus: taskRecord.taskStatus,
         createdAt: taskRecord.createdAt,
-        executeStartTime: taskRecord.executeStartTime,
-        executeEndTime: taskRecord.executeEndTime
+        executeStartTime: taskRecord.executeStartTime?.toString(),
+        executeEndTime: taskRecord.executeEndTime?.toString()
       });
     }
 

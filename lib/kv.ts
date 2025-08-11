@@ -372,9 +372,9 @@ const createKVClient = (kvBinding?: any): KVClient => {
       namespaceId.includes('placeholder') || 
       accountId.includes('placeholder') || 
       apiToken.includes('placeholder')) {
-    // 在构建过程中，如果缺少配置，使用模拟客户端而不是抛出错误
-    if (process.env.NODE_ENV === 'production') {
-      console.log('🏗️ 生产构建时使用模拟 KV 客户端（配置不完整）');
+    // 在构建过程中或开发环境配置不完整时，使用模拟客户端
+    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
+      console.log('🔧 开发/构建时使用模拟 KV 客户端（配置不完整）');
       return new MockKVClient();
     }
     

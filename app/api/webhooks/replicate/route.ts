@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       case "starting":
         updateData = {
           taskStatus: "starting",
-          executeStartTime: Date.now(),
+          executeStartTime: BigInt(Date.now()),
         };
         console.log(`🚀 任务开始处理: ${body.id}`);
         break;
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
         updateData = {
           taskStatus: "succeeded",
           outputImageUrl: imageUrl,
-          executeEndTime: Date.now(),
+          executeEndTime: BigInt(Date.now()),
           errorMsg: logsText,
         };
         console.log(`✅ 任务成功完成: ${body.id}，图片URL: ${imageUrl}`);
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
         
         updateData = {
           taskStatus: "failed",
-          executeEndTime: Date.now(),
+          executeEndTime: BigInt(Date.now()),
           errorMsg: errorMsg,
         };
         console.log(`❌ 任务失败: ${body.id}，错误: ${errorMsg}`);
