@@ -73,9 +73,11 @@ export default function History({ locale, explore }: { locale: string, explore?:
     explore,
     onSuccess(result) {
       const { page, pageSize, total, data } = result.data ?? {};
-      setDataSource(page === 1 ? data : [...dataSource, ...data]);
-      setPageParams({ page, pageSize });
-      setHasMore(page * pageSize < total);
+      // 确保 data 是数组
+      const safeData = Array.isArray(data) ? data : [];
+      setDataSource(page === 1 ? safeData : [...dataSource, ...safeData]);
+      setPageParams({ page: page || 1, pageSize: pageSize || 12 });
+      setHasMore((page || 1) * (pageSize || 12) < (total || 0));
       setInit(true);
     },
   });

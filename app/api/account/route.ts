@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       ...accountInfo,
-      id: AccountHashids.encode(Number(accountInfo.id)),
+      id: typeof accountInfo.id === 'string' ? accountInfo.id : AccountHashids.encode(Number(accountInfo.id)),
     });
   } catch (error) {
     console.error("❌ /api/account 错误:", error);

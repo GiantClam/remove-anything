@@ -82,6 +82,7 @@ export default function Playground({
   const useCreateTask = useCreateTaskMutation();
   const [uploadInputImage, setUploadInputImage] = useState<any[]>([]);
   const [inputImageUrl, setInputImageUrl] = useState<string>("");
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const t = useTranslations("Playground");
   const queryClient = useQueryClient();
   const [pricingCardOpen, setPricingCardOpen] = useState(false);
@@ -158,8 +159,11 @@ export default function Playground({
   }, [loading]);
 
   const handleSubmit = async () => {
-    if (!inputImageUrl.trim()) {
-      toast.error("Please provide an image URL");
+    // 获取图片URL：优先使用上传的文件，其次使用手动输入的URL
+    const imageUrl = uploadedFiles.length > 0 ? uploadedFiles[0].url : inputImageUrl.trim();
+    
+    if (!imageUrl) {
+      toast.error("Please upload an image or provide an image URL");
       return;
     }
 
@@ -169,7 +173,7 @@ export default function Playground({
     try {
       const result = await useCreateTask.mutateAsync({
         model: model.backgroundRemoval,
-        inputImageUrl: inputImageUrl.trim(),
+        inputImageUrl: imageUrl,
         isPrivate: isPublic ? 0 : 1,
         locale,
       });
@@ -211,27 +215,55 @@ export default function Playground({
         <div className="space-y-6">
           <div className="rounded-lg border bg-card p-6">
             <div className="mb-4">
-              <Label htmlFor="image-url" className="text-base font-semibold">
-                Image URL
+              <Label className="text-base font-semibold">
+                Upload Image
               </Label>
               <p className="text-sm text-muted-foreground">
-                Enter the URL of the image you want to remove the background from.
+                Drag and drop an image or click to select a file from your computer.
               </p>
             </div>
             
             <div className="space-y-4">
-              <Input
-                id="image-url"
-                type="url"
-                placeholder="https://example.com/image.jpg"
-                value={inputImageUrl}
-                onChange={(e) => setInputImageUrl(e.target.value)}
-                className="w-full"
+              <Upload
+                value={uploadedFiles}
+                onChange={setUploadedFiles}
+                accept={{ "image/*": [".jpg", ".jpeg", ".png", ".webp"] }}
+                maxSize={10 * 1024 * 1024} // 10MB
+                maxFiles={1}
+                multiple={false}
+                placeholder={
+                  <div className="flex flex-col items-center justify-center p-6 text-center">
+                    <Icons.media className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg font-medium mb-2">Drop your image here</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      or click to browse your files
+                    </p>
+                    <Button variant="outline" size="sm">
+                      Select Image
+                    </Button>
+                  </div>
+                }
+                className="min-h-[200px]"
               />
               
               <div className="text-sm text-muted-foreground">
                 <p>Supported formats: JPG, PNG, WebP</p>
                 <p>Maximum file size: 10MB</p>
+              </div>
+              
+              {/* 可选：保留URL输入作为备选方案 */}
+              <div className="border-t pt-4">
+                <Label htmlFor="image-url" className="text-sm font-medium">
+                  Or enter image URL (optional)
+                </Label>
+                <Input
+                  id="image-url"
+                  type="url"
+                  placeholder="https://example.com/image.jpg"
+                  value={inputImageUrl}
+                  onChange={(e) => setInputImageUrl(e.target.value)}
+                  className="w-full mt-2"
+                />
               </div>
             </div>
           </div>
@@ -266,7 +298,7 @@ export default function Playground({
 
           <Button
             onClick={handleSubmit}
-            disabled={loading || !inputImageUrl.trim() || !hasEnoughCredit}
+            disabled={loading || (uploadedFiles.length === 0 && !inputImageUrl.trim()) || !hasEnoughCredit}
             className="w-full"
             size="lg"
           >

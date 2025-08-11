@@ -30,6 +30,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
   const userId = user.id;
+  
+  // 开发模式：返回空数据
+  const isDevMode = process.env.NODE_ENV === "development" && userId === "dev-user-123";
+  if (isDevMode) {
+    console.log("🔧 开发模式：使用测试用户账户");
+    const url = new URL(req.url);
+    const values = searchParamsSchema.parse(
+      Object.fromEntries(url.searchParams),
+    );
+    const { page, pageSize } = values;
+    
+    return NextResponse.json({
+      data: {
+        total: 0,
+        page,
+        pageSize,
+        data: [],
+      },
+    });
+  }
+  
   try {
     const url = new URL(req.url);
     const values = searchParamsSchema.parse(
