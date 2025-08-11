@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
 
     // 生成预签名URL
     const stsResult = await s3Service.getSts(key, {
+      path: 'uploads', // 设置上传路径
       ContentType: fileType,
       acl: 'public-read',
     });
