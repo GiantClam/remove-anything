@@ -406,6 +406,7 @@ export default function Playground({
                     <DownloadAction
                       id={fluxData.id}
                       showText={true}
+                      taskType="background-removal"
                     />
                     <Button
                       variant="outline"

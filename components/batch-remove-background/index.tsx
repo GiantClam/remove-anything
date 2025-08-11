@@ -315,6 +315,7 @@ export default function BatchRemoveBackground({
                                 <DownloadAction
                                   id={result.id}
                                   showText={false}
+                                  taskType="background-removal"
                                 />
                               </div>
                             </div>

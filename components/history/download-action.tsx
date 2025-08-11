@@ -14,10 +14,12 @@ export function DownloadAction({
   id,
   disabled,
   showText,
+  taskType = "flux",
 }: {
   id: string;
   disabled?: boolean;
-  showText?: boolean
+  showText?: boolean;
+  taskType?: "flux" | "background-removal";
 }) {
   const t = useTranslations("History");
   const [isDownloading, startDownloadTransition] = useTransition();
@@ -32,7 +34,13 @@ export function DownloadAction({
       toast.promise(
         async () => {
           setIsPending(true);
-          const blob = await fetch(`/api/download?fluxId=${id}`, {
+          
+          // 根据任务类型选择不同的API端点
+          const apiUrl = taskType === "background-removal" 
+            ? `/api/download-background?taskId=${id}`
+            : `/api/download?fluxId=${id}`;
+          
+          const blob = await fetch(apiUrl, {
             credentials: 'include',
           }).then((response) => response.blob());
           console.log("blob-->", blob);
