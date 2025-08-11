@@ -137,7 +137,11 @@ export async function GET(
           outputImageUrl: updateData.outputImageUrl || taskRecord.outputImageUrl,
           dbTaskStatus: updateData.taskStatus || taskRecord.taskStatus,
           executeStartTime: taskRecord.executeStartTime?.toString(),
-          executeEndTime: taskRecord.executeEndTime?.toString()
+          executeEndTime: taskRecord.executeEndTime?.toString(),
+          // 前端兼容字段
+          id: taskId,
+          taskStatus: updateData.taskStatus || taskRecord.taskStatus,
+          imageUrl: updateData.outputImageUrl || taskRecord.outputImageUrl || replicateStatus.output
         });
       } catch (replicateError) {
         console.error("❌ 从Replicate获取状态失败:", replicateError);
@@ -155,7 +159,11 @@ export async function GET(
           dbTaskStatus: taskRecord.taskStatus,
           createdAt: taskRecord.createdAt,
           executeStartTime: taskRecord.executeStartTime?.toString(),
-          executeEndTime: taskRecord.executeEndTime?.toString()
+          executeEndTime: taskRecord.executeEndTime?.toString(),
+          // 前端兼容字段
+          id: taskId,
+          taskStatus: taskRecord.taskStatus,
+          imageUrl: taskRecord.outputImageUrl
         });
       }
     } else {
@@ -173,7 +181,11 @@ export async function GET(
         dbTaskStatus: taskRecord.taskStatus,
         createdAt: taskRecord.createdAt,
         executeStartTime: taskRecord.executeStartTime?.toString(),
-        executeEndTime: taskRecord.executeEndTime?.toString()
+        executeEndTime: taskRecord.executeEndTime?.toString(),
+        // 前端兼容字段
+        id: taskId,
+        taskStatus: taskRecord.taskStatus,
+        imageUrl: taskRecord.outputImageUrl
       });
     }
 
