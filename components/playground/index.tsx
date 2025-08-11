@@ -159,10 +159,11 @@ export default function Playground({
   }, [loading]);
 
   const handleSubmit = async () => {
-    // 获取图片URL：优先使用上传的文件，其次使用手动输入的URL
-    const imageUrl = uploadedFiles.length > 0 ? uploadedFiles[0].url : inputImageUrl.trim();
+    // 获取图片：优先使用上传的文件，其次使用手动输入的URL
+    const uploadedFile = uploadedFiles.length > 0 ? uploadedFiles[0] : null;
+    const imageUrl = inputImageUrl.trim();
     
-    if (!imageUrl) {
+    if (!uploadedFile && !imageUrl) {
       toast.error("Please upload an image or provide an image URL");
       return;
     }
@@ -171,12 +172,41 @@ export default function Playground({
     setFluxData(undefined);
 
     try {
-      const result = await useCreateTask.mutateAsync({
-        model: model.backgroundRemoval,
-        inputImageUrl: imageUrl,
-        isPrivate: isPublic ? 0 : 1,
-        locale,
-      });
+      let result;
+      
+      // 如果有上传的文件且包含originFile（本地文件），发送FormData
+      if (uploadedFile?.originFile) {
+        console.log("🔧 使用本地文件模式发送FormData");
+        
+        const formData = new FormData();
+        formData.append('image', uploadedFile.originFile);
+        formData.append('model', model.backgroundRemoval);
+        formData.append('isPrivate', isPublic ? '0' : '1');
+        formData.append('locale', locale);
+        
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          body: formData,
+          credentials: 'include',
+        });
+
+        if (!res.ok && res.status >= 500) {
+          throw new Error("Network response error");
+        }
+
+        result = await res.json();
+      } else {
+        // 使用URL模式（R2上传或手动输入的URL）
+        const finalImageUrl = uploadedFile?.url || imageUrl;
+        console.log("🔧 使用URL模式:", finalImageUrl);
+        
+        result = await useCreateTask.mutateAsync({
+          model: model.backgroundRemoval,
+          inputImageUrl: finalImageUrl,
+          isPrivate: isPublic ? 0 : 1,
+          locale,
+        });
+      }
 
       if (result.error) {
         toast.error(result.error);
@@ -184,7 +214,7 @@ export default function Playground({
         return;
       }
 
-      setFluxId(result.id);
+      setFluxId(result.taskId || result.id);
       toast.success("Background removal started!");
     } catch (error) {
       console.error("Background removal error:", error);

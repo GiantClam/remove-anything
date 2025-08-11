@@ -72,10 +72,15 @@ interface FormUploadProps {
 export const useGetLicenseSts = (config?: {
   onSuccess: (result: any) => void;
 }) => {
-  const { userId } = useAuth();
+  const { userId, isSignedIn } = useAuth();
 
   return useMutation({
     mutationFn: async (values: any = {}) => {
+      // 如果用户未登录，直接返回错误，让组件使用本地文件处理
+      if (!isSignedIn) {
+        throw new Error("User not authenticated - use local file handling");
+      }
+      
       return fetch(`/api/s3/sts`, {
         method: "POST",
         body: JSON.stringify(values),
@@ -102,6 +107,7 @@ const FormUpload = (props: FormUploadProps) => {
     defaultImg,
     multiple = false, // 默认单文件上传
   } = props;
+  const { isSignedIn } = useAuth();
   const getLicenseSts = useGetLicenseSts();
   const [uploadLoading, setUploadLoading] = useState(false);
   
@@ -142,43 +148,92 @@ const FormUpload = (props: FormUploadProps) => {
           }
 
           try {
-            const res = await getLicenseSts.mutateAsync({
-              key,
-              fileType: file.type,
-            });
-            
-            if (res.error || !res?.data.putUrl || !res?.data.url) {
-              throw new Error(res.error || "Failed to get upload information");
-            }
-            
-            const formData = new FormData();
-            formData.append("file", file);
-            await fetch(res.data.putUrl, {
-              body: file,
-              method: "PUT",
-              headers: {
-                "Content-Type": file.type,
-              },
-            });
+            // 如果用户已登录，使用STS上传到R2
+            if (isSignedIn) {
+              const res = await getLicenseSts.mutateAsync({
+                key,
+                fileType: file.type,
+              });
+              
+              if (res.error || !res?.data.putUrl || !res?.data.url) {
+                throw new Error(res.error || "Failed to get upload information");
+              }
+              
+              const formData = new FormData();
+              formData.append("file", file);
+              await fetch(res.data.putUrl, {
+                body: file,
+                method: "PUT",
+                headers: {
+                  "Content-Type": file.type,
+                },
+              });
 
-            const newValue = {
-              url: res?.data?.url,
-              key: res?.data?.key,
-              completedUrl: res?.data?.completedUrl,
-              id: tempValue.id,
-              originFile: file,
-              status: 'uploaded' as const,
-            };
-            
-            // 更新对应的文件状态
-            const updatedValues = multiple 
-              ? value.map(v => v.id === tempValue.id ? newValue : v)
-              : [newValue];
-            onChange?.(updatedValues);
-            
-            return newValue;
+              const newValue = {
+                url: res?.data?.url,
+                key: res?.data?.key,
+                completedUrl: res?.data?.completedUrl,
+                id: tempValue.id,
+                originFile: file,
+                status: 'uploaded' as const,
+              };
+              
+              // 更新对应的文件状态
+              const updatedValues = multiple 
+                ? value.map(v => v.id === tempValue.id ? newValue : v)
+                : [newValue];
+              onChange?.(updatedValues);
+              
+              return newValue;
+            } else {
+              // 用户未登录，使用本地文件处理
+              console.log("🔧 匿名用户：使用本地文件处理模式");
+              
+              // 创建本地文件URL（用于预览）
+              const localUrl = URL.createObjectURL(file);
+              
+              const newValue = {
+                url: localUrl,  // 本地预览URL
+                key: key,
+                completedUrl: localUrl,
+                id: tempValue.id,
+                originFile: file,  // 保存原始文件对象，供后续API使用
+                status: 'uploaded' as const,
+              };
+              
+              // 更新对应的文件状态
+              const updatedValues = multiple 
+                ? value.map(v => v.id === tempValue.id ? newValue : v)
+                : [newValue];
+              onChange?.(updatedValues);
+              
+              return newValue;
+            }
           } catch (error) {
             console.log("upload error->", error);
+            
+            // 如果是认证错误且用户未登录，尝试本地处理
+            if (!isSignedIn && error.message?.includes("not authenticated")) {
+              console.log("🔧 STS失败，使用本地文件处理");
+              
+              const localUrl = URL.createObjectURL(file);
+              const newValue = {
+                url: localUrl,
+                key: key,
+                completedUrl: localUrl,
+                id: tempValue.id,
+                originFile: file,
+                status: 'uploaded' as const,
+              };
+              
+              const updatedValues = multiple 
+                ? value.map(v => v.id === tempValue.id ? newValue : v)
+                : [newValue];
+              onChange?.(updatedValues);
+              
+              return newValue;
+            }
+            
             const errorValue = {
               ...tempValue,
               status: 'error' as const,
