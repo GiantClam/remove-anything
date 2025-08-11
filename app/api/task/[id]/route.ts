@@ -136,8 +136,8 @@ export async function GET(
           inputImageUrl: taskRecord.inputImageUrl,
           outputImageUrl: updateData.outputImageUrl || taskRecord.outputImageUrl,
           dbTaskStatus: updateData.taskStatus || taskRecord.taskStatus,
-          executeStartTime: taskRecord.executeStartTime,
-          executeEndTime: taskRecord.executeEndTime
+          executeStartTime: taskRecord.executeStartTime?.toString(),
+          executeEndTime: taskRecord.executeEndTime?.toString()
         });
       } catch (replicateError) {
         console.error("❌ 从Replicate获取状态失败:", replicateError);
@@ -154,8 +154,8 @@ export async function GET(
           outputImageUrl: taskRecord.outputImageUrl,
           dbTaskStatus: taskRecord.taskStatus,
           createdAt: taskRecord.createdAt,
-          executeStartTime: taskRecord.executeStartTime,
-          executeEndTime: taskRecord.executeEndTime
+          executeStartTime: taskRecord.executeStartTime?.toString(),
+          executeEndTime: taskRecord.executeEndTime?.toString()
         });
       }
     } else {

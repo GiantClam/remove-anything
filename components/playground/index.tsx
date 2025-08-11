@@ -35,6 +35,7 @@ import { PricingCardDialog } from "../pricing-cards";
 import { EmptyPlaceholder } from "../shared/empty-placeholder";
 import { Icons } from "../shared/icons";
 import Upload from "../upload";
+import { WebhookHandler } from "../marketing/webhook-handler";
 import ComfortingMessages from "./comforting";
 import Loading from "./loading";
 
@@ -87,17 +88,25 @@ export default function Playground({
   const queryClient = useQueryClient();
   const [pricingCardOpen, setPricingCardOpen] = useState(false);
 
+  // 检查是否是生产环境
+  const isProduction = typeof window !== 'undefined' && 
+    (window.location.hostname === 'www.remove-anything.com' || 
+     window.location.hostname === 'remove-anything.com' ||
+     window.location.hostname.includes('vercel.app'));
+
   const queryTask = useQuery({
     queryKey: ["queryFluxTask", fluxId],
     enabled: !!fluxId,
     refetchInterval: (query) => {
-      // 在生产环境中，使用webhook模式，不进行轮询
-      const isProduction = typeof window !== 'undefined' && 
-        (window.location.hostname === 'www.remove-anything.com' || 
-         window.location.hostname === 'remove-anything.com' ||
-         window.location.hostname === 'vercel.app');
-      
+      // 在生产环境中，减少轮询频率，主要依赖WebhookHandler
       if (isProduction) {
+        const data = query.state.data as FluxSelectDto;
+        // 只在任务还在处理时进行较少的轮询作为后备机制
+        if (data?.taskStatus === FluxTaskStatus.Processing || 
+            data?.taskStatus === "pending" || 
+            data?.taskStatus === "starting") {
+          return 10000; // 10秒轮询一次作为后备
+        }
         return false;
       }
       
@@ -446,6 +455,25 @@ export default function Playground({
         onClose={setPricingCardOpen}
         chargeProduct={chargeProduct}
       />
+
+      {/* 生产环境Webhook处理器 */}
+      {isProduction && fluxId && loading && (
+        <WebhookHandler
+          taskId={fluxId}
+          onComplete={(imageUrl) => {
+            console.log("🎉 WebhookHandler: 任务完成", imageUrl);
+            // 刷新查询以获取最新数据
+            queryClient.invalidateQueries({ queryKey: ["queryFluxTask", fluxId] });
+            setLoading(false);
+            toast.success("Background removal completed!");
+          }}
+          onError={(error) => {
+            console.error("❌ WebhookHandler: 任务失败", error);
+            setLoading(false);
+            toast.error("Background removal failed. Please try again.");
+          }}
+        />
+      )}
     </div>
   );
 }
