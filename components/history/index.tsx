@@ -219,13 +219,16 @@ export default function History({ locale, explore }: { locale: string, explore?:
                           )}
                         </div>
                         <div className="flex flex-row justify-between space-x-2 p-4 pt-0">
-                          <button
-                            className="focus-ring text-content-strong border-stroke-strong hover:border-stroke-stronger data-[state=open]:bg-surface-alpha-light inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border bg-transparent px-2.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
-                            onClick={() => copyPrompt(item.inputPrompt!)}
-                          >
-                            <Copy className="icon-xs me-1" />
-                            {t("action.copy")}
-                          </button>
+                          {/* 只为非背景移除任务显示复制prompt按钮 */}
+                          {item.taskType !== "background-removal" && (
+                            <button
+                              className="focus-ring text-content-strong border-stroke-strong hover:border-stroke-stronger data-[state=open]:bg-surface-alpha-light inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border bg-transparent px-2.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+                              onClick={() => copyPrompt(item.inputPrompt!)}
+                            >
+                              <Copy className="icon-xs me-1" />
+                              {t("action.copy")}
+                            </button>
+                          )}
                           <DownloadAction
                             disabled={item.taskStatus === FluxTaskStatus.Processing}
                             id={item.id}

@@ -2,6 +2,55 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
 import { env } from "@/env.mjs";
 import { findBackgroundRemovalTaskByReplicateId, updateBackgroundRemovalTask } from "@/db/queries/background-removal";
+import AWS from 'aws-sdk';
+import { nanoid } from "nanoid";
+
+// 下载图片并保存到R2
+async function downloadAndSaveToR2(imageUrl: string, taskId: string): Promise<string> {
+  try {
+    console.log(`📥 开始下载并保存图片到R2: ${imageUrl}`);
+    
+    // 下载图片
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to download image: ${response.status}`);
+    }
+    
+    const imageBuffer = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') || 'image/png';
+    
+    // 配置AWS S3（用于R2）
+    const s3 = new AWS.S3({
+      endpoint: env.R2_ENDPOINT,
+      accessKeyId: env.R2_ACCESS_KEY,
+      secretAccessKey: env.R2_SECRET_KEY,
+      region: env.R2_REGION || 'auto',
+      s3ForcePathStyle: true,
+    });
+    
+    // 生成文件名
+    const fileExtension = contentType.includes('png') ? 'png' : 'jpg';
+    const fileName = `background-removal/processed/${taskId}-${nanoid(8)}.${fileExtension}`;
+    
+    // 上传到R2
+    const uploadResult = await s3.upload({
+      Bucket: env.R2_BUCKET,
+      Key: fileName,
+      Body: Buffer.from(imageBuffer),
+      ContentType: contentType,
+    }).promise();
+    
+    // 构建公共访问URL
+    const r2PublicUrl = `${env.R2_URL_BASE}/${fileName}`;
+    
+    console.log(`✅ 图片已保存到R2: ${r2PublicUrl}`);
+    return r2PublicUrl;
+    
+  } catch (error) {
+    console.error(`❌ 保存图片到R2失败:`, error);
+    throw error;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -100,7 +149,7 @@ export async function POST(req: NextRequest) {
         break;
         
       case "succeeded":
-        const imageUrl = Array.isArray(body.output) ? body.output[0] : body.output;
+        const replicateImageUrl = Array.isArray(body.output) ? body.output[0] : body.output;
         
         // 安全处理 logs 字段
         let logsText = "";
@@ -114,13 +163,23 @@ export async function POST(req: NextRequest) {
           }
         }
         
+        // 下载Replicate的结果图片并保存到R2
+        let r2ImageUrl = replicateImageUrl; // 默认使用Replicate URL作为备用
+        try {
+          r2ImageUrl = await downloadAndSaveToR2(replicateImageUrl, body.id);
+          console.log(`✅ 图片已保存到R2: ${r2ImageUrl}`);
+        } catch (r2Error) {
+          console.error(`❌ 保存到R2失败，使用原始URL:`, r2Error);
+          // 继续使用Replicate的URL，不阻断流程
+        }
+        
         updateData = {
           taskStatus: "succeeded",
-          outputImageUrl: imageUrl,
+          outputImageUrl: r2ImageUrl,
           executeEndTime: BigInt(Date.now()),
           errorMsg: logsText,
         };
-        console.log(`✅ 任务成功完成: ${body.id}，图片URL: ${imageUrl}`);
+        console.log(`✅ 任务成功完成: ${body.id}，最终图片URL: ${r2ImageUrl}`);
         break;
         
       case "failed":
