@@ -10,6 +10,10 @@ import { env } from "@/env.mjs";
 import AWS from 'aws-sdk';
 import crypto from 'crypto';
 import { createBackgroundRemovalTask } from "@/db/queries/background-removal";
+import { getUserCredit } from "@/db/queries/account";
+import { prisma } from "@/db/prisma";
+import { Credits, model } from "@/config/constants";
+import { BillingType } from "@/db/type";
 
 const ratelimit = new KVRateLimit(kv, {
   limit: 10,
@@ -99,6 +103,30 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // 对于登录用户，检查积分
+  if (userId) {
+    try {
+      const userCredit = await getUserCredit(userId);
+      const requiredCredits = Credits[model.backgroundRemoval] || 2;
+      
+      if (userCredit.credit < requiredCredits) {
+        return NextResponse.json(
+          { error: "Insufficient credits", requiredCredits, currentCredits: userCredit.credit },
+          { status: 402 }
+        );
+      }
+    } catch (error) {
+      console.error("❌ 检查用户积分失败:", error);
+      // 如果积分检查失败，仍然允许匿名用户继续，但记录错误
+      if (userId) {
+        return NextResponse.json(
+          { error: "Failed to check user credits" },
+          { status: 500 }
+        );
+      }
+    }
+  }
+
   try {
     // 检查Content-Type，支持FormData和JSON两种格式
     const contentType = req.headers.get('content-type') || '';
@@ -152,6 +180,61 @@ export async function POST(req: NextRequest) {
     
     console.log("✅ 异步任务创建成功:", result);
     console.log("✅ 任务记录创建成功:", taskRecord);
+
+    // 对于登录用户，扣除积分并创建计费记录
+    if (userId && taskRecord) {
+      try {
+        const requiredCredits = Credits[model.backgroundRemoval] || 2;
+        
+        await prisma.$transaction(async (tx) => {
+          // 扣除用户积分
+          const userCredit = await tx.userCredit.findFirst({
+            where: { userId },
+          });
+
+          if (!userCredit || userCredit.credit < requiredCredits) {
+            throw new Error("Insufficient credits");
+          }
+
+          const newCreditBalance = userCredit.credit - requiredCredits;
+          
+          await tx.userCredit.update({
+            where: { id: userCredit.id },
+            data: {
+              credit: newCreditBalance,
+            },
+          });
+
+          // 创建计费记录
+          const billing = await tx.userBilling.create({
+            data: {
+              userId,
+              state: "Done",
+              amount: requiredCredits,
+              type: BillingType.Withdraw,
+              description: `Background Removal - Task ${result.id}`,
+            },
+          });
+
+          // 创建积分交易记录
+          await tx.userCreditTransaction.create({
+            data: {
+              userId,
+              credit: -requiredCredits,
+              balance: newCreditBalance,
+              billingId: billing.id,
+              type: "Background Removal",
+            },
+          });
+        });
+
+        console.log(`✅ 用户 ${userId} 成功扣除 ${requiredCredits} 积分`);
+      } catch (error) {
+        console.error("❌ 积分扣除失败:", error);
+        // 如果积分扣除失败，不影响任务创建，但应该记录错误
+        // 生产环境中可能需要回滚任务
+      }
+    }
 
     // 返回任务信息
     return NextResponse.json({

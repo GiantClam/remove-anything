@@ -59,4 +59,4 @@ export type FluxDto = Prisma.FluxDataGetPayload<any>;
 
 export type FluxSchema = Prisma.FluxDataCreateInput;
 
-export type FluxSelectDto = Omit<FluxDto, "id"> & { id: string };
+export type FluxSelectDto = Omit<FluxDto, "id"> & { id: string; taskType?: "flux" | "background-removal" };

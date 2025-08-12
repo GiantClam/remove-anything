@@ -12,6 +12,7 @@ import { FluxHashids } from "@/db/dto/flux.dto";
 import { prisma } from "@/db/prisma";
 import { FluxTaskStatus } from "@/db/type";
 import { getErrorMessage } from "@/lib/handle-error";
+import { getUserBackgroundRemovalTasks } from "@/db/queries/background-removal";
 
 const searchParamsSchema = z.object({
   page: z.coerce.number().default(1),
@@ -69,7 +70,8 @@ export async function GET(req: NextRequest) {
       whereConditions.model = model;
     }
 
-    const [fluxData, total] = await Promise.all([
+    // 获取Flux任务
+    const [fluxData, fluxTotal] = await Promise.all([
       prisma.fluxData.findMany({
         where: whereConditions,
         take: pageSize,
@@ -79,21 +81,60 @@ export async function GET(req: NextRequest) {
       prisma.fluxData.count({ where: whereConditions }),
     ]);
 
+    // 获取背景移除任务
+    const backgroundRemovalTasks = await prisma.backgroundRemovalTask.findMany({
+      where: {
+        userId,
+        taskStatus: {
+          in: ["succeeded", "processing", "pending", "starting"],
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: Math.min(pageSize, 50), // 限制数量，避免过多数据
+    });
+
+    // 转换背景移除任务为统一格式
+    const transformedBackgroundTasks = backgroundRemovalTasks.map((task) => ({
+      id: task.replicateId, // 使用replicateId作为id
+      imageUrl: task.outputImageUrl,
+      inputImageUrl: task.inputImageUrl,
+      inputPrompt: "Background Removal", // 背景移除没有prompt，使用固定值
+      taskStatus: task.taskStatus === "succeeded" ? FluxTaskStatus.Succeeded : FluxTaskStatus.Processing,
+      model: task.model,
+      createdAt: task.createdAt,
+      userId: task.userId,
+      isPrivate: !task.isPublic,
+      aspectRatio: task.resolution || "1024x1024",
+      executeTime: task.executeEndTime && task.executeStartTime 
+        ? Number(`${task.executeEndTime - task.executeStartTime}`)
+        : 0,
+      taskType: "background-removal", // 添加任务类型标识
+    }));
+
+    // 转换Flux任务为统一格式
+    const transformedFluxTasks = fluxData.map(
+      ({ id, executeEndTime, executeStartTime, loraUrl, ...rest }) => ({
+        ...rest,
+        executeTime:
+          executeEndTime && executeStartTime
+            ? Number(`${executeEndTime - executeStartTime}`)
+            : 0,
+        id: FluxHashids.encode(id),
+        taskType: "flux", // 添加任务类型标识
+      }),
+    );
+
+    // 合并所有任务并按创建时间排序
+    const allTasks = [...transformedFluxTasks, ...transformedBackgroundTasks]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, pageSize); // 重新分页
+
     return NextResponse.json({
       data: {
-        total,
+        total: fluxTotal + backgroundRemovalTasks.length,
         page,
         pageSize,
-        data: fluxData.map(
-          ({ id, executeEndTime, executeStartTime, loraUrl, ...rest }) => ({
-            ...rest,
-            executeTime:
-              executeEndTime && executeStartTime
-                ? Number(`${executeEndTime - executeStartTime}`)
-                : 0,
-            id: FluxHashids.encode(id),
-          }),
-        ),
+        data: allTasks,
       },
     });
   } catch (error) {

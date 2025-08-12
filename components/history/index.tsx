@@ -229,6 +229,7 @@ export default function History({ locale, explore }: { locale: string, explore?:
                           <DownloadAction
                             disabled={item.taskStatus === FluxTaskStatus.Processing}
                             id={item.id}
+                            taskType={item.taskType === "background-removal" ? "background-removal" : "flux"}
                           />
                         </div>
                       </>
