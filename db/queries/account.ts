@@ -1,6 +1,7 @@
 import { prisma } from "@/db/prisma";
 import { env } from "@/env.mjs";
 import { shouldSkipDatabaseQuery, getBuildTimeFallback } from "@/lib/build-check";
+import { logsnag } from "@/lib/log-snag";
 
 export async function getUserCredit(userId: string) {
   // 在构建时或没有数据库连接时返回默认值
@@ -35,12 +36,62 @@ export async function getUserCredit(userId: string) {
     },
   });
   if (!accountInfo?.id) {
-    const data = await prisma.userCredit.create({
-      data: {
-        userId: userId,
-        credit: 0,
-      },
+    // 新用户注册赠送100积分
+    const signupBonus = 100;
+    
+    const data = await prisma.$transaction(async (tx) => {
+      // 创建用户积分记录
+      const userCredit = await tx.userCredit.create({
+        data: {
+          userId: userId,
+          credit: signupBonus,
+        },
+      });
+
+      // 创建计费记录
+      const billing = await tx.userBilling.create({
+        data: {
+          userId: userId,
+          state: "Done",
+          amount: signupBonus,
+          type: "Gift", // 使用Gift类型表示赠送
+          description: "New User Signup Bonus - 100 Credits",
+        },
+      });
+
+      // 创建积分交易记录
+      await tx.userCreditTransaction.create({
+        data: {
+          userId: userId,
+          credit: signupBonus,
+          balance: signupBonus,
+          billingId: billing.id,
+          type: "Signup Bonus",
+        },
+      });
+
+      console.log(`🎉 新用户 ${userId} 注册成功，赠送 ${signupBonus} 积分`);
+      
+      // 发送通知到LogSnag
+      try {
+        await logsnag.track({
+          channel: "signup",
+          event: "New User Signup",
+          user_id: userId,
+          description: `新用户注册并获得 ${signupBonus} 积分奖励`,
+          icon: "🎉",
+          tags: {
+            credits: signupBonus.toString(),
+            source: "signup_bonus"
+          }
+        });
+      } catch (error) {
+        console.error("❌ LogSnag通知发送失败:", error);
+      }
+      
+      return userCredit;
     });
+    
     accountInfo = data;
   }
   return accountInfo;
