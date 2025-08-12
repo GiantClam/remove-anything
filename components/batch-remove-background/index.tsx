@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -37,10 +37,13 @@ interface UploadValue {
 interface BatchResult {
   id: string;
   index: number;
-  status: string;
+  success: boolean;
   originalImageUrl: string;
+  replicateId?: string;
+  taskRecordId?: number;
   processedImageUrl?: string;
   error?: string;
+  status?: string; // 任务状态：pending, processing, succeeded, failed
 }
 
 export default function BatchRemoveBackground({
@@ -53,6 +56,7 @@ export default function BatchRemoveBackground({
   const [pricingCardOpen, setPricingCardOpen] = useState(false);
   const [batchResults, setBatchResults] = useState<BatchResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingTasks, setProcessingTasks] = useState<string[]>([]); // 正在处理的任务ID
 
   // 获取用户积分
   const { data: userCreditData } = useQuery({
@@ -67,6 +71,62 @@ export default function BatchRemoveBackground({
     enabled: !!userId,
   });
   const userCredit = userCreditData?.credit;
+
+  // 轮询任务状态
+  const { data: taskStatusData } = useQuery({
+    queryKey: ["batch-task-status", processingTasks],
+    queryFn: async () => {
+      if (!processingTasks.length) return [];
+      
+      const statusPromises = processingTasks.map(async (taskId) => {
+        try {
+          const response = await fetch(`/api/task/${taskId}`);
+          if (response.ok) {
+            return await response.json();
+          }
+          return null;
+        } catch (error) {
+          console.error(`Failed to fetch status for task ${taskId}:`, error);
+          return null;
+        }
+      });
+      
+      return Promise.all(statusPromises);
+    },
+    enabled: processingTasks.length > 0,
+    refetchInterval: 3000, // 每3秒轮询一次
+    refetchIntervalInBackground: false,
+  });
+
+  // 更新批量结果状态
+  React.useEffect(() => {
+    if (taskStatusData && taskStatusData.length > 0) {
+      setBatchResults(prev => prev.map(result => {
+        if (!result.replicateId) return result;
+        
+        const taskStatus = taskStatusData.find(status => 
+          status && status.replicateId === result.replicateId
+        );
+        
+        if (taskStatus) {
+          const newResult = {
+            ...result,
+            status: taskStatus.taskStatus,
+            processedImageUrl: taskStatus.imageUrl
+          };
+          
+          // 如果任务完成，从轮询列表中移除
+          if (taskStatus.taskStatus === 'succeeded' || taskStatus.taskStatus === 'failed') {
+            setProcessingTasks(prev => prev.filter(id => id !== result.replicateId));
+          }
+          
+          return newResult;
+        }
+        
+        return result;
+      }));
+    }
+  }, [taskStatusData]);
 
   // 批量背景去除
   const batchRemoveBackground = useMutation({
@@ -91,9 +151,20 @@ export default function BatchRemoveBackground({
       return response.json();
     },
     onSuccess: (data) => {
-      setBatchResults(data.results);
+      setBatchResults(data.results.map((result: any) => ({
+        ...result,
+        status: result.success ? 'pending' : 'failed'
+      })));
       setIsProcessing(false);
-      toast.success(`Successfully processed ${data.completedImages} images`);
+      
+      // 收集成功的任务ID用于轮询
+      const successfulTasks = data.results
+        .filter((result: any) => result.success && result.replicateId)
+        .map((result: any) => result.replicateId);
+      
+      setProcessingTasks(successfulTasks);
+      
+      toast.success(`Successfully started processing ${data.completedImages} images`);
     },
     onError: (error) => {
       setIsProcessing(false);
@@ -149,7 +220,7 @@ export default function BatchRemoveBackground({
       <div className="mb-8 text-center">
         <h1 className="mb-4 text-3xl font-bold">Batch Background Removal</h1>
         <p className="text-muted-foreground">
-          Remove backgrounds from multiple images at once. Upload up to 10 images and get clean results.
+          Remove backgrounds from multiple images at once. Upload up to 100MB of images and get clean results.
         </p>
       </div>
 
@@ -164,8 +235,8 @@ export default function BatchRemoveBackground({
               <div className="space-y-4">
                 <FormUpload
                   accept={{ "image/*": [] }}
-                  maxSize={10 * 1024 * 1024}
-                  maxFiles={10}
+                  maxSize={100 * 1024 * 1024} // 总大小限制100MB
+                  maxFiles={50} // 增加文件数量限制到50
                   multiple={true}
                   value={uploadedImages}
                   onChange={setUploadedImages}
@@ -173,8 +244,8 @@ export default function BatchRemoveBackground({
                 />
                 <div className="text-sm text-muted-foreground">
                   <p>Supported formats: JPG, PNG, WebP</p>
-                  <p>Maximum file size: 10MB per image</p>
-                  <p>Maximum files: 10 images</p>
+                  <p>Maximum total size: 100MB</p>
+                  <p>Maximum files: 50 images</p>
                 </div>
               </div>
             </CardContent>
@@ -278,11 +349,19 @@ export default function BatchRemoveBackground({
                       <div className="mb-3 flex items-center justify-between">
                         <h4 className="font-medium">Image {result.index + 1}</h4>
                         <span className={`text-sm px-2 py-1 rounded ${
-                          result.status === 'Succeeded' 
+                          result.status === 'succeeded' 
                             ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
+                            : result.status === 'failed'
+                            ? 'bg-red-100 text-red-800'
+                            : result.status === 'processing'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {result.status}
+                          {result.status === 'succeeded' ? 'Completed' :
+                           result.status === 'failed' ? 'Failed' :
+                           result.status === 'processing' ? 'Processing' :
+                           result.status === 'pending' ? 'Pending' :
+                           'Unknown'}
                         </span>
                       </div>
                       
@@ -297,7 +376,7 @@ export default function BatchRemoveBackground({
                         </div>
                         <div>
                           <p className="text-sm font-medium mb-2">Processed</p>
-                          {result.status === 'Succeeded' && result.processedImageUrl ? (
+                          {result.status === 'succeeded' && result.processedImageUrl ? (
                             <div className="relative">
                               <img 
                                 src={result.processedImageUrl} 
@@ -313,10 +392,19 @@ export default function BatchRemoveBackground({
                                   <Copy className="h-3 w-3" />
                                 </Button>
                                 <DownloadAction
-                                  id={result.id}
+                                  id={result.replicateId!}
                                   showText={false}
                                   taskType="background-removal"
                                 />
+                              </div>
+                            </div>
+                          ) : result.status === 'processing' || result.status === 'pending' ? (
+                            <div className="w-full h-32 bg-gray-100 rounded flex items-center justify-center">
+                              <div className="flex items-center gap-2">
+                                <Icons.spinner className="h-4 w-4 animate-spin" />
+                                <p className="text-sm text-gray-500">
+                                  {result.status === 'pending' ? 'Starting...' : 'Processing...'}
+                                </p>
                               </div>
                             </div>
                           ) : (
