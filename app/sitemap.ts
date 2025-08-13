@@ -82,11 +82,90 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // }));
   const fluxUrls = await getFluxUrl();
 
-  return [...posts, ...keys, ...fluxUrls, ...explorePages].flatMap((key) =>
-    locales.map((locale) => ({
-      url: getUrl(key, locale),
-      priority: 0.7,
-      changeFrequency: "daily",
-    })),
+  // 添加优先级配置
+  const sitemapEntries = [];
+  
+  // 高优先级页面（主页、主要功能页面）
+  const highPriorityPages = ["/", "/remove-background", "/batch-remove-background"];
+  highPriorityPages.forEach(page => {
+    if (keys.includes(page)) {
+      locales.forEach(locale => {
+        sitemapEntries.push({
+          url: getUrl(page, locale),
+          priority: 1.0,
+          changeFrequency: "daily" as const,
+          lastModified: new Date(),
+        });
+      });
+    }
+  });
+  
+  // 中等优先级页面（博客、功能页面）
+  const mediumPriorityPages = ["/blog", "/pricing", "/explore"];
+  mediumPriorityPages.forEach(page => {
+    if (keys.includes(page)) {
+      locales.forEach(locale => {
+        sitemapEntries.push({
+          url: getUrl(page, locale),
+          priority: 0.8,
+          changeFrequency: "weekly" as const,
+          lastModified: new Date(),
+        });
+      });
+    }
+  });
+  
+  // 博客文章
+  posts.forEach(post => {
+    locales.forEach(locale => {
+      sitemapEntries.push({
+        url: getUrl(post, locale),
+        priority: 0.7,
+        changeFrequency: "monthly" as const,
+        lastModified: new Date(),
+      });
+    });
+  });
+  
+  // 用户生成的内容（Flux图片）
+  fluxUrls.forEach(fluxUrl => {
+    locales.forEach(locale => {
+      sitemapEntries.push({
+        url: getUrl(fluxUrl, locale),
+        priority: 0.6,
+        changeFrequency: "weekly" as const,
+        lastModified: new Date(),
+      });
+    });
+  });
+  
+  // 探索页面
+  explorePages.forEach(page => {
+    locales.forEach(locale => {
+      sitemapEntries.push({
+        url: getUrl(page, locale),
+        priority: 0.6,
+        changeFrequency: "daily" as const,
+        lastModified: new Date(),
+      });
+    });
+  });
+  
+  // 其他剩余页面（低优先级）
+  const remainingPages = keys.filter(key => 
+    !highPriorityPages.includes(key) && 
+    !mediumPriorityPages.includes(key)
   );
+  remainingPages.forEach(page => {
+    locales.forEach(locale => {
+      sitemapEntries.push({
+        url: getUrl(page, locale),
+        priority: 0.5,
+        changeFrequency: "monthly" as const,
+        lastModified: new Date(),
+      });
+    });
+  });
+
+  return sitemapEntries;
 }
