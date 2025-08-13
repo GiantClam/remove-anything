@@ -103,9 +103,7 @@ export async function POST(req: NextRequest) {
           resolution: "1024x1024",
         });
 
-        if (result.error) {
-          throw new Error(result.error);
-        }
+        // 异步API通过抛出异常来处理错误，不需要检查result.error
 
         // 创建任务记录
         const taskRecord = await createBackgroundRemovalTask({
