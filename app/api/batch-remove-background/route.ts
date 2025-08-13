@@ -160,6 +160,11 @@ export async function POST(req: NextRequest) {
         const creditsToDeduct = Credits[model.backgroundRemoval] * completedCount;
         await prisma.$transaction(async (tx) => {
           const userCredit = await tx.userCredit.findFirst({ where: { userId } });
+          
+          if (!userCredit) {
+            throw new Error(`User credit record not found for user ${userId}`);
+          }
+          
           const newCreditBalance = userCredit.credit - creditsToDeduct;
           
           await tx.userCredit.update({ 
@@ -204,7 +209,7 @@ export async function POST(req: NextRequest) {
       failedImages: failedCount,
       results: processedResults.map(result => ({
         ...result,
-        id: result.replicateId || `failed-${result.index}` // 为前端提供ID
+        id: ('replicateId' in result && result.replicateId) ? result.replicateId : `failed-${result.index}` // 为前端提供ID
       })),
     });
 

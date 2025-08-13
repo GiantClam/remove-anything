@@ -83,7 +83,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fluxUrls = await getFluxUrl();
 
   // 添加优先级配置
-  const sitemapEntries = [];
+  const sitemapEntries: Array<{
+    url: string;
+    priority: number;
+    changeFrequency: "daily" | "weekly" | "monthly";
+    lastModified: Date;
+  }> = [];
   
   // 高优先级页面（主页、主要功能页面）
   const highPriorityPages = ["/", "/remove-background", "/batch-remove-background"];
