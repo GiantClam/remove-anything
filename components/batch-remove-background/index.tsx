@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,6 +52,7 @@ export default function BatchRemoveBackground({
   chargeProduct,
 }: BatchRemoveBackgroundProps) {
   const { userId } = useAuth();
+  const t = useTranslations('BatchRemoveBackground');
   const [uploadedImages, setUploadedImages] = useState<UploadValue[]>([]);
   const [isPublic, setIsPublic] = useState(false);
   const [pricingCardOpen, setPricingCardOpen] = useState(false);
@@ -174,7 +176,7 @@ export default function BatchRemoveBackground({
 
   const handleSubmit = async () => {
     if (!uploadedImages.length) {
-      toast.error("Please upload at least one image");
+      toast.error(t('uploadAtLeastOne'));
       return;
     }
 
@@ -183,7 +185,7 @@ export default function BatchRemoveBackground({
       .map(img => img.url);
 
     if (!imageUrls.length) {
-      toast.error("Please wait for all images to finish uploading");
+      toast.error(t('waitForUpload'));
       return;
     }
 
@@ -430,7 +432,7 @@ export default function BatchRemoveBackground({
               </EmptyPlaceholder.Icon>
               <EmptyPlaceholder.Title>No results yet</EmptyPlaceholder.Title>
               <EmptyPlaceholder.Description>
-                Upload images and click "Remove Backgrounds" to get started.
+                {t('getStartedText')}
               </EmptyPlaceholder.Description>
             </EmptyPlaceholder>
           )}

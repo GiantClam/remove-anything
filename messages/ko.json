@@ -282,6 +282,14 @@
       "downloadSuccess": "이미지가 다운로드되었습니다.",
       "downloadLoading": "다운로드 중...",
       "upgrade": "Flux.1의 무료 평가판을 이용하여 높이세요. 로고 없는 프리미엄 모델 경험을 위해 여기를 클릭하여 업그레이드하세요."
+    },
+    "backgroundRemoval": {
+      "failed": "배경 제거에 실패했습니다",
+      "processing": "처리 중...",
+      "success": "배경 제거가 성공했습니다！",
+      "altText": "배경이 제거되었습니다",
+      "noResultTitle": "아직 결과가 없습니다",
+      "getStartedText": "이미지를 업로드하고 \"배경 제거\"를 클릭하여 시작하세요."
     }
   },
   "GiftCode": {
@@ -367,6 +375,39 @@
       "confirm": "구독 확인 이메일을 확인해 주세요.",
       "button": "구독하기"
     }
+  },
+  "RemoveBackgroundPage": {
+    "processing": "처리 중...",
+    "chooseImage": "이미지 선택",
+    "dragDropText": "드래그앤드롭 또는 클릭하여 업로드",
+    "originalImage": "원본 이미지",
+    "processedImage": "처리된 이미지",
+    "download": "다운로드",
+    "loginDownload": "로그인하여 다운로드",
+    "tryAgain": "다시 시도",
+    "removingBackground": "배경 제거 중...",
+    "demoProcessing": "데모 처리 중...",
+    "noProcessedImage": "처리 결과가 없습니다",
+    "uploadFile": "이미지 파일을 업로드해주세요",
+    "fileSizeLimit": "이미지 크기는 5MB 미만이어야 합니다",
+    "foundProcessedImage": "처리 결과를 찾았습니다! 이제 다운로드할 수 있습니다.",
+    "backgroundRemoved": "배경 제거가 성공적으로 완료되었습니다!",
+    "taskCreated": "배경 제거 작업이 생성되었습니다! 백그라운드에서 처리 중...",
+    "processingFailed": "배경 제거에 실패했습니다. 다시 시도해주세요.",
+    "taskFailed": "작업 실패",
+    "taskTimeout": "작업 시간 초과",
+    "noOutputReceived": "출력을 받지 못했습니다",
+    "getStatusFailed": "작업 상태 가져오기에 실패했습니다. 다시 시도해주세요.",
+    "loginToDownload": "처리된 이미지를 다운로드하려면 로그인해주세요",
+    "noImageToDownload": "다운로드할 처리된 이미지가 없습니다",
+    "downloadSuccess": "이미지 다운로드가 완료되었습니다!"
+  },
+  "BatchRemoveBackground": {
+    "title": "배치 배경 제거 - Remove Anything",
+    "description": "AI를 사용하여 여러 이미지의 배경을 한 번에 제거합니다. 이미지를 업로드하고 깨끗하고 투명한 결과를 즉시 얻으세요.",
+    "uploadAtLeastOne": "최소 한 장의 이미지를 업로드해주세요",
+    "waitForUpload": "모든 이미지 업로드가 완료될 때까지 기다려주세요",
+    "getStartedText": "이미지를 업로드하고 \"배경 제거\"를 클릭하여 시작하세요."
   },
   "LocaleLayout": {
     "title": "Flux AI 온라인 이미지 생성기 - Flux AI",

@@ -9,10 +9,10 @@ type Props = {
 };
 
 export async function generateMetadata({ params: { locale } }: Props) {
-  const t = await getTranslations({ locale, namespace: "Playground" });
+  const t = await getTranslations({ locale, namespace: "BatchRemoveBackground" });
   return {
-    title: `Batch Background Removal - Remove Anything`,
-    description: "Remove backgrounds from multiple images at once using AI. Upload up to 10 images and get clean, transparent results instantly.",
+    title: t("title"),
+    description: t("description"),
   };
 }
 

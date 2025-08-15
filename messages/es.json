@@ -282,6 +282,14 @@
       "downloadSuccess": "Imagen descargada.",
       "downloadLoading": "Descargando...",
       "upgrade": "Eleva tu arte con las pruebas gratuitas mensuales limitadas de Schnell. Para experiencias de modelo premium sin marca, haz clic aquí para actualizar."
+    },
+    "backgroundRemoval": {
+      "failed": "La eliminación del fondo falló",
+      "processing": "Procesando...",
+      "success": "¡Eliminación de fondo exitosa!",
+      "altText": "Fondo eliminado",
+      "noResultTitle": "Aún no hay resultados",
+      "getStartedText": "Sube una imagen y haz clic en \"Eliminar Fondo\" para empezar."
     }
   },
   "GiftCode": {
@@ -367,6 +375,39 @@
       "confirm": "Por favor, revisa el correo de confirmación de suscripción.",
       "button": "Suscribirse"
     }
+  },
+  "RemoveBackgroundPage": {
+    "processing": "Procesando...",
+    "chooseImage": "Elegir imagen",
+    "dragDropText": "Arrastra y suelta o haz clic para subir",
+    "originalImage": "Imagen original",
+    "processedImage": "Imagen procesada",
+    "download": "Descargar",
+    "loginDownload": "Iniciar sesión para descargar",
+    "tryAgain": "Intentar de nuevo",
+    "removingBackground": "Eliminando fondo...",
+    "demoProcessing": "Procesamiento de demostración...",
+    "noProcessedImage": "Sin resultado de procesamiento",
+    "uploadFile": "Por favor sube un archivo de imagen",
+    "fileSizeLimit": "El tamaño de la imagen debe ser menor a 5MB",
+    "foundProcessedImage": "¡Resultado de procesamiento encontrado! Ahora puedes descargarlo.",
+    "backgroundRemoved": "¡Fondo eliminado exitosamente!",
+    "taskCreated": "¡Tarea de eliminación de fondo creada! Procesando en segundo plano...",
+    "processingFailed": "Error al eliminar el fondo. Por favor inténtalo de nuevo.",
+    "taskFailed": "Tarea fallida",
+    "taskTimeout": "Tiempo de espera de la tarea agotado",
+    "noOutputReceived": "No se recibió salida",
+    "getStatusFailed": "Error al obtener el estado de la tarea. Por favor inténtalo de nuevo.",
+    "loginToDownload": "Por favor inicia sesión para descargar la imagen procesada",
+    "noImageToDownload": "No hay imagen procesada para descargar",
+    "downloadSuccess": "¡Imagen descargada exitosamente!"
+  },
+  "BatchRemoveBackground": {
+    "title": "Eliminación de Fondo por Lotes - Remove Anything",
+    "description": "Elimina fondos de múltiples imágenes a la vez usando IA. Sube imágenes y obtén resultados limpios y transparentes al instante.",
+    "uploadAtLeastOne": "Por favor sube al menos una imagen",
+    "waitForUpload": "Por favor espera a que todas las imágenes terminen de subir",
+    "getStartedText": "Sube imágenes y haz clic en \"Eliminar Fondos\" para empezar."
   },
   "LocaleLayout": {
     "title": "Generador de Imágenes en Línea Flux AI - Flux AI",

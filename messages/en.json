@@ -278,6 +278,14 @@
       "downloadSuccess": "Image downloaded.",
       "downloadLoading": "Downloading...",
       "upgrade": "Elevate your artistry with Schnell's limited monthly free trials. For watermark-free, premium model experiences, click here to upgrade."
+    },
+    "backgroundRemoval": {
+      "failed": "Background removal failed",
+      "processing": "Processing...",
+      "success": "Background removed successfully!",
+      "altText": "Background removed",
+      "noResultTitle": "No result yet",
+      "getStartedText": "Upload an image and click \"Remove Background\" to get started."
     }
   },
   "GiftCode": {
@@ -363,6 +371,39 @@
       "confirm": "Please check the subscription confirmation email.",
       "button": "Subscribe"
     }
+  },
+  "RemoveBackgroundPage": {
+    "processing": "Processing...",
+    "chooseImage": "Choose Image",
+    "dragDropText": "Drag and drop or click to upload",
+    "originalImage": "Original Image",
+    "processedImage": "Processed Image",
+    "download": "Download",
+    "loginDownload": "Login to Download",
+    "tryAgain": "Try Again",
+    "removingBackground": "Removing background...",
+    "demoProcessing": "Demo processing...",
+    "noProcessedImage": "No processed image",
+    "uploadFile": "Please upload an image file",
+    "fileSizeLimit": "Image size should be less than 5MB",
+    "foundProcessedImage": "Found your processed image! You can now download it.",
+    "backgroundRemoved": "Background removed successfully!",
+    "taskCreated": "Background removal task created! Processing in the background...",
+    "processingFailed": "Failed to remove background. Please try again.",
+    "taskFailed": "Task failed",
+    "taskTimeout": "Task timeout",
+    "noOutputReceived": "No output received",
+    "getStatusFailed": "Failed to get task status. Please try again.",
+    "loginToDownload": "Please login to download the processed image",
+    "noImageToDownload": "No processed image to download",
+    "downloadSuccess": "Image downloaded successfully!"
+  },
+  "BatchRemoveBackground": {
+    "title": "Batch Background Removal - Remove Anything",
+    "description": "Remove backgrounds from multiple images at once using AI. Upload images and get clean, transparent results instantly.",
+    "uploadAtLeastOne": "Please upload at least one image",
+    "waitForUpload": "Please wait for all images to finish uploading",
+    "getStartedText": "Upload images and click \"Remove Backgrounds\" to get started."
   },
   "LocaleLayout": {
     "title": "Free Background Remover - Remove Background from Image AI",

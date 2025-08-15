@@ -282,6 +282,14 @@
       "downloadSuccess": "تم تنزيل الصورة.",
       "downloadLoading": "جارٍ التنزيل...",
       "upgrade": "ارتقِ بفنك مع التجارب المجانية الشهرية المحدودة من Schnell. للحصول على تجارب نموذجية متميزة خالية من العلامات المائية، انقر هنا للترقية."
+    },
+    "backgroundRemoval": {
+      "failed": "فشل في إزالة الخلفية",
+      "processing": "جاري المعالجة...",
+      "success": "تم إزالة الخلفية بنجاح！",
+      "altText": "تم إزالة الخلفية",
+      "noResultTitle": "لا توجد نتائج حتى الآن",
+      "getStartedText": "ارفع صورة وانقر على \"إزالة الخلفية\" للبدء."
     }
   },
   "GiftCode": {
@@ -367,6 +375,39 @@
       "confirm": "يرجى التحقق من بريد التأكيد الخاص بالاشتراك.",
       "button": "اشتراك"
     }
+  },
+  "RemoveBackgroundPage": {
+    "processing": "جاري المعالجة...",
+    "chooseImage": "اختيار صورة",
+    "dragDropText": "اسحب وأفلت أو انقر للرفع",
+    "originalImage": "الصورة الأصلية",
+    "processedImage": "الصورة المعالجة",
+    "download": "تحميل",
+    "loginDownload": "تسجيل الدخول للتحميل",
+    "tryAgain": "حاول مرة أخرى",
+    "removingBackground": "إزالة الخلفية...",
+    "demoProcessing": "معالجة تجريبية...",
+    "noProcessedImage": "لا توجد نتيجة معالجة",
+    "uploadFile": "يرجى رفع ملف صورة",
+    "fileSizeLimit": "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
+    "foundProcessedImage": "تم العثور على نتيجة المعالجة! يمكنك الآن التحميل.",
+    "backgroundRemoved": "تم إزالة الخلفية بنجاح!",
+    "taskCreated": "تم إنشاء مهمة إزالة الخلفية! جاري المعالجة في الخلفية...",
+    "processingFailed": "فشل في إزالة الخلفية. يرجى المحاولة مرة أخرى.",
+    "taskFailed": "فشلت المهمة",
+    "taskTimeout": "انتهت مهلة المهمة",
+    "noOutputReceived": "لم يتم استلام أي مخرجات",
+    "getStatusFailed": "فشل في الحصول على حالة المهمة. يرجى المحاولة مرة أخرى.",
+    "loginToDownload": "يرجى تسجيل الدخول لتحميل الصورة المعالجة",
+    "noImageToDownload": "لا توجد صورة معالجة للتحميل",
+    "downloadSuccess": "تم تحميل الصورة بنجاح!"
+  },
+  "BatchRemoveBackground": {
+    "title": "إزالة الخلفية بشكل جماعي - Remove Anything",
+    "description": "أزل خلفيات متعددة من الصور في مرة واحدة باستخدام الذكاء الاصطناعي. ارفع الصور واحصل على نتائج نظيفة وشفافة فوراً.",
+    "uploadAtLeastOne": "يرجى رفع صورة واحدة على الأقل",
+    "waitForUpload": "يرجى انتظار انتهاء رفع جميع الصور",
+    "getStartedText": "ارفع الصور وانقر على \"إزالة الخلفيات\" للبدء."
   },
   "LocaleLayout": {
     "title": "مولد الصور Flux AI عبر الإنترنت - Flux AI",

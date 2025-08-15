@@ -17,6 +17,7 @@ interface MarketingRemoveBackgroundProps {
 export default function MarketingRemoveBackground({ locale }: MarketingRemoveBackgroundProps) {
   // 所有hooks必须在组件顶层调用，不能在任何条件语句中
   const t = useTranslations('IndexPage');
+  const tPage = useTranslations('RemoveBackgroundPage');
   const { data: session, status } = useSession();
   
   // 状态管理
@@ -82,7 +83,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         const data = await response.json();
         if (data.status === 'succeeded' && data.output) {
           setProcessedImage(data.output);
-          toast.success('Found your processed image! You can now download it.');
+          toast.success(tPage('foundProcessedImage'));
         }
       }
     } catch (error) {
@@ -96,13 +97,13 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
 
     // 验证文件类型
     if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
+      toast.error(tPage('uploadFile'));
       return;
     }
 
     // 验证文件大小 (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
+      toast.error(tPage('fileSizeLimit'));
       return;
     }
 
@@ -151,7 +152,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       }
     } catch (error) {
       console.error('Error processing image:', error);
-      toast.error('Failed to remove background. Please try again.');
+      toast.error(tPage('processingFailed'));
       
       // 如果API调用失败，显示模拟结果用于演示
       if (uploadedFile) {
@@ -177,7 +178,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     if (isProduction) {
       console.log("🔗 生产环境：使用webhook模式，不进行轮询");
       console.log("📝 任务已创建，ID:", taskId);
-      toast.success('Background removal task created! Processing in the background...');
+      toast.success(tPage('taskCreated'));
       return;
     }
 
@@ -215,7 +216,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             console.log('✅ 任务成功完成!');
             if (taskStatus.output) {
               setProcessedImage(taskStatus.output);
-              toast.success('Background removed successfully!');
+              toast.success(tPage('backgroundRemoved'));
             } else {
               throw new Error('No output received');
             }
@@ -232,7 +233,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         }
       } catch (error) {
         console.error('Error polling task status:', error);
-        toast.error('Failed to get task status. Please try again.');
+        toast.error(tPage('getStatusFailed'));
       }
     };
     
@@ -241,7 +242,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
 
   const handleDownload = async () => {
     if (!isAuthenticated) {
-      toast.info('请登录以下载处理后的图片');
+      toast.info(tPage('loginToDownload'));
       // 保存当前任务ID到sessionStorage，登录后可以继续下载
       if (currentTaskId) {
         sessionStorage.setItem('pendingDownloadTaskId', currentTaskId);
@@ -251,7 +252,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     }
 
     if (!processedImage) {
-      toast.error('No processed image to download');
+      toast.error(tPage('noImageToDownload'));
       return;
     }
 
@@ -273,7 +274,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
           
-          toast.success('Image downloaded successfully!');
+          toast.success(tPage('downloadSuccess'));
           return;
         } else {
           console.warn('API download failed, falling back to direct download');
@@ -392,10 +393,10 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
               )}
             >
               <Upload className="w-4 h-4" />
-              {isProcessing ? 'Processing...' : 'Choose Image'}
+              {isProcessing ? tPage('processing') : tPage('chooseImage')}
             </label>
             <p className="text-sm text-muted-foreground mt-2">
-              Drag and drop or click to upload
+              {tPage('dragDropText')}
             </p>
           </div>
         </CardContent>
@@ -408,13 +409,13 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           {originalImage && (
             <Card>
               <CardHeader>
-                <CardTitle>Original Image</CardTitle>
+                <CardTitle>{tPage('originalImage')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                   <img
                     src={originalImage}
-                    alt="Original"
+                    alt={tPage('originalImage')}
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -426,7 +427,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Processed Image</span>
+                <span>{tPage('processedImage')}</span>
                 {processedImage && !isProcessing && (
                   <div className="flex gap-2">
                     <Button
@@ -437,12 +438,12 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                       {isAuthenticated ? (
                         <>
                           <Download className="w-4 h-4" />
-                          Download
+                          {tPage('download')}
                         </>
                       ) : (
                         <>
                           <LogIn className="w-4 h-4" />
-                          登录下载
+                          {tPage('loginDownload')}
                         </>
                       )}
                     </Button>
@@ -452,7 +453,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                         variant="outline"
                         size="sm"
                       >
-                        Try Again
+                        {tPage('tryAgain')}
                       </Button>
                     )}
                   </div>
@@ -466,19 +467,19 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                       <p className="text-sm text-muted-foreground">
-                        {isAuthenticated ? 'Removing background...' : '演示处理中...'}
+                        {isAuthenticated ? tPage('removingBackground') : tPage('demoProcessing')}
                       </p>
                     </div>
                   </div>
                 ) : processedImage ? (
                   <img
                     src={processedImage}
-                    alt="Processed"
+                    alt={tPage('processedImage')}
                     className="w-full h-full object-contain"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                    <p>Processing...</p>
+                    <p>{tPage('processing')}</p>
                   </div>
                 )}
               </div>

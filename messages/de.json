@@ -282,6 +282,14 @@
       "downloadSuccess": "Bild heruntergeladen.",
       "downloadLoading": "Wird heruntergeladen...",
       "upgrade": "Verbessern Sie Ihre Kunst mit den begrenzten monatlichen kostenlosen Tests von Schnell. Für markenfreie, premium-Modell-Erlebnisse klicken Sie hier, um zu upgraden."
+    },
+    "backgroundRemoval": {
+      "failed": "Hintergrundentfernung fehlgeschlagen",
+      "processing": "Verarbeitung...",
+      "success": "Hintergrundentfernung erfolgreich!",
+      "altText": "Hintergrund entfernt",
+      "noResultTitle": "Noch kein Ergebnis",
+      "getStartedText": "Laden Sie ein Bild hoch und klicken Sie auf \"Hintergrund entfernen\", um zu beginnen."
     }
   },
   "GiftCode": {
@@ -367,6 +375,39 @@
       "confirm": "Bitte überprüfen Sie die Abonnementbestätigungs-E-Mail.",
       "button": "Abonnieren"
     }
+  },
+  "RemoveBackgroundPage": {
+    "processing": "Verarbeitung...",
+    "chooseImage": "Bild auswählen",
+    "dragDropText": "Ziehen und Ablegen oder Klicken zum Hochladen",
+    "originalImage": "Originalbild",
+    "processedImage": "Verarbeitetes Bild",
+    "download": "Herunterladen",
+    "loginDownload": "Anmelden zum Herunterladen",
+    "tryAgain": "Erneut versuchen",
+    "removingBackground": "Hintergrund entfernen...",
+    "demoProcessing": "Demo-Verarbeitung...",
+    "noProcessedImage": "Kein Verarbeitungsergebnis",
+    "uploadFile": "Bitte laden Sie eine Bilddatei hoch",
+    "fileSizeLimit": "Die Bildgröße sollte weniger als 5MB betragen",
+    "foundProcessedImage": "Verarbeitungsergebnis gefunden! Sie können es jetzt herunterladen.",
+    "backgroundRemoved": "Hintergrund erfolgreich entfernt!",
+    "taskCreated": "Hintergrundentfernungsaufgabe erstellt! Verarbeitung im Hintergrund...",
+    "processingFailed": "Fehler beim Entfernen des Hintergrunds. Bitte versuchen Sie es erneut.",
+    "taskFailed": "Aufgabe fehlgeschlagen",
+    "taskTimeout": "Aufgaben-Zeitüberschreitung",
+    "noOutputReceived": "Keine Ausgabe erhalten",
+    "getStatusFailed": "Fehler beim Abrufen des Aufgabenstatus. Bitte versuchen Sie es erneut.",
+    "loginToDownload": "Bitte melden Sie sich an, um das verarbeitete Bild herunterzuladen",
+    "noImageToDownload": "Kein verarbeitetes Bild zum Herunterladen",
+    "downloadSuccess": "Bild erfolgreich heruntergeladen!"
+  },
+  "BatchRemoveBackground": {
+    "title": "Batch-Hintergrundentfernung - Remove Anything",
+    "description": "Entfernen Sie Hintergründe von mehreren Bildern gleichzeitig mit KI. Laden Sie Bilder hoch und erhalten Sie sofort saubere, transparente Ergebnisse.",
+    "uploadAtLeastOne": "Bitte laden Sie mindestens ein Bild hoch",
+    "waitForUpload": "Bitte warten Sie, bis alle Bilder hochgeladen sind",
+    "getStartedText": "Laden Sie Bilder hoch und klicken Sie auf \"Hintergründe entfernen\", um zu beginnen."
   },
   "LocaleLayout": {
     "title": "Flux AI Online-Bildgenerator - Flux AI",

@@ -385,10 +385,10 @@ export default function Playground({
                 <h3 className="text-lg font-semibold">Result</h3>
                 <p className="text-sm text-muted-foreground">
                   {fluxData.taskStatus === FluxTaskStatus.Succeeded
-                    ? "Background removed successfully!"
+                    ? t("backgroundRemoval.success")
                     : fluxData.taskStatus === FluxTaskStatus.Failed
-                    ? "Background removal failed"
-                    : "Processing..."}
+                    ? t("backgroundRemoval.failed")
+                    : t("backgroundRemoval.processing")}
                 </p>
               </div>
 
@@ -397,7 +397,7 @@ export default function Playground({
                   <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-muted">
                     <img
                       src={fluxData.imageUrl}
-                      alt="Background removed"
+                      alt={t("backgroundRemoval.altText")}
                       className="h-full w-full object-contain"
                     />
                   </div>
@@ -441,9 +441,9 @@ export default function Playground({
                             <EmptyPlaceholder.Icon name="eraser">
                 <Icons.eraser className="h-8 w-8" />
               </EmptyPlaceholder.Icon>
-              <EmptyPlaceholder.Title>No result yet</EmptyPlaceholder.Title>
+              <EmptyPlaceholder.Title>{t("backgroundRemoval.noResultTitle")}</EmptyPlaceholder.Title>
               <EmptyPlaceholder.Description>
-                Upload an image and click "Remove Background" to get started.
+                {t("backgroundRemoval.getStartedText")}
               </EmptyPlaceholder.Description>
             </EmptyPlaceholder>
           )}

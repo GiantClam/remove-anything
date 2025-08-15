@@ -277,6 +277,14 @@
       "downloadSuccess": "图像已下载。",
       "downloadLoading": "正在下载...",
       "upgrade": "通过 Schnell 的每月限量免费试用提升您的艺术创作。点击此处可体验无水印的高级模型。"
+    },
+    "backgroundRemoval": {
+      "failed": "背景移除失败",
+      "processing": "处理中...",
+      "success": "背景移除成功！",
+      "altText": "背景已移除",
+      "noResultTitle": "暂无结果",
+      "getStartedText": "上传图片并点击\"去除背景\"开始使用。"
     }
   },
   "GiftCode": {
@@ -363,6 +371,39 @@
       "confirm": "请查看订阅确认邮件。",
       "button": "订阅"
     }
+  },
+  "RemoveBackgroundPage": {
+    "processing": "处理中...",
+    "chooseImage": "选择图片",
+    "dragDropText": "拖拽或点击上传",
+    "originalImage": "原始图片",
+    "processedImage": "处理后图片",
+    "download": "下载",
+    "loginDownload": "登录下载",
+    "tryAgain": "重试",
+    "removingBackground": "正在去除背景...",
+    "demoProcessing": "演示处理中...",
+    "noProcessedImage": "暂无处理结果",
+    "uploadFile": "请上传图片文件",
+    "fileSizeLimit": "图片大小应小于 5MB",
+    "foundProcessedImage": "找到您的处理结果！现在可以下载了。",
+    "backgroundRemoved": "背景去除成功！",
+    "taskCreated": "背景去除任务已创建！正在后台处理...",
+    "processingFailed": "去除背景失败，请重试。",
+    "taskFailed": "任务失败",
+    "taskTimeout": "任务超时",
+    "noOutputReceived": "未收到处理结果",
+    "getStatusFailed": "获取任务状态失败，请重试。",
+    "loginToDownload": "请登录以下载处理后的图片",
+    "noImageToDownload": "没有可下载的处理图片",
+    "downloadSuccess": "图片下载成功！"
+  },
+  "BatchRemoveBackground": {
+    "title": "批量去背景 - Remove Anything",
+    "description": "使用AI批量去除多张图片的背景。上传图片即可获得干净、透明的结果。",
+    "uploadAtLeastOne": "请至少上传一张图片",
+    "waitForUpload": "请等待所有图片上传完成",
+    "getStartedText": "上传图片并点击\"批量去背景\"开始使用。"
   },
   "LocaleLayout": {
     "title": "Flux AI 在线图像生成器 - Flux AI",

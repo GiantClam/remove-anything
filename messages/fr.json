@@ -282,6 +282,14 @@
       "downloadSuccess": "Image téléchargée.",
       "downloadLoading": "Téléchargement en cours...",
       "upgrade": "Elevez votre art avec les essais gratuits mensuels limités de Schnell. Pour des expériences de modèle premium sans marque, cliquez ici pour mettre à niveau."
+    },
+    "backgroundRemoval": {
+      "failed": "La suppression de l'arrière-plan a échoué",
+      "processing": "Traitement en cours...",
+      "success": "Suppression d'arrière-plan réussie !",
+      "altText": "Arrière-plan supprimé",
+      "noResultTitle": "Aucun résultat pour le moment",
+      "getStartedText": "Téléchargez une image et cliquez sur \"Supprimer l'arrière-plan\" pour commencer."
     }
   },
   "GiftCode": {
@@ -367,6 +375,39 @@
       "confirm": "Veuillez vérifier l'e-mail de confirmation d'abonnement.",
       "button": "S'abonner"
     }
+  },
+  "RemoveBackgroundPage": {
+    "processing": "Traitement en cours...",
+    "chooseImage": "Choisir une image",
+    "dragDropText": "Glissez-déposez ou cliquez pour télécharger",
+    "originalImage": "Image originale",
+    "processedImage": "Image traitée",
+    "download": "Télécharger",
+    "loginDownload": "Se connecter pour télécharger",
+    "tryAgain": "Réessayer",
+    "removingBackground": "Suppression de l'arrière-plan...",
+    "demoProcessing": "Traitement de démonstration...",
+    "noProcessedImage": "Aucun résultat de traitement",
+    "uploadFile": "Veuillez télécharger un fichier image",
+    "fileSizeLimit": "La taille de l'image doit être inférieure à 5 Mo",
+    "foundProcessedImage": "Résultat de traitement trouvé ! Vous pouvez maintenant télécharger.",
+    "backgroundRemoved": "Arrière-plan supprimé avec succès !",
+    "taskCreated": "Tâche de suppression d'arrière-plan créée ! Traitement en cours en arrière-plan...",
+    "processingFailed": "Échec de la suppression de l'arrière-plan. Veuillez réessayer.",
+    "taskFailed": "Tâche échouée",
+    "taskTimeout": "Délai d'attente de la tâche dépassé",
+    "noOutputReceived": "Aucune sortie reçue",
+    "getStatusFailed": "Échec de l'obtention du statut de la tâche. Veuillez réessayer.",
+    "loginToDownload": "Veuillez vous connecter pour télécharger l'image traitée",
+    "noImageToDownload": "Aucune image traitée à télécharger",
+    "downloadSuccess": "Image téléchargée avec succès !"
+  },
+  "BatchRemoveBackground": {
+    "title": "Suppression d'arrière-plan par lots - Remove Anything",
+    "description": "Supprimez les arrière-plans de plusieurs images à la fois en utilisant l'IA. Téléchargez des images et obtenez instantanément des résultats propres et transparents.",
+    "uploadAtLeastOne": "Veuillez télécharger au moins une image",
+    "waitForUpload": "Veuillez attendre que toutes les images finissent de se télécharger",
+    "getStartedText": "Téléchargez des images et cliquez sur \"Supprimer les arrière-plans\" pour commencer."
   },
   "LocaleLayout": {
     "title": "Générateur d'Images en Ligne Flux AI - Flux AI",
