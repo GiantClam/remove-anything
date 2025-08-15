@@ -19,9 +19,9 @@
   },
   "IndexPage": {
     "intro": "Découvrez Flux AI, le générateur d'images",
-    "description": "Révolutionnez la création d'images avec notre modèle avancé de texte vers image, compatible avec flux.1 pro/dev et flux.1 schnell.",
-    "title": "Flux AI Générateur d'Images",
-    "subtitle": "Conversion avancée de texte en image",
+    "description": "Révolutionnez la suppression d'arrière-plan avec notre outil avancé d'IA, compatible avec flux.1 pro/dev et flux.1 schnell.",
+    "title": "Remove Anything - Suppresseur Gratuit d'Objets et d'Arrière-plans par IA",
+    "subtitle": "Suppression avancée d'arrière-plan par IA",
     "examples": {
       "label": "Exemple",
       "title": "Exemples d'images Flux AI",
@@ -402,7 +402,20 @@
     "getStatusFailed": "Échec de l'obtention du statut de la tâche. Veuillez réessayer.",
     "loginToDownload": "Veuillez vous connecter pour télécharger l'image traitée",
     "noImageToDownload": "Aucune image traitée à télécharger",
-    "downloadSuccess": "Image téléchargée avec succès !"
+    "downloadSuccess": "Image téléchargée avec succès !",
+    "aiPowered": "Alimenté par IA",
+    "aiPoweredDesc": "Technologie IA avancée pour une suppression précise des arrière-plans",
+    "highQuality": "Haute Qualité",
+    "highQualityDesc": "Maintient la qualité de l'image tout en supprimant les arrière-plans",
+    "freeTrial": "Essai Gratuit",
+    "freeTrialDesc": "Essayez notre service gratuitement, sans carte de crédit",
+    "readyToGetStarted": "Prêt à commencer ?",
+    "uploadImage": "Télécharger une Image",
+    "uploadImageDesc": "Téléchargez une image pour supprimer son arrière-plan. Prend en charge les formats JPG, PNG et WebP jusqu'à 5 Mo.",
+    "demoModeDesc": "Mode démo : Téléchargez des images pour découvrir la suppression d'arrière-plan. Connectez-vous pour toutes les fonctionnalités.",
+    "signUpFreeDesc": "Inscrivez-vous gratuitement et commencez à supprimer les arrière-plans de vos images dès aujourd'hui !",
+    "getStartedFree": "Commencer Gratuitement",
+    "viewPricing": "Voir les Tarifs"
   },
   "BatchRemoveBackground": {
     "title": "Suppression d'arrière-plan par lots - Remove Anything",
@@ -412,16 +425,16 @@
     "getStartedText": "Téléchargez des images et cliquez sur \"Supprimer les arrière-plans\" pour commencer."
   },
   "LocaleLayout": {
-    "title": "Générateur d'Images en Ligne Flux AI - Flux AI",
-    "description": "Transformez vos images avec les outils avancés de Flux.1 AI : Flux Schnell pour des créations rapides, Flux Dev pour une personnalisation détaillée et Flux Pro pour une qualité professionnelle inégalée.",
-    "keywords": "Flux AI, AI Flux, intelligence artificielle Flux, technologie AI, apprentissage automatique Flux, outils Flux AI, applications AI, solutions d'intelligence artificielle, analyse de données Flux, innovation AI, analyse prédictive Flux, apprentissage automatique Flux, développement AI, prochaine génération AI"
+    "title": "Remove Anything - Suppresseur Gratuit d'Objets et d'Arrière-plans par IA",
+    "description": "Supprimez n'importe quel objet, arrière-plan ou personne des images en utilisant une technologie IA avancée. Rapide, précis et facile à utiliser. Outil gratuit en ligne.",
+    "keywords": "supprimer objets de photo, supprimer arrière-plan, outil de suppression IA, suppresseur d'arrière-plan gratuit, édition d'images, gomme d'objets, suppression de personnes, Remove Anything, éditeur photo IA"
   },
   "LocaleSwitcher": {
     "label": "Changer de langue",
     "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Inconnu}}"
   },
   "Manifest": {
-    "name": "Flux AI Générateur d'Images"
+    "name": "Remove Anything - Suppresseur d'Objets et d'Arrière-plans"
   },
   "AppNavigation": {
     "Index": "Accueil",
@@ -451,7 +464,7 @@
   },
   "PageLayout": {
     "footer": {
-      "title": "Flux AI Générateur d'Images",
+      "title": "Remove Anything",
       "term": "Conditions",
       "privacy": "Confidentialité",
       "contact": "Contact"

@@ -412,16 +412,16 @@
     "getStartedText": "Sube imágenes y haz clic en \"Eliminar Fondos\" para empezar."
   },
   "LocaleLayout": {
-    "title": "Generador de Imágenes en Línea Flux AI - Flux AI",
-    "description": "Transforma tus imágenes con las herramientas avanzadas de Flux.1 AI: Flux Schnell para creaciones rápidas, Flux Dev para personalización detallada y Flux Pro para una calidad profesional insuperable.",
-    "keywords": "Flux AI, AI Flux, inteligencia artificial Flux, tecnología AI, aprendizaje automático Flux, herramientas Flux AI, aplicaciones AI, soluciones de inteligencia artificial, análisis de datos Flux, innovación AI, análisis predictivo Flux, aprendizaje automático Flux, desarrollo AI, próxima generación AI"
+    "title": "Remove Anything - Eliminador Gratuito de Objetos y Fondos con IA",
+    "description": "Elimina cualquier objeto, fondo o persona de las imágenes usando tecnología IA avanzada. Rápido, preciso y fácil de usar. Herramienta gratuita en línea.",
+    "keywords": "eliminar objetos de foto, eliminar fondo, herramienta de eliminación IA, eliminador de fondo gratuito, edición de imágenes, borrador de objetos, eliminación de personas, Remove Anything, editor de fotos IA"
   },
   "LocaleSwitcher": {
     "label": "Cambiar idioma",
     "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} de {🇩🇪 Deutsch} es {🇪🇸 Español} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
   },
   "Manifest": {
-    "name": "Generador de Imágenes Flux AI"
+    "name": "Remove Anything - Eliminador de Objetos y Fondos"
   },
   "AppNavigation": {
     "Index": "Inicio",
@@ -451,7 +451,7 @@
   },
   "PageLayout": {
     "footer": {
-      "title": "Generador de Imágenes Flux AI",
+      "title": "Remove Anything",
       "term": "Términos",
       "privacy": "Privacidad",
       "contact": "Contacto"

@@ -18,13 +18,13 @@
     }
   },
   "IndexPage": {
-    "intro": "Flux AI画像生成ツールのご紹介",
-    "description": "次世代の高度なテキストから画像への変換を革新する先進的なオープンモデルです。flux.1 pro/devとflux.1 schnellモデルをサポートしています。",
-    "title": "Flux AI画像生成ツール",
-    "subtitle": "高度なテキストから画像への変換",
+    "intro": "🎉 無料AI背景除去ツール",
+    "description": "次世代の高度なAI技術を使用して、画像から任意のオブジェクト、背景、人物を無料で除去します。高速、正確、簡単に使用できます。",
+    "title": "Remove Anything - 無料で画像から任意のオブジェクトを除去",
+    "subtitle": "数秒で画像の背景を除去",
     "examples": {
       "label": "サンプル",
-      "title": "Flux AI画像の例",
+      "title": "背景除去の例",
       "subtitle": "テキストプロンプトから画像を生成します。"
     },
     "features": {
@@ -188,11 +188,11 @@
   },
   "ExplorePage": {
     "layout": {
-      "title": "Flux AI画像生成ツールを探索",
+      "title": "Remove Anythingを探索",
       "description": "Flux AI画像生成ツールの最新機能と更新内容を発見してください。 ",
       "keywords": "flux AI, AI flux, flux artificial intelligence, AI technology, machine learning flux, flux AI tools, AI applications, artificial intelligence solutions, flux data analysis, AI innovation, predictive analytics flux, flux machine learning, AI development, next-gen AI"
     },
-    "title": "Flux AI画像生成ツールを探索",
+    "title": "Remove Anythingを探索",
     "description": "Flux AI画像生成ツールの最新機能と更新内容を発見してください。 ",
     "flux": {
       "model": "モデル",
@@ -248,8 +248,8 @@
         "answer": "support@fluxaipro.artまでお問い合わせください。"
       }
     },
-    "title": "Flux AI画像生成ツール",
-    "description": "テキストプロンプトから画像を生成する素晴らしいAIモデル。",
+    "title": "Remove Anything - 無料で画像から任意のオブジェクトを除去",
+    "description": "高度なAI技術を使用して、画像から任意のオブジェクト、背景、人物を無料で除去します。高速、正確、簡単に使用できます。",
     "empty": {
       "title": "生成エラー",
       "description": "エラー情報: {error}",
@@ -323,7 +323,7 @@
   },
   "Billings": {
     "page": {
-      "title": "アプリ - Flux AI画像生成ツール",
+      "title": "アプリ - Remove Anything",
       "description": "最近の予測を表示"
     },
     "title": "最近の予測",
@@ -402,7 +402,20 @@
     "getStatusFailed": "タスクステータスの取得に失敗しました。再試行してください。",
     "loginToDownload": "処理済み画像をダウンロードするにはログインしてください",
     "noImageToDownload": "ダウンロードできる処理済み画像がありません",
-    "downloadSuccess": "画像のダウンロードが完了しました！"
+    "downloadSuccess": "画像のダウンロードが完了しました！",
+    "aiPowered": "AI搭載",
+    "aiPoweredDesc": "高度なAI技術で正確に背景を除去",
+    "highQuality": "高品質",
+    "highQualityDesc": "背景を除去しながら画像品質を保持",
+    "freeTrial": "無料トライアル",
+    "freeTrialDesc": "クレジットカード不要で無料でお試しください",
+    "readyToGetStarted": "始める準備はできましたか？",
+    "uploadImage": "画像をアップロード",
+    "uploadImageDesc": "画像をアップロードして背景を除去します。JPG、PNG、WebP形式、最大 5MB まで対応。",
+    "demoModeDesc": "デモモード：画像をアップロードして背景除去を体験。ログインで全機能が使用可能。",
+    "signUpFreeDesc": "無料で登録して、今すぐ画像の背景除去を始めましょう！",
+    "getStartedFree": "無料で始める",
+    "viewPricing": "料金を見る"
   },
   "BatchRemoveBackground": {
     "title": "バッチ背景除去 - Remove Anything",
@@ -412,16 +425,16 @@
     "getStartedText": "画像をアップロードして「バッチ背景除去」をクリックして開始してください。"
   },
   "LocaleLayout": {
-    "title": "Flux AI オンライン画像生成器 - Flux AI",
-    "description": "Flux.1 AIの高度なツールであなたのビジュアルを変革：Flux Schnellで迅速な作成、Flux Devで詳細なカスタマイズ、そしてFlux Proで無比のプロフェッショナルクオリティ。",
-    "keywords": "Flux AI, AI Flux, Flux 人工知能, AI 技術, 機械学習 Flux, Flux AI ツール, AI アプリケーション, 人工知能ソリューション, Flux データ分析, AI イノベーション, 予測分析 Flux, Flux 機械学習, AI 開発, 次世代 AI"
+    "title": "Remove Anything - 無料で画像から任意のオブジェクトを除去",
+    "description": "高度なAI技術を使用して、画像から任意のオブジェクト、背景、人物を無料で除去。高速、正確、簡単に使用できます。",
+    "keywords": "画像オブジェクト除去, 背景除去, AI除去ツール, 無料背景除去, 画像編集, 消しゴムツール, 人物除去, オブジェクト除去, Remove Anything, AI画像編集"
   },
   "LocaleSwitcher": {
     "label": "言語を変更",
     "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 英語} fr {🇫🇷 フランス語} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {不明}}"
   },
   "Manifest": {
-    "name": "Flux AI画像生成ツール"
+    "name": "Remove Anything - 画像オブジェクト除去"
   },
   "AppNavigation": {
     "Index": "ホーム",
@@ -436,7 +449,7 @@
     "schnell": "Flux Schnell",
     "explore": "探索",
     "prompt": "Flux AI プロンプトジェネレーター",
-    "title": "Flux AI画像生成ツール",
+    "title": "Remove Anything - 無料で画像から任意のオブジェクトを除去",
     "blog": "ブログ",
     "dashboard": "ダッシュボード",
     "tooltip": {
@@ -451,7 +464,7 @@
   },
   "PageLayout": {
     "footer": {
-      "title": "Flux AI画像生成ツール",
+      "title": "Remove Anything",
       "term": "利用規約",
       "privacy": "プライバシーポリシー",
       "contact": "お問い合わせ"

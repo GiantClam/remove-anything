@@ -327,11 +327,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         <Card>
           <CardHeader className="text-center">
             <Sparkles className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <CardTitle className="text-lg">AI Powered</CardTitle>
+            <CardTitle className="text-lg">{tPage('aiPowered')}</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
             <CardDescription>
-              Advanced AI technology for precise background removal
+              {tPage('aiPoweredDesc')}
             </CardDescription>
           </CardContent>
         </Card>
@@ -339,11 +339,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         <Card>
           <CardHeader className="text-center">
             <CheckCircle className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <CardTitle className="text-lg">High Quality</CardTitle>
+            <CardTitle className="text-lg">{tPage('highQuality')}</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
             <CardDescription>
-              Maintains image quality while removing backgrounds
+              {tPage('highQualityDesc')}
             </CardDescription>
           </CardContent>
         </Card>
@@ -351,11 +351,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         <Card>
           <CardHeader className="text-center">
             <AlertCircle className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <CardTitle className="text-lg">Free Trial</CardTitle>
+            <CardTitle className="text-lg">{tPage('freeTrial')}</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
             <CardDescription>
-              Try our service for free, no credit card required
+              {tPage('freeTrialDesc')}
             </CardDescription>
           </CardContent>
         </Card>
@@ -366,12 +366,12 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
-            Upload Image
+            {tPage('uploadImage')}
           </CardTitle>
           <CardDescription>
             {isAuthenticated 
-              ? "Upload an image to remove its background. Supports JPG, PNG, and WebP formats up to 5MB."
-              : "演示模式：上传图片体验背景移除功能。登录后可使用完整功能。"
+              ? tPage('uploadImageDesc')
+              : tPage('demoModeDesc')
             }
           </CardDescription>
         </CardHeader>
@@ -496,12 +496,12 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             setProcessedImage(imageUrl);
             setIsProcessing(false);
             setCurrentTaskId(null);
-            toast.success('Background removed successfully!');
+            toast.success(tPage('backgroundRemoved'));
           }}
           onError={(error) => {
             setIsProcessing(false);
             setCurrentTaskId(null);
-            toast.error(`Background removal failed: ${error}`);
+            toast.error(tPage('processingFailed'));
           }}
         />
       )}
@@ -509,9 +509,9 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       {/* CTA Section */}
       <Card className="text-center">
         <CardHeader>
-          <CardTitle>Ready to get started?</CardTitle>
+          <CardTitle>{tPage('readyToGetStarted')}</CardTitle>
           <CardDescription>
-            Sign up for free and start removing backgrounds from your images today!
+            {tPage('signUpFreeDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -522,7 +522,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
               className="flex items-center gap-2"
             >
               <LogIn className="w-4 h-4" />
-              Get Started Free
+              {tPage('getStartedFree')}
               <ArrowRight className="w-4 h-4" />
             </Button>
             <Button
@@ -530,7 +530,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
               size="lg"
               onClick={() => window.location.href = `/${locale}/pricing`}
             >
-              View Pricing
+              {tPage('viewPricing')}
             </Button>
           </div>
         </CardContent>

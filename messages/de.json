@@ -412,16 +412,16 @@
     "getStartedText": "Laden Sie Bilder hoch und klicken Sie auf \"Hintergründe entfernen\", um zu beginnen."
   },
   "LocaleLayout": {
-    "title": "Flux AI Online-Bildgenerator - Flux AI",
-    "description": "Verwandeln Sie Ihre Bilder mit den fortschrittlichen Tools von Flux.1 AI: Flux Schnell für schnelle Erstellungen, Flux Dev für detaillierte Anpassungen und Flux Pro für professionelle Qualität, die nicht zu toppen ist.",
-    "keywords": "Flux AI, AI Flux, Flux Künstliche Intelligenz, AI Technologie, Maschinelles Lernen Flux, Flux AI Tools, AI Anwendungen, Künstliche Intelligenz Lösungen, Flux Datenanalyse, AI Innovation, Predictive Analytics Flux, Flux Maschinelles Lernen, AI Entwicklung, nächste Generation AI"
+    "title": "Remove Anything - Kostenloser KI-Objekt- und Hintergrundentferner",
+    "description": "Entfernen Sie beliebige Objekte, Hintergründe oder Personen aus Bildern mit fortschrittlicher KI-Technologie. Schnell, präzise und einfach zu bedienen. Kostenloses Online-Tool.",
+    "keywords": "Objekte aus Foto entfernen, Hintergrund entfernen, KI-Entfernungswerkzeug, kostenloser Hintergrundentferner, Bildbearbeitung, Objektradierer, Personenentfernung, Remove Anything, KI-Fotoeditor"
   },
   "LocaleSwitcher": {
     "label": "Sprache ändern",
     "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unbekannt}}"
   },
   "Manifest": {
-    "name": "Flux AI Image Generator"
+    "name": "Remove Anything - Objekt- und Hintergrundentferner"
   },
   "AppNavigation": {
     "Index": "Startseite",
@@ -451,7 +451,7 @@
   },
   "PageLayout": {
     "footer": {
-      "title": "Flux AI Image Generator",
+      "title": "Remove Anything",
       "term": "Bedingungen",
       "privacy": "Datenschutz",
       "contact": "Kontakt"

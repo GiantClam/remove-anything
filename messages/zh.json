@@ -243,7 +243,7 @@
         "answer": "您可以通过 support@fluxaipro.art 联系我们。"
       }
     },
-    "title": "Flux AI 图像生成器",
+    "title": "Remove Anything - 免费去除图片任意物体",
     "description": "令人惊叹的AI模型，可以根据文本提示生成图像。",
     "empty": {
       "title": "生成失败",
@@ -398,7 +398,20 @@
     "getStatusFailed": "获取任务状态失败，请重试。",
     "loginToDownload": "请登录以下载处理后的图片",
     "noImageToDownload": "没有可下载的处理图片",
-    "downloadSuccess": "图片下载成功！"
+    "downloadSuccess": "图片下载成功！",
+    "aiPowered": "AI 驱动",
+    "aiPoweredDesc": "先进的 AI 技术，精准去除背景",
+    "highQuality": "高品质",
+    "highQualityDesc": "去除背景的同时保持图片质量",
+    "freeTrial": "免费试用",
+    "freeTrialDesc": "免费试用我们的服务，无需信用卡",
+    "readyToGetStarted": "准备好开始了吗？",
+    "uploadImage": "上传图片",
+    "uploadImageDesc": "上传图片以去除其背景。支持 JPG、PNG 和 WebP 格式，最大 5MB。",
+    "demoModeDesc": "演示模式：上传图片体验背景移除功能。登录后可使用完整功能。",
+    "signUpFreeDesc": "免费注册，立即开始从您的图片中去除背景！",
+    "getStartedFree": "免费开始",
+    "viewPricing": "查看定价"
   },
   "BatchRemoveBackground": {
     "title": "批量去背景 - Remove Anything",
@@ -408,16 +421,16 @@
     "getStartedText": "上传图片并点击\"批量去背景\"开始使用。"
   },
   "LocaleLayout": {
-    "title": "Flux AI 在线图像生成器 - Flux AI",
-    "description": "利用 Flux.1 AI 的高级工具提升您的视觉内容：Flux Schnell 快速创作，Flux Dev 精细定制，以及 Flux Pro 无与伦比的专业品质。",
-    "keywords": "Flux AI, AI Flux, Flux 人工智能, AI 技术, 机器学习 Flux, Flux AI 工具, AI 应用, 人工智能解决方案, Flux 数据分析, AI 创新, 预测分析 Flux, Flux 机器学习, AI 开发, 下一代 AI"
+    "title": "Remove Anything - 免费去除图片任意物体",
+    "description": "使用先进的 AI 技术免费去除图片中的任意物体、背景或人物。快速、精准、易于使用。",
+    "keywords": "去除图片物体, 去除背景, AI 去除工具, 免费去除背景, 图片编辑, 抓图工具, 人物去除, 物体去除, Remove Anything, AI 图片编辑"
   },
   "LocaleSwitcher": {
     "label": "更改语言",
     "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {未知}}"
   },
   "Manifest": {
-    "name": "Flux AI 图像生成器"
+    "name": "Remove Anything - 去除图片任意物体"
   },
   "AppNavigation": {
     "Index": "首页",
@@ -432,8 +445,8 @@
     "schnell": "去背景",
     "BatchBackgroundRemoval": "批量去背景",
     "explore": "发现",
-    "title": "Flux AI 图像生成器",
-    "prompt": "Flux AI 提示词生成器",
+    "title": "Remove Anything - 免费去除图片任意物体",
+    "prompt": "Remove Anything 提示词生成器",
     "blog": "博客",
     "dashboard": "去使用",
     "Support": "支持",
@@ -447,7 +460,7 @@
   },
   "PageLayout": {
     "footer": {
-      "title": "Flux AI Image Generator",
+      "title": "Remove Anything",
       "term": "使用条款",
       "privacy": "隐私政策",
       "contact": "联系我们"

@@ -244,7 +244,7 @@
         "answer": "You can reach out to us at support@fluxaipro.art."
       }
     },
-    "title": "Flux AI Image Generator",
+    "title": "Remove Anything - Free AI Object & Background Remover",
     "description": "Amazing AI models to generate images from text prompts.",
     "empty": {
       "title": "Generator Error",
@@ -398,7 +398,20 @@
     "getStatusFailed": "Failed to get task status. Please try again.",
     "loginToDownload": "Please login to download the processed image",
     "noImageToDownload": "No processed image to download",
-    "downloadSuccess": "Image downloaded successfully!"
+    "downloadSuccess": "Image downloaded successfully!",
+    "aiPowered": "AI Powered",
+    "aiPoweredDesc": "Advanced AI technology for precise background removal",
+    "highQuality": "High Quality",
+    "highQualityDesc": "Maintains image quality while removing backgrounds",
+    "freeTrial": "Free Trial",
+    "freeTrialDesc": "Try our service for free, no credit card required",
+    "readyToGetStarted": "Ready to get started?",
+    "uploadImage": "Upload Image",
+    "uploadImageDesc": "Upload an image to remove its background. Supports JPG, PNG, and WebP formats up to 5MB.",
+    "demoModeDesc": "Demo mode: Upload images to experience background removal. Login for full features.",
+    "signUpFreeDesc": "Sign up for free and start removing backgrounds from your images today!",
+    "getStartedFree": "Get Started Free",
+    "viewPricing": "View Pricing"
   },
   "BatchRemoveBackground": {
     "title": "Batch Background Removal - Remove Anything",
@@ -408,16 +421,16 @@
     "getStartedText": "Upload images and click \"Remove Backgrounds\" to get started."
   },
   "LocaleLayout": {
-    "title": "Free Background Remover - Remove Background from Image AI",
-    "description": "Instantly remove the background from any image with our free AI-powered tool. High-quality, fast, and easy to use. Upload your photo and get a transparent background in seconds.",
-    "keywords": "free background remover, remove background from image, AI background removal, transparent background, image editing, photo background removal, online background remover, free AI tool, background removal tool, remove image background"
+    "title": "Remove Anything - Free AI Object & Background Remover",
+    "description": "Remove any object, background, or person from images using advanced AI technology. Fast, accurate, and easy to use. Free online tool.",
+    "keywords": "remove objects from photo, remove background, AI removal tool, free background remover, image editing, object eraser, person removal, Remove Anything, AI photo editor"
   },
   "LocaleSwitcher": {
     "label": "Change language",
     "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
   },
   "Manifest": {
-    "name": "Free Background Remover"
+    "name": "Remove Anything - Object & Background Remover"
   },
   "AppNavigation": {
     "Index": "Home",

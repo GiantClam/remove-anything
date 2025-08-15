@@ -403,7 +403,20 @@
     "getStatusFailed": "Falha ao obter o status da tarefa. Por favor, tente novamente.",
     "loginToDownload": "Por favor, faça login para baixar a imagem processada",
     "noImageToDownload": "Nenhuma imagem processada para baixar",
-    "downloadSuccess": "Imagem baixada com sucesso!"
+    "downloadSuccess": "Imagem baixada com sucesso!",
+    "aiPowered": "Alimentado por IA",
+    "aiPoweredDesc": "Tecnologia IA avançada para remoção precisa de fundo",
+    "highQuality": "Alta Qualidade",
+    "highQualityDesc": "Mantém a qualidade da imagem ao remover fundos",
+    "freeTrial": "Teste Grátis",
+    "freeTrialDesc": "Experimente nosso serviço gratuitamente, sem cartão de crédito",
+    "readyToGetStarted": "Pronto para começar?",
+    "uploadImage": "Carregar Imagem",
+    "uploadImageDesc": "Carregue uma imagem para remover seu fundo. Suporta formatos JPG, PNG e WebP até 5MB.",
+    "demoModeDesc": "Modo demonstração: Carregue imagens para experimentar a remoção de fundo. Faça login para todos os recursos.",
+    "signUpFreeDesc": "Inscreva-se gratuitamente e comece a remover fundos de suas imagens hoje!",
+    "getStartedFree": "Começar Grátis",
+    "viewPricing": "Ver Preços"
   },
   "BatchRemoveBackground": {
     "title": "Remoção de Fundo em Lote - Remove Anything",
@@ -413,16 +426,16 @@
     "getStartedText": "Envie imagens e clique em \"Remover Fundos\" para começar."
   },
   "LocaleLayout": {
-    "title": "Gerador de Imagens Online Flux AI - Flux AI",
-    "description": "Transforme suas imagens com as ferramentas avançadas de Flux.1 AI: Flux Schnell para criações rápidas, Flux Dev para personalização detalhada e Flux Pro para qualidade profissional incomparável.",
-    "keywords": "Flux AI, AI Flux, inteligência artificial Flux, tecnologia AI, aprendizado de máquina Flux, ferramentas Flux AI, aplicações AI, soluções de inteligência artificial, análise de dados Flux, inovação AI, análise preditiva Flux, aprendizado de máquina Flux, desenvolvimento AI, próxima geração AI"
+    "title": "Remove Anything - Removedor Gratuito de Objetos e Fundos com IA",
+    "description": "Remova qualquer objeto, fundo ou pessoa de imagens usando tecnologia IA avançada. Rápido, preciso e fácil de usar. Ferramenta online gratuita.",
+    "keywords": "remover objetos de foto, remover fundo, ferramenta de remoção IA, removedor de fundo gratuito, edição de imagem, apagador de objetos, remoção de pessoas, Remove Anything, editor de fotos IA"
   },
   "LocaleSwitcher": {
     "label": "Alterar idioma",
     "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
   },
   "Manifest": {
-    "name": "Gerador de Imagens Flux AI"
+    "name": "Remove Anything - Removedor de Objetos e Fundos"
   },
   "AppNavigation": {
     "Index": "Início",
@@ -452,7 +465,7 @@
   },
   "PageLayout": {
     "footer": {
-      "title": "Gerador de Imagens Flux AI",
+      "title": "Remove Anything",
       "term": "Termos",
       "privacy": "Privacidade",
       "contact": "Contato"
