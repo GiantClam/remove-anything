@@ -40,7 +40,7 @@ export default async function RemoveObjectsPage({
           无需专业技能，涂抹即可完成。
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href={`/${locale}/remove-background`}>
+          <Link href={`/remove-background`}>
             <Button size="lg" className="gap-2">
               <Upload className="w-5 h-5" />
               开始移除物体
@@ -142,7 +142,7 @@ export default async function RemoveObjectsPage({
         <p className="text-muted-foreground mb-6">
           立即体验AI物体移除的强大功能，让您的照片更加完美
         </p>
-        <Link href={`/${locale}/remove-background`}>
+        <Link href={`/remove-background`}>
           <Button size="lg" className="gap-2">
             <Eraser className="w-5 h-5" />
             免费开始使用

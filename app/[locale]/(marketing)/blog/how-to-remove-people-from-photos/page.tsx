@@ -96,7 +96,7 @@ export default async function HowToRemovePeoplePage({
         <p className="text-muted-foreground mb-6">
           立即体验AI人物移除的强大功能，让您的照片更加完美
         </p>
-        <Link href={`/${locale}/remove-background`}>
+        <Link href={`/remove-background`}>
           <Button size="lg" className="gap-2">
             <Eraser className="w-5 h-5" />
             免费开始使用

@@ -39,7 +39,7 @@ export default async function RemoveWatermarkPage({
           保护您的作品，让图片更加专业和美观。
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href={`/${locale}/remove-background`}>
+          <Link href={`/remove-background`}>
             <Button size="lg" className="gap-2">
               <Upload className="w-5 h-5" />
               开始移除水印
