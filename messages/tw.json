@@ -377,6 +377,8 @@
     }
   },
   "RemoveBackgroundPage": {
+    "title": "AI 背景去除器 - 線上去除圖片背景",
+    "description": "使用 AI 技術快速去除圖片背景，支援批次處理，專業品質，完全免費。",
     "processing": "處理中...",
     "chooseImage": "選擇圖片",
     "dragDropText": "拖拽或點擊上傳",

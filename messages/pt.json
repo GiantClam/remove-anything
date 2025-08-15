@@ -378,6 +378,8 @@
     }
   },
   "RemoveBackgroundPage": {
+    "title": "Removedor de Fundo com IA - Remover Fundo de Imagem Online",
+    "description": "Remova fundos de imagens rapidamente com tecnologia IA. Processamento em lote, qualidade profissional, totalmente grátis.",
     "processing": "Processando...",
     "chooseImage": "Escolher imagem",
     "dragDropText": "Arrastar e soltar ou clicar para enviar",

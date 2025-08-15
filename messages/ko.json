@@ -377,6 +377,8 @@
     }
   },
   "RemoveBackgroundPage": {
+    "title": "AI 배경 제거 도구 - 온라인으로 이미지 배경 제거",
+    "description": "AI 기술로 이미지 배경을 빠르게 제거합니다. 일괄 처리, 전문가 품질, 완전 무료.",
     "processing": "처리 중...",
     "chooseImage": "이미지 선택",
     "dragDropText": "드래그앤드롭 또는 클릭하여 업로드",

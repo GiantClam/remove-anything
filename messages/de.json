@@ -377,6 +377,8 @@
     }
   },
   "RemoveBackgroundPage": {
+    "title": "KI-Hintergrundentferner - Bildhintergrund Online Entfernen",
+    "description": "Entfernen Sie Bildhintergründe schnell mit KI-Technologie. Stapelverarbeitung, professionelle Qualität, völlig kostenlos.",
     "processing": "Verarbeitung...",
     "chooseImage": "Bild auswählen",
     "dragDropText": "Ziehen und Ablegen oder Klicken zum Hochladen",

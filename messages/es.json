@@ -377,6 +377,8 @@
     }
   },
   "RemoveBackgroundPage": {
+    "title": "Eliminador de Fondo con IA - Quitar Fondo de Imagen en Línea",
+    "description": "Elimina fondos de imágenes rápidamente con tecnología IA. Procesamiento por lotes, calidad profesional, completamente gratis.",
     "processing": "Procesando...",
     "chooseImage": "Elegir imagen",
     "dragDropText": "Arrastra y suelta o haz clic para subir",

@@ -11,7 +11,7 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params: { locale } }: PageProps): Promise<Metadata> {
-  const t = await getTranslations({ locale, namespace: "IndexPage" });
+  const t = await getTranslations({ locale, namespace: "RemoveBackgroundPage" });
 
   return {
     title: t("title"),

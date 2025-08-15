@@ -377,6 +377,8 @@
     }
   },
   "RemoveBackgroundPage": {
+    "title": "Suppresseur d'Arrière-plan IA - Supprimer le Fond d'Image en Ligne",
+    "description": "Supprimez rapidement les arrière-plans d'images avec la technologie IA. Traitement par lots, qualité professionnelle, entièrement gratuit.",
     "processing": "Traitement en cours...",
     "chooseImage": "Choisir une image",
     "dragDropText": "Glissez-déposez ou cliquez pour télécharger",

@@ -11,7 +11,7 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params: { locale } }: PageProps) {
-  const t = await getTranslations({ locale, namespace: "Playground" });
+  const t = await getTranslations({ locale, namespace: "RemoveBackgroundPage" });
 
   return {
     title: t("title"),

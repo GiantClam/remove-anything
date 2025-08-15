@@ -373,6 +373,8 @@
     }
   },
   "RemoveBackgroundPage": {
+    "title": "AI Background Remover - Remove Image Background Online",
+    "description": "Remove image backgrounds quickly with AI technology. Batch processing, professional quality, completely free.",
     "processing": "Processing...",
     "chooseImage": "Choose Image",
     "dragDropText": "Drag and drop or click to upload",
