@@ -7,6 +7,14 @@ export const marketingConfig: MarketingConfig = {
       href: "/remove-background",
     },
     {
+      title: "removeObjects",
+      href: "/remove-objects",
+    },
+    {
+      title: "removeWatermark",
+      href: "/remove-watermark",
+    },
+    {
       title: "explore",
       href: "/explore",
     },

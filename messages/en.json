@@ -19,44 +19,44 @@
   },
 
   "IndexPage": {
-    "intro": "🎉 Free AI Background Remover",
-    "description": "Instantly remove the background from any image with our free AI-powered tool. High-quality, fast, and easy to use. Upload your photo and get a transparent background in seconds.",
-    "title": "Free AI Background Remover",
-    "subtitle": "Remove Image Backgrounds in Seconds",
+    "intro": "🎉 All-in-One AI Image Eraser",
+    "description": "More than background removal - your all-in-one AI image eraser! AI-powered, just paint to precisely remove people, objects, text, and blemishes from images. HD quality, no watermarks, completely free download.",
+    "title": "Smart Eraser Tool, Easily Remove Any Flaws from Photos",
+    "subtitle": "Upload, Paint, Download - Three Steps to Remove Everything Unwanted from Photos",
     "examples": {
       "label": "Example",
       "title": "Background Removal Examples",
       "subtitle": "See the magic of AI background removal in action."
     },
     "features": {
-      "title": "Why Choose Our Background Remover?",
-      "description": "Our AI-powered background removal tool offers professional-quality results with unmatched speed and ease of use. Perfect for any project that requires clean, transparent backgrounds.",
+      "title": "Why Choose Our All-in-One Image Eraser?",
+      "description": "Our AI-powered all-in-one image eraser offers professional-quality results with unmatched speed and ease of use. Not just background removal, but your complete image editing assistant.",
       "action": {
-        "visit": "Remove Background"
+        "visit": "Start Erasing"
       },
       "item1": {
-        "title": "Stunning Quality",
-        "description": "Get clean, crisp cutouts thanks to our advanced AI technology. Perfect for portraits, products, and graphics with professional-grade results."
+        "title": "Extremely Simple",
+        "description": "No skills required, just paint to remove. AI automatically recognizes and fills backgrounds naturally, no complex operations needed."
       },
       "item2": {
-        "title": "Incredibly Fast",
-        "description": "Don't waste time with complex software. Get your background removed in about 5 seconds with our optimized AI processing."
+        "title": "AI Powered",
+        "description": "Artificial intelligence automatically recognizes and fills backgrounds naturally. Faster than Photoshop, smarter than online tools."
       },
       "item3": {
-        "title": "Completely Free",
-        "description": "Our background removal tool is 100% free to use. No sign-up required, no hidden costs, and no watermarks on your results."
+        "title": "Comprehensive Features",
+        "description": "Not just clutter, but people, watermarks, and text can all be removed. Supports person removal, object erasing, watermark removal, and more."
       },
       "item4": {
+        "title": "Completely Free",
+        "description": "HD quality, no watermarks, completely free download. No registration required, no hidden fees, no watermarks on results."
+      },
+      "item5": {
         "title": "Privacy Focused",
         "description": "We process your images and then delete them from our servers within a few hours. Your data is safe and secure with us."
       },
-      "item5": {
-        "title": "Easy to Use",
-        "description": "Simply upload your image and let our AI do the work. No technical skills required - perfect for beginners and professionals alike."
-      },
       "item6": {
         "title": "Multiple Formats",
-        "description": "Support for all common image formats including JPG, PNG, and WEBP. Download your results in high resolution with transparent backgrounds."
+        "description": "Support for all common image formats including JPG, PNG, and WebP. Download your results in high resolution with transparent backgrounds."
       }
     },
     "powered": {
@@ -85,49 +85,61 @@
     },
     "usecases": {
       "title": "Perfect for Any Project",
-      "description": "Our background removal tool is versatile and can be used for various purposes.",
+      "description": "Our all-in-one image eraser is versatile and can be used for various purposes.",
       "ecommerce": {
         "title": "For E-commerce",
-        "description": "Create professional product photos for Amazon, Shopify, and more."
+        "description": "Create professional product photos for Amazon, Shopify, and more, easily remove backgrounds and clutter."
       },
       "marketing": {
         "title": "For Marketers",
-        "description": "Design eye-catching social media posts, banners, and ads."
+        "description": "Design eye-catching social media posts, banners, and ads, remove unwanted elements."
       },
       "photography": {
         "title": "For Photographers",
-        "description": "Speed up your photo editing workflow."
+        "description": "Speed up your photo editing workflow, easily remove tourists and clutter."
       },
       "personal": {
         "title": "For Personal Use",
-        "description": "Make fun profile pictures, memes, or greeting cards."
+        "description": "Make fun profile pictures, memes, or greeting cards, restore old photos."
+      },
+      "content": {
+        "title": "For Content Creators",
+        "description": "Easily remove watermarks and text from images, protect your work."
       }
     },
     "faq": {
       "title": "Frequently Asked Questions",
-      "description": "Get answers to common questions about our background removal tool.",
+      "description": "Get answers to common questions about our all-in-one image eraser.",
       "q1": {
-        "question": "How to remove background from an image on iPhone?",
-        "answer": "Our website works perfectly on your iPhone's browser. Just open Safari or Chrome, navigate to our site, upload your picture, and download the result directly to your phone."
+        "question": "How do I use Remove Anything to remove objects from images?",
+        "answer": "It's very simple! Just upload your image, use the paint tool to mark the area you want to remove, then click start processing. Our AI will automatically recognize and intelligently fill the background, completing in just seconds."
       },
       "q2": {
-        "question": "Is it free to remove a background from a picture?",
-        "answer": "Yes, our tool is completely free. You can process as many images as you like without any charge."
+        "question": "Is Remove Anything really completely free?",
+        "answer": "Yes! Our basic features are completely free, including background removal, object removal, and watermark removal. You can process any number of images without any cost or registration."
       },
       "q3": {
-        "question": "Can I remove the background from a logo?",
-        "answer": "Absolutely. Our AI is trained to handle sharp edges, making it ideal for removing the background from logos and graphics. Upload your logo to get a transparent version."
+        "question": "Can I remove people from images?",
+        "answer": "Absolutely! Our AI technology is specifically optimized for person removal and can easily remove unwanted people from group photos and travel photos with natural, seamless results."
       },
       "q4": {
-        "question": "What image formats are supported?",
-        "answer": "We support all common image formats, including JPG, PNG, and WEBP."
+        "question": "What image formats and sizes are supported?",
+        "answer": "We support common formats like JPG, PNG, and WebP, with single images up to 5MB. For batch processing, we recommend keeping each image under 3MB for best results."
+      },
+      "q5": {
+        "question": "Will the processed image quality be reduced?",
+        "answer": "No! We maintain the original image resolution and quality, with output results matching the original image quality exactly, completely watermark-free."
+      },
+      "q6": {
+        "question": "Is my image data secure?",
+        "answer": "Very secure! We delete your images from our servers within a few hours of processing, and we never store or share any of your image content."
       }
     },
     "action": {
       "pricing": "Buy Credits",
       "login": "Login",
       "dashboard": "Dashboard",
-      "generate": "Upload Image",
+      "generate": "Start Erasing",
       "github": {
         "sm": "Star on",
         "normal": "Github"
@@ -152,28 +164,28 @@
       "title": "Frequently asked questions",
       "subtitle": "Explore our comprehensive FAQ to find quick answers to common inquiries. If you need further assistance, don't hesitate to contact us for personalized help.",
       "item1": {
-        "question": "How does Flux AI compare to Stable Diffusion 3?",
-        "answer": "Flux AI offers faster generation times, higher image quality, and a more user-friendly interface compared to Stable Diffusion 3. The Flux.1 model incorporates the latest advancements in AI research."
+        "question": "Is Remove Anything really completely free?",
+        "answer": "Yes! Our basic features are completely free, including background removal, object removal, and watermark removal. You can process any number of images without any cost or registration."
       },
       "item2": {
-        "question": "Is Flux AI available on GitHub or Hugging Face?",
-        "answer": "Yes, Flux AI is open-source and available on both GitHub and Hugging Face."
+        "question": "How do I use Remove Anything to remove objects from images?",
+        "answer": "It's very simple! Just upload your image, use the paint tool to mark the area you want to remove, then click start processing. Our AI will automatically recognize and intelligently fill the background, completing in just seconds."
       },
       "item3": {
-        "question": "What makes Flux AI different from other AI image generators?",
-        "answer": "Flux AI combines speed, quality, and ease of use. It's faster than Midjourney, more user-friendly than ComfyUI, and produces higher quality images than many competitors."
+        "question": "Can I remove people from images?",
+        "answer": "Absolutely! Our AI technology is specifically optimized for person removal and can easily remove unwanted people from group photos and travel photos with natural, seamless results."
       },
       "item4": {
-        "question": "How to use Flux AI?",
-        "answer": "To use Flux AI, simply visit fluxaipro.art, enter your prompt, and witness the creation of breathtaking visuals in a matter of seconds."
+        "question": "What image formats and sizes are supported?",
+        "answer": "We support common formats like JPG, PNG, and WebP, with single images up to 5MB. For batch processing, we recommend keeping each image under 3MB for best results."
       },
       "item5": {
-        "question": "What pricing plans does Flux AI offer?",
-        "answer": "We use points to use our services, and you can click on the price card to buy points (only one payment is required)."
+        "question": "What pricing plans does Remove Anything offer?",
+        "answer": "We use points to use our services, and you can click on the price card to buy points (only one payment is required). Basic features are completely free, advanced features require points."
       },
       "item6": {
         "question": "How can I get support for Online?",
-        "answer": "You can reach out to us at support@fluxaipro.art."
+        "answer": "You can reach out to us at support@remove-anything.com."
       }
     },
     "tip": {
@@ -423,7 +435,7 @@
   "LocaleLayout": {
     "title": "Remove Anything - Free AI Object & Background Remover",
     "description": "Remove any object, background, or person from images using advanced AI technology. Fast, accurate, and easy to use. Free online tool.",
-    "keywords": "remove objects from photo, remove background, AI removal tool, free background remover, image editing, object eraser, person removal, Remove Anything, AI photo editor"
+    "keywords": "object removal, image eraser, online photo editing, photo object remover, remove objects from photo, remove background, AI removal tool, free background remover, image editing, object eraser, person removal, watermark removal, text removal, Remove Anything, AI photo editor, online image processing tool"
   },
   "LocaleSwitcher": {
     "label": "Change language",
@@ -443,6 +455,8 @@
   "Navigation": {
     "pricing": "Pricing",
     "schnell": "Background Removal",
+    "removeObjects": "Remove Objects",
+    "removeWatermark": "Remove Watermark",
     "BatchBackgroundRemoval": "Batch Background Removal",
     "explore": "Examples",
     "title": "Remove Anything",
@@ -480,5 +494,35 @@
   "BlogPage": {
     "title": "Blog",
     "description": "The latest news and updates from Our"
+  },
+  "RemoveObjectsPage": {
+    "title": "Smart Object Removal Tool - Remove Anything",
+    "description": "Use advanced AI technology to easily remove any unwanted objects, people, or blemishes from photos. No professional skills required, just paint to complete.",
+    "keywords": "object removal, image eraser, online photo editing, photo object remover, remove people, remove watermark, remove text, AI image editing, online image processing tool"
+  },
+  "RemoveWatermarkPage": {
+    "title": "Professional Watermark Removal Tool - Remove Anything",
+    "description": "Use AI technology to intelligently identify and remove watermarks, text marks, and identifiers from images. Protect your work and make images more professional and beautiful.",
+    "keywords": "watermark removal, text removal, image cleaning, watermark removal tool, text removal tool, image editing, AI image processing, online tool"
+  },
+  "QuickAccess": {
+    "title": "Quick Access",
+    "subtitle": "Choose the feature you need and start using it immediately",
+    "backgroundRemoval": {
+      "title": "Background Removal",
+      "description": "Quickly remove image backgrounds for transparent effects"
+    },
+    "objectRemoval": {
+      "title": "Object Removal",
+      "description": "Intelligently remove unwanted objects and people from images"
+    },
+    "watermarkRemoval": {
+      "title": "Watermark Removal",
+      "description": "Professionally remove watermarks, text, and identifiers"
+    },
+    "batchProcessing": {
+      "title": "Batch Processing",
+      "description": "Process multiple images at once to improve efficiency"
+    }
   }
 }

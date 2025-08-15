@@ -21,6 +21,14 @@ export default async function FAQWrapper() {
       question: t("q4.question"),
       answer: t("q4.answer"),
     },
+    {
+      question: t("q5.question"),
+      answer: t("q5.answer"),
+    },
+    {
+      question: t("q6.question"),
+      answer: t("q6.answer"),
+    },
   ];
 
   return (

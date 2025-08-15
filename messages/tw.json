@@ -447,6 +447,8 @@
   "Navigation": {
     "pricing": "定價",
     "schnell": "Flux Schnell",
+    "removeObjects": "物體移除",
+    "removeWatermark": "水印移除",
     "explore": "探索",
     "title": "Remove Anything - 免費去除圖片任意物體",
     "prompt": "Flux AI 提示產生器",

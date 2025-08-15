@@ -1,5 +1,7 @@
 import { getTranslations } from "next-intl/server";
-import { ShoppingCart, Megaphone, Camera, Heart } from "lucide-react";
+import { ShoppingCart, Megaphone, Camera, Heart, FileText } from "lucide-react";
+import { HeaderSection } from "@/components/shared/header-section";
+import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
 
 export default async function UseCases() {
   const t = await getTranslations({ namespace: "IndexPage.usecases" });
@@ -25,34 +27,49 @@ export default async function UseCases() {
       title: t("personal.title"),
       description: t("personal.description"),
     },
+    {
+      icon: FileText,
+      title: t("content.title"),
+      description: t("content.description"),
+    },
   ];
 
   return (
-    <section className="py-16">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">{t("title")}</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            {t("description")}
-          </p>
-        </div>
+    <section>
+      <div className="pb-6 pt-4">
+        <MaxWidthWrapper>
+          <HeaderSection
+            title={t("title")}
+            subtitle={t("description")}
+          />
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-          {useCases.map((useCase, index) => (
-            <div
-              key={index}
-              className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-            >
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                <useCase.icon className="w-6 h-6 text-green-600 dark:text-green-400" />
+          <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {useCases.map((useCase, index) => (
+              <div
+                className="group relative overflow-hidden rounded-2xl border bg-background p-5 md:p-8"
+                key={index}
+              >
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 aspect-video -translate-y-1/2 rounded-full border bg-gradient-to-b from-purple-500/80 to-white opacity-25 blur-2xl duration-300 group-hover:-translate-y-1/4 dark:from-white dark:to-white dark:opacity-5 dark:group-hover:opacity-10"
+                />
+                <div className="relative">
+                  <div className="relative flex size-12 rounded-2xl border border-border shadow-sm *:relative *:m-auto *:size-6">
+                    <useCase.icon className="size-6" />
+                  </div>
+
+                  <h3 className="mt-6 text-lg font-semibold mb-2">
+                    {useCase.title}
+                  </h3>
+
+                  <p className="pb-6 text-muted-foreground">
+                    {useCase.description}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold mb-2">{useCase.title}</h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">
-                {useCase.description}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </MaxWidthWrapper>
       </div>
     </section>
   );

@@ -7,7 +7,7 @@ import HeroLanding from "@/components/sections/hero-landing";
 import PricingCard from "@/components/sections/pricing-card";
 import HowTo from "@/components/sections/how-to";
 import UseCases from "@/components/sections/use-cases";
-import FAQWrapper from "@/components/sections/faq-wrapper";
+import QuickAccess from "@/components/sections/quick-access";
 import { env } from "@/env.mjs";
 
 type Props = {
@@ -21,8 +21,8 @@ export default function IndexPage({ params: { locale } }: Props) {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "Free Background Remover",
-    "description": "Instantly remove the background from any image with our free AI-powered tool. High-quality, fast, and easy to use.",
+    "name": "Remove Anything - All-in-One AI Image Eraser",
+    "description": "Smart eraser tool that easily removes any flaws from photos. AI-powered, just paint to precisely remove people, objects, text, and blemishes from images.",
     "url": env.NEXT_PUBLIC_SITE_URL,
     "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Any",
@@ -33,7 +33,11 @@ export default function IndexPage({ params: { locale } }: Props) {
       "priceCurrency": "USD"
     },
     "featureList": [
-      "AI-powered background removal",
+      "AI-powered object removal",
+      "Person removal from photos",
+      "Watermark removal",
+      "Text removal from images",
+      "Background removal",
       "High-quality results",
       "Fast processing",
       "Free to use",
@@ -59,11 +63,11 @@ export default function IndexPage({ params: { locale } }: Props) {
         }}
       />
       <HeroLanding />
+      <QuickAccess />
       <Features />
       <Examples />
       <HowTo />
       <UseCases />
-      <FAQWrapper />
       <PricingCard locale={locale} />
     </>
   );

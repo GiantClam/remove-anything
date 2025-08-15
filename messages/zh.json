@@ -18,10 +18,10 @@
     }
   },
   "IndexPage": {
-    "intro": "🎉 免费 AI 背景去除器",
-    "description": "使用我们的免费 AI 驱动工具立即去除任何图片的背景。高质量、快速且易于使用。上传您的照片，几秒钟内即可获得透明背景。",
-    "title": "免费 AI 背景去除器",
-    "subtitle": "几秒钟内去除图片背景",
+    "intro": "🎉 全能 AI 图片橡皮擦",
+    "description": "不止于背景移除，更是你的全能图片橡皮擦！AI 驱动，只需涂抹即可从图片中精准移除人物、物体、文字和瑕疵。高清无水印，完全免费下载。",
+    "title": "智能抹除工具，轻松移除照片中的任何瑕疵",
+    "subtitle": "上传、涂抹、下载 - 三步移除照片中不需要的一切",
     "powered": {
       "title": "技术支持"
     },
@@ -36,34 +36,34 @@
       "subtitle": "查看 AI 背景去除的神奇效果。"
     },
     "features": {
-      "title": "为什么选择我们的背景去除器？",
+      "title": "为什么选择我们的全能图片橡皮擦？",
       "action": {
-        "visit": "去除背景"
+        "visit": "开始抹除"
       },
-      "description": "我们的 AI 驱动背景去除工具提供专业级结果，具有无与伦比的速度和易用性。非常适合需要干净透明背景的任何项目。",
+      "description": "我们的 AI 驱动全能图片橡皮擦提供专业级结果，具有无与伦比的速度和易用性。不仅是背景去除，更是你的全能图片编辑助手。",
       "item1": {
-        "title": "出色质量",
-        "description": "得益于我们先进的 AI 技术，获得干净、清晰的抠图效果。非常适合人像、产品和图形，提供专业级结果。"
+        "title": "极致简单",
+        "description": "无需任何技巧，涂抹即可移除。AI 自动识别并填充背景，效果自然，无需复杂操作。"
       },
       "item2": {
-        "title": "极速处理",
-        "description": "不要浪费时间使用复杂的软件。通过我们优化的 AI 处理，在约5秒内去除背景。"
+        "title": "AI 赋能",
+        "description": "人工智能自动识别并填充背景，效果自然。比 Photoshop 更快，比在线工具更智能。"
       },
       "item3": {
-        "title": "完全免费",
-        "description": "我们的背景去除工具100%免费使用。无需注册，无隐藏费用，结果无水印。"
+        "title": "功能全面",
+        "description": "不仅是杂物，人物、水印、文字皆可移除。支持人物移除、物体擦除、水印去除等多种功能。"
       },
       "item4": {
+        "title": "完全免费",
+        "description": "高清无水印，完全免费下载。无需注册，无隐藏费用，结果无水印。"
+      },
+      "item5": {
         "title": "注重隐私",
         "description": "我们处理您的图片，然后在几小时内从我们的服务器删除。您的数据在我们这里安全可靠。"
       },
-      "item5": {
-        "title": "易于使用",
-        "description": "只需上传您的图片，让我们的 AI 完成工作。无需技术技能 - 非常适合初学者和专业人士。"
-      },
       "item6": {
         "title": "多格式支持",
-        "description": "支持所有常见图片格式，包括 JPG、PNG 和 WEBP。以高分辨率下载您的结果，带有透明背景。"
+        "description": "支持所有常见图片格式，包括 JPG、PNG 和 WebP。以高分辨率下载您的结果，带有透明背景。"
       }
     },
     "howto": {
@@ -84,49 +84,61 @@
     },
     "usecases": {
       "title": "适用于任何项目",
-      "description": "我们的背景去除工具用途广泛，可用于各种目的。",
+      "description": "我们的全能图片橡皮擦用途广泛，可用于各种目的。",
       "ecommerce": {
         "title": "电商用途",
-        "description": "为亚马逊、Shopify 等平台创建专业的产品照片。"
+        "description": "为亚马逊、Shopify 等平台创建专业的产品照片，轻松移除背景和杂物。"
       },
       "marketing": {
         "title": "营销用途",
-        "description": "设计引人注目的社交媒体帖子、横幅和广告。"
+        "description": "设计引人注目的社交媒体帖子、横幅和广告，去除不需要的元素。"
       },
       "photography": {
         "title": "摄影用途",
-        "description": "加快您的照片编辑工作流程。"
+        "description": "加快您的照片编辑工作流程，轻松移除游客和杂物。"
       },
       "personal": {
         "title": "个人用途",
-        "description": "制作有趣的头像、表情包或贺卡。"
+        "description": "制作有趣的头像、表情包或贺卡，修复旧照片。"
+      },
+      "content": {
+        "title": "内容创作",
+        "description": "轻松去除图片中的水印和文字，保护您的作品。"
       }
     },
     "faq": {
       "title": "常见问题",
-      "description": "获取有关我们背景去除工具的常见问题答案。",
+      "description": "获取有关我们全能图片橡皮擦的常见问题答案。",
       "q1": {
-        "question": "如何在 iPhone 上去除图片背景？",
-        "answer": "我们的网站在您的 iPhone 浏览器上完美运行。只需打开 Safari 或 Chrome，导航到我们的网站，上传您的图片，然后直接下载结果到您的手机。"
+        "question": "如何使用 Remove Anything 移除图片中的物体？",
+        "answer": "非常简单！只需上传您的图片，使用涂抹工具标记要移除的区域，然后点击开始处理。我们的AI会自动识别并智能填充背景，几秒钟内即可完成。"
       },
       "q2": {
-        "question": "去除图片背景是否免费？",
-        "answer": "是的，我们的工具完全免费。您可以处理任意数量的图片，无需任何费用。"
+        "question": "Remove Anything 真的完全免费吗？",
+        "answer": "是的！我们的基础功能完全免费，包括背景移除、物体移除和水印移除。您可以处理任意数量的图片，无需任何费用或注册。"
       },
       "q3": {
-        "question": "我可以去除 Logo 的背景吗？",
-        "answer": "当然可以。我们的 AI 经过训练可以处理锐利的边缘，非常适合去除 Logo 和图形的背景。上传您的 Logo 即可获得透明版本。"
+        "question": "可以移除图片中的人物吗？",
+        "answer": "当然可以！我们的AI技术专门针对人物移除进行了优化，可以轻松从集体照、旅游照片中移除不需要的人物，效果自然无痕迹。"
       },
       "q4": {
-        "question": "支持哪些图片格式？",
-        "answer": "我们支持所有常见的图片格式，包括 JPG、PNG 和 WEBP。"
+        "question": "支持哪些图片格式和大小？",
+        "answer": "我们支持JPG、PNG、WebP等常见格式，单张图片最大支持5MB。对于批量处理，建议每张图片不超过3MB以获得最佳效果。"
+      },
+      "q5": {
+        "question": "处理后的图片质量会降低吗？",
+        "answer": "不会！我们保持原始图片的分辨率和质量，输出结果与原始图片质量一致，完全无水印。"
+      },
+      "q6": {
+        "question": "我的图片数据安全吗？",
+        "answer": "非常安全！我们处理您的图片后会在几小时内从服务器删除，不会存储或分享您的任何图片内容。"
       }
     },
     "action": {
       "pricing": "购买积分",
       "login": "登录",
       "dashboard": "去使用",
-      "generate": "上传图片",
+      "generate": "开始抹除",
       "github": {
         "sm": "在 Github 上加星",
         "normal": "Github"
@@ -151,28 +163,28 @@
       "title": "常见问题解答",
       "subtitle": "浏览我们全面的常见问题解答，快速找到常见疑问的答案。如果您需要进一步帮助，请随时联系我们获取个性化支持。",
       "item1": {
-        "question": "Flux AI 与 Stable Diffusion 3 相比有什么不同？",
-        "answer": "与 Stable Diffusion 3 相比，Flux AI 提供更快的生成时间、更高的图像质量和更用户友好的界面。Flux.1 模型融合了最新的人工智能研究成果。"
+        "question": "Remove Anything 真的完全免费吗？",
+        "answer": "是的！我们的基础功能完全免费，包括背景移除、物体移除和水印移除。您可以处理任意数量的图片，无需任何费用或注册。"
       },
       "item2": {
-        "question": "Flux AI 是否在 GitHub 或 Hugging Face 上可用？",
-        "answer": "是的，Flux AI 是开源的，可在 GitHub 和 Hugging Face 上使用。"
+        "question": "如何使用 Remove Anything 移除图片中的物体？",
+        "answer": "非常简单！只需上传您的图片，使用涂抹工具标记要移除的区域，然后点击开始处理。我们的AI会自动识别并智能填充背景，几秒钟内即可完成。"
       },
       "item3": {
-        "question": "Flux AI 与其他人工智能图像生成器有何不同？",
-        "answer": "Flux AI 结合了速度、质量和易用性。它比 Midjourney 更快，比 ComfyUI 更易于使用，并且比许多竞争对手生成更高质量的图像。"
+        "question": "可以移除图片中的人物吗？",
+        "answer": "当然可以！我们的AI技术专门针对人物移除进行了优化，可以轻松从集体照、旅游照片中移除不需要的人物，效果自然无痕迹。"
       },
       "item4": {
-        "question": "如何使用 Flux AI？",
-        "answer": "要使用 Flux AI，只需访问 fluxaipro.art，输入您的提示，然后在几秒钟内见证令人惊叹的视觉效果的创作过程。"
+        "question": "支持哪些图片格式和大小？",
+        "answer": "我们支持JPG、PNG、WebP等常见格式，单张图片最大支持5MB。对于批量处理，建议每张图片不超过3MB以获得最佳效果。"
       },
       "item5": {
-        "question": "Flux AI 提供哪些定价计划？",
-        "answer": "我们使用积分来使用我们的服务，您可以点击价格卡购买积分（只需一次付款）。"
+        "question": "Remove Anything 提供哪些定价计划？",
+        "answer": "我们使用积分来使用我们的服务，您可以点击价格卡购买积分（只需一次付款）。基础功能完全免费，高级功能需要积分。"
       },
       "item6": {
         "question": "如何获取在线支持？",
-        "answer": "您可以通过发送电子邮件至 support@fluxaipro.art 联系我们的支持团队。"
+        "answer": "您可以通过发送电子邮件至 support@remove-anything.com 联系我们的支持团队。"
       }
     },
     "tip": {
@@ -423,7 +435,7 @@
   "LocaleLayout": {
     "title": "Remove Anything - 免费去除图片任意物体",
     "description": "使用先进的 AI 技术免费去除图片中的任意物体、背景或人物。快速、精准、易于使用。",
-    "keywords": "去除图片物体, 去除背景, AI 去除工具, 免费去除背景, 图片编辑, 抓图工具, 人物去除, 物体去除, Remove Anything, AI 图片编辑"
+    "keywords": "物体移除, 图片橡皮擦, 在线P图, photo object remover, 去除图片物体, 去除背景, AI 去除工具, 免费去除背景, 图片编辑, 抓图工具, 人物去除, 物体去除, 水印去除, 文字去除, Remove Anything, AI 图片编辑, 在线图片处理工具"
   },
   "LocaleSwitcher": {
     "label": "更改语言",
@@ -443,6 +455,8 @@
   "Navigation": {
     "pricing": "定价",
     "schnell": "去背景",
+    "removeObjects": "物体移除",
+    "removeWatermark": "水印移除",
     "BatchBackgroundRemoval": "批量去背景",
     "explore": "发现",
     "title": "Remove Anything - 免费去除图片任意物体",
@@ -481,5 +495,35 @@
   "BlogPage": {
     "title": "博客",
     "description": "我们的最新新闻和更新"
+  },
+  "RemoveObjectsPage": {
+    "title": "智能物体移除工具 - Remove Anything",
+    "description": "使用先进的AI技术，轻松从照片中移除任何不需要的物体、人物或瑕疵。无需专业技能，涂抹即可完成。",
+    "keywords": "物体移除, 图片橡皮擦, 在线P图, photo object remover, 移除人物, 移除水印, 移除文字, AI图片编辑, 在线图片处理工具"
+  },
+  "RemoveWatermarkPage": {
+    "title": "专业水印移除工具 - Remove Anything",
+    "description": "使用AI技术智能识别并移除图片中的水印、文字标记和标识。保护您的作品，让图片更加专业和美观。",
+    "keywords": "水印移除, 文字移除, 图片清理, watermark removal, text removal, 图片编辑, AI图片处理, 在线工具"
+  },
+  "QuickAccess": {
+    "title": "快速访问",
+    "subtitle": "选择您需要的功能，立即开始使用",
+    "backgroundRemoval": {
+      "title": "背景移除",
+      "description": "快速去除图片背景，获得透明效果"
+    },
+    "objectRemoval": {
+      "title": "物体移除",
+      "description": "智能移除图片中不需要的物体和人物"
+    },
+    "watermarkRemoval": {
+      "title": "水印移除",
+      "description": "专业去除水印、文字和标识"
+    },
+    "batchProcessing": {
+      "title": "批量处理",
+      "description": "一次处理多张图片，提高工作效率"
+    }
   }
 }

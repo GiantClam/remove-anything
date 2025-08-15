@@ -20,31 +20,59 @@ export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
       )}
     >
       <div className="flex max-w-7xl flex-col items-center justify-end gap-4 text-sm md:flex-row">
-        <Link
-          href="/terms-of-use"
-          className="underline-offset-4 hover:underline"
-          prefetch={false}
-          title={t("footer.term")}
-        >
-          {t("footer.term")}
-        </Link>
-        <Link
-          href="/privacy-policy"
-          className="underline-offset-4 hover:underline"
-          prefetch={false}
-          title={t("footer.privacy")}
-        >
-          {t("footer.privacy")}
-        </Link>
-        <Link
-          href="mailto:support@remove-anything.com"
-          className="underline-offset-4 hover:underline"
-          prefetch={false}
-          title={t("footer.contact")}
-        >
-          {t("footer.contact")}
-        </Link>
-        <ModeToggle />
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <Link
+            href="/remove-background"
+            className="underline-offset-4 hover:underline"
+            prefetch={false}
+            title="背景移除"
+          >
+            背景移除
+          </Link>
+          <Link
+            href="/remove-objects"
+            className="underline-offset-4 hover:underline"
+            prefetch={false}
+            title="物体移除"
+          >
+            物体移除
+          </Link>
+          <Link
+            href="/remove-watermark"
+            className="underline-offset-4 hover:underline"
+            prefetch={false}
+            title="水印移除"
+          >
+            水印移除
+          </Link>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/terms-of-use"
+            className="underline-offset-4 hover:underline"
+            prefetch={false}
+            title={t("footer.term")}
+          >
+            {t("footer.term")}
+          </Link>
+          <Link
+            href="/privacy-policy"
+            className="underline-offset-4 hover:underline"
+            prefetch={false}
+            title={t("footer.privacy")}
+          >
+            {t("footer.privacy")}
+          </Link>
+          <Link
+            href="mailto:support@remove-anything.com"
+            className="underline-offset-4 hover:underline"
+            prefetch={false}
+            title={t("footer.contact")}
+          >
+            {t("footer.contact")}
+          </Link>
+          <ModeToggle />
+        </div>
       </div>
       <div className="mt-4 flex max-w-7xl flex-col items-center justify-between gap-4 text-sm md:flex-row">
         <div className="flex items-center gap-2">

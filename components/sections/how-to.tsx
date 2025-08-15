@@ -1,5 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Upload, Download, Zap } from "lucide-react";
+import { HeaderSection } from "@/components/shared/header-section";
+import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
 
 export default async function HowTo() {
   const t = await getTranslations({ namespace: "IndexPage.howto" });
@@ -23,29 +25,41 @@ export default async function HowTo() {
   ];
 
   return (
-    <section className="py-16 bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">{t("title")}</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            {t("description")}
-          </p>
-        </div>
+    <section>
+      <div className="pb-6 pt-4">
+        <MaxWidthWrapper>
+          <HeaderSection
+            title={t("title")}
+            subtitle={t("description")}
+          />
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          {steps.map((step, index) => (
-            <div
-              key={index}
-              className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
-            >
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                <step.icon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          <div className="mt-12 grid gap-3 sm:grid-cols-3">
+            {steps.map((step, index) => (
+              <div
+                className="group relative overflow-hidden rounded-2xl border bg-background p-5 md:p-8"
+                key={index}
+              >
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 aspect-video -translate-y-1/2 rounded-full border bg-gradient-to-b from-purple-500/80 to-white opacity-25 blur-2xl duration-300 group-hover:-translate-y-1/4 dark:from-white dark:to-white dark:opacity-5 dark:group-hover:opacity-10"
+                />
+                <div className="relative">
+                  <div className="relative flex size-12 rounded-2xl border border-border shadow-sm *:relative *:m-auto *:size-6">
+                    <step.icon className="size-6" />
+                  </div>
+
+                  <h3 className="mt-6 text-lg font-semibold mb-2">
+                    {step.title}
+                  </h3>
+
+                  <p className="pb-6 text-muted-foreground">
+                    {step.description}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
-              <p className="text-gray-600 dark:text-gray-300">{step.description}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </MaxWidthWrapper>
       </div>
     </section>
   );
