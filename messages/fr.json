@@ -446,12 +446,14 @@
   },
   "Navigation": {
     "pricing": "Tarifs",
-    "schnell": "Suppression d'arrière-plan",
+    "removebg": "Suppression d'arrière-plan",
+    "removeObjects": "Suppression d'objets",
+    "removeWatermark": "Suppression de filigrane",
     "BatchBackgroundRemoval": "Suppression d'arrière-plan par lot",
     "explore": "Explorer",
-    "title": "Flux AI Générateur d'Images",
+    "title": "Remove Anything - Suppresseur Gratuit d'Objets et d'Arrière-plans par IA",
     "blog": "Blog",
-    "prompt": "Générateur de Prompts Flux AI",
+    "prompt": "Générateur de Prompts Remove Anything",
     "dashboard": "Tableau de bord",
     "Support": "Support",
     "tooltip": {
@@ -485,5 +487,35 @@
   "BlogPage": {
     "title": "Blog",
     "description": "Les dernières nouvelles et mises à jour de notre équipe"
+  },
+  "RemoveObjectsPage": {
+    "title": "Outil de suppression d'objets intelligent - Remove Anything",
+    "description": "Utilisez une technologie IA avancée pour supprimer facilement tout objet, personne ou défaut indésirable des photos. Aucune compétence professionnelle requise, il suffit de dessiner pour terminer.",
+    "keywords": "suppression d'objets, gomme d'image, édition de photos en ligne, suppression d'objets de photos, suppression de personnes, suppression de filigrane, suppression de texte, édition d'images IA, outil de traitement d'images en ligne"
+  },
+  "RemoveWatermarkPage": {
+    "title": "Outil professionnel de suppression de filigrane - Remove Anything",
+    "description": "Utilisez la technologie IA pour identifier et supprimer intelligemment les filigranes, marques de texte et identifiants des images. Protégez votre travail et rendez les images plus professionnelles et belles.",
+    "keywords": "suppression de filigrane, suppression de texte, nettoyage d'images, outil de suppression de filigrane, outil de suppression de texte, édition d'images, traitement d'images IA, outil en ligne"
+  },
+  "QuickAccess": {
+    "title": "Accès rapide",
+    "subtitle": "Choisissez la fonctionnalité dont vous avez besoin et commencez à l'utiliser immédiatement",
+    "backgroundRemoval": {
+      "title": "Suppression d'arrière-plan",
+      "description": "Supprimez rapidement l'arrière-plan des images pour des effets transparents"
+    },
+    "objectRemoval": {
+      "title": "Suppression d'objets",
+      "description": "Supprimez intelligemment les objets et personnes indésirables des images"
+    },
+    "watermarkRemoval": {
+      "title": "Suppression de filigrane",
+      "description": "Supprimez professionnellement les filigranes, textes et identifiants"
+    },
+    "batchProcessing": {
+      "title": "Traitement par lots",
+      "description": "Traitez plusieurs images à la fois pour améliorer l'efficacité"
+    }
   }
 }

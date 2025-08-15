@@ -454,7 +454,7 @@
   },
   "Navigation": {
     "pricing": "Pricing",
-    "schnell": "Background Removal",
+    "removebg": "Background Removal",
     "removeObjects": "Remove Objects",
     "removeWatermark": "Remove Watermark",
     "BatchBackgroundRemoval": "Batch Background Removal",

@@ -447,10 +447,12 @@
   },
   "Navigation": {
     "pricing": "Preços",
-    "schnell": "Flux Schnell",
+    "removebg": "Remoção de fundo",
+    "removeObjects": "Remoção de objetos",
+    "removeWatermark": "Remoção de marca d'água",
     "explore": "Explorar",
-    "prompt": "Gerador de Prompts Flux AI",
-    "title": "Gerador de Imagens Flux AI",
+    "prompt": "Gerador de Prompts Remove Anything",
+    "title": "Remove Anything - Removedor Gratuito de Objetos e Fundos com IA",
     "blog": "Blog",
     "dashboard": "Painel de Controle",
     "tooltip": {
@@ -486,5 +488,35 @@
   "BlogPage": {
     "title": "Blog",
     "description": "As últimas notícias e atualizações de Nossa"
+  },
+  "RemoveObjectsPage": {
+    "title": "Ferramenta inteligente de remoção de objetos - Remove Anything",
+    "description": "Use tecnologia IA avançada para remover facilmente qualquer objeto, pessoa ou imperfeição indesejada das fotos. Nenhuma habilidade profissional é necessária, apenas desenhe para completar.",
+    "keywords": "remoção de objetos, borracha de imagem, edição de fotos online, removedor de objetos de fotos, remoção de pessoas, remoção de marca d'água, remoção de texto, editor de imagens IA, ferramenta de processamento de imagens online"
+  },
+  "RemoveWatermarkPage": {
+    "title": "Ferramenta profissional de remoção de marca d'água - Remove Anything",
+    "description": "Use tecnologia IA para identificar e remover inteligentemente marcas d'água, marcas de texto e identificadores de imagens. Proteja seu trabalho e torne as imagens mais profissionais e bonitas.",
+    "keywords": "remoção de marca d'água, remoção de texto, limpeza de imagem, ferramenta de remoção de marca d'água, ferramenta de remoção de texto, edição de imagem, processamento de imagem IA, ferramenta online"
+  },
+  "QuickAccess": {
+    "title": "Acesso rápido",
+    "subtitle": "Escolha a funcionalidade que você precisa e comece a usá-la imediatamente",
+    "backgroundRemoval": {
+      "title": "Remoção de fundo",
+      "description": "Remova rapidamente os fundos das imagens para efeitos transparentes"
+    },
+    "objectRemoval": {
+      "title": "Remoção de objetos",
+      "description": "Remova inteligentemente objetos e pessoas indesejadas das imagens"
+    },
+    "watermarkRemoval": {
+      "title": "Remoção de marca d'água",
+      "description": "Remova profissionalmente marcas d'água, textos e identificadores"
+    },
+    "batchProcessing": {
+      "title": "Processamento em lote",
+      "description": "Processe múltiplas imagens de uma vez para melhorar a eficiência"
+    }
   }
 }

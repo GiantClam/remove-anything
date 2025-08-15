@@ -446,9 +446,11 @@
   },
   "Navigation": {
     "pricing": "価格",
-    "schnell": "Flux Schnell",
+    "removebg": "背景除去",
+    "removeObjects": "オブジェクト除去",
+    "removeWatermark": "透かし除去",
     "explore": "探索",
-    "prompt": "Flux AI プロンプトジェネレーター",
+    "prompt": "Remove Anything プロンプトジェネレーター",
     "title": "Remove Anything - 無料で画像から任意のオブジェクトを除去",
     "blog": "ブログ",
     "dashboard": "ダッシュボード",
@@ -485,5 +487,35 @@
   "BlogPage": {
     "title": "ブログ",
     "description": "当社からの最新ニュースとアップデート"
+  },
+  "RemoveObjectsPage": {
+    "title": "スマートオブジェクト除去ツール - Remove Anything",
+    "description": "高度なAI技術を使用して、写真から不要なオブジェクト、人物、または欠陥を簡単に除去します。専門的なスキルは不要で、描くだけで完了します。",
+    "keywords": "オブジェクト除去, 画像消しゴム, オンライン写真編集, 写真オブジェクト除去, 人物除去, 透かし除去, テキスト除去, AI画像編集, オンライン画像処理ツール"
+  },
+  "RemoveWatermarkPage": {
+    "title": "プロフェッショナル透かし除去ツール - Remove Anything",
+    "description": "AI技術を使用して、画像の透かし、テキストマーク、識別子をインテリジェントに識別し除去します。作業を保護し、画像をよりプロフェッショナルで美しくします。",
+    "keywords": "透かし除去, テキスト除去, 画像クリーニング, 透かし除去ツール, テキスト除去ツール, 画像編集, AI画像処理, オンラインツール"
+  },
+  "QuickAccess": {
+    "title": "クイックアクセス",
+    "subtitle": "必要な機能を選択して、すぐに使用を開始してください",
+    "backgroundRemoval": {
+      "title": "背景除去",
+      "description": "画像の背景を素早く除去して透明な効果を得る"
+    },
+    "objectRemoval": {
+      "title": "オブジェクト除去",
+      "description": "画像から不要なオブジェクトと人物をインテリジェントに除去"
+    },
+    "watermarkRemoval": {
+      "title": "透かし除去",
+      "description": "透かし、テキスト、識別子をプロフェッショナルに除去"
+    },
+    "batchProcessing": {
+      "title": "バッチ処理",
+      "description": "複数の画像を一度に処理して効率を向上"
+    }
   }
 }

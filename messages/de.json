@@ -433,10 +433,12 @@
   },
   "Navigation": {
     "pricing": "Preise",
-    "schnell": "Flux Schnell",
+    "removebg": "Hintergrund entfernen",
+    "removeObjects": "Objekte entfernen",
+    "removeWatermark": "Wasserzeichen entfernen",
     "explore": "Erkunden",
-    "prompt": "Flux AI Prompt Generator",
-    "title": "Flux AI Image Generator",
+    "prompt": "Remove Anything Prompt Generator",
+    "title": "Remove Anything - Kostenloser KI-Objekt- und Hintergrundentferner",
     "blog": "Blog",
     "dashboard": "Dashboard",
     "tooltip": {
@@ -472,5 +474,35 @@
   "BlogPage": {
     "title": "Blog",
     "description": "Die neuesten Nachrichten und Updates von Our"
+  },
+  "RemoveObjectsPage": {
+    "title": "Intelligentes Objekt-Entfernungstool - Remove Anything",
+    "description": "Verwenden Sie fortschrittliche KI-Technologie, um unerwünschte Objekte, Personen oder Mängel aus Fotos einfach zu entfernen. Keine professionellen Fähigkeiten erforderlich, zeichnen Sie einfach, um abzuschließen.",
+    "keywords": "Objektentfernung, Bildradierer, Online-Fotobearbeitung, Foto-Objektentferner, Personenentfernung, Wasserzeichenentfernung, Texentfernung, KI-Bildbearbeitung, Online-Bildverarbeitungstool"
+  },
+  "RemoveWatermarkPage": {
+    "title": "Professionelles Wasserzeichen-Entfernungstool - Remove Anything",
+    "description": "Verwenden Sie KI-Technologie, um Wasserzeichen, Textmarken und Bezeichner aus Bildern intelligent zu identifizieren und zu entfernen. Schützen Sie Ihre Arbeit und machen Sie Bilder professioneller und schöner.",
+    "keywords": "Wasserzeichenentfernung, Texentfernung, Bildbereinigung, Wasserzeichenentfernungstool, Texentfernungstool, Bildbearbeitung, KI-Bildverarbeitung, Online-Tool"
+  },
+  "QuickAccess": {
+    "title": "Schnellzugriff",
+    "subtitle": "Wählen Sie die benötigte Funktionalität und beginnen Sie sofort mit der Nutzung",
+    "backgroundRemoval": {
+      "title": "Hintergrund entfernen",
+      "description": "Entfernen Sie schnell Bildhintergründe für transparente Effekte"
+    },
+    "objectRemoval": {
+      "title": "Objekte entfernen",
+      "description": "Entfernen Sie intelligente unerwünschte Objekte und Personen aus Bildern"
+    },
+    "watermarkRemoval": {
+      "title": "Wasserzeichen entfernen",
+      "description": "Entfernen Sie professionell Wasserzeichen, Texte und Bezeichner"
+    },
+    "batchProcessing": {
+      "title": "Stapelverarbeitung",
+      "description": "Verarbeiten Sie mehrere Bilder gleichzeitig, um die Effizienz zu verbessern"
+    }
   }
 }

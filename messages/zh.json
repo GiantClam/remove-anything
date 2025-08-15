@@ -454,7 +454,7 @@
   },
   "Navigation": {
     "pricing": "定价",
-    "schnell": "去背景",
+    "removebg": "去背景",
     "removeObjects": "物体移除",
     "removeWatermark": "水印移除",
     "BatchBackgroundRemoval": "批量去背景",

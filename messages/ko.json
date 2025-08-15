@@ -446,10 +446,12 @@
   },
   "Navigation": {
     "pricing": "가격",
-    "schnell": "Flux Schnell",
+    "removebg": "배경 제거",
+    "removeObjects": "객체 제거",
+    "removeWatermark": "워터마크 제거",
     "explore": "탐색",
-    "title": "플럭스 AI 이미지 생성기",
-    "prompt": "Flux AI 프롬프트 생성기",
+    "title": "Remove Anything - 무료 이미지 객체 및 배경 제거",
+    "prompt": "Remove Anything 프롬프트 생성기",
     "blog": "블로그",
     "dashboard": "대시보드",
     "tooltip": {
@@ -485,5 +487,35 @@
   "BlogPage": {
     "title": "블로그",
     "description": "우리의 최신 뉴스와 업데이트"
+  },
+  "RemoveObjectsPage": {
+    "title": "스마트 객체 제거 도구 - Remove Anything",
+    "description": "고급 AI 기술을 사용하여 사진에서 원하지 않는 객체, 사람 또는 흠을 쉽게 제거합니다. 전문 기술이 필요하지 않으며, 그리기만 하면 완료됩니다.",
+    "keywords": "객체 제거, 이미지 지우개, 온라인 사진 편집, 사진 객체 제거, 사람 제거, 워터마크 제거, 텍스트 제거, AI 이미지 편집, 온라인 이미지 처리 도구"
+  },
+  "RemoveWatermarkPage": {
+    "title": "전문 워터마크 제거 도구 - Remove Anything",
+    "description": "AI 기술을 사용하여 이미지의 워터마크, 텍스트 마크 및 식별자를 지능적으로 식별하고 제거합니다. 작업을 보호하고 이미지를 더욱 전문적이고 아름답게 만듭니다.",
+    "keywords": "워터마크 제거, 텍스트 제거, 이미지 정리, 워터마크 제거 도구, 텍스트 제거 도구, 이미지 편집, AI 이미지 처리, 온라인 도구"
+  },
+  "QuickAccess": {
+    "title": "빠른 접근",
+    "subtitle": "필요한 기능을 선택하고 즉시 사용을 시작하세요",
+    "backgroundRemoval": {
+      "title": "배경 제거",
+      "description": "이미지 배경을 빠르게 제거하여 투명한 효과를 얻으세요"
+    },
+    "objectRemoval": {
+      "title": "객체 제거",
+      "description": "이미지에서 원하지 않는 객체와 사람을 지능적으로 제거하세요"
+    },
+    "watermarkRemoval": {
+      "title": "워터마크 제거",
+      "description": "워터마크, 텍스트 및 식별자를 전문적으로 제거하세요"
+    },
+    "batchProcessing": {
+      "title": "일괄 처리",
+      "description": "여러 이미지를 한 번에 처리하여 효율성을 높이세요"
+    }
   }
 }

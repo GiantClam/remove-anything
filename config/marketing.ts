@@ -3,7 +3,7 @@ import { MarketingConfig } from "types";
 export const marketingConfig: MarketingConfig = {
   mainNav: [
     {
-      title: "schnell",
+      title: "removebg",
       href: "/remove-background",
     },
     {
