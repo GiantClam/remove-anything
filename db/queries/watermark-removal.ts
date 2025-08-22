@@ -8,6 +8,7 @@ export interface CreateWatermarkRemovalTaskData {
 }
 
 export interface UpdateWatermarkRemovalTaskData {
+  runninghubTaskId?: string;
   taskStatus?: string;
   outputZipUrl?: string;
   executeStartTime?: bigint;

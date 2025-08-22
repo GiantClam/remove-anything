@@ -177,7 +177,7 @@ export default function WatermarkRemoval({
     const hasUploadedFiles = uploadedFiles.length > 0;
     const imageUrl = inputImageUrl.trim();
     
-    console.log("🔍 检查结果:", { hasUploadedFiles, imageUrl, hasUploadedFiles: hasUploadedFiles, hasImageUrl: !!imageUrl });
+    console.log("🔍 检查结果:", { hasUploadedFiles, imageUrl, hasImageUrl: !!imageUrl });
     
     if (!hasUploadedFiles && !imageUrl) {
       toast.error("Please upload images or provide an image URL");
