@@ -51,6 +51,11 @@ export const env = createEnv({
     REPLICATE_WEBHOOK_SECRET: z.string().optional(),
     GEMINI_API_KEY: z.string().min(1).default("placeholder"),
     
+    // RunningHub API Configuration
+    RUNNINGHUB_API_BASE_URL: z.string().url().default("https://www.runninghub.cn"),
+    RUNNINGHUB_API_KEY: z.string().min(1).default("placeholder"),
+    RUNNINGHUB_WORKFLOW_ID: z.string().min(1).default("1958143469921382402"),
+    
     // Legacy OpenAI config (now replaced by Gemini via AI Gateway)
     OPEN_AI_API_ENDPOINT: z.string().url().optional(),
     OPEN_AI_API_KEY: z.string().optional(),
@@ -125,6 +130,9 @@ export const env = createEnv({
     REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN,
     REPLICATE_WEBHOOK_SECRET: process.env.REPLICATE_WEBHOOK_SECRET,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    RUNNINGHUB_API_BASE_URL: process.env.RUNNINGHUB_API_BASE_URL,
+    RUNNINGHUB_API_KEY: process.env.RUNNINGHUB_API_KEY,
+    RUNNINGHUB_WORKFLOW_ID: process.env.RUNNINGHUB_WORKFLOW_ID,
     
     // Legacy OpenAI config
     OPEN_AI_API_ENDPOINT: process.env.OPEN_AI_API_ENDPOINT,

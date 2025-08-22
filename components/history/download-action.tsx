@@ -19,7 +19,7 @@ export function DownloadAction({
   id: string;
   disabled?: boolean;
   showText?: boolean;
-  taskType?: "flux" | "background-removal";
+  taskType?: "flux" | "background-removal" | "watermark-removal";
 }) {
   const t = useTranslations("History");
   const [isDownloading, startDownloadTransition] = useTransition();
@@ -36,9 +36,14 @@ export function DownloadAction({
           setIsPending(true);
           
           // 根据任务类型选择不同的API端点
-          const apiUrl = taskType === "background-removal" 
-            ? `/api/download-background?taskId=${id}`
-            : `/api/download?fluxId=${id}`;
+          let apiUrl;
+          if (taskType === "background-removal") {
+            apiUrl = `/api/download-background?taskId=${id}`;
+          } else if (taskType === "watermark-removal") {
+            apiUrl = `/api/download?taskId=${id}&type=watermark-removal`;
+          } else {
+            apiUrl = `/api/download?fluxId=${id}`;
+          }
           
           const blob = await fetch(apiUrl, {
             credentials: 'include',

@@ -52,7 +52,45 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const fluxId = url.searchParams.get("fluxId");
+    const taskId = url.searchParams.get("taskId");
+    const type = url.searchParams.get("type");
     
+    // 处理去水印任务下载
+    if (type === "watermark-removal" && taskId) {
+      const watermarkTask = await prisma.watermarkRemovalTask.findUnique({
+        where: {
+          runninghubTaskId: taskId,
+        },
+      });
+
+      if (!watermarkTask || !watermarkTask.outputZipUrl) {
+        return new Response("Not found", { status: 404 });
+      }
+
+      // Check if user owns this task or if it's public
+      if (watermarkTask.userId !== userId && watermarkTask.isPublic === false) {
+        return new Response("Forbidden", { status: 403 });
+      }
+
+      // Fetch the ZIP file from the URL
+      const zipResponse = await fetch(watermarkTask.outputZipUrl);
+      if (!zipResponse.ok) {
+        return new Response("File not found", { status: 404 });
+      }
+
+      const zipBuffer = await zipResponse.arrayBuffer();
+      
+      // Return the ZIP file with appropriate headers
+      return new Response(zipBuffer, {
+        headers: {
+          "Content-Type": "application/zip",
+          "Content-Disposition": `attachment; filename="watermark-removed-${taskId}.zip"`,
+          "Cache-Control": "public, max-age=3600",
+        },
+      });
+    }
+    
+    // 处理 Flux 任务下载（原有逻辑）
     if (!fluxId) {
       return NextResponse.json({ error: "Missing fluxId parameter" }, { status: 400 });
     }

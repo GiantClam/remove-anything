@@ -457,6 +457,7 @@
     "removebg": "Background Removal",
     "removeObjects": "Remove Objects",
     "removeWatermark": "Remove Watermark",
+
     "BatchBackgroundRemoval": "Batch Background Removal",
     "explore": "Examples",
     "title": "Remove Anything",
@@ -498,12 +499,74 @@
   "RemoveObjectsPage": {
     "title": "Smart Object Removal Tool - Remove Anything",
     "description": "Use advanced AI technology to easily remove any unwanted objects, people, or blemishes from photos. No professional skills required, just paint to complete.",
-    "keywords": "object removal, image eraser, online photo editing, photo object remover, remove people, remove watermark, remove text, AI image editing, online image processing tool"
+    "keywords": "object removal, image eraser, online photo editing, photo object remover, remove people, remove watermark, remove text, AI image editing, online image processing tool",
+    "hero": {
+      "title": "Smart Object Removal Tool",
+      "description": "Use advanced AI technology to easily remove any unwanted objects, people, or blemishes from photos. No professional skills required, just paint to complete.",
+      "startButton": "Start Removing Objects",
+      "pricingButton": "View Pricing"
+    },
+    "features": {
+      "smartRecognition": {
+        "title": "Smart Recognition",
+        "description": "AI automatically identifies objects to remove without manual boundary selection"
+      },
+      "simpleOperation": {
+        "title": "Simple Operation",
+        "description": "Just paint the area to remove, AI automatically completes the rest"
+      },
+      "highQuality": {
+        "title": "High Quality Output",
+        "description": "Maintains original image quality with high-definition, watermark-free results"
+      }
+    },
+    "useCases": {
+      "title": "Use Cases",
+      "touristRemoval": {
+        "title": "Remove Tourists and Passersby",
+        "description": "Easily remove background tourists from photos taken at tourist attractions, making your photos more perfect.",
+        "benefit1": "Automatic person contour recognition",
+        "benefit2": "Intelligent background filling",
+        "benefit3": "Maintains natural effects"
+      },
+      "watermarkRemoval": {
+        "title": "Remove Watermarks and Text",
+        "description": "Easily remove watermarks, text marks, or unwanted identifiers from images to protect your work.",
+        "benefit1": "Precise text area recognition",
+        "benefit2": "Intelligent background reconstruction",
+        "benefit3": "Seamless removal"
+      },
+      "productPhoto": {
+        "title": "Clean Product Photos",
+        "description": "Create professional product photos for e-commerce platforms by removing background clutter and highlighting the main product.",
+        "benefit1": "Professional-level cutout effects",
+        "benefit2": "Batch processing support",
+        "benefit3": "E-commerce optimized"
+      },
+      "photoRestoration": {
+        "title": "Restore Old Photos",
+        "description": "Repair creases, stains, or damaged areas in old photos, bringing precious memories back to life.",
+        "benefit1": "Intelligent stain recognition",
+        "benefit2": "Natural restoration effects",
+        "benefit3": "Preserves historical feel"
+      }
+    },
+    "cta": {
+      "title": "Ready to Get Started?",
+      "description": "Experience the powerful features of AI object removal immediately and make your photos more perfect",
+      "button": "Start Using for Free"
+    }
   },
   "RemoveWatermarkPage": {
     "title": "Professional Watermark Removal Tool - Remove Anything",
     "description": "Use AI technology to intelligently identify and remove watermarks, text marks, and identifiers from images. Protect your work and make images more professional and beautiful.",
-    "keywords": "watermark removal, text removal, image cleaning, watermark removal tool, text removal tool, image editing, AI image processing, online tool"
+    "keywords": "watermark removal, text removal, image cleaning, watermark removal tool, text removal tool, image editing, AI image processing, online tool",
+    "hero": {
+      "title": "Professional Watermark Removal Tool",
+      "description": "Use AI technology to intelligently identify and remove watermarks, text marks, and identifiers from images. Protect your work and make images more professional and beautiful.",
+      "startButton": "Start Removing Watermark",
+      "pricingButton": "View Pricing"
+    }
   },
   "QuickAccess": {
     "title": "Quick Access",

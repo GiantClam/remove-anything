@@ -6,6 +6,7 @@ export const IconPrefix = Prefix + "-icon";
 
 export enum model {
   backgroundRemoval = "men1scus/birefnet",
+  watermarkRemoval = "watermark-removal",
 }
 
 export enum loras {
@@ -31,10 +32,12 @@ export const LoraConfig = {
 
 export const Credits = {
   [model.backgroundRemoval]: 2, // 666 runs per $1, 合理定价为2积分
+  [model.watermarkRemoval]: 1, // 去水印定价为1积分
 };
 
 export const ModelName = {
   [model.backgroundRemoval]: "Background Removal",
+  [model.watermarkRemoval]: "Watermark Removal",
 };
 
 export enum Ratio {
@@ -50,5 +53,8 @@ export enum Ratio {
 export const ModelDefaultAdVancedSetting = {
   [model.backgroundRemoval]: {
     description: "Background removal model - no advanced settings needed",
+  },
+  [model.watermarkRemoval]: {
+    description: "Watermark removal model - no advanced settings needed",
   },
 };

@@ -112,6 +112,8 @@ const FormUpload = (props: FormUploadProps) => {
   const [uploadLoading, setUploadLoading] = useState(false);
   
   const handleFileChange = async (files: File[]) => {
+    console.log("🔧 Upload 组件：handleFileChange 被调用", { filesLength: files.length, files });
+    
     if (files.length) {
       try {
         setUploadLoading(true);
@@ -179,9 +181,21 @@ const FormUpload = (props: FormUploadProps) => {
               };
               
               // 更新对应的文件状态
+              // 如果当前 value 为空，说明状态丢失，需要重新构建
+              const currentValues = value && value.length > 0 ? value : [tempValue];
+              
               const updatedValues = multiple 
-                ? value.map(v => v.id === tempValue.id ? newValue : v)
+                ? currentValues.map(v => v.id === tempValue.id ? newValue : v)
                 : [newValue];
+              
+              console.log("🔧 Upload 组件：STS上传完成，更新文件状态", {
+                tempValueId: tempValue.id,
+                currentValueLength: value.length,
+                currentValuesLength: currentValues.length,
+                updatedValuesLength: updatedValues.length,
+                newValue: newValue
+              });
+              
               onChange?.(updatedValues);
               
               return newValue;
@@ -202,9 +216,21 @@ const FormUpload = (props: FormUploadProps) => {
               };
               
               // 更新对应的文件状态
+              // 如果当前 value 为空，说明状态丢失，需要重新构建
+              const currentValues = value && value.length > 0 ? value : [tempValue];
+              
               const updatedValues = multiple 
-                ? value.map(v => v.id === tempValue.id ? newValue : v)
+                ? currentValues.map(v => v.id === tempValue.id ? newValue : v)
                 : [newValue];
+              
+              console.log("🔧 Upload 组件：本地文件处理完成，更新文件状态", {
+                tempValueId: tempValue.id,
+                currentValueLength: value.length,
+                currentValuesLength: currentValues.length,
+                updatedValuesLength: updatedValues.length,
+                newValue: newValue
+              });
+              
               onChange?.(updatedValues);
               
               return newValue;
@@ -240,8 +266,11 @@ const FormUpload = (props: FormUploadProps) => {
               error: error + "" || "Upload failed!",
             };
             
+            // 如果当前 value 为空，说明状态丢失，需要重新构建
+            const currentValues = value && value.length > 0 ? value : [tempValue];
+            
             const updatedValues = multiple 
-              ? value.map(v => v.id === tempValue.id ? errorValue : v)
+              ? currentValues.map(v => v.id === tempValue.id ? errorValue : v)
               : [errorValue];
             onChange?.(updatedValues);
             

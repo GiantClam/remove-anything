@@ -449,6 +449,7 @@
     "removebg": "去背景",
     "removeObjects": "物體移除",
     "removeWatermark": "水印移除",
+
     "explore": "探索",
     "title": "Remove Anything - 免費去除圖片任意物體",
     "prompt": "Remove Anything 提示詞產生器",
@@ -487,5 +488,97 @@
   "BlogPage": {
     "title": "博客",
     "description": "我們的最新新聞和更新"
+  },
+  "RemoveObjectsPage": {
+    "title": "智能物件移除工具 - Remove Anything",
+    "description": "使用先進的AI技術，輕鬆從照片中移除任何不需要的物件、人物或瑕疵。無需專業技能，塗抹即可完成。",
+    "keywords": "物件移除, 圖像橡皮擦, 線上照片編輯, 照片物件移除, 人物移除, 浮水印移除, 文字移除, AI圖像編輯, 線上圖像處理工具",
+    "hero": {
+      "title": "智能物件移除工具",
+      "description": "使用先進的AI技術，輕鬆從照片中移除任何不需要的物件、人物或瑕疵。無需專業技能，塗抹即可完成。",
+      "startButton": "開始移除物件",
+      "pricingButton": "查看定價"
+    },
+    "features": {
+      "smartRecognition": {
+        "title": "智能識別",
+        "description": "AI自動識別要移除的物件，無需手動選擇邊界"
+      },
+      "simpleOperation": {
+        "title": "簡單操作",
+        "description": "只需塗抹要移除的區域，AI自動完成剩餘工作"
+      },
+      "highQuality": {
+        "title": "高清輸出",
+        "description": "保持原始圖片品質，輸出高清無浮水印結果"
+      }
+    },
+    "useCases": {
+      "title": "應用場景",
+      "touristRemoval": {
+        "title": "移除遊客和路人",
+        "description": "在旅遊景點拍攝的照片中，輕鬆移除背景中的遊客，讓您的照片更加完美。",
+        "benefit1": "自動識別人物輪廓",
+        "benefit2": "智能填充背景",
+        "benefit3": "保持自然效果"
+      },
+      "watermarkRemoval": {
+        "title": "移除浮水印和文字",
+        "description": "輕鬆移除圖片中的浮水印、文字標記或不需要的標識，保護您的作品。",
+        "benefit1": "精確識別文字區域",
+        "benefit2": "智能背景重建",
+        "benefit3": "無痕跡移除"
+      },
+      "productPhoto": {
+        "title": "清理產品照片",
+        "description": "為電商平台創建專業的產品照片，移除背景雜物，突出產品主體。",
+        "benefit1": "專業級摳圖效果",
+        "benefit2": "批次處理支援",
+        "benefit3": "電商專用優化"
+      },
+      "photoRestoration": {
+        "title": "修復舊照片",
+        "description": "修復老照片中的折痕、污點或損壞區域，讓珍貴的回憶重現光彩。",
+        "benefit1": "智能污點識別",
+        "benefit2": "自然修復效果",
+        "benefit3": "保持歷史感"
+      }
+    },
+    "cta": {
+      "title": "準備好開始了嗎？",
+      "description": "立即體驗AI物件移除的強大功能，讓您的照片更加完美",
+      "button": "免費開始使用"
+    }
+  },
+  "RemoveWatermarkPage": {
+    "title": "專業浮水印移除工具 - Remove Anything",
+    "description": "使用AI技術智能識別並移除圖片中的浮水印、文字標記和標識。保護您的作品，讓圖片更加專業和美觀。",
+    "keywords": "浮水印移除, 文字移除, 圖片清理, watermark removal, text removal, 圖片編輯, AI圖片處理, 線上工具",
+    "hero": {
+      "title": "專業浮水印移除工具",
+      "description": "使用AI技術智能識別並移除圖片中的浮水印、文字標記和標識。保護您的作品，讓圖片更加專業和美觀。",
+      "startButton": "開始移除浮水印",
+      "pricingButton": "查看定價"
+    }
+  },
+  "QuickAccess": {
+    "title": "快速訪問",
+    "subtitle": "選擇您需要的功能，立即開始使用",
+    "backgroundRemoval": {
+      "title": "背景移除",
+      "description": "快速去除圖片背景，獲得透明效果"
+    },
+    "objectRemoval": {
+      "title": "物件移除",
+      "description": "智能移除圖片中不需要的物件和人物"
+    },
+    "watermarkRemoval": {
+      "title": "浮水印移除",
+      "description": "專業去除浮水印、文字和標識"
+    },
+    "batchProcessing": {
+      "title": "批次處理",
+      "description": "一次處理多張圖片，提高工作效率"
+    }
   }
 }

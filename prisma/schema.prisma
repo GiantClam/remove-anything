@@ -66,6 +66,7 @@ model User {
   userPaymentInfos       UserPaymentInfo[]
   batchTasks             BatchTask[]
   backgroundRemovalTasks BackgroundRemovalTask[]
+  watermarkRemovalTasks  WatermarkRemovalTask[]
 
   @@map("users")
 }
@@ -206,6 +207,30 @@ model BackgroundRemovalTask {
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map(name: "background_removal_tasks")
+  @@index([userId])
+  @@index([taskStatus])
+  @@index([createdAt])
+}
+
+model WatermarkRemovalTask {
+  id               Int       @id @default(autoincrement())
+  userId           String?   @map(name: "user_id")
+  runninghubTaskId String    @unique @map(name: "runninghub_task_id")
+  inputZipUrl      String    @map(name: "input_zip_url")
+  outputZipUrl     String?   @map(name: "output_zip_url")
+  taskStatus       String    @map(name: "task_status") @default("pending")
+  executeStartTime BigInt?   @map(name: "execute_start_time")
+  executeEndTime   BigInt?   @map(name: "execute_end_time")
+  errorMsg         String?   @map(name: "error_msg")
+  downloadCount    Int       @default(0) @map(name: "download_count")
+  viewCount        Int       @default(0) @map(name: "view_count")
+  isPublic         Boolean   @default(true) @map(name: "is_public")
+  createdAt        DateTime  @default(now()) @map(name: "created_at")
+  updatedAt        DateTime  @updatedAt @map(name: "updated_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map(name: "watermark_removal_tasks")
   @@index([userId])
   @@index([taskStatus])
   @@index([createdAt])
