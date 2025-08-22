@@ -4,6 +4,10 @@ import { findWatermarkRemovalTaskByRunningHubId, updateWatermarkRemovalTask } fr
 import AWS from 'aws-sdk';
 import { nanoid } from "nanoid";
 import { env } from "@/env.mjs";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
+
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
 
 // 下载ZIP文件并保存到R2
 async function downloadAndSaveToR2(zipUrl: string, taskId: string): Promise<string> {

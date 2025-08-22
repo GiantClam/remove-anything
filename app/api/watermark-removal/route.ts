@@ -5,6 +5,10 @@ import { createWatermarkRemovalTask, updateWatermarkRemovalTask } from "@/db/que
 import { uploadToR2 } from "@/lib/upload";
 import JSZip from "jszip";
 import { getErrorMessage } from "@/lib/handle-error";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
+
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {

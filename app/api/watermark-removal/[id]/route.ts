@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
 import { runninghubAPI } from "@/lib/runninghub-api";
 import { findWatermarkRemovalTaskByRunningHubId, updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
+
+// 强制动态渲染，避免构建时静态生成
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   req: NextRequest,
