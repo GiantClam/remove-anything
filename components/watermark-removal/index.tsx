@@ -112,14 +112,27 @@ export default function WatermarkRemoval({
       return false;
     },
     queryFn: async () => {
+      console.log("🔍 开始查询任务状态，taskId:", taskId);
       const res = await fetch(`/api/watermark-removal/${taskId}`, {
         credentials: 'include',
       });
+      console.log("📡 API响应状态:", res.status, res.statusText);
+      
       if (!res.ok) {
-        throw new Error("Failed to fetch task");
+        console.error("❌ API请求失败:", res.status, res.statusText);
+        const errorText = await res.text();
+        console.error("❌ 错误详情:", errorText);
+        throw new Error(`Failed to fetch task: ${res.status} ${res.statusText}`);
       }
-      return res.json();
+      
+      const data = await res.json();
+      console.log("✅ 获取到任务数据:", data);
+      return data;
     },
+    onError: (error) => {
+      console.error("❌ 查询任务失败:", error);
+      toast.error("Failed to fetch task status. Please try again.");
+    }
   });
 
   const { data: userCredit } = useQuery<UserCreditSelectDto>({

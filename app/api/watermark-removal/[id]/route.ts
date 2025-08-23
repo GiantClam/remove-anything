@@ -16,7 +16,11 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const dbOnly = searchParams.get('dbOnly') === 'true';
     
+    console.log("🔍 开始查询去水印任务状态");
+    console.log("📋 请求参数:", { taskId, dbOnly, url: req.url });
+    
     if (!taskId) {
+      console.log("❌ 缺少taskId参数");
       return NextResponse.json({ error: "Task ID is required" }, { status: 400 });
     }
 

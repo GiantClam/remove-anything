@@ -1,5 +1,5 @@
 import { prisma } from "@/db/prisma";
-import { shouldSkipDatabaseQuery } from "@/lib/build-time";
+import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 export interface CreateWatermarkRemovalTaskData {
   userId?: string;
@@ -49,12 +49,15 @@ export async function createWatermarkRemovalTask(data: CreateWatermarkRemovalTas
  * 根据RunningHub任务ID查找任务
  */
 export async function findWatermarkRemovalTaskByRunningHubId(runninghubTaskId: string) {
+  console.log("🔍 开始查找去水印任务:", runninghubTaskId);
+  
   if (shouldSkipDatabaseQuery()) {
     console.log("🔧 构建时：跳过查找去水印任务");
     return null;
   }
 
   try {
+    console.log("🔍 执行数据库查询，runninghubTaskId:", runninghubTaskId);
     const task = await prisma.watermarkRemovalTask.findUnique({
       where: { runninghubTaskId },
       include: {
@@ -68,6 +71,7 @@ export async function findWatermarkRemovalTaskByRunningHubId(runninghubTaskId: s
       }
     });
 
+    console.log("🔍 数据库查询结果:", task ? "找到任务" : "未找到任务");
     return task;
   } catch (error) {
     console.error("❌ 查找去水印任务失败:", error);

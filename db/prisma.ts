@@ -40,6 +40,16 @@ if (isBuildTime) {
       findMany: async () => [],
       count: async () => 0,
     },
+    // 添加WatermarkRemovalTask模型
+    watermarkRemovalTask: {
+      findFirst: async () => null,
+      findUnique: async () => null,
+      create: async () => ({} as any),
+      update: async () => ({} as any),
+      delete: async () => ({} as any),
+      findMany: async () => [],
+      count: async () => 0,
+    },
   } as any;
   console.log("🔧 构建时：创建虚拟Prisma客户端");
 } else {
