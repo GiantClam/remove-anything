@@ -128,10 +128,6 @@ export default function WatermarkRemoval({
       const data = await res.json();
       console.log("✅ 获取到任务数据:", data);
       return data;
-    },
-    onError: (error) => {
-      console.error("❌ 查询任务失败:", error);
-      toast.error("Failed to fetch task status. Please try again.");
     }
   });
 
@@ -162,6 +158,14 @@ export default function WatermarkRemoval({
       }
     }
   }, [queryTask.data]);
+
+  // 监听查询错误
+  useEffect(() => {
+    if (queryTask.error) {
+      console.error("❌ 查询任务失败:", queryTask.error);
+      toast.error("Failed to fetch task status. Please try again.");
+    }
+  }, [queryTask.error]);
 
   const onBeforeunload = () => {
     if (loading) {

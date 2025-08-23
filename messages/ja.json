@@ -115,6 +115,10 @@
       "personal": {
         "title": "For Personal Use",
         "description": "Make fun profile pictures, memes, or greeting cards."
+      },
+      "content": {
+        "title": "For Content Creators",
+        "description": "Easily remove watermarks and text from images, protect your work."
       }
     },
     "faq": {
@@ -492,7 +496,63 @@
   "RemoveObjectsPage": {
     "title": "スマートオブジェクト除去ツール - Remove Anything",
     "description": "高度なAI技術を使用して、写真から不要なオブジェクト、人物、または欠陥を簡単に除去します。専門的なスキルは不要で、描くだけで完了します。",
-    "keywords": "オブジェクト除去, 画像消しゴム, オンライン写真編集, 写真オブジェクト除去, 人物除去, 透かし除去, テキスト除去, AI画像編集, オンライン画像処理ツール"
+    "keywords": "オブジェクト除去, 画像消しゴム, オンライン写真編集, 写真オブジェクト除去, 人物除去, 透かし除去, テキスト除去, AI画像編集, オンライン画像処理ツール",
+    "hero": {
+      "title": "スマートオブジェクト除去ツール",
+      "description": "高度なAI技術を使用して、写真から不要なオブジェクト、人物、または欠陥を簡単に除去します。専門的なスキルは不要で、描くだけで完了します。",
+      "startButton": "オブジェクト除去を開始",
+      "pricingButton": "価格を表示"
+    },
+    "features": {
+      "smartRecognition": {
+        "title": "スマート認識",
+        "description": "AIが手動での境界選択なしで除去するオブジェクトを自動的に識別"
+      },
+      "simpleOperation": {
+        "title": "シンプル操作",
+        "description": "除去する領域を描くだけで、AIが残りを自動的に完了"
+      },
+      "highQuality": {
+        "title": "高品質出力",
+        "description": "高解像度で透かしのない結果で元の画像品質を維持"
+      }
+    },
+    "useCases": {
+      "title": "ユースケース",
+      "touristRemoval": {
+        "title": "観光客と通行人を除去",
+        "description": "観光地で撮影された写真から背景の観光客を簡単に除去し、写真をより完璧にします。",
+        "benefit1": "自動的な人物輪郭認識",
+        "benefit2": "インテリジェントな背景充填",
+        "benefit3": "自然な効果を維持"
+      },
+      "watermarkRemoval": {
+        "title": "透かしとテキストを除去",
+        "description": "画像から透かし、テキストマーク、または不要な識別子を簡単に除去して作業を保護します。",
+        "benefit1": "正確なテキスト領域認識",
+        "benefit2": "インテリジェントな背景再構築",
+        "benefit3": "シームレスな除去"
+      },
+      "productPhoto": {
+        "title": "商品写真をクリーンアップ",
+        "description": "背景の乱雑さを除去し、メイン商品を強調して、Eコマースプラットフォーム用のプロフェッショナルな商品写真を作成。",
+        "benefit1": "プロレベルの切り抜き効果",
+        "benefit2": "バッチ処理サポート",
+        "benefit3": "Eコマース最適化"
+      },
+      "photoRestoration": {
+        "title": "古い写真を復元",
+        "description": "古い写真のしわ、汚れ、または損傷した領域を修復し、貴重な思い出を蘇らせます。",
+        "benefit1": "インテリジェントな汚れ認識",
+        "benefit2": "自然な復元効果",
+        "benefit3": "歴史的な感覚を保持"
+      }
+    },
+    "cta": {
+      "title": "始める準備はできましたか？",
+      "description": "AIオブジェクト除去の強力な機能をすぐに体験し、写真をより完璧にしましょう",
+      "button": "無料で開始"
+    }
   },
   "RemoveWatermarkPage": {
     "title": "プロフェッショナル透かし除去ツール - Remove Anything",

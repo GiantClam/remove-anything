@@ -115,6 +115,10 @@
       "personal": {
         "title": "For Personal Use",
         "description": "Make fun profile pictures, memes, or greeting cards."
+      },
+      "content": {
+        "title": "For Content Creators",
+        "description": "Easily remove watermarks and text from images, protect your work."
       }
     },
     "faq": {
@@ -479,7 +483,63 @@
   "RemoveObjectsPage": {
     "title": "Intelligentes Objekt-Entfernungstool - Remove Anything",
     "description": "Verwenden Sie fortschrittliche KI-Technologie, um unerwünschte Objekte, Personen oder Mängel aus Fotos einfach zu entfernen. Keine professionellen Fähigkeiten erforderlich, zeichnen Sie einfach, um abzuschließen.",
-    "keywords": "Objektentfernung, Bildradierer, Online-Fotobearbeitung, Foto-Objektentferner, Personenentfernung, Wasserzeichenentfernung, Texentfernung, KI-Bildbearbeitung, Online-Bildverarbeitungstool"
+    "keywords": "Objektentfernung, Bildradierer, Online-Fotobearbeitung, Foto-Objektentferner, Personenentfernung, Wasserzeichenentfernung, Texentfernung, KI-Bildbearbeitung, Online-Bildverarbeitungstool",
+    "hero": {
+      "title": "Intelligentes Objekt-Entfernungstool",
+      "description": "Verwenden Sie fortschrittliche KI-Technologie, um unerwünschte Objekte, Personen oder Mängel aus Fotos einfach zu entfernen. Keine professionellen Fähigkeiten erforderlich, zeichnen Sie einfach, um abzuschließen.",
+      "startButton": "Objekte entfernen starten",
+      "pricingButton": "Preise anzeigen"
+    },
+    "features": {
+      "smartRecognition": {
+        "title": "Intelligente Erkennung",
+        "description": "KI identifiziert automatisch zu entfernende Objekte ohne manuelle Grenzauswahl"
+      },
+      "simpleOperation": {
+        "title": "Einfache Bedienung",
+        "description": "Zeichnen Sie einfach den zu entfernenden Bereich, KI erledigt den Rest automatisch"
+      },
+            "highQuality": {
+        "title": "Hochwertige Ausgabe",
+        "description": "Behält die ursprüngliche Bildqualität mit hochauflösenden, wasserzeichenfreien Ergebnissen bei"
+      }
+    },
+    "useCases": {
+      "title": "Anwendungsfälle",
+      "touristRemoval": {
+        "title": "Touristen und Passanten entfernen",
+        "description": "Entfernen Sie einfach Hintergrundtouristen aus Fotos, die an Sehenswürdigkeiten aufgenommen wurden, und machen Sie Ihre Fotos perfekter.",
+        "benefit1": "Automatische Personenkonturerkennung",
+        "benefit2": "Intelligente Hintergrundfüllung",
+        "benefit3": "Behält natürliche Effekte bei"
+      },
+      "watermarkRemoval": {
+        "title": "Wasserzeichen und Text entfernen",
+        "description": "Entfernen Sie einfach Wasserzeichen, Textmarken oder unerwünschte Bezeichner aus Bildern, um Ihre Arbeit zu schützen.",
+        "benefit1": "Präzise Textbereichserkennung",
+        "benefit2": "Intelligente Hintergrundrekonstruktion",
+        "benefit3": "Nahtlose Entfernung"
+      },
+      "productPhoto": {
+        "title": "Produktfotos bereinigen",
+        "description": "Erstellen Sie professionelle Produktfotos für E-Commerce-Plattformen, indem Sie Hintergrundunordnung entfernen und das Hauptprodukt hervorheben.",
+        "benefit1": "Professionelle Freistelleffekte",
+        "benefit2": "Batch-Verarbeitungsunterstützung",
+        "benefit3": "E-Commerce-optimiert"
+      },
+      "photoRestoration": {
+        "title": "Alte Fotos restaurieren",
+        "description": "Reparieren Sie Falten, Flecken oder beschädigte Bereiche in alten Fotos und bringen Sie wertvolle Erinnerungen wieder zum Leben.",
+        "benefit1": "Intelligente Fleckenerkennung",
+        "benefit2": "Natürliche Restaurierungseffekte",
+        "benefit3": "Bewahrt historisches Gefühl"
+      }
+    },
+    "cta": {
+      "title": "Bereit zu beginnen?",
+      "description": "Erleben Sie sofort die leistungsstarken Funktionen der KI-Objektentfernung und machen Sie Ihre Fotos perfekter",
+      "button": "Kostenlos starten"
+    }
   },
   "RemoveWatermarkPage": {
     "title": "Professionelles Wasserzeichen-Entfernungstool - Remove Anything",

@@ -115,6 +115,10 @@
       "personal": {
         "title": "For Personal Use",
         "description": "Make fun profile pictures, memes, or greeting cards."
+      },
+      "content": {
+        "title": "For Content Creators",
+        "description": "Easily remove watermarks and text from images, protect your work."
       }
     },
     "faq": {
@@ -493,7 +497,63 @@
   "RemoveObjectsPage": {
     "title": "Ferramenta inteligente de remoção de objetos - Remove Anything",
     "description": "Use tecnologia IA avançada para remover facilmente qualquer objeto, pessoa ou imperfeição indesejada das fotos. Nenhuma habilidade profissional é necessária, apenas desenhe para completar.",
-    "keywords": "remoção de objetos, borracha de imagem, edição de fotos online, removedor de objetos de fotos, remoção de pessoas, remoção de marca d'água, remoção de texto, editor de imagens IA, ferramenta de processamento de imagens online"
+    "keywords": "remoção de objetos, borracha de imagem, edição de fotos online, removedor de objetos de fotos, remoção de pessoas, remoção de marca d'água, remoção de texto, editor de imagens IA, ferramenta de processamento de imagens online",
+    "hero": {
+      "title": "Ferramenta inteligente de remoção de objetos",
+      "description": "Use tecnologia IA avançada para remover facilmente qualquer objeto, pessoa ou imperfeição indesejada das fotos. Nenhuma habilidade profissional é necessária, apenas desenhe para completar.",
+      "startButton": "Começar a remover objetos",
+      "pricingButton": "Ver preços"
+    },
+    "features": {
+      "smartRecognition": {
+        "title": "Reconhecimento inteligente",
+        "description": "IA identifica automaticamente objetos para remover sem seleção manual de limites"
+      },
+      "simpleOperation": {
+        "title": "Operação simples",
+        "description": "Apenas desenhe a área a ser removida, a IA completa automaticamente o resto"
+      },
+      "highQuality": {
+        "title": "Saída de alta qualidade",
+        "description": "Mantém a qualidade original da imagem com resultados de alta definição e sem marca d'água"
+      }
+    },
+    "useCases": {
+      "title": "Casos de uso",
+      "touristRemoval": {
+        "title": "Remover turistas e transeuntes",
+        "description": "Remova facilmente turistas de fundo de fotos tiradas em atrações turísticas, tornando suas fotos mais perfeitas.",
+        "benefit1": "Reconhecimento automático de contorno de pessoas",
+        "benefit2": "Preenchimento de fundo inteligente",
+        "benefit3": "Mantém efeitos naturais"
+      },
+      "watermarkRemoval": {
+        "title": "Remover marcas d'água e textos",
+        "description": "Remova facilmente marcas d'água, marcas de texto ou identificadores indesejados das imagens para proteger seu trabalho.",
+        "benefit1": "Reconhecimento preciso de áreas de texto",
+        "benefit2": "Reconstrução de fundo inteligente",
+        "benefit3": "Remoção sem costuras"
+      },
+      "productPhoto": {
+        "title": "Limpar fotos de produtos",
+        "description": "Crie fotos de produtos profissionais para plataformas de e-commerce removendo desordem de fundo e destacando o produto principal.",
+        "benefit1": "Efeitos de recorte de nível profissional",
+        "benefit2": "Suporte ao processamento em lote",
+        "benefit3": "Otimizado para e-commerce"
+      },
+      "photoRestoration": {
+        "title": "Restaurar fotos antigas",
+        "description": "Repare rugas, manchas ou áreas danificadas em fotos antigas, trazendo preciosas memórias de volta à vida.",
+        "benefit1": "Reconhecimento inteligente de manchas",
+        "benefit2": "Efeitos de restauração naturais",
+        "benefit3": "Preserva sensação histórica"
+      }
+    },
+    "cta": {
+      "title": "Pronto para começar?",
+      "description": "Experimente imediatamente os recursos poderosos de remoção de objetos por IA e torne suas fotos mais perfeitas",
+      "button": "Começar grátis"
+    }
   },
   "RemoveWatermarkPage": {
     "title": "Ferramenta profissional de remoção de marca d'água - Remove Anything",

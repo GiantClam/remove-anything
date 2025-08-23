@@ -115,6 +115,10 @@
       "personal": {
         "title": "For Personal Use",
         "description": "Make fun profile pictures, memes, or greeting cards."
+      },
+      "content": {
+        "title": "For Content Creators",
+        "description": "Easily remove watermarks and text from images, protect your work."
       }
     },
     "faq": {
@@ -492,7 +496,63 @@
   "RemoveObjectsPage": {
     "title": "Outil de suppression d'objets intelligent - Remove Anything",
     "description": "Utilisez une technologie IA avancée pour supprimer facilement tout objet, personne ou défaut indésirable des photos. Aucune compétence professionnelle requise, il suffit de dessiner pour terminer.",
-    "keywords": "suppression d'objets, gomme d'image, édition de photos en ligne, suppression d'objets de photos, suppression de personnes, suppression de filigrane, suppression de texte, édition d'images IA, outil de traitement d'images en ligne"
+    "keywords": "suppression d'objets, gomme d'image, édition de photos en ligne, suppression d'objets de photos, suppression de personnes, suppression de filigrane, suppression de texte, édition d'images IA, outil de traitement d'images en ligne",
+    "hero": {
+      "title": "Outil de suppression d'objets intelligent",
+      "description": "Utilisez une technologie IA avancée pour supprimer facilement tout objet, personne ou défaut indésirable des photos. Aucune compétence professionnelle requise, il suffit de dessiner pour terminer.",
+      "startButton": "Commencer la suppression d'objets",
+      "pricingButton": "Voir les tarifs"
+    },
+    "features": {
+      "smartRecognition": {
+        "title": "Reconnaissance intelligente",
+        "description": "L'IA identifie automatiquement les objets à supprimer sans sélection manuelle des limites"
+      },
+      "simpleOperation": {
+        "title": "Opération simple",
+        "description": "Dessinez simplement la zone à supprimer, l'IA complète automatiquement le reste"
+      },
+      "highQuality": {
+        "title": "Sortie de haute qualité",
+        "description": "Maintient la qualité d'image originale avec des résultats haute définition et sans filigrane"
+      }
+    },
+    "useCases": {
+      "title": "Cas d'utilisation",
+      "touristRemoval": {
+        "title": "Supprimer les touristes et passants",
+        "description": "Supprimez facilement les touristes de l'arrière-plan des photos prises aux attractions touristiques, rendant vos photos plus parfaites.",
+        "benefit1": "Reconnaissance automatique du contour des personnes",
+        "benefit2": "Remplissage d'arrière-plan intelligent",
+        "benefit3": "Maintient les effets naturels"
+      },
+      "watermarkRemoval": {
+        "title": "Supprimer les filigranes et textes",
+        "description": "Supprimez facilement les filigranes, marques de texte ou identifiants indésirables des images pour protéger votre travail.",
+        "benefit1": "Reconnaissance précise des zones de texte",
+        "benefit2": "Reconstruction d'arrière-plan intelligente",
+        "benefit3": "Suppression transparente"
+      },
+      "productPhoto": {
+        "title": "Nettoyer les photos de produits",
+        "description": "Créez des photos de produits professionnelles pour les plateformes e-commerce en supprimant l'encombrement d'arrière-plan et en mettant en valeur le produit principal.",
+        "benefit1": "Effets de découpe de niveau professionnel",
+        "benefit2": "Support du traitement par lots",
+        "benefit3": "Optimisé pour l'e-commerce"
+      },
+      "photoRestoration": {
+        "title": "Restaurer les anciennes photos",
+        "description": "Réparer les plis, taches ou zones endommagées dans les anciennes photos, ramenant les précieux souvenirs à la vie.",
+        "benefit1": "Reconnaissance intelligente des taches",
+        "benefit2": "Effets de restauration naturels",
+        "benefit3": "Préserve le sentiment historique"
+      }
+    },
+    "cta": {
+      "title": "Prêt à commencer ?",
+      "description": "Découvrez immédiatement les fonctionnalités puissantes de suppression d'objets par IA et rendez vos photos plus parfaites",
+      "button": "Commencer gratuitement"
+    }
   },
   "RemoveWatermarkPage": {
     "title": "Outil professionnel de suppression de filigrane - Remove Anything",
