@@ -339,11 +339,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         <Card>
           <CardHeader className="text-center">
             <CheckCircle className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <CardTitle className="text-lg">{tPage('highQuality')}</CardTitle>
+            <CardTitle className="text-lg">{tPage('hairLevelPrecision')}</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
             <CardDescription>
-              {tPage('highQualityDesc')}
+              {tPage('hairLevelPrecisionDesc')}
             </CardDescription>
           </CardContent>
         </Card>
@@ -360,6 +360,160 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           </CardContent>
         </Card>
       </div>
+
+      {/* BiRefNet vs rembg Algorithm Comparison */}
+      <Card className="mb-8">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl mb-2">{tPage('birefnetAdvantage')}</CardTitle>
+          <CardDescription className="text-lg">
+            {tPage('birefnetAdvantageDesc')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <h4 className="font-semibold">{tPage('hairLevelPrecision')}</h4>
+                  <p className="text-sm text-muted-foreground">{tPage('hairLevelPrecisionDesc')}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <h4 className="font-semibold">{tPage('professionalQuality')}</h4>
+                  <p className="text-sm text-muted-foreground">{tPage('professionalQualityDesc')}</p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <h4 className="font-semibold">{tPage('fastProcessing')}</h4>
+                  <p className="text-sm text-muted-foreground">{tPage('fastProcessingDesc')}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <h4 className="font-semibold">{tPage('multiScenario')}</h4>
+                  <p className="text-sm text-muted-foreground">{tPage('multiScenarioDesc')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Algorithm Technology Comparison */}
+      <Card className="mb-8">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl mb-2">{tPage('algorithmComparison')}</CardTitle>
+          <CardDescription className="text-lg">
+            {tPage('algorithmComparisonDesc')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* BiRefNet Features */}
+            <div className="border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-blue-100">
+              <h3 className="text-xl font-bold text-blue-800 mb-4 text-center">{tPage('birefnetFeatures')}</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Hair-level precision matting</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Automatic background detection</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Complex edge handling</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Professional quality output</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">High-resolution support</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* rembg Features */}
+            <div className="border rounded-lg p-4 bg-gradient-to-br from-gray-50 to-gray-100">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">{tPage('rembgFeatures')}</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Basic background removal</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Fast processing</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Simple backgrounds</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-yellow-600" />
+                  <span className="text-sm">Limited complex edges</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-yellow-600" />
+                  <span className="text-sm">Basic quality output</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* No Background Selection Required */}
+      <Card className="mb-8 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl mb-2 text-green-800">{tPage('noBackgroundSelection')}</CardTitle>
+          <CardDescription className="text-lg text-green-700">
+            {tPage('noBackgroundSelectionDesc')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <Sparkles className="w-16 h-16 text-green-600" />
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-semibold text-green-800">{tPage('automaticMatting')}</h4>
+              <p className="text-sm text-green-700">{tPage('automaticMattingDesc')}</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-green-600 font-bold">1</span>
+                </div>
+                <p className="text-sm font-medium">Upload Image</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-blue-600 font-bold">2</span>
+                </div>
+                <p className="text-sm font-medium">AI Auto-Detection</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-purple-600 font-bold">3</span>
+                </div>
+                <p className="text-sm font-medium">Download Result</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Upload Area */}
       <Card className="mb-8">

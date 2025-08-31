@@ -19,7 +19,7 @@
   },
   "IndexPage": {
     "intro": "Einführung des Flux AI Image Generators",
-    "description": "Revolutionäres Next-Generation-Advanced-Text-to-Image-Open-Modell, unterstützt flux.1 pro/dev und flux.1 schnell Modelle.",
+    "description": "Revolutionäres Next-Generation-Advanced-Text-to-Image-Open-Modell, unterstützt flux.1 pro/dev und flux.1 schnell Modelle. Die Stapelverarbeitung stellt sicher, dass kein Bild verloren geht, der permanente Speicher schützt Ihre Arbeit.",
     "title": "Flux AI Image Generator",
     "subtitle": "Advanced Text-to-Image",
     "examples": {
@@ -56,6 +56,14 @@
       "item6": {
         "title": "Benutzerfreundliche Oberfläche",
         "description": "Einfacher zu bedienen als ComfyUI, perfekt für Anfänger und Profis gleichermaßen. Der Flux AI Image Generator ist das ultimative Tool zur Erzeugung atemberaubender Bilder aus Textprompts. Mit seiner benutzerfreundlichen Oberfläche und leistungsstarken KI-Modellen macht Flux AI es sowohl Anfängern als auch Profis leicht, erstaunliche visuelle Effekte zu erstellen."
+      },
+      "item7": {
+        "title": "Stapelverarbeitung",
+        "description": "Verarbeiten Sie mehrere Bilder gleichzeitig, ohne ein einziges Bild zu verlieren. Sparen Sie Zeit und Mühe mit effizienten Stapeloperationen für Hintergrundentfernung, Wasserzeichenentfernung und Objektentfernung."
+      },
+      "item8": {
+        "title": "Permanenter Speicher",
+        "description": "Alle verarbeiteten Bilder werden dauerhaft gespeichert und gehen niemals verloren. Greifen Sie jederzeit und überall auf Ihre Arbeit zu, mit sicherem Cloud-Speicher, der Ihre wertvollen Bearbeitungen schützt."
       }
     },
     "powered": {

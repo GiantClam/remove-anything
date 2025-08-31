@@ -19,7 +19,7 @@
   },
   "IndexPage": {
     "intro": "Presentamos el Generador de Imágenes Flux AI",
-    "description": "Revolutionando el modelo avanzado de texto a imagen de próxima generación, compatible con los modelos flux.1 pro/dev y flux.1 schnell.",
+    "description": "Revolutionando el modelo avanzado de texto a imagen de próxima generación, compatible con los modelos flux.1 pro/dev y flux.1 schnell. El procesamiento por lotes garantiza que no se pierda ninguna imagen, el almacenamiento permanente protege tu trabajo.",
     "title": "Generador de Imágenes Flux AI",
     "subtitle": "Texto a Imagen Avanzado",
     "examples": {
@@ -56,6 +56,14 @@
       "item6": {
         "title": "Interfaz de Usuario Amigable",
         "description": "Más fácil de usar que ComfyUI, perfecto para principiantes y profesionales por igual. El Generador de Imágenes Flux AI es la herramienta definitiva para generar imágenes impresionantes a partir de textos. Con su interfaz de usuario amigable y potentes modelos de IA, Flux AI facilita la creación de increíbles visuales tanto para principiantes como para profesionales."
+      },
+      "item7": {
+        "title": "Procesamiento por Lotes",
+        "description": "Procesa múltiples imágenes simultáneamente sin perder una sola imagen. Ahorra tiempo y esfuerzo con operaciones por lotes eficientes para eliminación de fondos, eliminación de marcas de agua y eliminación de objetos."
+      },
+      "item8": {
+        "title": "Almacenamiento Permanente",
+        "description": "Todas las imágenes procesadas se almacenan permanentemente y nunca se pierden. Accede a tu trabajo en cualquier momento, desde cualquier lugar con almacenamiento en la nube seguro que preserva tus valiosas ediciones."
       }
     },
     "powered": {

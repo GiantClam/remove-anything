@@ -75,7 +75,7 @@ export default async function QuickAccess() {
                       href={feature.href}
                       className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                     >
-                      立即使用 →
+                      {t("useNow")} →
                     </Link>
                   </div>
                 </div>

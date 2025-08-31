@@ -20,7 +20,7 @@
 
   "IndexPage": {
     "intro": "🎉 All-in-One AI Image Eraser",
-    "description": "More than background removal - your all-in-one AI image eraser! AI-powered, just paint to precisely remove people, objects, text, and blemishes from images. HD quality, no watermarks, completely free download.",
+    "description": "More than background removal - your all-in-one AI image eraser! AI-powered, just paint to precisely remove people, objects, text, and blemishes from images. Batch processing ensures no image is lost, permanent storage preserves your work. HD quality, no watermarks, completely free download.",
     "title": "Smart Eraser Tool, Easily Remove Any Flaws from Photos",
     "subtitle": "Upload, Paint, Download - Three Steps to Remove Everything Unwanted from Photos",
     "examples": {
@@ -57,6 +57,14 @@
       "item6": {
         "title": "Multiple Formats",
         "description": "Support for all common image formats including JPG, PNG, and WebP. Download your results in high resolution with transparent backgrounds."
+      },
+      "item7": {
+        "title": "Batch Processing",
+        "description": "Process multiple images simultaneously without losing any single image. Save time and effort with efficient batch operations for background removal, watermark removal, and object removal."
+      },
+      "item8": {
+        "title": "Permanent Storage",
+        "description": "All processed images are permanently stored and never lost. Access your work anytime, anywhere with secure cloud storage that preserves your valuable edits."
       }
     },
     "powered": {
@@ -385,8 +393,8 @@
     }
   },
   "RemoveBackgroundPage": {
-    "title": "AI Background Remover - Remove Image Background Online",
-    "description": "Remove image backgrounds quickly with AI technology. Batch processing, professional quality, completely free.",
+    "title": "AI Background Remover - BiRefNet vs rembg Algorithm",
+    "description": "Advanced BiRefNet algorithm vs traditional rembg: superior precision, automatic background detection, no manual selection required. AI technology quickly removes image backgrounds with batch processing, professional quality, completely free. Batch processing ensures no image is lost, permanent storage preserves your work.",
     "processing": "Processing...",
     "chooseImage": "Choose Image",
     "dragDropText": "Drag and drop or click to upload",
@@ -411,35 +419,53 @@
     "loginToDownload": "Please login to download the processed image",
     "noImageToDownload": "No processed image to download",
     "downloadSuccess": "Image downloaded successfully!",
-    "aiPowered": "AI Powered",
-    "aiPoweredDesc": "Advanced AI technology for precise background removal",
-    "highQuality": "High Quality",
-    "highQualityDesc": "Maintains image quality while removing backgrounds",
+    "aiPowered": "BiRefNet vs rembg",
+    "aiPoweredDesc": "Advanced BiRefNet algorithm vs traditional rembg for superior precision",
+    "highQuality": "Hair-Level Precision",
+    "highQualityDesc": "Precisely identifies hair strand edges while maintaining natural texture",
     "freeTrial": "Free Trial",
     "freeTrialDesc": "Try our service for free, no credit card required",
-    "readyToGetStarted": "Ready to get started?",
+    "readyToGetStarted": "Ready to experience advanced AI matting?",
     "uploadImage": "Upload Image",
-    "uploadImageDesc": "Upload an image to remove its background. Supports JPG, PNG, and WebP formats up to 5MB.",
-    "demoModeDesc": "Demo mode: Upload images to experience background removal. Login for full features.",
-    "signUpFreeDesc": "Sign up for free and start removing backgrounds from your images today!",
+    "uploadImageDesc": "Upload an image to remove its background. No background selection needed - AI automatically detects and removes backgrounds. Supports JPG, PNG, and WebP formats up to 5MB.",
+    "demoModeDesc": "Demo mode: Upload images to experience advanced AI matting with automatic background detection. Login for full features.",
+    "signUpFreeDesc": "Sign up for free and experience advanced AI matting technology today!",
     "getStartedFree": "Get Started Free",
-    "viewPricing": "View Pricing"
+    "viewPricing": "View Pricing",
+    "birefnetAdvantage": "BiRefNet vs rembg Algorithm Comparison",
+    "birefnetAdvantageDesc": "Advanced BiRefNet algorithm vs traditional rembg: superior precision and automatic background detection",
+    "hairLevelPrecision": "Hair-Level Precision",
+    "hairLevelPrecisionDesc": "BiRefNet achieves hair-level precision while rembg struggles with complex edges",
+    "professionalQuality": "Professional Quality",
+    "professionalQualityDesc": "BiRefNet delivers professional results, rembg limited to basic background removal",
+    "fastProcessing": "Fast Processing",
+    "fastProcessingDesc": "Both algorithms are fast, but BiRefNet maintains quality at high speeds",
+    "multiScenario": "Multi-Scenario Application",
+    "multiScenarioDesc": "BiRefNet excels in all scenarios, rembg works best with simple backgrounds",
+    "algorithmComparison": "Algorithm Technology Comparison",
+    "algorithmComparisonDesc": "Detailed comparison between BiRefNet and rembg algorithms",
+    "birefnetFeatures": "BiRefNet Features",
+    "rembgFeatures": "rembg Features",
+    "noBackgroundSelection": "No Background Selection Required",
+    "noBackgroundSelectionDesc": "AI automatically detects and removes backgrounds without manual input",
+    "automaticMatting": "Automatic AI Matting",
+    "automaticMattingDesc": "Advanced AI automatically identifies subjects and removes backgrounds intelligently"
   },
   "BatchRemoveBackground": {
     "title": "Batch Background Removal - Remove Anything",
-    "description": "Remove backgrounds from multiple images at once using AI. Upload images and get clean, transparent results instantly.",
+    "description": "Remove backgrounds from multiple images at once using AI. Batch processing ensures no image is lost, permanent storage preserves your work. Upload images and get clean, transparent results instantly. Save time and effort with efficient batch operations.",
     "uploadAtLeastOne": "Please upload at least one image",
     "waitForUpload": "Please wait for all images to finish uploading",
     "getStartedText": "Upload images and click \"Remove Backgrounds\" to get started."
   },
   "LocaleLayout": {
-    "title": "Remove Anything - Free AI Object & Background Remover",
-    "description": "Remove any object, background, or person from images using advanced AI technology. Fast, accurate, and easy to use. Free online tool.",
-    "keywords": "object removal, image eraser, online photo editing, photo object remover, remove objects from photo, remove background, AI removal tool, free background remover, image editing, object eraser, person removal, watermark removal, text removal, Remove Anything, AI photo editor, online image processing tool"
+    "title": "Remove Anything - BiRefNet vs rembg Algorithm, Free AI Object & Background Remover",
+    "description": "Advanced BiRefNet algorithm vs traditional rembg: superior precision, automatic background detection, no manual selection required. Remove any object, background, or person from images using advanced AI technology. Batch processing ensures no image is lost, permanent storage preserves your work. Fast, accurate, and easy to use. Free online tool.",
+    "keywords": "object removal, image eraser, online photo editing, photo object remover, remove objects from photo, remove background, AI removal tool, free background remover, image editing, object eraser, person removal, watermark removal, text removal, Remove Anything, AI photo editor, online image processing tool, BiRefNet algorithm, hair-level matting, high-precision matting, AI background removal, intelligent matting tool, professional matting software, online matting tool, free matting software, image background removal, portrait matting, product matting, e-commerce image processing, batch processing, permanent storage, no image loss, efficient workflow, time-saving tool"
   },
   "LocaleSwitcher": {
     "label": "Change language",
-    "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
+    "locale": "{locale, select, tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
   },
   "Manifest": {
     "name": "Remove Anything - Object & Background Remover"
@@ -497,13 +523,13 @@
     "description": "The latest news and updates from Our"
   },
   "RemoveObjectsPage": {
-    "title": "Smart Object Removal Tool - Remove Anything",
-    "description": "Use advanced AI technology to easily remove any unwanted objects, people, or blemishes from photos. No professional skills required, just paint to complete.",
-    "keywords": "object removal, image eraser, online photo editing, photo object remover, remove people, remove watermark, remove text, AI image editing, online image processing tool",
+    "title": "Coming Soon - Smart Object Removal Tool - Remove Anything",
+    "description": "Advanced AI object removal tool is coming soon. Stay tuned for the most intelligent way to remove unwanted objects, people, and blemishes from photos.",
+    "keywords": "coming soon, object removal, image eraser, online photo editing, photo object remover, remove people, remove watermark, remove text, AI image editing, online image processing tool",
     "hero": {
-      "title": "Smart Object Removal Tool",
-      "description": "Use advanced AI technology to easily remove any unwanted objects, people, or blemishes from photos. No professional skills required, just paint to complete.",
-      "startButton": "Start Removing Objects",
+      "title": "Coming Soon - Smart Object Removal Tool",
+      "description": "Our advanced AI object removal tool is under development. Get ready for the most intelligent way to remove unwanted objects, people, and blemishes from photos. No professional skills required, just paint to complete.",
+      "startButton": "Coming Soon",
       "pricingButton": "View Pricing"
     },
     "features": {
@@ -552,9 +578,9 @@
       }
     },
     "cta": {
-      "title": "Ready to Get Started?",
-      "description": "Experience the powerful features of AI object removal immediately and make your photos more perfect",
-      "button": "Start Using for Free"
+      "title": "Coming Soon!",
+      "description": "Our AI object removal tool is under development. Sign up for updates and be the first to know when it launches!",
+      "button": "Notify Me When Available"
     }
   },
   "RemoveWatermarkPage": {
@@ -586,6 +612,7 @@
     "batchProcessing": {
       "title": "Batch Processing",
       "description": "Process multiple images at once to improve efficiency"
-    }
+    },
+    "useNow": "Use Now"
   }
 }

@@ -56,6 +56,14 @@
       "item6": {
         "title": "Interface conviviale",
         "description": "Plus facile à utiliser que ComfyUI, parfait pour les débutants comme pour les pros. Flux AI rend la création d'images extraordinaires accessible à tous grâce à son interface intuitive et ses puissants modèles d'IA."
+      },
+      "item7": {
+        "title": "Traitement par lot",
+        "description": "Traitez plusieurs images simultanément sans perdre une seule image. Gagnez du temps et de l'effort avec des opérations par lot efficaces pour la suppression d'arrière-plan, la suppression de filigrane et la suppression d'objets."
+      },
+      "item8": {
+        "title": "Stockage permanent",
+        "description": "Toutes les images traitées sont stockées en permanence et jamais perdues. Accédez à votre travail à tout moment, n'importe où avec un stockage cloud sécurisé qui préserve vos précieuses modifications."
       }
     },
     "powered": {
@@ -381,8 +389,8 @@
     }
   },
   "RemoveBackgroundPage": {
-    "title": "Suppresseur d'Arrière-plan IA - Supprimer le Fond d'Image en Ligne",
-    "description": "Supprimez rapidement les arrière-plans d'images avec la technologie IA. Traitement par lots, qualité professionnelle, entièrement gratuit.",
+    "title": "Suppresseur d'Arrière-plan IA - BiRefNet vs rembg Algorithme",
+    "description": "Algorithme BiRefNet avancé vs rembg traditionnel : précision supérieure, détection automatique d'arrière-plan, aucune sélection manuelle requise. Supprimez rapidement les arrière-plans d'images avec la technologie IA. Traitement par lots, qualité professionnelle, entièrement gratuit.",
     "processing": "Traitement en cours...",
     "chooseImage": "Choisir une image",
     "dragDropText": "Glissez-déposez ou cliquez pour télécharger",
@@ -407,19 +415,37 @@
     "loginToDownload": "Veuillez vous connecter pour télécharger l'image traitée",
     "noImageToDownload": "Aucune image traitée à télécharger",
     "downloadSuccess": "Image téléchargée avec succès !",
-    "aiPowered": "Alimenté par IA",
-    "aiPoweredDesc": "Technologie IA avancée pour une suppression précise des arrière-plans",
-    "highQuality": "Haute Qualité",
-    "highQualityDesc": "Maintient la qualité de l'image tout en supprimant les arrière-plans",
+    "aiPowered": "BiRefNet vs rembg",
+    "aiPoweredDesc": "Algorithme BiRefNet avancé vs rembg traditionnel pour une précision supérieure",
+    "highQuality": "Précision au Niveau des Cheveux",
+    "highQualityDesc": "BiRefNet atteint une précision au niveau des cheveux tandis que rembg peine avec les bords complexes",
     "freeTrial": "Essai Gratuit",
     "freeTrialDesc": "Essayez notre service gratuitement, sans carte de crédit",
-    "readyToGetStarted": "Prêt à commencer ?",
+    "readyToGetStarted": "Prêt à expérimenter le matting IA avancé ?",
     "uploadImage": "Télécharger une Image",
-    "uploadImageDesc": "Téléchargez une image pour supprimer son arrière-plan. Prend en charge les formats JPG, PNG et WebP jusqu'à 5 Mo.",
-    "demoModeDesc": "Mode démo : Téléchargez des images pour découvrir la suppression d'arrière-plan. Connectez-vous pour toutes les fonctionnalités.",
-    "signUpFreeDesc": "Inscrivez-vous gratuitement et commencez à supprimer les arrière-plans de vos images dès aujourd'hui !",
+    "uploadImageDesc": "Téléchargez une image pour supprimer son arrière-plan. Aucune sélection d'arrière-plan nécessaire - l'IA détecte et supprime automatiquement les arrière-plans. Prend en charge les formats JPG, PNG et WebP jusqu'à 5 Mo.",
+    "demoModeDesc": "Mode démo : Téléchargez des images pour découvrir le matting IA avancé avec détection automatique d'arrière-plan. Connectez-vous pour toutes les fonctionnalités.",
+    "signUpFreeDesc": "Inscrivez-vous gratuitement et expérimentez la technologie de matting IA avancée dès aujourd'hui !",
     "getStartedFree": "Commencer Gratuitement",
-    "viewPricing": "Voir les Tarifs"
+    "viewPricing": "Voir les Tarifs",
+    "birefnetAdvantage": "Comparaison des Algorithmes BiRefNet vs rembg",
+    "birefnetAdvantageDesc": "Algorithme BiRefNet avancé vs rembg traditionnel : précision supérieure et détection automatique d'arrière-plan",
+    "hairLevelPrecision": "Précision au Niveau des Cheveux",
+    "hairLevelPrecisionDesc": "BiRefNet atteint une précision au niveau des cheveux tandis que rembg peine avec les bords complexes",
+    "professionalQuality": "Qualité Professionnelle",
+    "professionalQualityDesc": "BiRefNet fournit des résultats professionnels, rembg limité à la suppression d'arrière-plan de base",
+    "fastProcessing": "Traitement Rapide",
+    "fastProcessingDesc": "Les deux algorithmes sont rapides, mais BiRefNet maintient la qualité à haute vitesse",
+    "multiScenario": "Application Multi-Scénarios",
+    "multiScenarioDesc": "BiRefNet excelle dans tous les scénarios, rembg fonctionne mieux avec des arrière-plans simples",
+    "algorithmComparison": "Comparaison des Technologies d'Algorithmes",
+    "algorithmComparisonDesc": "Comparaison détaillée entre les algorithmes BiRefNet et rembg",
+    "birefnetFeatures": "Fonctionnalités BiRefNet",
+    "rembgFeatures": "Fonctionnalités rembg",
+    "noBackgroundSelection": "Aucune Sélection d'Arrière-plan Requise",
+    "noBackgroundSelectionDesc": "L'IA détecte et supprime automatiquement les arrière-plans sans entrée manuelle",
+    "automaticMatting": "Matting IA Automatique",
+    "automaticMattingDesc": "L'IA avancée identifie automatiquement les sujets et supprime intelligemment les arrière-plans"
   },
   "BatchRemoveBackground": {
     "title": "Suppression d'arrière-plan par lots - Remove Anything",
@@ -429,13 +455,13 @@
     "getStartedText": "Téléchargez des images et cliquez sur \"Supprimer les arrière-plans\" pour commencer."
   },
   "LocaleLayout": {
-    "title": "Remove Anything - Suppresseur Gratuit d'Objets et d'Arrière-plans par IA",
-    "description": "Supprimez n'importe quel objet, arrière-plan ou personne des images en utilisant une technologie IA avancée. Rapide, précis et facile à utiliser. Outil gratuit en ligne.",
-    "keywords": "supprimer objets de photo, supprimer arrière-plan, outil de suppression IA, suppresseur d'arrière-plan gratuit, édition d'images, gomme d'objets, suppression de personnes, Remove Anything, éditeur photo IA"
+    "title": "Remove Anything - BiRefNet vs rembg Algorithme, Suppresseur Gratuit d'Objets et d'Arrière-plans par IA",
+    "description": "Algorithme BiRefNet avancé vs rembg traditionnel : précision supérieure, détection automatique d'arrière-plan, aucune sélection manuelle requise. Supprimez n'importe quel objet, arrière-plan ou personne des images en utilisant une technologie IA avancée. Rapide, précis et facile à utiliser. Outil gratuit en ligne.",
+    "keywords": "supprimer objets de photo, supprimer arrière-plan, outil de suppression IA, suppresseur d'arrière-plan gratuit, édition d'images, gomme d'objets, suppression de personnes, Remove Anything, éditeur photo IA, algorithme BiRefNet, matting au niveau des cheveux, matting de haute précision, suppression d'arrière-plan IA, outil de matting intelligent, logiciel de matting professionnel, outil de matting en ligne, logiciel de matting gratuit, suppression d'arrière-plan d'image, matting de portrait, matting de produit, traitement d'images e-commerce"
   },
   "LocaleSwitcher": {
     "label": "Changer de langue",
-    "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Inconnu}}"
+    "locale": "{locale, select, tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Inconnu}}"
   },
   "Manifest": {
     "name": "Remove Anything - Suppresseur d'Objets et d'Arrière-plans"
@@ -494,13 +520,13 @@
     "description": "Les dernières nouvelles et mises à jour de notre équipe"
   },
   "RemoveObjectsPage": {
-    "title": "Outil de suppression d'objets intelligent - Remove Anything",
-    "description": "Utilisez une technologie IA avancée pour supprimer facilement tout objet, personne ou défaut indésirable des photos. Aucune compétence professionnelle requise, il suffit de dessiner pour terminer.",
-    "keywords": "suppression d'objets, gomme d'image, édition de photos en ligne, suppression d'objets de photos, suppression de personnes, suppression de filigrane, suppression de texte, édition d'images IA, outil de traitement d'images en ligne",
+    "title": "Bientôt disponible - Outil de suppression d'objets intelligent - Remove Anything",
+    "description": "Notre outil de suppression d'objets IA avancé arrive bientôt. Restez à l'écoute pour la façon la plus intelligente de supprimer les objets, personnes et défauts indésirables des photos.",
+    "keywords": "bientôt disponible, suppression d'objets, gomme d'image, édition de photos en ligne, suppression d'objets de photos, suppression de personnes, suppression de filigrane, suppression de texte, édition d'images IA, outil de traitement d'images en ligne",
     "hero": {
-      "title": "Outil de suppression d'objets intelligent",
-      "description": "Utilisez une technologie IA avancée pour supprimer facilement tout objet, personne ou défaut indésirable des photos. Aucune compétence professionnelle requise, il suffit de dessiner pour terminer.",
-      "startButton": "Commencer la suppression d'objets",
+      "title": "Bientôt disponible - Outil de suppression d'objets intelligent",
+      "description": "Notre outil de suppression d'objets IA avancé est en cours de développement. Préparez-vous à expérimenter la façon la plus intelligente de supprimer les objets, personnes et défauts indésirables des photos. Aucune compétence professionnelle requise, il suffit de dessiner pour terminer.",
+      "startButton": "Bientôt disponible",
       "pricingButton": "Voir les tarifs"
     },
     "features": {
@@ -549,9 +575,9 @@
       }
     },
     "cta": {
-      "title": "Prêt à commencer ?",
-      "description": "Découvrez immédiatement les fonctionnalités puissantes de suppression d'objets par IA et rendez vos photos plus parfaites",
-      "button": "Commencer gratuitement"
+      "title": "Bientôt disponible !",
+      "description": "Notre outil de suppression d'objets IA est en cours de développement. Inscrivez-vous pour recevoir des mises à jour et soyez le premier à savoir quand il sera lancé !",
+      "button": "M'avertir quand disponible"
     }
   },
   "RemoveWatermarkPage": {
@@ -577,6 +603,7 @@
     "batchProcessing": {
       "title": "Traitement par lots",
       "description": "Traitez plusieurs images à la fois pour améliorer l'efficacité"
-    }
+    },
+    "useNow": "Utiliser Maintenant"
   }
 }

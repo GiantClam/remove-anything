@@ -14,8 +14,8 @@ const prisma = new PrismaClient();
 const pricingProducts = [
   // 英文产品
   {
-    amount: 990,
-    originalAmount: 1990,
+    amount: 300,
+    originalAmount: 500,
     credit: 100,
     currency: 'USD',
     locale: 'en',
@@ -25,60 +25,60 @@ const pricingProducts = [
     state: 'active'
   },
   {
-    amount: 1990,
-    originalAmount: 3990,
-    credit: 250,
+    amount: 500,
+    originalAmount: 800,
+    credit: 200,
     currency: 'USD',
     locale: 'en',
     title: 'Pro',
     tag: 'Best Value',
-    message: '250 credits,All models,Priority support,Commercial license',
+    message: '200 credits,All models,Priority support,Commercial license',
     state: 'active'
   },
   {
-    amount: 4990,
-    originalAmount: 9990,
-    credit: 750,
+    amount: 1000,
+    originalAmount: 1500,
+    credit: 500,
     currency: 'USD',
     locale: 'en',
     title: 'Business',
     tag: 'Enterprise',
-    message: '750 credits,All models,Priority support,Commercial license,API access',
+    message: '500 credits,All models,Priority support,Commercial license,API access',
     state: 'active'
   },
   
-  // 中文产品
+  // 繁体中文产品
   {
-    amount: 990,
-    originalAmount: 1990,
+    amount: 300,
+    originalAmount: 500,
     credit: 100,
     currency: 'USD',
-    locale: 'zh',
-    title: '入门版',
-    tag: '热门',
-    message: '100积分,基础模型,标准支持',
+    locale: 'tw',
+    title: '入門版',
+    tag: '熱門',
+    message: '100積分,基礎模型,標準支持',
     state: 'active'
   },
   {
-    amount: 1990,
-    originalAmount: 3990,
-    credit: 250,
+    amount: 500,
+    originalAmount: 800,
+    credit: 200,
     currency: 'USD',
-    locale: 'zh',
-    title: '专业版',
+    locale: 'tw',
+    title: '專業版',
     tag: '超值',
-    message: '250积分,所有模型,优先支持,商业许可',
+    message: '200積分,所有模型,優先支持,商業許可',
     state: 'active'
   },
   {
-    amount: 4990,
-    originalAmount: 9990,
-    credit: 750,
+    amount: 1000,
+    originalAmount: 1500,
+    credit: 500,
     currency: 'USD',
-    locale: 'zh',
-    title: '企业版',
-    tag: '企业级',
-    message: '750积分,所有模型,优先支持,商业许可,API访问',
+    locale: 'tw',
+    title: '企業版',
+    tag: '企業級',
+    message: '500積分,所有模型,優先支持,商業許可,API訪問',
     state: 'active'
   }
 ];

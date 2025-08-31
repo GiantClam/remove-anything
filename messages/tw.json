@@ -19,7 +19,7 @@
   },
   "IndexPage": {
     "intro": "🎉 免費 AI 背景去除器",
-    "description": "使用我們的免費 AI 驅動工具立即去除任何圖片背景。高品質、快速且易於使用。上傳您的照片，幾秒鐘內即可獲得透明背景。",
+    "description": "使用我們的免費 AI 驅動工具立即去除任何圖片背景。批量處理確保不丟失任何圖片，永久存儲保護您的工作。高品質、快速且易於使用。上傳您的照片，幾秒鐘內即可獲得透明背景。",
     "title": "免費 AI 背景去除器",
     "subtitle": "幾秒鐘內去除圖片背景",
     "powered": {
@@ -64,6 +64,14 @@
       "item6": {
         "title": "多格式支持",
         "description": "支持所有常見圖片格式，包括 JPG、PNG 和 WEBP。以高分辨率下載您的結果，帶有透明背景。"
+      },
+      "item7": {
+        "title": "批量處理",
+        "description": "同時處理多張圖片而不丟失任何單張圖片。通過高效的批量操作節省時間和精力，適用於背景移除、浮水印移除和物件移除。"
+      },
+      "item8": {
+        "title": "永久存儲",
+        "description": "所有處理後的圖片都永久存儲且永不丟失。通過安全的雲端存儲隨時隨地訪問您的工作，保護您寶貴的編輯成果。"
       }
     },
     "schnell": {
@@ -381,8 +389,8 @@
     }
   },
   "RemoveBackgroundPage": {
-    "title": "AI 背景去除器 - 線上去除圖片背景",
-    "description": "使用 AI 技術快速去除圖片背景，支援批次處理，專業品質，完全免費。",
+    "title": "AI 背景去除器 - BiRefNet vs rembg 算法",
+    "description": "先進的 BiRefNet 算法 vs 傳統 rembg：優越精度、自動背景檢測、無需手動選擇。AI 技術快速去除圖片背景，支援批次處理，專業品質，完全免費。",
     "processing": "處理中...",
     "chooseImage": "選擇圖片",
     "dragDropText": "拖拽或點擊上傳",
@@ -407,19 +415,37 @@
     "loginToDownload": "請登入以下載處理後的圖片",
     "noImageToDownload": "沒有可下載的處理圖片",
     "downloadSuccess": "圖片下載成功！",
-    "aiPowered": "AI 驅動",
-    "aiPoweredDesc": "先進的 AI 技術，精準去除背景",
-    "highQuality": "高品質",
-    "highQualityDesc": "去除背景的同時保持圖片質量",
+    "aiPowered": "BiRefNet vs rembg",
+    "aiPoweredDesc": "先進的 BiRefNet 算法 vs 傳統 rembg，優越精度",
+    "highQuality": "發絲級精度",
+    "highQualityDesc": "BiRefNet 實現發絲級精度，rembg 在複雜邊緣處理困難",
     "freeTrial": "免費試用",
     "freeTrialDesc": "免費試用我們的服務，無需信用卡",
-    "readyToGetStarted": "準備好開始了嗎？",
+    "readyToGetStarted": "準備好體驗先進 AI 摳圖了嗎？",
     "uploadImage": "上傳圖片",
-    "uploadImageDesc": "上傳圖片以去除其背景。支援 JPG、PNG 和 WebP 格式，最大 5MB。",
-    "demoModeDesc": "演示模式：上傳圖片體驗背景移除功能。登入後可使用完整功能。",
-    "signUpFreeDesc": "免費註冊，立即開始從您的圖片中去除背景！",
+    "uploadImageDesc": "上傳圖片以去除其背景。無需選擇背景 - AI 自動檢測並去除背景。支援 JPG、PNG 和 WebP 格式，最大 5MB。",
+    "demoModeDesc": "演示模式：上傳圖片體驗先進 AI 摳圖，自動背景檢測。登入後可使用完整功能。",
+    "signUpFreeDesc": "免費註冊，立即體驗先進 AI 摳圖技術！",
     "getStartedFree": "免費開始",
-    "viewPricing": "查看定價"
+    "viewPricing": "查看定價",
+    "birefnetAdvantage": "BiRefNet vs rembg 算法對比",
+    "birefnetAdvantageDesc": "先進的 BiRefNet 算法 vs 傳統 rembg：優越精度和自動背景檢測",
+    "hairLevelPrecision": "發絲級精度",
+    "hairLevelPrecisionDesc": "BiRefNet 實現發絲級精度，rembg 在複雜邊緣處理困難",
+    "professionalQuality": "專業品質",
+    "professionalQualityDesc": "BiRefNet 提供專業結果，rembg 僅限於基本背景去除",
+    "fastProcessing": "快速處理",
+    "fastProcessingDesc": "兩種算法都很快，但 BiRefNet 在高速下保持品質",
+    "multiScenario": "多場景適用",
+    "multiScenarioDesc": "BiRefNet 在所有場景中表現優異，rembg 最適合簡單背景",
+    "algorithmComparison": "算法技術對比",
+    "algorithmComparisonDesc": "BiRefNet 和 rembg 算法的詳細對比",
+    "birefnetFeatures": "BiRefNet 特性",
+    "rembgFeatures": "rembg 特性",
+    "noBackgroundSelection": "無需選擇背景",
+    "noBackgroundSelectionDesc": "AI 自動檢測並去除背景，無需手動輸入",
+    "automaticMatting": "自動 AI 摳圖",
+    "automaticMattingDesc": "先進的 AI 自動識別主體並智能去除背景"
   },
   "BatchRemoveBackground": {
     "title": "批量去背景 - Remove Anything",
@@ -429,13 +455,13 @@
     "getStartedText": "上傳圖片並點擊「批量去背景」開始使用。"
   },
   "LocaleLayout": {
-    "title": "Remove Anything - 免費去除圖片任意物體",
-    "description": "使用先進的 AI 技術免費去除圖片中的任意物體、背景或人物。快速、精準、易於使用。",
-    "keywords": "去除圖片物體, 去除背景, AI 去除工具, 免費去除背景, 圖片編輯, 抓圖工具, 人物去除, 物體去除, Remove Anything, AI 圖片編輯"
+    "title": "Remove Anything - BiRefNet vs rembg 算法，免費去除圖片任意物體",
+    "description": "先進的 BiRefNet 算法 vs 傳統 rembg：優越精度、自動背景檢測、無需手動選擇。使用先進的 AI 技術免費去除圖片中的任意物體、背景或人物。快速、精準、易於使用。",
+    "keywords": "去除圖片物體, 去除背景, AI 去除工具, 免費去除背景, 圖片編輯, 抓圖工具, 人物去除, 物體去除, Remove Anything, AI 圖片編輯, BiRefNet 算法, 發絲級摳圖, 高精度摳圖, AI 背景去除, 智能摳圖工具, 專業摳圖軟體, 線上摳圖工具, 免費摳圖軟體, 圖片背景去除, 人像摳圖, 產品摳圖, 電商圖片處理"
   },
   "LocaleSwitcher": {
     "label": "更改語言",
-    "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {未知}}"
+    "locale": "{locale, select, tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {未知}}"
   },
   "Manifest": {
     "name": "Remove Anything - 去除圖片任意物體"
@@ -494,13 +520,13 @@
     "description": "我們的最新新聞和更新"
   },
   "RemoveObjectsPage": {
-    "title": "智能物件移除工具 - Remove Anything",
-    "description": "使用先進的AI技術，輕鬆從照片中移除任何不需要的物件、人物或瑕疵。無需專業技能，塗抹即可完成。",
-    "keywords": "物件移除, 圖像橡皮擦, 線上照片編輯, 照片物件移除, 人物移除, 浮水印移除, 文字移除, AI圖像編輯, 線上圖像處理工具",
+    "title": "敬請期待 - 智能物件移除工具 - Remove Anything",
+    "description": "先進的AI物件移除工具即將推出。敬請期待最智能的方式來移除照片中不需要的物件、人物和瑕疵。",
+    "keywords": "敬請期待, 物件移除, 圖像橡皮擦, 線上照片編輯, 照片物件移除, 人物移除, 浮水印移除, 文字移除, AI圖像編輯, 線上圖像處理工具",
     "hero": {
-      "title": "智能物件移除工具",
-      "description": "使用先進的AI技術，輕鬆從照片中移除任何不需要的物件、人物或瑕疵。無需專業技能，塗抹即可完成。",
-      "startButton": "開始移除物件",
+      "title": "敬請期待 - 智能物件移除工具",
+      "description": "我們的先進AI物件移除工具正在開發中。準備好體驗最智能的方式來移除照片中不需要的物件、人物和瑕疵。無需專業技能，塗抹即可完成。",
+      "startButton": "敬請期待",
       "pricingButton": "查看定價"
     },
     "features": {
@@ -549,9 +575,9 @@
       }
     },
     "cta": {
-      "title": "準備好開始了嗎？",
-      "description": "立即體驗AI物件移除的強大功能，讓您的照片更加完美",
-      "button": "免費開始使用"
+      "title": "敬請期待！",
+      "description": "我們的AI物件移除工具正在開發中。註冊以獲取更新，成為第一個知道它推出的人！",
+      "button": "當可用時通知我"
     }
   },
   "RemoveWatermarkPage": {
@@ -583,6 +609,7 @@
     "batchProcessing": {
       "title": "批次處理",
       "description": "一次處理多張圖片，提高工作效率"
-    }
+    },
+    "useNow": "立即使用"
   }
 }
