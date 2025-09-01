@@ -17,9 +17,32 @@ export async function generateMetadata({ params: { locale } }: PageProps) {
 }
 
 export default async function BlogPage({ params: { locale } }: PageProps) {
+  // 添加额外的安全检查
+  const validPosts = allPosts.filter((post) => {
+    return (
+      post &&
+      typeof post === 'object' &&
+      post.published === true &&
+      post.language === locale &&
+      post.image &&
+      typeof post.image === 'string' &&
+      post.image.trim() !== '' &&
+      post.title &&
+      post.date
+    );
+  });
+
+  if (validPosts.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-4">No blog posts available</h1>
+        <p>There are no blog posts available for this language.</p>
+      </div>
+    );
+  }
+
   const posts = await Promise.all(
-    allPosts
-      .filter((post) => post.published && post.language === locale)
+    validPosts
       .sort((a, b) => b.date.localeCompare(a.date))
       .map(async (post) => ({
         ...post,

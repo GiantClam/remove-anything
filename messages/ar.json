@@ -25,7 +25,11 @@
     "examples": {
       "label": "مثال",
       "title": "أمثلة على صور Flux AI",
-      "subtitle": "توليد الصور من نصوص الإشعارات."
+      "subtitle": "توليد الصور من نصوص الإشعارات.",
+      "cta": {
+        "description": "هل أنت مستعد لتجربته بنفسك؟ ارفع صورتك وشاهد السحر يحدث!",
+        "button": "جرب الآن"
+      }
     },
     "features": {
       "title": "ميزات",
@@ -572,6 +576,25 @@
     "batchProcessing": {
       "title": "المعالجة المجمعة",
       "description": "عالج صور متعددة في وقت واحد لتحسين الكفاءة"
-    }
+    },
+    "batchBackgroundRemoval": {
+      "title": "إزالة الخلفية المجمعة",
+      "description": "أزل خلفيات من صور متعددة في وقت واحد"
+    },
+    "batchWatermarkRemoval": {
+      "title": "إزالة العلامات المائية المجمعة",
+      "description": "أزل العلامات المائية من صور متعددة في وقت واحد"
+    },
+    "useNow": "استخدم الآن"
+  },
+  "Upload": {
+    "dragAndDrop": "اسحب وأفلت الملفات هنا أو انقر للرفع",
+    "selectFile": "اختر الملف",
+    "uploading": "جاري الرفع...",
+    "uploadFailed": "فشل الرفع",
+    "fileSizeLimit": "حجم الملف لا يمكن أن يتجاوز {size} ميجابايت",
+    "maxFilesLimit": "يمكن رفع {count} ملف كحد أقصى",
+    "supportedFormats": "يدعم {formats} تنسيق، الحد الأقصى {size} ميجابايت",
+    "uploadProgress": "جاري الرفع... {progress}%"
   }
 }

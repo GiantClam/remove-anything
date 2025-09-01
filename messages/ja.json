@@ -25,7 +25,11 @@
     "examples": {
       "label": "サンプル",
       "title": "背景除去の例",
-      "subtitle": "テキストプロンプトから画像を生成します。"
+      "subtitle": "テキストプロンプトから画像を生成します。",
+      "cta": {
+        "description": "自分で試してみませんか？画像をアップロードして魔法を見てください！",
+        "button": "今すぐ試す"
+      }
     },
     "features": {
       "title": "特徴",
@@ -461,7 +465,6 @@
     "removebg": "背景除去",
     "removeObjects": "オブジェクト除去",
     "removeWatermark": "透かし除去",
-
     "explore": "探索",
     "prompt": "Remove Anything プロンプトジェネレーター",
     "title": "Remove Anything - 無料で画像から任意のオブジェクトを除去",
@@ -584,7 +587,26 @@
     },
     "batchProcessing": {
       "title": "バッチ処理",
-      "description": "複数の画像を一度に処理して効率を向上"
+      "description": "複数の画像を同時に処理して効率を向上"
+    },
+    "useNow": "今すぐ使用",
+    "batchBackgroundRemoval": {
+      "title": "バッチ背景除去",
+      "description": "複数の画像から一度に背景を除去"
+    },
+    "batchWatermarkRemoval": {
+      "title": "バッチ透かし除去",
+      "description": "複数の画像から一度に透かしを除去"
     }
+  },
+  "Upload": {
+    "dragAndDrop": "ここにファイルをドラッグ＆ドロップするか、クリックしてアップロード",
+    "selectFile": "ファイルを選択",
+    "uploading": "アップロード中...",
+    "uploadFailed": "アップロード失敗",
+    "fileSizeLimit": "ファイルサイズは {size} MB を超えることはできません",
+    "maxFilesLimit": "最大 {count} ファイルまでアップロード可能",
+    "supportedFormats": "{formats} 形式をサポート、最大 {size} MB",
+    "uploadProgress": "アップロード中... {progress}%"
   }
 }

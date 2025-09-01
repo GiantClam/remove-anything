@@ -617,6 +617,14 @@
       "title": "Batch Processing",
       "description": "Process multiple images at once to improve efficiency"
     },
+    "batchBackgroundRemoval": {
+      "title": "Batch Background Removal",
+      "description": "Remove backgrounds from multiple images at once"
+    },
+    "batchWatermarkRemoval": {
+      "title": "Batch Watermark Removal",
+      "description": "Remove watermarks from multiple images at once"
+    },
     "useNow": "Use Now"
   },
   "Upload": {

@@ -25,7 +25,11 @@
     "examples": {
       "label": "Beispiel",
       "title": "Flux AI Image Beispiele",
-      "subtitle": "Bilder aus Textprompts generieren."
+      "subtitle": "Bilder aus Textprompts generieren.",
+      "cta": {
+        "description": "Bereit, es selbst zu versuchen? Laden Sie Ihr Bild hoch und erleben Sie die Magie!",
+        "button": "Jetzt versuchen"
+      }
     },
     "features": {
       "title": "Funktionen",
@@ -448,7 +452,6 @@
     "removebg": "Hintergrund entfernen",
     "removeObjects": "Objekte entfernen",
     "removeWatermark": "Wasserzeichen entfernen",
-
     "explore": "Erkunden",
     "prompt": "Remove Anything Prompt Generator",
     "title": "Remove Anything - Kostenloser KI-Objekt- und Hintergrundentferner",
@@ -507,7 +510,7 @@
         "title": "Einfache Bedienung",
         "description": "Zeichnen Sie einfach den zu entfernenden Bereich, KI erledigt den Rest automatisch"
       },
-            "highQuality": {
+      "highQuality": {
         "title": "Hochwertige Ausgabe",
         "description": "Behält die ursprüngliche Bildqualität mit hochauflösenden, wasserzeichenfreien Ergebnissen bei"
       }
@@ -570,8 +573,27 @@
       "description": "Entfernen Sie professionell Wasserzeichen, Texte und Bezeichner"
     },
     "batchProcessing": {
-      "title": "Stapelverarbeitung",
+      "title": "Batch-Verarbeitung",
       "description": "Verarbeiten Sie mehrere Bilder gleichzeitig, um die Effizienz zu verbessern"
+    },
+    "useNow": "Jetzt verwenden",
+    "batchBackgroundRemoval": {
+      "title": "Batch Hintergrund entfernen",
+      "description": "Entfernen Sie Hintergründe von mehreren Bildern gleichzeitig"
+    },
+    "batchWatermarkRemoval": {
+      "title": "Batch Wasserzeichen entfernen",
+      "description": "Entfernen Sie Wasserzeichen von mehreren Bildern gleichzeitig"
     }
+  },
+  "Upload": {
+    "dragAndDrop": "Dateien hierher ziehen und ablegen oder klicken zum Hochladen",
+    "selectFile": "Datei auswählen",
+    "uploading": "Wird hochgeladen...",
+    "uploadFailed": "Upload fehlgeschlagen",
+    "fileSizeLimit": "Dateigröße darf {size} MB nicht überschreiten",
+    "maxFilesLimit": "Maximal {count} Dateien können hochgeladen werden",
+    "supportedFormats": "Unterstützt {formats} Format, maximal {size} MB",
+    "uploadProgress": "Wird hochgeladen... {progress}%"
   }
 }

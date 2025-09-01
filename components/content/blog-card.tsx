@@ -12,7 +12,7 @@ export function BlogCard({
   horizontale = false,
 }: {
   data: Post & {
-    blurDataURL: string;
+    blurDataURL: string | null;
   };
   priority?: boolean;
   horizontale?: boolean;

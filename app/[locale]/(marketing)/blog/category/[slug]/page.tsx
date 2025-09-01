@@ -50,9 +50,34 @@ export default async function BlogCategory({
     notFound();
   }
 
+  // 添加额外的安全检查
+  const validPosts = allPosts.filter((post) => {
+    return (
+      post &&
+      typeof post === 'object' &&
+      post.categories &&
+      Array.isArray(post.categories) &&
+      post.categories.includes(category.slug) &&
+      post.language === params.locale &&
+      post.image &&
+      typeof post.image === 'string' &&
+      post.image.trim() !== '' &&
+      post.title &&
+      post.date
+    );
+  });
+
+  if (validPosts.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-4">No posts in this category</h1>
+        <p>There are no blog posts available in this category for this language.</p>
+      </div>
+    );
+  }
+
   const articles = await Promise.all(
-    allPosts
-      .filter((post) => post.categories.includes(category.slug) && post.language === params.locale)
+    validPosts
       .sort((a, b) => b.date.localeCompare(a.date))
       .map(async (post) => ({
         ...post,

@@ -25,7 +25,11 @@
     "examples": {
       "label": "Exemple",
       "title": "Exemples d'images Flux AI",
-      "subtitle": "Générez des images à partir de descriptions textuelles."
+      "subtitle": "Générez des images à partir de descriptions textuelles.",
+      "cta": {
+        "description": "Prêt à l'essayer vous-même ? Téléchargez votre image et regardez la magie opérer !",
+        "button": "Essayez maintenant"
+      }
     },
     "features": {
       "title": "Fonctionnalités",
@@ -479,7 +483,6 @@
     "removebg": "Suppression d'arrière-plan",
     "removeObjects": "Suppression d'objets",
     "removeWatermark": "Suppression de filigrane",
-
     "BatchBackgroundRemoval": "Suppression d'arrière-plan par lot",
     "explore": "Explorer",
     "title": "Remove Anything - Suppresseur Gratuit d'Objets et d'Arrière-plans par IA",
@@ -604,6 +607,24 @@
       "title": "Traitement par lots",
       "description": "Traitez plusieurs images à la fois pour améliorer l'efficacité"
     },
-    "useNow": "Utiliser Maintenant"
+    "useNow": "Utiliser Maintenant",
+    "batchBackgroundRemoval": {
+      "title": "Suppression d'arrière-plan par lot",
+      "description": "Supprimez les arrière-plans de plusieurs images à la fois"
+    },
+    "batchWatermarkRemoval": {
+      "title": "Suppression de filigranes par lot",
+      "description": "Supprimez les filigranes de plusieurs images à la fois"
+    }
+  },
+  "Upload": {
+    "dragAndDrop": "Glissez et déposez des fichiers ici ou cliquez pour télécharger",
+    "selectFile": "Sélectionner un fichier",
+    "uploading": "Téléchargement...",
+    "uploadFailed": "Échec du téléchargement",
+    "fileSizeLimit": "La taille du fichier ne peut pas dépasser {size} MB",
+    "maxFilesLimit": "Un maximum de {count} fichiers peuvent être téléchargés",
+    "supportedFormats": "Prend en charge le format {formats}, maximum {size} MB",
+    "uploadProgress": "Téléchargement... {progress}%"
   }
 }

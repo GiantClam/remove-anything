@@ -25,7 +25,11 @@
     "examples": {
       "label": "Exemplo",
       "title": "Exemplos de Imagens Flux AI",
-      "subtitle": "Gerar imagens a partir de prompts de texto."
+      "subtitle": "Gerar imagens a partir de prompts de texto.",
+      "cta": {
+        "description": "Pronto para experimentar você mesmo? Faça upload da sua imagem e veja a mágica acontecer!",
+        "button": "Experimente agora"
+      }
     },
     "features": {
       "title": "Recursos",
@@ -462,7 +466,6 @@
     "removebg": "Remoção de fundo",
     "removeObjects": "Remoção de objetos",
     "removeWatermark": "Remoção de marca d'água",
-
     "explore": "Explorar",
     "prompt": "Gerador de Prompts Remove Anything",
     "title": "Remove Anything - Removedor Gratuito de Objetos e Fundos com IA",
@@ -584,8 +587,27 @@
       "description": "Remova profissionalmente marcas d'água, textos e identificadores"
     },
     "batchProcessing": {
-      "title": "Processamento em lote",
+      "title": "Processamento em Lote",
       "description": "Processe múltiplas imagens de uma vez para melhorar a eficiência"
+    },
+    "useNow": "Usar Agora",
+    "batchBackgroundRemoval": {
+      "title": "Remoção de fundo em lote",
+      "description": "Remova fundos de múltiplas imagens de uma vez"
+    },
+    "batchWatermarkRemoval": {
+      "title": "Remoção de marca d'água em lote",
+      "description": "Remova marcas d'água de múltiplas imagens de uma vez"
     }
+  },
+  "Upload": {
+    "dragAndDrop": "Arraste e solte arquivos aqui ou clique para fazer upload",
+    "selectFile": "Selecionar arquivo",
+    "uploading": "Fazendo upload...",
+    "uploadFailed": "Falha no upload",
+    "fileSizeLimit": "O tamanho do arquivo não pode exceder {size} MB",
+    "maxFilesLimit": "Máximo {count} arquivos podem ser enviados",
+    "supportedFormats": "Suporta formato {formats}, máximo {size} MB",
+    "uploadProgress": "Fazendo upload... {progress}%"
   }
 }

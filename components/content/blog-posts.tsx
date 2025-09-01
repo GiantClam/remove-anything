@@ -6,7 +6,7 @@ export function BlogPosts({
   posts,
 }: {
   posts: (Post & {
-    blurDataURL: string;
+    blurDataURL: string | null;
   })[];
 }) {
   return (

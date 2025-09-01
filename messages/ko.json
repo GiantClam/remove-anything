@@ -25,7 +25,11 @@
     "examples": {
       "label": "예시",
       "title": "배경 제거 예시",
-      "subtitle": "텍스트 프롬프트로 이미지를 생성하세요."
+      "subtitle": "텍스트 프롬프트로 이미지를 생성하세요.",
+      "cta": {
+        "description": "직접 시도해보시겠습니까? 이미지를 업로드하고 마법이 일어나는 것을 보세요!",
+        "button": "지금 시도"
+      }
     },
     "features": {
       "title": "기능",
@@ -461,7 +465,6 @@
     "removebg": "배경 제거",
     "removeObjects": "객체 제거",
     "removeWatermark": "워터마크 제거",
-
     "explore": "탐색",
     "title": "Remove Anything - 무료 이미지 객체 및 배경 제거",
     "prompt": "Remove Anything 프롬프트 생성기",
@@ -584,7 +587,26 @@
     },
     "batchProcessing": {
       "title": "일괄 처리",
-      "description": "여러 이미지를 한 번에 처리하여 효율성을 높이세요"
+      "description": "여러 이미지를 한 번에 처리하여 효율성 향상"
+    },
+    "useNow": "지금 사용",
+    "batchBackgroundRemoval": {
+      "title": "배치 배경 제거",
+      "description": "여러 이미지에서 한 번에 배경 제거"
+    },
+    "batchWatermarkRemoval": {
+      "title": "배치 워터마크 제거",
+      "description": "여러 이미지에서 한 번에 워터마크 제거"
     }
+  },
+  "Upload": {
+    "dragAndDrop": "여기에 파일을 끌어다 놓거나 클릭하여 업로드",
+    "selectFile": "파일 선택",
+    "uploading": "업로드 중...",
+    "uploadFailed": "업로드 실패",
+    "fileSizeLimit": "파일 크기는 {size} MB를 초과할 수 없습니다",
+    "maxFilesLimit": "최대 {count}개 파일을 업로드할 수 있습니다",
+    "supportedFormats": "{formats} 형식을 지원하며, 최대 {size} MB",
+    "uploadProgress": "업로드 중... {progress}%"
   }
 }
