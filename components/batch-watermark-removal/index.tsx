@@ -181,14 +181,14 @@ export default function BatchWatermarkRemoval({
         </div>
         <div className="flex items-center space-x-2">
           <PrivateSwitch
-            checked={isPublic}
-            onCheckedChange={setIsPublic}
+            isPublic={isPublic}
+            onChange={setIsPublic}
           />
           <Button
             onClick={() => setPricingCardOpen(true)}
             variant="outline"
           >
-            <Icons.credit className="mr-2 h-4 w-4" />
+            <Icons.billing className="mr-2 h-4 w-4" />
             {userCredit || 0} {t("credits")}
           </Button>
         </div>
@@ -206,7 +206,7 @@ export default function BatchWatermarkRemoval({
             multiple={true}
             maxFiles={10}
             maxSize={10 * 1024 * 1024} // 10MB
-            accept="image/*"
+            accept={"image/*" as any}
           />
         </CardContent>
       </Card>
@@ -284,8 +284,8 @@ export default function BatchWatermarkRemoval({
                         />
                       </div>
                       <DownloadAction
-                        url={result.processedImageUrl}
-                        filename={`watermark-removed-${index + 1}.png`}
+                        id={result.id}
+                        taskType="watermark-removal"
                       />
                     </div>
                   )}
@@ -302,9 +302,8 @@ export default function BatchWatermarkRemoval({
 
       {/* 定价卡片对话框 */}
       <PricingCardDialog
-        open={pricingCardOpen}
-        onOpenChange={setPricingCardOpen}
-        locale={locale}
+        isOpen={pricingCardOpen}
+        onClose={setPricingCardOpen}
         chargeProduct={chargeProduct}
       />
     </div>

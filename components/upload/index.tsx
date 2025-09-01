@@ -151,7 +151,7 @@ const FormUpload = (props: FormUploadProps) => {
         // 如果用户已登录，使用STS上传到R2
         if (isSignedIn) {
           try {
-            const stsResult = await getLicenseSts.mutateAsync();
+            const stsResult = await getLicenseSts.mutateAsync({});
             if (stsResult.success) {
               // STS上传逻辑...
               // 更新对应的文件状态

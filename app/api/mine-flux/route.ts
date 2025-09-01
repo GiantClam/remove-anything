@@ -126,8 +126,8 @@ export async function GET(req: NextRequest) {
     // 转换水印移除任务为统一格式
     const transformedWatermarkTasks = watermarkRemovalTasks.map((task) => ({
       id: task.runninghubTaskId || task.id.toString(), // 使用runninghubTaskId或id作为标识
-      imageUrl: task.outputZipUrl || task.inputImageUrl, // 如果有输出文件则使用，否则使用输入图片
-      inputImageUrl: task.inputImageUrl,
+      imageUrl: task.outputZipUrl || task.inputZipUrl, // 如果有输出文件则使用，否则使用输入文件
+      inputImageUrl: task.inputZipUrl, // 使用inputZipUrl作为输入图片URL
       inputPrompt: "Watermark Removal", // 水印移除没有prompt，使用固定值
       taskStatus: task.taskStatus === "succeeded" ? FluxTaskStatus.Succeeded : FluxTaskStatus.Processing,
       model: "watermark-removal",
