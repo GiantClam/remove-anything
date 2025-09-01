@@ -16,15 +16,15 @@ export default function Examples() {
     },
     {
       category: "Products",
-      before: "/images/portrait_before.png", // 您可以添加product_before.png和product_after.png
-      after: "/images/portrait_after.png",
+      before: "/images/product_before.png",
+      after: "/images/product_after.png",
       alt: "Product background removal example",
       description: "Ideal for e-commerce and product photography"
     },
     {
       category: "Objects",
-      before: "/images/portrait_before.png", // 您可以添加object_before.png和object_after.png
-      after: "/images/portrait_after.png",
+      before: "/images/object_before.png",
+      after: "/images/object_after.png",
       alt: "Object background removal example",
       description: "Great for object isolation and editing"
     }
