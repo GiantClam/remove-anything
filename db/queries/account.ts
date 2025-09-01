@@ -36,8 +36,8 @@ export async function getUserCredit(userId: string) {
     },
   });
   if (!accountInfo?.id) {
-    // 新用户注册赠送100积分
-    const signupBonus = 100;
+    // 新用户注册赠送10积分
+    const signupBonus = 10;
     
     const data = await prisma.$transaction(async (tx) => {
       // 创建用户积分记录
@@ -55,7 +55,7 @@ export async function getUserCredit(userId: string) {
           state: "Done",
           amount: signupBonus,
           type: "Gift", // 使用Gift类型表示赠送
-          description: "New User Signup Bonus - 100 Credits",
+          description: `New User Signup Bonus - ${signupBonus} Credits`,
         },
       });
 

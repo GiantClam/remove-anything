@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/db/prisma";
 import { env } from "@/env.mjs";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
+import { logsnag } from "@/lib/log-snag";
 
 // 条件性配置
 const providers: any[] = [];
@@ -45,6 +46,74 @@ export const authOptions: NextAuthOptions = {
         hasProfile: !!profile 
       });
       return true;
+    },
+  },
+  // 在用户注册立即初始化积分（而非首次查询）
+  events: {
+    createUser: async ({ user }) => {
+      try {
+        if (!env.DATABASE_URL || shouldSkipDatabaseQuery()) return;
+        if (!user?.id) return;
+
+        const signupBonus = 10;
+
+        // 如果已有积分记录则跳过
+        const exists = await prisma.userCredit.findFirst({
+          where: { userId: user.id },
+          select: { id: true },
+        });
+        if (exists?.id) return;
+
+        await prisma.$transaction(async (tx) => {
+          const userCredit = await tx.userCredit.create({
+            data: {
+              userId: user.id,
+              credit: signupBonus,
+            },
+          });
+
+          const billing = await tx.userBilling.create({
+            data: {
+              userId: user.id,
+              state: "Done",
+              amount: signupBonus,
+              type: "Gift",
+              description: `New User Signup Bonus - ${signupBonus} Credits`,
+            },
+          });
+
+          await tx.userCreditTransaction.create({
+            data: {
+              userId: user.id,
+              credit: signupBonus,
+              balance: signupBonus,
+              billingId: billing.id,
+              type: "Signup Bonus",
+            },
+          });
+
+          console.log(`🎉 新用户 ${user.id} 注册成功，赠送 ${signupBonus} 积分`);
+        });
+
+        // 发送通知（非关键路径，失败忽略）
+        try {
+          await logsnag.track({
+            channel: "signup",
+            event: "New User Signup",
+            user_id: user.id,
+            description: `新用户注册并获得 ${signupBonus} 积分奖励`,
+            icon: "🎉",
+            tags: {
+              credits: String(signupBonus),
+              source: "signup_bonus",
+            },
+          });
+        } catch (err) {
+          console.error("❌ LogSnag通知发送失败:", err);
+        }
+      } catch (error) {
+        console.error("❌ createUser 初始化积分失败:", error);
+      }
     },
   },
   pages: {
