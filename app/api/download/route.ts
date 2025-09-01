@@ -86,6 +86,7 @@ export async function GET(req: NextRequest) {
           "Content-Type": "application/zip",
           "Content-Disposition": `attachment; filename="watermark-removed-${taskId}.zip"`,
           "Cache-Control": "public, max-age=3600",
+          "X-Content-Type-Options": "nosniff",
         },
       });
     }
@@ -130,6 +131,7 @@ export async function GET(req: NextRequest) {
         "Content-Type": contentType,
         "Content-Disposition": `attachment; filename="flux-${fluxId}.jpg"`,
         "Cache-Control": "public, max-age=3600",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (error) {

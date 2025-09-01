@@ -64,8 +64,8 @@ export default function IndexPage({ params: { locale } }: Props) {
       />
       <HeroLanding />
       <QuickAccess />
-      <Features />
       <Examples />
+      <Features />
       <HowTo />
       <UseCases />
       <PricingCard locale={locale} />

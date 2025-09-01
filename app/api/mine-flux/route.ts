@@ -93,6 +93,18 @@ export async function GET(req: NextRequest) {
       take: Math.min(pageSize, 50), // 限制数量，避免过多数据
     });
 
+    // 获取水印移除任务
+    const watermarkRemovalTasks = await prisma.watermarkRemovalTask.findMany({
+      where: {
+        userId,
+        taskStatus: {
+          in: ["succeeded", "processing", "pending", "starting"],
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: Math.min(pageSize, 50), // 限制数量，避免过多数据
+    });
+
     // 转换背景移除任务为统一格式
     const transformedBackgroundTasks = backgroundRemovalTasks.map((task) => ({
       id: task.replicateId, // 使用replicateId作为id
@@ -111,6 +123,22 @@ export async function GET(req: NextRequest) {
       taskType: "background-removal", // 添加任务类型标识
     }));
 
+    // 转换水印移除任务为统一格式
+    const transformedWatermarkTasks = watermarkRemovalTasks.map((task) => ({
+      id: task.runninghubTaskId || task.id.toString(), // 使用runninghubTaskId或id作为标识
+      imageUrl: task.outputZipUrl || task.inputImageUrl, // 如果有输出文件则使用，否则使用输入图片
+      inputImageUrl: task.inputImageUrl,
+      inputPrompt: "Watermark Removal", // 水印移除没有prompt，使用固定值
+      taskStatus: task.taskStatus === "succeeded" ? FluxTaskStatus.Succeeded : FluxTaskStatus.Processing,
+      model: "watermark-removal",
+      createdAt: task.createdAt,
+      userId: task.userId,
+      isPrivate: !task.isPublic,
+      aspectRatio: "1024x1024", // 水印移除默认分辨率
+      executeTime: 0, // 水印移除暂时不计算执行时间
+      taskType: "watermark-removal", // 添加任务类型标识
+    }));
+
     // 转换Flux任务为统一格式
     const transformedFluxTasks = fluxData.map(
       ({ id, executeEndTime, executeStartTime, loraUrl, ...rest }) => ({
@@ -125,13 +153,13 @@ export async function GET(req: NextRequest) {
     );
 
     // 合并所有任务并按创建时间排序
-    const allTasks = [...transformedFluxTasks, ...transformedBackgroundTasks]
+    const allTasks = [...transformedFluxTasks, ...transformedBackgroundTasks, ...transformedWatermarkTasks]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, pageSize); // 重新分页
 
     return NextResponse.json({
       data: {
-        total: fluxTotal + backgroundRemovalTasks.length,
+        total: fluxTotal + backgroundRemovalTasks.length + watermarkRemovalTasks.length,
         page,
         pageSize,
         data: allTasks,

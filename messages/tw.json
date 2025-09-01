@@ -31,9 +31,13 @@
       }
     },
     "examples": {
-      "label": "示範案例",
-      "title": "背景去除示範",
-      "subtitle": "查看 AI 背景去除的神奇效果。"
+      "label": "示例",
+      "title": "背景移除示例",
+      "subtitle": "親眼見證AI背景移除的魔力。",
+      "cta": {
+        "description": "準備好親自試試了嗎？上傳您的圖片，見證奇蹟發生！",
+        "button": "立即試用"
+      }
     },
     "features": {
       "title": "為什麼選擇我們的背景去除器？",
@@ -611,5 +615,71 @@
       "description": "一次處理多張圖片，提高工作效率"
     },
     "useNow": "立即使用"
+  },
+  "Upload": {
+    "dragAndDrop": "拖拽文件到這裡或點擊上傳",
+    "selectFile": "選擇文件",
+    "uploading": "上傳中...",
+    "uploadFailed": "上傳失敗",
+    "fileSizeLimit": "文件大小不能超過 {size} MB",
+    "maxFilesLimit": "最多只能上傳 {count} 個文件",
+    "supportedFormats": "支持 {formats} 格式，最大 {size} MB",
+    "uploadProgress": "上傳中... {progress}%"
+  },
+  "BatchWatermarkRemoval": {
+    "title": "批量浮水印移除",
+    "description": "一次性移除多張圖片中的浮水印",
+    "uploadImages": "上傳圖片",
+    "batchProcessing": "批量處理",
+    "selectedImages": "已選擇圖片",
+    "requiredCredits": "所需積分",
+    "processingProgress": "處理進度",
+    "startProcessing": "開始處理",
+    "processing": "處理中...",
+    "processingResults": "處理結果",
+    "image": "圖片",
+    "pending": "等待中",
+    "processing": "處理中",
+    "succeeded": "成功",
+    "failed": "失敗",
+    "noImagesSelected": "未選擇圖片",
+    "batchProcessingStarted": "批量處理已開始",
+    "batchProcessingError": "批量處理啟動失敗",
+    "credits": "積分"
+  },
+  "DashboardHome": {
+    "title": "儀表板",
+    "description": "查看您最近的活動和任務歷史",
+    "tabs": {
+      "watermark": "浮水印移除",
+      "background": "背景移除"
+    },
+    "watermarkHistory": {
+      "title": "浮水印移除歷史",
+      "task": "任務",
+      "image": "圖片",
+      "empty": {
+        "title": "暫無浮水印移除任務",
+        "description": "開始移除圖片中的浮水印，即可在此處查看",
+        "action": "開始移除浮水印"
+      }
+    },
+    "backgroundHistory": {
+      "title": "背景移除歷史",
+      "task": "任務",
+      "image": "圖片",
+      "empty": {
+        "title": "暫無背景移除任務",
+        "description": "開始移除圖片中的背景，即可在此處查看",
+        "action": "開始移除背景"
+      }
+    },
+    "status": {
+      "succeeded": "已完成",
+      "processing": "處理中",
+      "failed": "失敗",
+      "pending": "等待中"
+    },
+    "taskIdCopied": "任務ID已複製到剪貼板"
   }
 }

@@ -11,6 +11,8 @@ import { Icons } from "../shared/icons";
 
 export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
   const t = useTranslations("PageLayout");
+  const quickAccess = useTranslations("QuickAccess");
+  
   return (
     <footer
       className={cn(
@@ -25,25 +27,25 @@ export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
             href="/remove-background"
             className="underline-offset-4 hover:underline"
             prefetch={false}
-            title="背景移除"
+            title={quickAccess("backgroundRemoval.title")}
           >
-            背景移除
+            {quickAccess("backgroundRemoval.title")}
           </Link>
           <Link
             href="/remove-objects"
             className="underline-offset-4 hover:underline"
             prefetch={false}
-            title="物体移除"
+            title={quickAccess("objectRemoval.title")}
           >
-            物体移除
+            {quickAccess("objectRemoval.title")}
           </Link>
           <Link
             href="/remove-watermark"
             className="underline-offset-4 hover:underline"
             prefetch={false}
-            title="水印移除"
+            title={quickAccess("watermarkRemoval.title")}
           >
-            水印移除
+            {quickAccess("watermarkRemoval.title")}
           </Link>
         </div>
         <div className="flex items-center gap-4">
@@ -78,51 +80,6 @@ export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
         <div className="flex items-center gap-2">
           <Icons.logo className="h-6 w-6" />
                       <span className="font-medium">Remove Anything Inc.</span>
-        </div>
-        <div className="flex flex-col items-center gap-4 md:flex-row">
-          <Link
-            href="https://tap4.ai/"
-            title="Tap4 AI Tools Directory"
-            className="underline-offset-4 hover:underline"
-            prefetch={false}
-            target="_blank"
-          >
-            Tap4 AI
-          </Link>
-          <Link
-            href="https://aiwith.me/"
-            title="Discover thousands of AI tools"
-            className="underline-offset-4 hover:underline"
-            prefetch={false}
-            target="_blank"
-          >
-            AIWITH.ME
-          </Link>
-          <Link
-            href="https://woy.ai/"
-            className="underline-offset-4 hover:underline"
-            title="Woy AI Tools Directory"
-            prefetch={false}
-            target="_blank"
-          >
-            Woy AI
-          </Link>
-          <Link
-            href="https://aipure.ai/"
-            prefetch={false}
-            target="_blank"
-            className="underline-offset-4 hover:underline"
-          >
-            AIPURE AI
-          </Link>
-          <Link
-            href="https://www.toolify.ai/"
-            prefetch={false}
-            target="_blank"
-            className="underline-offset-4 hover:underline"
-          >
-            Toolify AI
-          </Link>
         </div>
       </div>
       <div className="mt-4 flex max-w-7xl flex-col items-center justify-center gap-4 text-sm md:flex-row">

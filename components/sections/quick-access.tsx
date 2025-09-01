@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Eraser, Shield, Users, Image } from "lucide-react";
+import { Eraser, Shield, Users, Image, Layers } from "lucide-react";
 import { Link } from "@/lib/navigation";
 import { HeaderSection } from "@/components/shared/header-section";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
@@ -31,10 +31,17 @@ export default async function QuickAccess() {
     },
     {
       icon: Image,
-      title: t("batchProcessing.title"),
-      description: t("batchProcessing.description"),
+      title: t("batchBackgroundRemoval.title"),
+      description: t("batchBackgroundRemoval.description"),
       href: "/app/batch-remove-background",
       color: "bg-orange-500",
+    },
+    {
+      icon: Layers,
+      title: t("batchWatermarkRemoval.title"),
+      description: t("batchWatermarkRemoval.description"),
+      href: "/app/batch-watermark-removal",
+      color: "bg-indigo-500",
     },
   ];
 

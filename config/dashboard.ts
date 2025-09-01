@@ -17,16 +17,26 @@ export const dashboardConfig: DashboardConfig = {
           href: "/app",
           icon: "HomeIcon",
         },
-                       {
-                 title: "BackgroundRemoval",
-                 href: "/app/remove-background",
-                 icon: "eraser"
-               },
-               {
-                 title: "BatchBackgroundRemoval",
-                 href: "/app/batch-remove-background",
-                 icon: "Images"
-               },
+        {
+          title: "BackgroundRemoval",
+          href: "/app/remove-background",
+          icon: "eraser"
+        },
+        {
+          title: "BatchBackgroundRemoval",
+          href: "/app/batch-remove-background",
+          icon: "Images"
+        },
+        {
+          title: "WatermarkRemoval",
+          href: "/app/watermark-removal",
+          icon: "eraser"
+        },
+        {
+          title: "BatchWatermarkRemoval",
+          href: "/app/batch-watermark-removal",
+          icon: "Images"
+        },
         {
           title: "History",
           href: "/app/history",

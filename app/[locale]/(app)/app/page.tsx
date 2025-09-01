@@ -1,6 +1,6 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 
-import BillingsInfo from "@/components/billing-info";
+import DashboardHome from "@/components/dashboard-home";
 
 interface PageProps {
   params: { locale: string };
@@ -13,11 +13,12 @@ export async function generateMetadata({
 }: PageProps) {
   return {
     title: "App - Dashboard",
-    description: "View your account dashboard and billing information",
+    description: "View your account dashboard and recent activities",
   };
 }
+
 export default async function DashboardPage({ params: { locale } }: PageProps) {
   unstable_setRequestLocale(locale);
 
-  return <BillingsInfo />;
+  return <DashboardHome locale={locale} />;
 }

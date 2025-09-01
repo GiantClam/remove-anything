@@ -14,11 +14,6 @@ export const marketingConfig: MarketingConfig = {
       title: "removeWatermark",
       href: "/remove-watermark",
     },
-
-    {
-      title: "explore",
-      href: "/explore",
-    },
     {
       title: "pricing",
       href: "/pricing",

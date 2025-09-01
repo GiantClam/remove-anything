@@ -26,7 +26,11 @@
     "examples": {
       "label": "Example",
       "title": "Background Removal Examples",
-      "subtitle": "See the magic of AI background removal in action."
+      "subtitle": "See the magic of AI background removal in action.",
+      "cta": {
+        "description": "Ready to try it yourself? Upload your image and see the magic happen!",
+        "button": "Try It Now"
+      }
     },
     "features": {
       "title": "Why Choose Our All-in-One Image Eraser?",
@@ -614,5 +618,72 @@
       "description": "Process multiple images at once to improve efficiency"
     },
     "useNow": "Use Now"
+  },
+  "Upload": {
+    "dragAndDrop": "Drag and drop files here or click to upload",
+    "selectFile": "Select File",
+    "uploading": "Uploading...",
+    "uploadFailed": "Upload Failed",
+    "fileSizeLimit": "File size cannot exceed {size} MB",
+    "maxFilesLimit": "Maximum {count} files can be uploaded",
+    "supportedFormats": "Supports {formats} format, maximum {size} MB",
+    "uploadProgress": "Uploading... {progress}%"
+  },
+  "BatchWatermarkRemoval": {
+    "title": "Batch Watermark Removal",
+    "description": "Remove watermarks from multiple images at once",
+    "uploadImages": "Upload Images",
+    "batchProcessing": "Batch Processing",
+    "selectedImages": "Selected Images",
+    "requiredCredits": "Required Credits",
+    "processingProgress": "Processing Progress",
+    "startProcessing": "Start Processing",
+    "processing": "Processing...",
+    "processingResults": "Processing Results",
+    "image": "Image",
+    "pending": "Pending",
+    "processing": "Processing",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "noImagesSelected": "No images selected",
+    "batchProcessingStarted": "Batch processing started successfully",
+    "batchProcessingError": "Failed to start batch processing",
+    "credits": "Credits"
+  },
+  "DashboardHome": {
+    "title": "Dashboard",
+    "description": "View your recent activities and task history",
+    "tabs": {
+      "watermark": "Watermark Removal",
+      "background": "Background Removal"
+    },
+    "watermarkHistory": {
+      "title": "Watermark Removal History",
+      "task": "Task",
+      "image": "Image",
+      "empty": {
+        "title": "No watermark removal tasks yet",
+        "description": "Start removing watermarks from your images to see them here",
+        "action": "Start Removing Watermarks"
+      }
+    },
+    "backgroundHistory": {
+      "title": "Background Removal History",
+      "task": "Task",
+      "image": "Image",
+      "empty": {
+        "title": "No background removal tasks yet",
+        "description": "Start removing backgrounds from your images to see them here",
+        "action": "Start Removing Backgrounds"
+      }
+    },
+    "status": {
+      "succeeded": "Completed",
+      "processing": "Processing",
+      "failed": "Failed",
+      "pending": "Pending"
+    },
+    "promptCopied": "Prompt copied to clipboard",
+    "taskIdCopied": "Task ID copied to clipboard"
   }
 }

@@ -35,27 +35,93 @@ export function DownloadAction({
         async () => {
           setIsPending(true);
           
-          // 根据任务类型选择不同的API端点
-          let apiUrl;
-          if (taskType === "background-removal") {
-            apiUrl = `/api/download-background?taskId=${id}`;
-          } else if (taskType === "watermark-removal") {
-            apiUrl = `/api/download?taskId=${id}&type=watermark-removal`;
-          } else {
-            apiUrl = `/api/download?fluxId=${id}`;
+          try {
+            // 根据任务类型选择不同的API端点和文件名
+            let apiUrl: string;
+            let fileName: string;
+            let fileExtension: string;
+            
+            if (taskType === "background-removal") {
+              apiUrl = `/api/download-background?taskId=${id}`;
+              fileExtension = "png";
+              fileName = `background-removed-${id}.${fileExtension}`;
+            } else if (taskType === "watermark-removal") {
+              apiUrl = `/api/download?taskId=${id}&type=watermark-removal`;
+              fileExtension = "zip";
+              fileName = `watermark-removed-${id}.${fileExtension}`;
+            } else {
+              apiUrl = `/api/download?fluxId=${id}`;
+              fileExtension = "jpg";
+              fileName = `flux-${id}.${fileExtension}`;
+            }
+            
+            console.log("🔍 开始下载:", { apiUrl, fileName, taskType });
+            
+            const response = await fetch(apiUrl, {
+              credentials: 'include',
+            });
+            
+            if (!response.ok) {
+              throw new Error(`下载失败: ${response.status} ${response.statusText}`);
+            }
+            
+            // 检查Content-Type和Content-Disposition
+            const contentType = response.headers.get("content-type");
+            const contentDisposition = response.headers.get("content-disposition");
+            console.log("🔍 响应头:", { 
+              contentType, 
+              contentDisposition,
+              status: response.status,
+              statusText: response.statusText
+            });
+            
+            // 获取文件数据
+            const blob = await response.blob();
+            console.log("🔍 获取到blob:", { 
+              size: blob.size, 
+              type: blob.type,
+              fileName: fileName
+            });
+            
+            // 验证blob大小
+            if (blob.size === 0) {
+              throw new Error("下载的文件大小为0，可能下载失败");
+            }
+            
+            // 创建下载链接
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            
+            // 设置下载属性
+            link.style.display = "none";
+            link.setAttribute("download", fileName);
+            
+            // 添加到DOM并触发下载
+            document.body.appendChild(link);
+            
+            // 延迟一下再点击，确保DOM已更新
+            setTimeout(() => {
+              link.click();
+              console.log("🔍 触发下载点击");
+            }, 100);
+            
+            // 清理
+            setTimeout(() => {
+              document.body.removeChild(link);
+              window.URL.revokeObjectURL(url);
+              console.log("🔍 清理完成");
+            }, 200);
+            
+            console.log("✅ 下载完成:", fileName);
+            
+          } catch (error) {
+            console.error("❌ 下载失败:", error);
+            throw error;
+          } finally {
+            setIsPending(false);
           }
-          
-          const blob = await fetch(apiUrl, {
-            credentials: 'include',
-          }).then((response) => response.blob());
-          console.log("blob-->", blob);
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = `${id}_remove-anything.${blob.type.split("/")?.[1]}`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
         },
         {
           loading: t("action.downloadLoading"),
