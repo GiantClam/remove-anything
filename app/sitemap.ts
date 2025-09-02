@@ -67,7 +67,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     locale: (typeof locales)[number],
   ) {
     const pathname = getPathname({ locale, href: key });
-    return `${env.NEXT_PUBLIC_SITE_URL}/${locale === defaultLocale ? "" : locale}${pathname === "/" ? "" : pathname}`;
+    const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+    const localeSegment = locale === defaultLocale ? "" : `/${locale}`;
+    const pathSegment = pathname === "/" ? "" : pathname; // pathname 以 / 开头
+    return `${base}${localeSegment}${pathSegment || "/"}`;
   }
 
   // return [...posts, ...keys].map((key) => ({

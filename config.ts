@@ -18,8 +18,6 @@ export type Locale = (typeof locales)[number];
 export const pathnames: Pathnames<typeof locales> = {
   "/": "/",
   "/blog": "/blog",
-  "/flux-schnell": "/flux-schnell",
-  "/flux-prompt-generator": "/flux-prompt-generator",
 };
 
 export const localePrefix: LocalePrefix<typeof locales> = "always";

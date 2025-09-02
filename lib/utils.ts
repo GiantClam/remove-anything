@@ -94,7 +94,9 @@ export function formatDate(input: Date | string): string {
 }
 
 export function absoluteUrl(path: string) {
-  return `${env.NEXT_PUBLIC_SITE_URL}${path}`;
+  const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${normalizedPath}`;
 }
 
 // Utils from precedent.dev
