@@ -19,10 +19,13 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { key, fileType } = body;
-
+    let { key, fileType } = body || {};
+    // 允许运行时未传 key，由后端生成安全文件名
     if (!key) {
-      return NextResponse.json({ error: "Missing required parameter: key" }, { status: 400 });
+      const extension = typeof fileType === 'string' && fileType.includes('/')
+        ? `.${fileType.split('/')[1]}`
+        : '';
+      key = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${extension}`;
     }
 
     // 检查R2配置
@@ -60,6 +63,7 @@ export async function POST(req: NextRequest) {
     console.log("✅ STS令牌生成成功:", { key, putUrl: stsResult.putUrl.substring(0, 100) + '...' });
 
     return NextResponse.json({
+      success: true,
       data: stsResult
     });
 

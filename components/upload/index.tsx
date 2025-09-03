@@ -84,6 +84,9 @@ export const useGetLicenseSts = (config?: {
       
       return fetch(`/api/s3/sts`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(values),
         credentials: 'include',
       }).then((res) => res.json());
@@ -151,26 +154,62 @@ const FormUpload = (props: FormUploadProps) => {
         // 如果用户已登录，使用STS上传到R2
         if (isSignedIn) {
           try {
-            const stsResult = await getLicenseSts.mutateAsync({});
-            if (stsResult.success) {
-              // STS上传逻辑...
-              // 更新对应的文件状态
-              const updatedItems = newItems.map((item) => ({
+            // 逐个文件获取 STS 并直传 PUT 到 R2
+            const uploadResults = await Promise.all(
+              filesToProcess.map(async (file) => {
+                const ext = file.type && file.type.includes('/') ? file.type.split('/')[1] : 'bin';
+                const filename = `${nanoid()}.${ext}`;
+                const stsResult: any = await getLicenseSts.mutateAsync({
+                  key: filename,
+                  fileType: file.type,
+                });
+
+                if (!stsResult?.data?.putUrl) {
+                  throw new Error('Failed to get STS putUrl');
+                }
+
+                const putRes = await fetch(stsResult.data.putUrl, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': file.type || 'application/octet-stream',
+                  },
+                  body: file,
+                });
+
+                if (!putRes.ok) {
+                  throw new Error(`PUT upload failed with status ${putRes.status}`);
+                }
+
+                return {
+                  completedUrl: stsResult.data.completedUrl as string,
+                  key: stsResult.data.key as string,
+                  fileType: file.type,
+                };
+              })
+            );
+
+            // 按顺序更新对应的文件状态
+            const updatedItems = newItems.map((item, idx) => {
+              const r = uploadResults[idx];
+              return {
                 ...item,
-                status: "uploaded" as const,
-                url: `https://example.com/${item.id}`, // 这里应该是实际的上传URL
-              }));
+                status: 'uploaded' as const,
+                url: r?.completedUrl || item.url,
+                completedUrl: r?.completedUrl || item.completedUrl,
+                key: r?.key || item.key,
+                fileType: r?.fileType || item.fileType,
+              };
+            });
 
-              if (multiple) {
-                onChange?.([...value, ...updatedItems]);
-              } else {
-                onChange?.(updatedItems);
-              }
-
-              console.log("🔧 Upload 组件：STS上传完成，更新文件状态", {
-                items: updatedItems,
-              });
+            if (multiple) {
+              onChange?.([...value, ...updatedItems]);
+            } else {
+              onChange?.(updatedItems);
             }
+
+            console.log("🔧 Upload 组件：STS上传完成，更新文件状态", {
+              items: updatedItems,
+            });
           } catch (error) {
             console.error("🔧 STS上传失败:", error);
             // 用户未登录，使用本地文件处理
