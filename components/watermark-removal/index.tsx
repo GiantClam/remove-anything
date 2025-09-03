@@ -452,7 +452,30 @@ export default function WatermarkRemoval({
                 </p>
               </div>
 
-              {taskData.taskStatus === WatermarkRemovalTaskStatus.Succeeded && taskData.outputZipUrl && (
+              {taskData.taskStatus === WatermarkRemovalTaskStatus.Succeeded && taskData.outputImageUrls?.length > 0 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {taskData.outputImageUrls.map((url: string, idx: number) => (
+                      <div key={idx} className="relative aspect-square w-full overflow-hidden rounded-lg border bg-muted">
+                        <img
+                          src={url}
+                          alt={`Processed ${idx + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <DownloadAction
+                      id={taskData.runninghubTaskId}
+                      showText={true}
+                      taskType="watermark-removal"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {taskData.taskStatus === WatermarkRemovalTaskStatus.Succeeded && !taskData.outputImageUrls?.length && taskData.outputZipUrl && (
                 <div className="space-y-4">
                   <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-muted">
                     <div className="flex h-full w-full items-center justify-center">

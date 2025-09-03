@@ -72,16 +72,37 @@ export async function GET(req: NextRequest) {
         return new Response("Forbidden", { status: 403 });
       }
 
-      // Fetch the ZIP file from the URL
-      const zipResponse = await fetch(watermarkTask.outputZipUrl);
-      if (!zipResponse.ok) {
+      // Fetch the file from the URL (may be zip or image)
+      const fileResponse = await fetch(watermarkTask.outputZipUrl);
+      if (!fileResponse.ok) {
         return new Response("File not found", { status: 404 });
       }
 
-      const zipBuffer = await zipResponse.arrayBuffer();
-      
-      // Return the ZIP file with appropriate headers
-      return new Response(zipBuffer, {
+      const contentType = fileResponse.headers.get("content-type") || "";
+
+      // If it's already a ZIP, stream it as-is
+      if (contentType.includes("zip")) {
+        const zipBuffer = await fileResponse.arrayBuffer();
+        return new Response(zipBuffer, {
+          headers: {
+            "Content-Type": "application/zip",
+            "Content-Disposition": `attachment; filename="watermark-removed-${taskId}.zip"`,
+            "Cache-Control": "public, max-age=3600",
+            "X-Content-Type-Options": "nosniff",
+          },
+        });
+      }
+
+      // Otherwise, wrap the file into a ZIP on-the-fly
+      const JSZip = (await import("jszip")).default;
+      const arrayBuffer = await fileResponse.arrayBuffer();
+      const zip = new JSZip();
+      // Guess extension from content-type
+      const ext = contentType.split("/")[1] || "png";
+      zip.file(`image_1.${ext}`, arrayBuffer);
+      const zipped = await zip.generateAsync({ type: "arraybuffer" });
+
+      return new Response(zipped, {
         headers: {
           "Content-Type": "application/zip",
           "Content-Disposition": `attachment; filename="watermark-removed-${taskId}.zip"`,

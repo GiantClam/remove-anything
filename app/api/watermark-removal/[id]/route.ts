@@ -174,11 +174,10 @@ export async function GET(
     // 若已成功并拿到 ZIP，尝试解压并将图片保存到 R2，以便前端直接展示
     if (finalStatus === 'succeeded' && outputZipUrl) {
       try {
-        console.log("📥 下载任务输出ZIP以提取图片:", outputZipUrl);
-        const zipRes = await fetch(outputZipUrl);
-        if (zipRes.ok) {
-          const zipArrayBuffer = await zipRes.arrayBuffer();
-          const zip = await JSZip.loadAsync(zipArrayBuffer);
+        console.log("📥 下载任务输出以提取图片:", outputZipUrl);
+        const fileRes = await fetch(outputZipUrl);
+        if (fileRes.ok) {
+          const contentType = fileRes.headers.get('content-type') || '';
 
           const s3 = new AWS.S3({
             endpoint: env.R2_ENDPOINT,
@@ -187,15 +186,39 @@ export async function GET(
             region: env.R2_REGION || 'auto',
             s3ForcePathStyle: true,
           });
-
           const folderPrefix = `watermark-removal/processed/${taskId}-${nanoid(6)}`;
-          const entries = Object.values(zip.files).filter(f => !f.dir);
 
-          const uploaded = await Promise.all(entries.map(async (entry, index) => {
-            const arrayBuffer = await entry.async('arraybuffer');
+          if (contentType.includes('zip')) {
+            // ZIP：解压多图
+            const zipArrayBuffer = await fileRes.arrayBuffer();
+            const zip = await JSZip.loadAsync(zipArrayBuffer);
+            const entries = Object.values(zip.files).filter(f => !f.dir);
+
+            const uploaded = await Promise.all(entries.map(async (entry, index) => {
+              const arrayBuffer = await entry.async('arraybuffer');
+              const buffer = Buffer.from(arrayBuffer);
+              const ext = entry.name.split('.').pop() || 'png';
+              const key = `${folderPrefix}/image_${index + 1}.${ext}`;
+
+              await s3.upload({
+                Bucket: env.R2_BUCKET,
+                Key: key,
+                Body: buffer,
+                ContentType: `image/${ext}`,
+                ACL: 'public-read',
+              }).promise();
+
+              return `${env.R2_URL_BASE}/${key}`;
+            }));
+
+            outputImageUrls = uploaded;
+            console.log("✅ 已解压并上传图片到R2:", uploaded.length);
+          } else if (contentType.startsWith('image/')) {
+            // 单图：直接转存为一张图片
+            const arrayBuffer = await fileRes.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
-            const ext = entry.name.split('.').pop() || 'png';
-            const key = `${folderPrefix}/image_${index + 1}.${ext}`;
+            const ext = contentType.split('/')[1] || 'png';
+            const key = `${folderPrefix}/image_1.${ext}`;
 
             await s3.upload({
               Bucket: env.R2_BUCKET,
@@ -205,11 +228,11 @@ export async function GET(
               ACL: 'public-read',
             }).promise();
 
-            return `${env.R2_URL_BASE}/${key}`;
-          }));
-
-          outputImageUrls = uploaded;
-          console.log("✅ 已解压并上传图片到R2:", uploaded.length);
+            outputImageUrls = [`${env.R2_URL_BASE}/${key}`];
+            console.log("✅ 已转存单张图片到R2:", outputImageUrls[0]);
+          } else {
+            console.log('ℹ️ 输出为非ZIP/非图片类型，保持仅提供原始链接');
+          }
         }
       } catch (extractErr) {
         console.error("⚠️ 解压或上传输出图片失败，忽略并继续返回ZIP:", extractErr);
