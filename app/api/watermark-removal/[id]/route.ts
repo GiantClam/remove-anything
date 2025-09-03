@@ -3,6 +3,10 @@ import { getErrorMessage } from "@/lib/handle-error";
 import { runninghubAPI } from "@/lib/runninghub-api";
 import { findWatermarkRemovalTaskByRunningHubId, updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
+import JSZip from "jszip";
+import AWS from "aws-sdk";
+import { nanoid } from "nanoid";
+import { env } from "@/env.mjs";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = 'force-dynamic';
@@ -57,6 +61,8 @@ export async function GET(
     }
 
     let finalStatus = taskRecord.taskStatus;
+    let outputZipUrl = taskRecord.outputZipUrl as string | null;
+    let outputImageUrls: string[] | undefined;
 
     // 如果任务还在进行中，从RunningHub获取最新状态
     if (['pending', 'starting', 'processing'].includes(taskRecord.taskStatus)) {
@@ -99,9 +105,10 @@ export async function GET(
               
               if (taskResult.data && Array.isArray(taskResult.data) && taskResult.data.length > 0) {
                 const outputFile = taskResult.data[0];
+                outputZipUrl = outputFile.fileUrl || null;
                 updateData = {
                   taskStatus: 'succeeded',
-                  outputZipUrl: outputFile.fileUrl || null,
+                  outputZipUrl,
                   executeEndTime: BigInt(Date.now())
                 };
                 console.log(`✅ 任务成功完成，输出URL: ${outputFile.fileUrl}`);
@@ -164,13 +171,59 @@ export async function GET(
       }
     }
 
+    // 若已成功并拿到 ZIP，尝试解压并将图片保存到 R2，以便前端直接展示
+    if (finalStatus === 'succeeded' && outputZipUrl) {
+      try {
+        console.log("📥 下载任务输出ZIP以提取图片:", outputZipUrl);
+        const zipRes = await fetch(outputZipUrl);
+        if (zipRes.ok) {
+          const zipArrayBuffer = await zipRes.arrayBuffer();
+          const zip = await JSZip.loadAsync(zipArrayBuffer);
+
+          const s3 = new AWS.S3({
+            endpoint: env.R2_ENDPOINT,
+            accessKeyId: env.R2_ACCESS_KEY,
+            secretAccessKey: env.R2_SECRET_KEY,
+            region: env.R2_REGION || 'auto',
+            s3ForcePathStyle: true,
+          });
+
+          const folderPrefix = `watermark-removal/processed/${taskId}-${nanoid(6)}`;
+          const entries = Object.values(zip.files).filter(f => !f.dir);
+
+          const uploaded = await Promise.all(entries.map(async (entry, index) => {
+            const arrayBuffer = await entry.async('arraybuffer');
+            const buffer = Buffer.from(arrayBuffer);
+            const ext = entry.name.split('.').pop() || 'png';
+            const key = `${folderPrefix}/image_${index + 1}.${ext}`;
+
+            await s3.upload({
+              Bucket: env.R2_BUCKET,
+              Key: key,
+              Body: buffer,
+              ContentType: `image/${ext}`,
+              ACL: 'public-read',
+            }).promise();
+
+            return `${env.R2_URL_BASE}/${key}`;
+          }));
+
+          outputImageUrls = uploaded;
+          console.log("✅ 已解压并上传图片到R2:", uploaded.length);
+        }
+      } catch (extractErr) {
+        console.error("⚠️ 解压或上传输出图片失败，忽略并继续返回ZIP:", extractErr);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       id: taskRecord.id,
       runninghubTaskId: taskId,
       taskStatus: finalStatus,
       inputZipUrl: taskRecord.inputZipUrl,
-      outputZipUrl: taskRecord.outputZipUrl,
+      outputZipUrl: outputZipUrl || taskRecord.outputZipUrl,
+      outputImageUrls,
       errorMsg: taskRecord.errorMsg,
       createdAt: taskRecord.createdAt,
       executeStartTime: taskRecord.executeStartTime?.toString(),
