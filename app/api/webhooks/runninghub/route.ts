@@ -20,7 +20,32 @@ async function downloadAndSaveToR2(zipUrl: string, taskId: string): Promise<stri
       throw new Error(`Failed to download ZIP: ${response.status}`);
     }
     
-    const zipBuffer = await response.arrayBuffer();
+    const contentTypeHeader = response.headers.get('content-type') || '';
+    const downloadedArrayBuffer = await response.arrayBuffer();
+
+    // 判断是否已是有效 ZIP（魔数 PK\x03\x04 或 PK\x05\x06 等）
+    const uint8 = new Uint8Array(downloadedArrayBuffer);
+    const isZipMagic = uint8.length >= 2 && uint8[0] === 0x50 && uint8[1] === 0x4b;
+
+    let finalZipBuffer: Buffer;
+    if (contentTypeHeader.includes('zip') && isZipMagic) {
+      // 已经是合法 ZIP，直接上传
+      finalZipBuffer = Buffer.from(downloadedArrayBuffer);
+    } else {
+      // 不是 ZIP：将单文件打包为 ZIP
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      // 猜测扩展名
+      const fromContentType = contentTypeHeader.split('/')[1] || '';
+      const guessedExt = fromContentType ? fromContentType.split(';')[0] : '';
+      const urlExtMatch = zipUrl.match(/\.([a-zA-Z0-9]+)(?:\?|#|$)/);
+      const urlExt = urlExtMatch?.[1];
+      const ext = (guessedExt || urlExt || 'png').toLowerCase();
+      zip.file(`image_1.${ext}`, downloadedArrayBuffer);
+      const zippedArrayBuffer = await zip.generateAsync({ type: 'arraybuffer' });
+      finalZipBuffer = Buffer.from(zippedArrayBuffer);
+      console.log(`🧩 已将非ZIP内容重新打包为ZIP，内含扩展名为 .${ext} 的文件`);
+    }
     
     // 配置AWS S3（用于R2）
     const s3 = new AWS.S3({
@@ -38,7 +63,7 @@ async function downloadAndSaveToR2(zipUrl: string, taskId: string): Promise<stri
     const uploadResult = await s3.upload({
       Bucket: env.R2_BUCKET,
       Key: fileName,
-      Body: Buffer.from(zipBuffer),
+      Body: finalZipBuffer,
       ContentType: 'application/zip',
     }).promise();
     

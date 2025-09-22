@@ -80,10 +80,12 @@ export async function GET(req: NextRequest) {
 
       const contentType = fileResponse.headers.get("content-type") || "";
 
-      // If it's already a ZIP, stream it as-is
-      if (contentType.includes("zip")) {
-        const zipBuffer = await fileResponse.arrayBuffer();
-        return new Response(zipBuffer, {
+      const downloadedArrayBuffer = await fileResponse.arrayBuffer();
+      const uint8 = new Uint8Array(downloadedArrayBuffer);
+      const isZipMagic = uint8.length >= 2 && uint8[0] === 0x50 && uint8[1] === 0x4b;
+
+      if (contentType.includes("zip") && isZipMagic) {
+        return new Response(downloadedArrayBuffer, {
           headers: {
             "Content-Type": "application/zip",
             "Content-Disposition": `attachment; filename="watermark-removed-${taskId}.zip"`,
@@ -95,11 +97,14 @@ export async function GET(req: NextRequest) {
 
       // Otherwise, wrap the file into a ZIP on-the-fly
       const JSZip = (await import("jszip")).default;
-      const arrayBuffer = await fileResponse.arrayBuffer();
       const zip = new JSZip();
-      // Guess extension from content-type
-      const ext = contentType.split("/")[1] || "png";
-      zip.file(`image_1.${ext}`, arrayBuffer);
+      // Guess extension from content-type or URL
+      const fromContentType = contentType.split("/")[1] || "";
+      const guessedExt = fromContentType ? fromContentType.split(";")[0] : "";
+      const urlExtMatch = watermarkTask.outputZipUrl.match(/\.([a-zA-Z0-9]+)(?:\?|#|$)/);
+      const urlExt = urlExtMatch?.[1];
+      const ext = (guessedExt || urlExt || "png").toLowerCase();
+      zip.file(`image_1.${ext}`, downloadedArrayBuffer);
       const zipped = await zip.generateAsync({ type: "arraybuffer" });
 
       return new Response(zipped, {

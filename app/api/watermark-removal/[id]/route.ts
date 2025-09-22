@@ -188,10 +188,13 @@ export async function GET(
           });
           const folderPrefix = `watermark-removal/processed/${taskId}-${nanoid(6)}`;
 
-          if (contentType.includes('zip')) {
+          const downloadedArrayBuffer = await fileRes.arrayBuffer();
+          const magic = new Uint8Array(downloadedArrayBuffer);
+          const isZipMagic = magic.length >= 2 && magic[0] === 0x50 && magic[1] === 0x4b;
+
+          if (contentType.includes('zip') && isZipMagic) {
             // ZIP：解压多图
-            const zipArrayBuffer = await fileRes.arrayBuffer();
-            const zip = await JSZip.loadAsync(zipArrayBuffer);
+            const zip = await JSZip.loadAsync(downloadedArrayBuffer);
             const entries = Object.values(zip.files).filter(f => !f.dir);
 
             const uploaded = await Promise.all(entries.map(async (entry, index) => {
@@ -215,8 +218,7 @@ export async function GET(
             console.log("✅ 已解压并上传图片到R2:", uploaded.length);
           } else if (contentType.startsWith('image/')) {
             // 单图：直接转存为一张图片
-            const arrayBuffer = await fileRes.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
+            const buffer = Buffer.from(downloadedArrayBuffer);
             const ext = contentType.split('/')[1] || 'png';
             const key = `${folderPrefix}/image_1.${ext}`;
 
@@ -230,6 +232,22 @@ export async function GET(
 
             outputImageUrls = [`${env.R2_URL_BASE}/${key}`];
             console.log("✅ 已转存单张图片到R2:", outputImageUrls[0]);
+          } else if (contentType.includes('zip') && !isZipMagic) {
+            // 标称zip但实际不是：将其当作单文件按通用扩展名转存
+            const guessedExt = 'png';
+            const buffer = Buffer.from(downloadedArrayBuffer);
+            const key = `${folderPrefix}/image_1.${guessedExt}`;
+
+            await s3.upload({
+              Bucket: env.R2_BUCKET,
+              Key: key,
+              Body: buffer,
+              ContentType: `image/${guessedExt}`,
+              ACL: 'public-read',
+            }).promise();
+
+            outputImageUrls = [`${env.R2_URL_BASE}/${key}`];
+            console.log('⚠️ 输出声明为zip但魔数不匹配，已按单图处理');
           } else {
             console.log('ℹ️ 输出为非ZIP/非图片类型，保持仅提供原始链接');
           }
