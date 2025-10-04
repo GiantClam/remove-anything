@@ -483,6 +483,7 @@
     "removebg": "去背景",
     "removeObjects": "物體移除",
     "removeWatermark": "水印移除",
+    "sora2VideoWatermarkRemoval": "Sora2 影片水印移除",
     "explore": "探索",
     "title": "Remove Anything - 免費去除圖片任意物體",
     "prompt": "Remove Anything 提示詞產生器",
@@ -687,5 +688,21 @@
       "pending": "等待中"
     },
     "taskIdCopied": "任務ID已複製到剪貼板"
+  },
+  "Sora2VideoWatermarkRemovalPage": {
+    "title": "Sora2 影片水印移除工具 - 專業 AI 影片處理",
+    "description": "使用先進的 AI 技術從 Sora2 生成的影片中移除水印。專業的影片水印移除工具，提供高品質輸出、快速處理和批次支援。",
+    "keywords": "sora2影片水印移除、影片水印移除、AI影片處理、sora2水印移除工具、影片編輯工具、內容創作者工具、線上影片水印移除、AI影片編輯、影片處理、從影片移除水印、sora2影片編輯器、影片水印工具、專業影片編輯、影片內容創作、AI影片增強",
+    "hero": {
+      "title": "Sora2 影片水印移除工具",
+      "description": "使用先進的 AI 技術從 Sora2 生成的影片中移除水印。",
+      "startButton": "開始移除影片水印",
+      "pricingButton": "查看價格"
+    },
+    "action": {
+      "download": "下載影片",
+      "downloadSuccess": "影片已下載。",
+      "downloadLoading": "下載中..."
+    }
   }
 }

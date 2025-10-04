@@ -117,6 +117,44 @@ export async function GET(req: NextRequest) {
       });
     }
     
+    // 处理 Sora2 视频去水印任务下载
+    if (type === "sora2-video-watermark-removal" && taskId) {
+      const sora2Task = await prisma.fluxData.findFirst({
+        where: {
+          replicateId: taskId,
+          model: "sora2-video-watermark-removal",
+        },
+      });
+
+      if (!sora2Task || !sora2Task.imageUrl) {
+        return new Response("Not found", { status: 404 });
+      }
+
+      // Check if user owns this task or if it's public
+      if (sora2Task.userId !== userId && sora2Task.isPrivate) {
+        return new Response("Forbidden", { status: 403 });
+      }
+
+      // Fetch the video from the URL
+      const videoResponse = await fetch(sora2Task.imageUrl);
+      if (!videoResponse.ok) {
+        return new Response("Video not found", { status: 404 });
+      }
+
+      const videoBuffer = await videoResponse.arrayBuffer();
+      const contentType = videoResponse.headers.get("content-type") || "video/mp4";
+      
+      // Return the video with appropriate headers
+      return new Response(videoBuffer, {
+        headers: {
+          "Content-Type": contentType,
+          "Content-Disposition": `attachment; filename="sora2-video-watermark-removed-${taskId}.mp4"`,
+          "Cache-Control": "public, max-age=3600",
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
+    }
+    
     // 处理 Flux 任务下载（原有逻辑）
     if (!fluxId) {
       return NextResponse.json({ error: "Missing fluxId parameter" }, { status: 400 });

@@ -29,6 +29,24 @@ export interface RunningHubTaskStatus {
   };
 }
 
+export interface RunningHubNodeInput {
+  nodeId: string;
+  fieldName: string;
+  fieldValue: string;
+}
+
+export interface CreateTaskOptions {
+  workflowId: string;
+  nodeInfoList: RunningHubNodeInput[];
+  taskRecordId?: number;
+}
+
+export interface UploadFileOptions {
+  fileType: string; // zip | image | video | other
+  filename: string;
+  contentType: string;
+}
+
 export class RunningHubAPI {
   private baseUrl: string;
   private apiKey: string;
@@ -51,8 +69,50 @@ export class RunningHubAPI {
     }
   }
 
-    /**
-   * 上传ZIP文件
+  /**
+   * 通用文件上传
+   */
+  async uploadFile(buffer: Buffer, options: UploadFileOptions): Promise<string> {
+    try {
+      console.log("🚀 开始上传文件到RunningHub...");
+      console.log("[RunningHub] baseUrl=", this.baseUrl);
+      console.log("[RunningHub] apiKey=", this.apiKey ? `${this.apiKey.substring(0, 8)}...` : "undefined");
+      console.log("[RunningHub] buffer size=", buffer.length, "bytes");
+      console.log("[RunningHub] upload options=", options);
+
+      const formData = new FormData();
+      const blob = new Blob([new Uint8Array(buffer)], { type: options.contentType || 'application/octet-stream' });
+      formData.append('file', blob, options.filename || 'upload.bin');
+      formData.append('apiKey', this.apiKey);
+      formData.append('fileType', options.fileType);
+
+      const response = await fetch(`${this.baseUrl}/task/openapi/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        let bodyText: string | undefined;
+        try {
+          bodyText = await response.text();
+        } catch {}
+        throw new Error(`Upload failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`);
+      }
+
+      const result = await response.json();
+      if (result.code !== 0) throw new Error(`Upload failed (api): ${result.msg}`);
+
+      //const fileName = result.data.fileName.replace(/^api\//, '').replace(/\.(zip|mp4|mov|mkv|png|jpg|jpeg)$/i, (m: string) => m);
+      const fileName = result.data.fileName;
+      return fileName;
+    } catch (error) {
+      console.error("❌ 文件上传失败:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 上传ZIP文件（兼容旧接口）
    */
   async uploadZip(zipBuffer: Buffer): Promise<string> {
     try {
@@ -61,50 +121,12 @@ export class RunningHubAPI {
       console.log("[RunningHub] apiKey=", this.apiKey ? `${this.apiKey.substring(0, 8)}...` : "undefined");
       console.log("[RunningHub] zipBuffer size=", zipBuffer.length, "bytes");
 
-      const formData = new FormData();
-      const blob = new Blob([zipBuffer], { type: 'application/zip' });
-      formData.append('file', blob, 'images.zip');
-      formData.append('apiKey', this.apiKey);
-      formData.append('fileType', 'zip');
-
-      console.log("📤 [RunningHub] 发送请求到:", `${this.baseUrl}/task/openapi/upload`);
-      console.log("📤 [RunningHub] 请求方法: POST");
-      console.log("📤 [RunningHub] FormData 内容:");
-      console.log("  - file: Blob (", blob.size, "bytes)");
-      console.log("  - apiKey:", this.apiKey ? `${this.apiKey.substring(0, 8)}...` : "undefined");
-      console.log("  - fileType: zip");
-
-      const response = await fetch(`${this.baseUrl}/task/openapi/upload`, {
-        method: 'POST',
-        body: formData,
+      const fileName = await this.uploadFile(zipBuffer, {
+        fileType: 'zip',
+        filename: 'images.zip',
+        contentType: 'application/zip',
       });
-
-      console.log("📥 [RunningHub] 响应状态:", response.status, response.statusText);
-      console.log("📥 [RunningHub] 响应头:", Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        let bodyText: string | undefined;
-        try {
-          bodyText = await response.text();
-          console.log("📥 [RunningHub] 错误响应体:", bodyText);
-        } catch {}
-        throw new Error(`Upload failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`);
-      }
-
-      const result = await response.json();
-      console.log("📥 [RunningHub] 成功响应体:", JSON.stringify(result, null, 2));
-      
-      if (result.code !== 0) {
-        console.log("❌ [RunningHub] API返回错误:", result.msg);
-        throw new Error(`Upload failed (api): ${result.msg}`);
-      }
-
-      console.log("✅ ZIP文件上传成功，完整路径:", result.data.fileName);
-      
-      // 从完整路径中提取文件名（去掉路径前缀和.zip后缀）
-      const fileName = result.data.fileName.replace(/^api\//, '').replace(/\.zip$/, '');
-      console.log("✅ 提取的文件名:", fileName);
-      
+      console.log("✅ ZIP文件上传成功，文件名:", fileName);
       return fileName;
       
     } catch (error) {
@@ -114,81 +136,122 @@ export class RunningHubAPI {
   }
 
   /**
-   * 创建去水印任务
+   * 通用创建任务
    */
-  async createWatermarkRemovalTask(filename: string, taskRecordId?: number): Promise<string> {
+  async createTaskGeneric(options: CreateTaskOptions): Promise<string> {
     try {
-      console.log("🚀 开始创建去水印任务...");
-      console.log("[RunningHub] workflowId=", this.workflowId);
-      
-      // 构建 webhook URL，如果提供了 taskRecordId
+      const { workflowId, nodeInfoList, taskRecordId } = options;
+      console.log("🚀 创建任务 (通用)");
+      console.log("[RunningHub] workflowId=", workflowId);
+
       const webhookUrl = taskRecordId 
         ? `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/webhooks/runninghub`
         : undefined;
-      
-      console.log("🔗 [RunningHub] webhookUrl 构建:", {
-        taskRecordId,
-        NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-        webhookUrl
-      });
-      
-      if (webhookUrl) {
-        console.log("[RunningHub] webhookUrl=", webhookUrl);
-      }
-      
+
       const payload = {
         apiKey: this.apiKey,
-        workflowId: this.workflowId,
-        nodeInfoList: [
-          {
-            nodeId: "377",
-            fieldName: "upload",
-            fieldValue: filename
-          }
-        ],
+        workflowId,
+        nodeInfoList,
         ...(webhookUrl && { webhookUrl })
       };
 
-      console.log("📤 [RunningHub] 发送请求到:", `${this.baseUrl}/task/openapi/create`);
-      console.log("📤 [RunningHub] 请求方法: POST");
-      console.log("📤 [RunningHub] 请求头: Content-Type: application/json");
-      console.log("📤 [RunningHub] 请求体:", JSON.stringify(payload, null, 2));
-
       const response = await fetch(`${this.baseUrl}/task/openapi/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      console.log("📥 [RunningHub] 响应状态:", response.status, response.statusText);
-      console.log("📥 [RunningHub] 响应头:", Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
         let bodyText: string | undefined;
-        try {
-          bodyText = await response.text();
-          console.log("📥 [RunningHub] 错误响应体:", bodyText);
-        } catch {}
+        try { bodyText = await response.text(); } catch {}
         throw new Error(`Create task failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`);
       }
 
       const result: RunningHubCreateTaskResponse = await response.json();
-      console.log("📥 [RunningHub] 成功响应体:", JSON.stringify(result, null, 2));
+      if (result.code !== 0) throw new Error(`Create task failed (api): ${result.msg}`);
+      return result.data.taskId;
+    } catch (error) {
+      console.error("❌ 创建任务失败 (通用):", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 取消 RunningHub 任务
+   */
+  async cancelTask(taskId: string): Promise<boolean> {
+    try {
+      console.log(`🚫 取消 RunningHub 任务: ${taskId}`);
       
-      if (result.code !== 0) {
-        console.log("❌ [RunningHub] API返回错误:", result.msg);
-        throw new Error(`Create task failed (api): ${result.msg}`);
+      const payload = {
+        apiKey: this.apiKey,
+        taskId: taskId
+      };
+
+      const response = await fetch(`${this.baseUrl}/task/openapi/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        let bodyText: string | undefined;
+        try { bodyText = await response.text(); } catch {}
+        throw new Error(`Cancel task failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`);
       }
 
-      console.log("✅ 去水印任务创建成功，任务ID:", result.data.taskId);
-      return result.data.taskId;
+      const result = await response.json();
+      if (result.code !== 0) {
+        console.warn(`⚠️ 取消任务失败 (api): ${result.msg}`);
+        return false;
+      }
+      
+      console.log(`✅ RunningHub 任务 ${taskId} 已取消`);
+      return true;
+    } catch (error) {
+      console.error("❌ 取消任务失败:", error);
+      return false;
+    }
+  }
+
+  /**
+   * 创建图片去水印任务（兼容旧接口）
+   */
+  async createWatermarkRemovalTask(filename: string, taskRecordId?: number): Promise<string> {
+    try {
+      return this.createTaskGeneric({
+        workflowId: this.workflowId,
+        nodeInfoList: [
+          { nodeId: '377', fieldName: 'upload', fieldValue: filename },
+        ],
+        taskRecordId,
+      });
       
     } catch (error) {
       console.error("❌ 创建去水印任务失败:", error);
       throw error;
     }
+  }
+
+  /**
+   * 创建视频去水印任务（可配置上传节点）
+   * workflowId 必须从环境变量中提供，不允许通过参数传递
+   */
+  async createVideoWatermarkRemovalTask(filename: string, taskRecordId?: number, options?: { workflowId: string; uploadNodeId?: string; uploadFieldName?: string; }): Promise<string> {
+    // workflowId 必须从参数中提供（由调用方从环境变量中选择）
+    const workflowId = options?.workflowId;
+    if (!workflowId) {
+      throw new Error('workflowId is required and must be provided from environment variables');
+    }
+    const uploadNodeId = options?.uploadNodeId || '205';
+    const uploadFieldName = options?.uploadFieldName || 'video';
+    return this.createTaskGeneric({
+      workflowId,
+      nodeInfoList: [
+        { nodeId: uploadNodeId, fieldName: uploadFieldName, fieldValue: filename },
+      ],
+      taskRecordId,
+    });
   }
 
   /**
@@ -208,10 +271,12 @@ export class RunningHubAPI {
       console.log("📤 [RunningHub] 请求头: Content-Type: application/json");
       console.log("📤 [RunningHub] 请求体:", JSON.stringify(payload, null, 2));
 
-      const response = await fetch(`${this.baseUrl}/task/openapi/status`, {
+      const response = await fetch(`${this.baseUrl}/task/openapi/status?t=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         },
         body: JSON.stringify(payload),
       });
@@ -274,15 +339,17 @@ export class RunningHubAPI {
         taskId: taskId
       };
 
-      console.log("📤 [RunningHub] 发送请求到:", `${this.baseUrl}/task/openapi/result`);
+      console.log("📤 [RunningHub] 发送请求到:", `${this.baseUrl}/task/openapi/outputs`);
       console.log("📤 [RunningHub] 请求方法: POST");
       console.log("📤 [RunningHub] 请求头: Content-Type: application/json");
       console.log("📤 [RunningHub] 请求体:", JSON.stringify(payload, null, 2));
 
-      const response = await fetch(`${this.baseUrl}/task/openapi/result`, {
+      const response = await fetch(`${this.baseUrl}/task/openapi/outputs?t=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         },
         body: JSON.stringify(payload),
       });
@@ -303,6 +370,16 @@ export class RunningHubAPI {
       console.log("📥 [RunningHub] 成功响应体:", JSON.stringify(result, null, 2));
       
       if (result.code !== 0) {
+        // 检查是否是任务仍在运行中的错误
+        if (result.code === 804 && result.msg === 'APIKEY_TASK_IS_RUNNING') {
+          console.log(`ℹ️ 任务仍在运行中，无法获取结果: ${taskId}`);
+          // 返回一个特殊的结果，表示任务仍在运行
+          return {
+            code: 804,
+            msg: 'APIKEY_TASK_IS_RUNNING',
+            data: null
+          };
+        }
         throw new Error(`Get result failed (api): ${result.msg || 'Unknown error'}`);
       }
 

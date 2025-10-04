@@ -19,9 +19,11 @@ export function DownloadAction({
   id: string;
   disabled?: boolean;
   showText?: boolean;
-  taskType?: "flux" | "background-removal" | "watermark-removal";
+  taskType?: "flux" | "background-removal" | "watermark-removal" | "sora2-video-watermark-removal";
 }) {
-  const t = useTranslations("History");
+  // 根据任务类型选择不同的国际化命名空间
+  const namespace = taskType === "sora2-video-watermark-removal" ? "Sora2VideoWatermarkRemovalPage" : "History";
+  const t = useTranslations(namespace);
   const [isDownloading, startDownloadTransition] = useTransition();
   const [isPending, setIsPending] = useState(false);
   const { userId } = useAuth();
@@ -49,6 +51,10 @@ export function DownloadAction({
               apiUrl = `/api/download?taskId=${id}&type=watermark-removal`;
               fileExtension = "zip";
               fileName = `watermark-removed-${id}.${fileExtension}`;
+            } else if (taskType === "sora2-video-watermark-removal") {
+              apiUrl = `/api/download?taskId=${id}&type=sora2-video-watermark-removal`;
+              fileExtension = "mp4";
+              fileName = `sora2-video-watermark-removed-${id}.${fileExtension}`;
             } else {
               apiUrl = `/api/download?fluxId=${id}`;
               fileExtension = "jpg";

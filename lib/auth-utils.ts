@@ -14,7 +14,6 @@ export async function getUser() {
 export async function getCurrentUser() {
   // 在构建时或没有数据库连接时返回null
   if (shouldSkipDatabaseQuery()) {
-    console.log("🔧 构建时：跳过用户认证，返回null");
     return null;
   }
 
@@ -24,7 +23,6 @@ export async function getCurrentUser() {
                       env.GOOGLE_CLIENT_SECRET === "google-client-secret-placeholder";
     
     if (isDevMode && process.env.NODE_ENV === "development") {
-      console.log("🔧 开发模式：使用测试用户账户");
       
       const testUserId = "dev-user-123";
       const testUserEmail = "dev@localhost.com";

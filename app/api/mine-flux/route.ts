@@ -139,6 +139,29 @@ export async function GET(req: NextRequest) {
       taskType: "watermark-removal", // 添加任务类型标识
     }));
 
+    // 查询 Sora2 视频去水印任务（从 FluxData 表中筛选）
+    const sora2VideoTasks = fluxData.filter((task) => 
+      task.model === "sora2-video-watermark-removal"
+    );
+
+    // 转换 Sora2 视频去水印任务为统一格式
+    const transformedSora2VideoTasks = sora2VideoTasks.map((task) => ({
+      id: task.replicateId || task.id.toString(), // 使用replicateId或id作为标识
+      imageUrl: task.imageUrl || task.inputImageUrl, // 使用imageUrl或inputImageUrl作为视频URL
+      inputImageUrl: task.inputImageUrl, // 使用inputImageUrl作为输入视频URL
+      inputPrompt: task.inputPrompt || "Sora2 Video Watermark Removal",
+      taskStatus: task.taskStatus === "succeeded" ? FluxTaskStatus.Succeeded : FluxTaskStatus.Processing,
+      model: task.model,
+      createdAt: task.createdAt,
+      userId: task.userId,
+      isPrivate: task.isPrivate || false,
+      aspectRatio: task.aspectRatio || "16:9", // 视频默认比例
+      executeTime: task.executeEndTime && task.executeStartTime 
+        ? Number(`${task.executeEndTime - task.executeStartTime}`)
+        : 0,
+      taskType: "sora2-video-watermark-removal", // 添加任务类型标识
+    }));
+
     // 转换Flux任务为统一格式
     const transformedFluxTasks = fluxData.map(
       ({ id, executeEndTime, executeStartTime, loraUrl, ...rest }) => ({
@@ -153,13 +176,13 @@ export async function GET(req: NextRequest) {
     );
 
     // 合并所有任务并按创建时间排序
-    const allTasks = [...transformedFluxTasks, ...transformedBackgroundTasks, ...transformedWatermarkTasks]
+    const allTasks = [...transformedFluxTasks, ...transformedBackgroundTasks, ...transformedWatermarkTasks, ...transformedSora2VideoTasks]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, pageSize); // 重新分页
 
     return NextResponse.json({
       data: {
-        total: fluxTotal + backgroundRemovalTasks.length + watermarkRemovalTasks.length,
+        total: fluxTotal + backgroundRemovalTasks.length + watermarkRemovalTasks.length + sora2VideoTasks.length,
         page,
         pageSize,
         data: allTasks,

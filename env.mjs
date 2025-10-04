@@ -54,7 +54,17 @@ export const env = createEnv({
     // RunningHub API Configuration
     RUNNINGHUB_API_BASE_URL: z.string().url().default("https://www.runninghub.cn"),
     RUNNINGHUB_API_KEY: z.string().min(1).default("placeholder"),
-    RUNNINGHUB_WORKFLOW_ID: z.string().min(1).default("1958143469921382402"),
+    RUNNINGHUB_WORKFLOW_ID: z.string().min(1).default("placeholder"),
+    
+    // Sora2 Video Watermark Removal Workflow IDs
+    SORA2_LANDSCAPE_WORKFLOW_ID: z.string().min(1).refine(
+      (val) => val !== "placeholder",
+      { message: "SORA2_LANDSCAPE_WORKFLOW_ID must be set in environment variables" }
+    ),
+    SORA2_PORTRAIT_WORKFLOW_ID: z.string().min(1).refine(
+      (val) => val !== "placeholder",
+      { message: "SORA2_PORTRAIT_WORKFLOW_ID must be set in environment variables" }
+    ),
     
     // Legacy OpenAI config (now replaced by Gemini via AI Gateway)
     OPEN_AI_API_ENDPOINT: z.string().url().optional(),
@@ -133,6 +143,8 @@ export const env = createEnv({
     RUNNINGHUB_API_BASE_URL: process.env.RUNNINGHUB_API_BASE_URL,
     RUNNINGHUB_API_KEY: process.env.RUNNINGHUB_API_KEY,
     RUNNINGHUB_WORKFLOW_ID: process.env.RUNNINGHUB_WORKFLOW_ID,
+    SORA2_LANDSCAPE_WORKFLOW_ID: process.env.SORA2_LANDSCAPE_WORKFLOW_ID,
+    SORA2_PORTRAIT_WORKFLOW_ID: process.env.SORA2_PORTRAIT_WORKFLOW_ID,
     
     // Legacy OpenAI config
     OPEN_AI_API_ENDPOINT: process.env.OPEN_AI_API_ENDPOINT,

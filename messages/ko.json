@@ -465,6 +465,7 @@
     "removebg": "배경 제거",
     "removeObjects": "객체 제거",
     "removeWatermark": "워터마크 제거",
+    "sora2VideoWatermarkRemoval": "Sora2 비디오 워터마크 제거",
     "explore": "탐색",
     "title": "Remove Anything - 무료 이미지 객체 및 배경 제거",
     "prompt": "Remove Anything 프롬프트 생성기",
@@ -569,6 +570,86 @@
     "title": "전문 워터마크 제거 도구 - Remove Anything",
     "description": "AI 기술을 사용하여 이미지의 워터마크, 텍스트 마크 및 식별자를 지능적으로 식별하고 제거합니다. 작업을 보호하고 이미지를 더욱 전문적이고 아름답게 만듭니다.",
     "keywords": "워터마크 제거, 텍스트 제거, 이미지 정리, 워터마크 제거 도구, 텍스트 제거 도구, 이미지 편집, AI 이미지 처리, 온라인 도구"
+  },
+  "Sora2VideoWatermarkRemovalPage": {
+    "title": "Sora2 비디오 워터마크 제거 도구 - 전문 AI 비디오 처리",
+    "description": "고급 AI 기술을 사용하여 Sora2 생성 비디오에서 워터마크를 제거하세요. 고품질 출력, 빠른 처리 및 배치 지원을 제공하는 전문 비디오 워터마크 제거 도구입니다.",
+    "keywords": "sora2 비디오 워터마크 제거, 비디오 워터마크 제거, AI 비디오 처리, sora2 워터마크 제거기, 비디오 편집 도구, 콘텐츠 제작자 도구, 온라인 비디오 워터마크 제거, AI 비디오 편집, 비디오 처리, 비디오에서 워터마크 제거, sora2 비디오 편집기, 비디오 워터마크 도구, 전문 비디오 편집, 비디오 콘텐츠 제작, AI 비디오 향상",
+    "hero": {
+      "title": "Sora2 비디오 워터마크 제거 도구",
+      "description": "고급 AI 기술을 사용하여 Sora2 생성 비디오에서 워터마크를 제거하세요. 고품질 출력과 빠른 처리를 제공하는 전문 비디오 워터마크 제거입니다.",
+      "startButton": "비디오 워터마크 제거 시작",
+      "pricingButton": "가격 보기"
+    },
+    "features": {
+      "title": "우리의 Sora2 비디오 워터마크 제거 도구를 선택하는 이유는?",
+      "description": "우리의 AI 기반 비디오 워터마크 제거 도구는 뛰어난 속도와 사용 편의성으로 전문가급 결과를 제공합니다.",
+      "aiPowered": {
+        "title": "AI 기반 기술",
+        "description": "고급 인공지능이 Sora2 비디오에서 워터마크를 정확하게 자동 감지하고 제거합니다"
+      },
+      "highQuality": {
+        "title": "고품질 출력",
+        "description": "워터마크를 매끄럽게 제거하면서 원본 비디오 품질을 유지하며, 품질 손실이 없습니다"
+      },
+      "fastProcessing": {
+        "title": "빠른 처리",
+        "description": "효율적인 알고리즘으로 빠른 비디오 처리, 몇 분 안에 결과를 얻으세요"
+      },
+      "batchSupport": {
+        "title": "배치 처리",
+        "description": "여러 비디오를 한 번에 처리하여 시간을 절약하고 워크플로우 효율성을 향상시키세요"
+      },
+      "freeToUse": {
+        "title": "무료 사용",
+        "description": "등록 불필요, Sora2 비디오를 위한 완전 무료 워터마크 제거"
+      },
+      "privacyFocused": {
+        "title": "개인정보 보호 중심",
+        "description": "비디오는 안전하게 처리되며 처리 후 서버에서 삭제됩니다"
+      }
+    },
+    "howToUse": {
+      "title": "Sora2 비디오에서 워터마크 제거하는 방법",
+      "description": "Sora2 생성 비디오에서 워터마크를 제거하려면 다음 간단한 단계를 따르세요.",
+      "step1": {
+        "title": "1. 비디오 업로드",
+        "description": "'비디오 업로드' 버튼을 클릭하고 Sora2 생성 비디오 파일을 선택하세요. MP4, MOV 및 기타 일반적인 비디오 형식을 지원합니다."
+      },
+      "step2": {
+        "title": "2. AI가 자동으로 워터마크 제거",
+        "description": "우리의 지능형 AI가 비디오에서 워터마크를 자동으로 감지하고 제거합니다. 수동 작업이 필요 없습니다!"
+      },
+      "step3": {
+        "title": "3. 깨끗한 비디오 다운로드",
+        "description": "워터마크가 제거된 비디오가 준비되었습니다! '비디오 다운로드' 버튼을 클릭하여 고품질로 저장하세요."
+      }
+    },
+    "useCases": {
+      "title": "콘텐츠 제작자에게 완벽",
+      "description": "우리의 Sora2 비디오 워터마크 제거 도구는 다양한 콘텐츠 제작 요구에 맞게 설계되었습니다.",
+      "contentCreation": {
+        "title": "콘텐츠 제작",
+        "description": "소셜 미디어 게시물, YouTube 콘텐츠 및 마케팅 자료를 위한 Sora2 비디오에서 워터마크 제거"
+      },
+      "professionalWork": {
+        "title": "전문 작업",
+        "description": "프레젠테이션, 클라이언트 작업 및 상업적 사용을 위한 깨끗하고 전문적인 비디오 제작"
+      },
+      "socialMedia": {
+        "title": "소셜 미디어",
+        "description": "워터마크 없이 Instagram, TikTok 및 기타 소셜 미디어 플랫폼을 위한 Sora2 비디오 준비"
+      },
+      "marketing": {
+        "title": "마케팅",
+        "description": "광고, 홍보 콘텐츠 및 마케팅 캠페인에서 깨끗한 Sora2 비디오 사용"
+      }
+    },
+    "action": {
+      "download": "비디오 다운로드",
+      "downloadSuccess": "비디오가 다운로드되었습니다.",
+      "downloadLoading": "다운로드 중..."
+    }
   },
   "QuickAccess": {
     "title": "빠른 접근",

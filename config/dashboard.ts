@@ -38,6 +38,11 @@ export const dashboardConfig: DashboardConfig = {
           icon: "Images"
         },
         {
+          title: "Sora2VideoWatermarkRemoval",
+          href: "/app/sora2-video-watermark-removal",
+          icon: "Video"
+        },
+        {
           title: "History",
           href: "/app/history",
           icon: "History",

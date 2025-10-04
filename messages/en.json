@@ -478,6 +478,9 @@
     "Index": "Home",
     "BackgroundRemoval": "Background Removal",
     "BatchBackgroundRemoval": "Batch Background Removal",
+    "WatermarkRemoval": "Watermark Removal",
+    "BatchWatermarkRemoval": "Batch Watermark Removal",
+    "Sora2VideoWatermarkRemoval": "Sora2 Video Watermark Removal",
     "History": "History",
     "GiftCode": "Gift Code",
     "ChargeOrder": "Charge Order"
@@ -487,7 +490,7 @@
     "removebg": "Background Removal",
     "removeObjects": "Remove Objects",
     "removeWatermark": "Remove Watermark",
-
+    "sora2VideoWatermarkRemoval": "Sora2 Video Watermark Removal",
     "BatchBackgroundRemoval": "Batch Background Removal",
     "explore": "Examples",
     "title": "Remove Anything",
@@ -598,6 +601,86 @@
       "pricingButton": "View Pricing"
     }
   },
+  "Sora2VideoWatermarkRemovalPage": {
+    "title": "Sora2 Video Watermark Removal Tool - Professional AI Video Processing",
+    "description": "Remove watermarks from Sora2 generated videos using advanced AI technology. Professional video watermark removal tool with high-quality output, fast processing, and batch support. Free online tool for content creators.",
+    "keywords": "sora2 video watermark removal, video watermark removal, AI video processing, sora2 watermark remover, video editing tool, content creator tools, video watermark removal online, AI video editing, video processing, remove watermark from video, sora2 video editor, video watermark tool, professional video editing, video content creation, AI video enhancement",
+    "hero": {
+      "title": "Sora2 Video Watermark Removal Tool",
+      "description": "Remove watermarks from Sora2 generated videos using advanced AI technology. Professional video watermark removal with high-quality output and fast processing.",
+      "startButton": "Start Removing Video Watermark",
+      "pricingButton": "View Pricing"
+    },
+    "features": {
+      "title": "Why Choose Our Sora2 Video Watermark Removal Tool?",
+      "description": "Our AI-powered video watermark removal tool offers professional-quality results with unmatched speed and ease of use.",
+      "aiPowered": {
+        "title": "AI-Powered Technology",
+        "description": "Advanced artificial intelligence automatically detects and removes watermarks from Sora2 videos with precision"
+      },
+      "highQuality": {
+        "title": "High-Quality Output",
+        "description": "Maintains original video quality while removing watermarks seamlessly, no quality loss"
+      },
+      "fastProcessing": {
+        "title": "Fast Processing",
+        "description": "Quick video processing with efficient algorithms, get results in minutes"
+      },
+      "batchSupport": {
+        "title": "Batch Processing",
+        "description": "Process multiple videos at once to save time and improve workflow efficiency"
+      },
+      "freeToUse": {
+        "title": "Free to Use",
+        "description": "No registration required, completely free watermark removal for Sora2 videos"
+      },
+      "privacyFocused": {
+        "title": "Privacy Focused",
+        "description": "Your videos are processed securely and deleted from our servers after processing"
+      }
+    },
+    "howToUse": {
+      "title": "How to Remove Watermarks from Sora2 Videos",
+      "description": "Follow these simple steps to remove watermarks from your Sora2 generated videos.",
+      "step1": {
+        "title": "1. Upload Your Video",
+        "description": "Click the 'Upload Video' button and select your Sora2 generated video file. We support MP4, MOV, and other common video formats."
+      },
+      "step2": {
+        "title": "2. AI Automatically Removes Watermark",
+        "description": "Our intelligent AI will automatically detect and remove watermarks from your video. No manual work needed!"
+      },
+      "step3": {
+        "title": "3. Download Your Clean Video",
+        "description": "Your watermark-free video is ready! Just click the 'Download Video' button to save it in high quality."
+      }
+    },
+    "useCases": {
+      "title": "Perfect for Content Creators",
+      "description": "Our Sora2 video watermark removal tool is designed for various content creation needs.",
+      "contentCreation": {
+        "title": "Content Creation",
+        "description": "Remove watermarks from Sora2 videos for social media posts, YouTube content, and marketing materials"
+      },
+      "professionalWork": {
+        "title": "Professional Work",
+        "description": "Create clean, professional videos for presentations, client work, and commercial use"
+      },
+      "socialMedia": {
+        "title": "Social Media",
+        "description": "Prepare Sora2 videos for Instagram, TikTok, and other social media platforms without watermarks"
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "Use clean Sora2 videos in advertisements, promotional content, and marketing campaigns"
+      }
+    },
+    "action": {
+      "download": "Download Video",
+      "downloadSuccess": "Video downloaded.",
+      "downloadLoading": "Downloading..."
+    }
+  },
   "QuickAccess": {
     "title": "Quick Access",
     "subtitle": "Choose the feature you need and start using it immediately",
@@ -650,7 +733,6 @@
     "processingResults": "Processing Results",
     "image": "Image",
     "pending": "Pending",
-    "processing": "Processing",
     "succeeded": "Succeeded",
     "failed": "Failed",
     "noImagesSelected": "No images selected",
@@ -663,7 +745,8 @@
     "description": "View your recent activities and task history",
     "tabs": {
       "watermark": "Watermark Removal",
-      "background": "Background Removal"
+      "background": "Background Removal",
+      "sora2video": "Sora2 Video"
     },
     "watermarkHistory": {
       "title": "Watermark Removal History",
@@ -683,6 +766,16 @@
         "title": "No background removal tasks yet",
         "description": "Start removing backgrounds from your images to see them here",
         "action": "Start Removing Backgrounds"
+      }
+    },
+    "sora2VideoHistory": {
+      "title": "Sora2 Video Watermark Removal History",
+      "task": "Task",
+      "video": "Video",
+      "empty": {
+        "title": "No Sora2 video watermark removal tasks yet",
+        "description": "Start removing watermarks from your Sora2 videos to see them here",
+        "action": "Start Removing Video Watermarks"
       }
     },
     "status": {

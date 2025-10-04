@@ -75,6 +75,28 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
     enabled: !!userId,
   });
 
+  // 获取 Sora2 视频去水印历史记录
+  const { data: sora2VideoHistory, isLoading: sora2VideoLoading } = useQuery({
+    queryKey: ["sora2-video-history", userId],
+    queryFn: async () => {
+      const response = await fetch("/api/mine-flux?page=1&pageSize=12", {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const result = await response.json();
+        console.log("🔍 Sora2 video watermark removal API response:", result);
+        // 过滤出 Sora2 视频去水印任务
+        const filteredTasks = result.data?.data?.filter((task: FluxSelectDto) => 
+          task.taskType === "sora2-video-watermark-removal"
+        ) || [];
+        console.log("🔍 Filtered Sora2 video tasks:", filteredTasks);
+        return filteredTasks;
+      }
+      return [];
+    },
+    enabled: !!userId,
+  });
+
   // 复制taskid
   const copyTaskId = (taskId: string) => {
     copy(taskId);
@@ -123,9 +145,10 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="watermark">{t("tabs.watermark")}</TabsTrigger>
           <TabsTrigger value="background">{t("tabs.background")}</TabsTrigger>
+          <TabsTrigger value="sora2video">{t("tabs.sora2video")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="watermark" className="space-y-4">
@@ -322,6 +345,108 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                   <Button asChild>
                     <Link href="/app/remove-background">
                       {t("backgroundHistory.empty.action")}
+                    </Link>
+                  </Button>
+                </EmptyPlaceholder>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sora2video" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icons.Video className="h-5 w-5" />
+                {t("sora2VideoHistory.title")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {sora2VideoLoading ? (
+                <div className="flex h-32 items-center justify-center">
+                  <Loading />
+                </div>
+              ) : sora2VideoHistory && sora2VideoHistory.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sora2VideoHistory.map((item: FluxSelectDto, index: number) => (
+                    <div
+                      key={item.id}
+                      className="border rounded-lg p-4 space-y-3 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-foreground mb-1">
+                            {t("sora2VideoHistory.task")} #{index + 1}
+                          </div>
+                          <div className="text-xs text-muted-foreground font-mono">
+                            ID: {item.id}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyTaskId(item.id)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Badge className={getStatusStyle(item.taskStatus)}>
+                            {getStatusText(item.taskStatus)}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+                        {item.taskStatus === FluxTaskStatus.Processing ? (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <PlaygroundLoading />
+                          </div>
+                        ) : (
+                          <BlurFade
+                            key={item.imageUrl}
+                            delay={0.25 + index * 0.05}
+                            inView
+                          >
+                            <video
+                              src={item.imageUrl || item.inputImageUrl || ""}
+                              className="w-full h-full object-cover"
+                              controls
+                              muted
+                            />
+                          </BlurFade>
+                        )}
+                      </div>
+
+                      {item.taskStatus === FluxTaskStatus.Succeeded && (
+                        <div className="space-y-2">
+                          <DownloadAction
+                            disabled={false}
+                            id={item.id}
+                            taskType="sora2-video-watermark-removal"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                        <span className="font-mono">{item.taskType}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyPlaceholder>
+                  <EmptyPlaceholder.Icon name="media" />
+                  <EmptyPlaceholder.Title>
+                    {t("sora2VideoHistory.empty.title")}
+                  </EmptyPlaceholder.Title>
+                  <EmptyPlaceholder.Description>
+                    {t("sora2VideoHistory.empty.description")}
+                  </EmptyPlaceholder.Description>
+                  <Button asChild>
+                    <Link href="/app/sora2-video-watermark-removal">
+                      {t("sora2VideoHistory.empty.action")}
                     </Link>
                   </Button>
                 </EmptyPlaceholder>

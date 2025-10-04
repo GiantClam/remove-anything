@@ -452,6 +452,7 @@
     "removebg": "Hintergrund entfernen",
     "removeObjects": "Objekte entfernen",
     "removeWatermark": "Wasserzeichen entfernen",
+    "sora2VideoWatermarkRemoval": "Sora2 Video-Wasserzeichen entfernen",
     "explore": "Erkunden",
     "prompt": "Remove Anything Prompt Generator",
     "title": "Remove Anything - Kostenloser KI-Objekt- und Hintergrundentferner",
@@ -595,5 +596,21 @@
     "maxFilesLimit": "Maximal {count} Dateien können hochgeladen werden",
     "supportedFormats": "Unterstützt {formats} Format, maximal {size} MB",
     "uploadProgress": "Wird hochgeladen... {progress}%"
+  },
+  "Sora2VideoWatermarkRemovalPage": {
+    "title": "Sora2 Video-Wasserzeichen-Entfernungstool - Professionelle KI-Videobearbeitung",
+    "description": "Entfernen Sie Wasserzeichen aus Sora2-generierten Videos mit fortschrittlicher KI-Technologie. Professionelles Video-Wasserzeichen-Entfernungstool mit hochwertiger Ausgabe, schneller Verarbeitung und Batch-Unterstützung.",
+    "keywords": "sora2 video wasserzeichen entfernung, video wasserzeichen entfernung, ki videobearbeitung, sora2 wasserzeichen entferner, videobearbeitung tools, content creator tools, video wasserzeichen entfernung online, ki videobearbeitung, videobearbeitung, wasserzeichen aus video entfernen, sora2 video editor, video wasserzeichen tool, professionelle videobearbeitung, video content creation, ki video verbesserung",
+    "hero": {
+      "title": "Sora2 Video-Wasserzeichen-Entfernungstool",
+      "description": "Entfernen Sie Wasserzeichen aus Sora2-generierten Videos mit fortschrittlicher KI-Technologie.",
+      "startButton": "Video-Wasserzeichen entfernen starten",
+      "pricingButton": "Preise anzeigen"
+    },
+    "action": {
+      "download": "Video herunterladen",
+      "downloadSuccess": "Video heruntergeladen.",
+      "downloadLoading": "Wird heruntergeladen..."
+    }
   }
 }

@@ -5,6 +5,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Copy,
   CreditCard,
   Eraser,
@@ -31,6 +32,7 @@ import {
   SunMedium,
   Trash,
   User,
+  Video,
   X,
 } from "lucide-react";
 
@@ -44,6 +46,7 @@ export const Icons = {
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
   check: Check,
+  clock: Clock,
   close: X,
   copy: Copy,
   ellipsis: MoreVertical,
@@ -54,6 +57,7 @@ export const Icons = {
   Images,
   Languages,
   HomeIcon,
+  Video,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"

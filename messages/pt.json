@@ -466,6 +466,7 @@
     "removebg": "Remoção de fundo",
     "removeObjects": "Remoção de objetos",
     "removeWatermark": "Remoção de marca d'água",
+    "sora2VideoWatermarkRemoval": "Remoção de marca d'água Sora2 Video",
     "explore": "Explorar",
     "prompt": "Gerador de Prompts Remove Anything",
     "title": "Remove Anything - Removedor Gratuito de Objetos e Fundos com IA",
@@ -609,5 +610,21 @@
     "maxFilesLimit": "Máximo {count} arquivos podem ser enviados",
     "supportedFormats": "Suporta formato {formats}, máximo {size} MB",
     "uploadProgress": "Fazendo upload... {progress}%"
+  },
+  "Sora2VideoWatermarkRemovalPage": {
+    "title": "Ferramenta de Remoção de Marca d'água Sora2 Video - Processamento de Vídeo IA Profissional",
+    "description": "Remova marcas d'água de vídeos gerados pelo Sora2 usando tecnologia IA avançada. Ferramenta profissional de remoção de marca d'água de vídeo com saída de alta qualidade, processamento rápido e suporte em lote.",
+    "keywords": "remoção de marca d'água de vídeo sora2, remoção de marca d'água de vídeo, processamento de vídeo IA, removedor de marca d'água sora2, ferramentas de edição de vídeo, ferramentas de criador de conteúdo, remoção de marca d'água de vídeo online, edição de vídeo IA, processamento de vídeo, remover marca d'água do vídeo, editor de vídeo sora2, ferramenta de marca d'água de vídeo, edição de vídeo profissional, criação de conteúdo de vídeo, melhoria de vídeo IA",
+    "hero": {
+      "title": "Ferramenta de Remoção de Marca d'água Sora2 Video",
+      "description": "Remova marcas d'água de vídeos gerados pelo Sora2 usando tecnologia IA avançada.",
+      "startButton": "Começar a remoção de marca d'água de vídeo",
+      "pricingButton": "Ver preços"
+    },
+    "action": {
+      "download": "Baixar vídeo",
+      "downloadSuccess": "Vídeo baixado.",
+      "downloadLoading": "Baixando..."
+    }
   }
 }

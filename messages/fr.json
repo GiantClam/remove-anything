@@ -483,6 +483,7 @@
     "removebg": "Suppression d'arrière-plan",
     "removeObjects": "Suppression d'objets",
     "removeWatermark": "Suppression de filigrane",
+    "sora2VideoWatermarkRemoval": "Suppression de filigrane vidéo Sora2",
     "BatchBackgroundRemoval": "Suppression d'arrière-plan par lot",
     "explore": "Explorer",
     "title": "Remove Anything - Suppresseur Gratuit d'Objets et d'Arrière-plans par IA",
@@ -626,5 +627,21 @@
     "maxFilesLimit": "Un maximum de {count} fichiers peuvent être téléchargés",
     "supportedFormats": "Prend en charge le format {formats}, maximum {size} MB",
     "uploadProgress": "Téléchargement... {progress}%"
+  },
+  "Sora2VideoWatermarkRemovalPage": {
+    "title": "Outil de suppression de filigrane vidéo Sora2 - Traitement vidéo IA professionnel",
+    "description": "Supprimez les filigranes des vidéos générées par Sora2 en utilisant une technologie IA avancée. Outil professionnel de suppression de filigrane vidéo avec sortie haute qualité, traitement rapide et support par lots.",
+    "keywords": "suppression de filigrane vidéo sora2, suppression de filigrane vidéo, traitement vidéo IA, suppresseur de filigrane sora2, outils d'édition vidéo, outils de créateur de contenu, suppression de filigrane vidéo en ligne, édition vidéo IA, traitement vidéo, supprimer filigrane de vidéo, éditeur vidéo sora2, outil de filigrane vidéo, édition vidéo professionnelle, création de contenu vidéo, amélioration vidéo IA",
+    "hero": {
+      "title": "Outil de suppression de filigrane vidéo Sora2",
+      "description": "Supprimez les filigranes des vidéos générées par Sora2 en utilisant une technologie IA avancée.",
+      "startButton": "Commencer la suppression de filigrane vidéo",
+      "pricingButton": "Voir les tarifs"
+    },
+    "action": {
+      "download": "Télécharger la vidéo",
+      "downloadSuccess": "Vidéo téléchargée.",
+      "downloadLoading": "Téléchargement en cours..."
+    }
   }
 }

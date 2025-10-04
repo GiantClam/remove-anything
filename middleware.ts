@@ -42,7 +42,15 @@ const isProtectedRoute = createRouteMatcher([
   "/:locale/admin(.*)",
   "/app", // 添加/app路由为受保护路由
 ]);
-const isPublicRoute = createRouteMatcher(["/api/webhooks(.*)"]);
+const isPublicRoute = createRouteMatcher([
+  "/api/webhooks(.*)",
+  "/api/sora2-video-watermark-removal(.*)",
+  "/api/download-video",
+  "/:locale/app/sora2-video-watermark-removal",
+  "/app/sora2-video-watermark-removal",
+  "/:locale/sora2-video-watermark-removal",
+  "/sora2-video-watermark-removal",
+]);
 
 const nextIntlMiddleware = createMiddleware({
   defaultLocale,
@@ -128,6 +136,15 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
+        const pathname = req.nextUrl.pathname;
+        // 显式放行 Sora2 视频去水印页面（含本地化前缀）
+        const allowSora2 = /^\/(zh|en)\/app\/sora2-video-watermark-removal$/.test(pathname) ||
+          /^\/app\/sora2-video-watermark-removal$/.test(pathname) ||
+          /^\/(zh|en)\/sora2-video-watermark-removal$/.test(pathname) ||
+          /^\/sora2-video-watermark-removal$/.test(pathname);
+        if (allowSora2) {
+          return true;
+        }
         // If it's a public route, allow access
         if (isPublicRoute(req)) {
           return true;

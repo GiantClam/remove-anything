@@ -465,6 +465,7 @@
     "removebg": "背景除去",
     "removeObjects": "オブジェクト除去",
     "removeWatermark": "透かし除去",
+    "sora2VideoWatermarkRemoval": "Sora2動画透かし除去",
     "explore": "探索",
     "prompt": "Remove Anything プロンプトジェネレーター",
     "title": "Remove Anything - 無料で画像から任意のオブジェクトを除去",
@@ -608,5 +609,21 @@
     "maxFilesLimit": "最大 {count} ファイルまでアップロード可能",
     "supportedFormats": "{formats} 形式をサポート、最大 {size} MB",
     "uploadProgress": "アップロード中... {progress}%"
+  },
+  "Sora2VideoWatermarkRemovalPage": {
+    "title": "Sora2動画透かし除去ツール - プロフェッショナルAI動画処理",
+    "description": "高度なAI技術を使用してSora2生成動画から透かしを除去します。高品質出力、高速処理、バッチサポートを提供するプロフェッショナル動画透かし除去ツールです。",
+    "keywords": "sora2動画透かし除去、動画透かし除去、AI動画処理、sora2透かし除去ツール、動画編集ツール、コンテンツクリエイターツール、オンライン動画透かし除去、AI動画編集、動画処理、動画から透かしを除去、sora2動画エディター、動画透かしツール、プロフェッショナル動画編集、動画コンテンツ作成、AI動画強化",
+    "hero": {
+      "title": "Sora2動画透かし除去ツール",
+      "description": "高度なAI技術を使用してSora2生成動画から透かしを除去します。",
+      "startButton": "動画透かし除去を開始",
+      "pricingButton": "価格を見る"
+    },
+    "action": {
+      "download": "動画をダウンロード",
+      "downloadSuccess": "動画がダウンロードされました。",
+      "downloadLoading": "ダウンロード中..."
+    }
   }
 }

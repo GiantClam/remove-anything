@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
 import { findWatermarkRemovalTaskByRunningHubId, updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";
+import { findSora2VideoWatermarkRemovalTaskByRunningHubId, updateSora2VideoWatermarkRemovalTask } from "@/db/queries/sora2-video-watermark-removal";
 import AWS from 'aws-sdk';
 import { nanoid } from "nanoid";
 import { env } from "@/env.mjs";
@@ -116,12 +117,29 @@ export async function POST(req: NextRequest) {
       // 即使API返回错误，我们也需要更新任务状态
     }
 
-    // 查找对应的任务记录
-    const taskRecord = await findWatermarkRemovalTaskByRunningHubId(taskId);
+    // 查找对应的任务记录（先查找图片去水印，再查找Sora2视频去水印）
+    let watermarkTaskRecord = await findWatermarkRemovalTaskByRunningHubId(taskId);
+    let sora2TaskRecord: any = null;
+    let taskType = 'watermark-removal';
+    let taskRecord: any = null;
+    
+    if (watermarkTaskRecord) {
+      taskRecord = watermarkTaskRecord;
+      taskType = 'watermark-removal';
+    } else {
+      sora2TaskRecord = await findSora2VideoWatermarkRemovalTaskByRunningHubId(taskId);
+      if (sora2TaskRecord) {
+        taskRecord = sora2TaskRecord;
+        taskType = 'sora2-video-watermark-removal';
+      }
+    }
+    
     if (!taskRecord) {
       console.log(`❌ 未找到任务记录: ${taskId}`);
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
+    
+    console.log(`🔍 找到任务记录: ${taskId}，类型: ${taskType}`);
 
     console.log(`🔄 处理任务状态更新: ${taskId} -> code: ${code}, msg: ${msg}`);
 
@@ -132,19 +150,29 @@ export async function POST(req: NextRequest) {
       // 任务成功
       if (data && Array.isArray(data) && data.length > 0) {
         try {
-          // 下载输出ZIP文件并保存到R2
           const outputFile = data[0];
-          const r2ZipUrl = await downloadAndSaveToR2(outputFile.fileUrl, taskRecord.id.toString());
           
-          updateData = {
-            taskStatus: "succeeded",
-            outputZipUrl: r2ZipUrl,
-            executeEndTime: BigInt(Date.now())
-          };
-          console.log(`✅ 任务成功完成: ${taskId}，输出URL: ${r2ZipUrl}`);
+          if (taskType === 'watermark-removal') {
+            // 图片去水印：下载ZIP文件并保存到R2
+            const r2ZipUrl = await downloadAndSaveToR2(outputFile.fileUrl, taskRecord.id.toString());
+            updateData = {
+              taskStatus: "succeeded",
+              outputZipUrl: r2ZipUrl,
+              executeEndTime: BigInt(Date.now())
+            };
+            console.log(`✅ 图片去水印任务成功完成: ${taskId}，输出URL: ${r2ZipUrl}`);
+          } else if (taskType === 'sora2-video-watermark-removal') {
+            // Sora2视频去水印：直接保存视频URL
+            updateData = {
+              taskStatus: "succeeded",
+              imageUrl: outputFile.fileUrl, // 使用imageUrl字段存储视频URL
+              executeEndTime: BigInt(Date.now())
+            };
+            console.log(`✅ Sora2视频去水印任务成功完成: ${taskId}，视频URL: ${outputFile.fileUrl}`);
+          }
         } catch (downloadError) {
-          console.error("❌ 下载输出文件失败:", downloadError);
-          // 即使下载失败，也记录任务成功，但outputZipUrl为空
+          console.error("❌ 处理输出文件失败:", downloadError);
+          // 即使处理失败，也记录任务成功
           updateData = {
             taskStatus: "succeeded",
             executeEndTime: BigInt(Date.now())
@@ -169,12 +197,18 @@ export async function POST(req: NextRequest) {
     
     // 更新数据库记录
     try {
-      await updateWatermarkRemovalTask(taskRecord.id, updateData);
-      console.log(`🔄 已更新 WatermarkRemovalTask 记录: ${taskRecord.id}，状态: ${updateData.taskStatus}`);
+      if (taskType === 'watermark-removal') {
+        await updateWatermarkRemovalTask(taskRecord.id, updateData);
+        console.log(`🔄 已更新 WatermarkRemovalTask 记录: ${taskRecord.id}，状态: ${updateData.taskStatus}`);
+      } else if (taskType === 'sora2-video-watermark-removal') {
+        await updateSora2VideoWatermarkRemovalTask(taskRecord.id, updateData);
+        console.log(`🔄 已更新 Sora2VideoWatermarkRemovalTask 记录: ${taskRecord.id}，状态: ${updateData.taskStatus}`);
+      }
     } catch (dbError) {
       console.error("❌ 数据库更新失败:", {
         error: dbError.message,
         taskRecordId: taskRecord.id,
+        taskType: taskType,
         updateData: updateData
       });
       return NextResponse.json(
