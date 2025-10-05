@@ -21,41 +21,28 @@ export class TaskProcessor {
    * 处理Sora2视频去水印任务
    */
   public async processSora2VideoWatermarkRemoval(task: any) {
-    const { taskRecordId, uploadedFileName, workflowId, uploadNodeId, uploadFieldName } = task.metadata;
+    const { taskRecordId, r2Url, runninghubFileName, orientation } = task.metadata;
     
     try {
       console.log(`🚀 开始处理Sora2视频去水印任务: ${task.id}`);
+      console.log(`📋 任务记录ID: ${taskRecordId}`);
+      console.log(`🔗 R2 URL: ${r2Url}`);
+      console.log(`📁 RunningHub 文件名: ${runninghubFileName}`);
 
-      // 创建RunningHub任务
-      const runninghubTaskId = await runninghubAPI.createVideoWatermarkRemovalTask(uploadedFileName, undefined, {
-        workflowId,
-        uploadNodeId,
-        uploadFieldName,
-      });
+      if (!taskRecordId) {
+        throw new Error("任务记录ID未找到");
+      }
 
-      // 更新任务记录
+      // 对于 R2 集成的任务，RunningHub 任务已经在 API 路由中创建
+      // 这里只需要更新任务状态为处理中
       await prisma.fluxData.update({
         where: { id: taskRecordId },
         data: {
-          replicateId: runninghubTaskId,
           taskStatus: "Processing",
         },
       });
 
-      // 扣除积分（仅对登录用户）
-      if (task.userId && task.userId !== "anonymous") {
-        const requiredCredits = Credits[model.sora2VideoWatermarkRemoval];
-        await this.deductCredits(task.userId, requiredCredits, taskRecordId);
-      }
-
-      console.log(`✅ Sora2视频去水印任务 ${task.id} 已启动，RunningHub任务ID: ${runninghubTaskId}`);
-
-      // 更新任务队列中的 RunningHub 任务 ID
-      const { taskQueueManager } = await import('./task-queue');
-      const runningTask = taskQueueManager.getRunningTask(task.id);
-      if (runningTask) {
-        runningTask.runninghubTaskId = runninghubTaskId;
-      }
+      console.log(`✅ Sora2视频去水印任务 ${task.id} 处理完成`);
 
       // 注意：这里不调用 completeTask，因为任务还在RunningHub中处理
       // 任务完成会通过webhook或状态轮询来处理
@@ -64,13 +51,15 @@ export class TaskProcessor {
       console.error(`❌ 处理Sora2视频去水印任务 ${task.id} 失败:`, error);
       
       // 更新任务状态为失败
-      await prisma.fluxData.update({
-        where: { id: taskRecordId },
-        data: {
-          taskStatus: "Failed",
-          errorMsg: error instanceof Error ? error.message : "Unknown error",
-        },
-      });
+      if (taskRecordId) {
+        await prisma.fluxData.update({
+          where: { id: taskRecordId },
+          data: {
+            taskStatus: "Failed",
+            errorMsg: error instanceof Error ? error.message : "Unknown error",
+          },
+        });
+      }
 
       // 标记队列任务失败
       await taskQueueManager.failTask(task.id, error);

@@ -136,6 +136,61 @@ export class RunningHubAPI {
   }
 
   /**
+   * 使用 R2 URL 直接创建任务（避免文件上传）
+   */
+  async createTaskWithR2Url(options: CreateTaskOptions & { r2Url: string }): Promise<string> {
+    try {
+      const { workflowId, nodeInfoList, taskRecordId, r2Url } = options;
+      console.log("🚀 创建任务 (使用 R2 URL)");
+      console.log("[RunningHub] workflowId=", workflowId);
+      console.log("[RunningHub] r2Url=", r2Url);
+
+      const webhookUrl = taskRecordId 
+        ? `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/webhooks/runninghub`
+        : undefined;
+
+      // 直接使用 R2 URL 作为视频输入
+      const nodeInfoListWithR2Url = nodeInfoList.map(node => {
+        if (node.fieldName === 'video_file' || node.fieldName === 'video') {
+          return {
+            ...node,
+            fieldValue: r2Url // 直接使用 R2 URL
+          };
+        }
+        return node;
+      });
+
+      const payload = {
+        apiKey: this.apiKey,
+        workflowId,
+        nodeInfoList: nodeInfoListWithR2Url,
+        ...(webhookUrl && { webhookUrl })
+      };
+
+      console.log("📤 发送到 RunningHub 的 payload:", JSON.stringify(payload, null, 2));
+
+      const response = await fetch(`${this.baseUrl}/task/openapi/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        let bodyText: string | undefined;
+        try { bodyText = await response.text(); } catch {}
+        throw new Error(`Create task failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`);
+      }
+
+      const result: RunningHubCreateTaskResponse = await response.json();
+      if (result.code !== 0) throw new Error(`Create task failed (api): ${result.msg}`);
+      return result.data.taskId;
+    } catch (error) {
+      console.error("❌ 创建任务失败 (R2 URL):", error);
+      throw error;
+    }
+  }
+
+  /**
    * 通用创建任务
    */
   async createTaskGeneric(options: CreateTaskOptions): Promise<string> {

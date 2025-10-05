@@ -151,10 +151,11 @@ model BatchTask {
 
 model FluxData {
   id               Int      @id @default(autoincrement())
-  userId           String   @map(name: "user_id")
-  replicateId      String   @map(name: "replicate_id")
+  userId           String?  @map(name: "user_id")
+  replicateId      String?  @map(name: "replicate_id")
   inputPrompt      String?  @map(name: "input_prompt")
   executePrompt    String?  @map(name: "execute_prompt")
+  prompt           String?  // 通用提示字段
   steps            Int?
   guidance         Int?
   interval         Int?
@@ -164,7 +165,8 @@ model FluxData {
   executeStartTime BigInt?  @map(name: "execute_start_time")
   executeEndTime   BigInt?  @map(name: "execute_end_time")
   locale           String?
-  aspectRatio      String   @map("aspect_ratio")
+  aspectRatio      String?  @map("aspect_ratio")
+  orientation      String?  // 视频方向：landscape/portrait
   safetyTolerance  Int?     @map("safety_tolerance")
   seed             Int?
   taskStatus       String   @map(name: "task_status")
@@ -179,8 +181,16 @@ model FluxData {
   loraScale        Float?   @map("lora_scale")
   batchTaskId      Int?     @map(name: "batch_task_id")
   batchIndex       Int?     @map(name: "batch_index")
+  
+  // R2 和 RunningHub 相关字段
+  r2Url            String?  @map("r2_url") // R2 存储的 URL
+  runninghubFileName String? @map("runninghub_file_name") // RunningHub 中的文件名
+  replicateStatus  String?  @map("replicate_status") // RunningHub 任务状态
+  replicateUrls    String[] @map("replicate_urls") // RunningHub 返回的 URL 列表
+  replicateLogs    String[] @map("replicate_logs") // RunningHub 日志
+  replicateMetrics Json?    @map("replicate_metrics") // RunningHub 指标
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   batchTask BatchTask? @relation(fields: [batchTaskId], references: [id], onDelete: Cascade)
 
   @@map(name: "flux_data")

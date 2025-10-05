@@ -48,7 +48,7 @@ const useCreateSora2VideoWatermarkRemovalMutation = (config?: {
       formData.append("video", values.file);
       formData.append("orientation", values.orientation);
       
-      const res = await fetch("/api/sora2-video-watermark-removal", {
+      const res = await fetch("/api/sora2-video-watermark-removal-r2", {
         method: "POST",
         body: formData,
         credentials: 'include',
@@ -230,10 +230,10 @@ export default function Sora2VideoWatermarkRemoval({
       return;
     }
     
-    // 检查文件大小 (100MB 限制)
-    const maxSize = 100 * 1024 * 1024; // 100MB
+    // 检查文件大小 (50MB 限制，考虑到 Vercel 的限制)
+    const maxSize = 50 * 1024 * 1024; // 50MB
     if (videoFile.size > maxSize) {
-      toast.error('Video file size cannot exceed 100MB');
+      toast.error('视频文件大小不能超过 50MB。请压缩视频后重试。');
       return;
     }
     
@@ -322,12 +322,25 @@ export default function Sora2VideoWatermarkRemoval({
             }
           } else if (errorData.code === "INSUFFICIENT_CREDITS") {
             toast.error("Insufficient credits. Please purchase more credits to continue.");
+          } else if (errorData.code === "FILE_TOO_LARGE") {
+            toast.error(`文件过大：${errorData.error}。建议使用视频压缩工具减小文件大小。`, {
+              duration: 10000,
+            });
+          } else if (errorData.code === "FILE_TOO_SMALL") {
+            toast.error(`文件过小：${errorData.error}`);
           } else {
             toast.error(errorData.details || errorData.error || "Failed to start video watermark removal. Please try again.");
           }
         } catch {
-          // 如果不是 JSON 格式的错误，显示通用错误信息
-          toast.error("Failed to start video watermark removal. Please try again.");
+          // 如果不是 JSON 格式的错误，检查是否是 413 错误
+          if (error.message.includes("413") || error.message.includes("Content Too Large")) {
+            toast.error("文件过大，请压缩视频后重试。建议文件大小不超过 50MB。", {
+              duration: 10000,
+            });
+          } else {
+            // 显示通用错误信息
+            toast.error("Failed to start video watermark removal. Please try again.");
+          }
         }
       } else {
         toast.error("Failed to start video watermark removal. Please try again.");
@@ -399,7 +412,7 @@ export default function Sora2VideoWatermarkRemoval({
               
               <div className="text-sm text-muted-foreground">
                 <p>Supported formats: MP4, MOV, AVI, MKV, WEBM</p>
-                <p>File size: 1MB - 100MB</p>
+                <p>File size: 1MB - 50MB (recommended for mobile devices)</p>
               </div>
             </div>
           </div>

@@ -24,6 +24,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing 'video' file" }, { status: 400 });
     }
 
+    // 检查文件大小 (50MB 限制，考虑到 Vercel 的限制)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (video.size > maxSize) {
+      return NextResponse.json({ 
+        error: "视频文件大小不能超过 50MB。请压缩视频后重试。",
+        code: "FILE_TOO_LARGE",
+        maxSize: "50MB"
+      }, { status: 413 });
+    }
+
+    // 检查最小文件大小 (1MB)
+    const minSize = 1024 * 1024; // 1MB
+    if (video.size < minSize) {
+      return NextResponse.json({ 
+        error: "视频文件大小至少需要 1MB",
+        code: "FILE_TOO_SMALL",
+        minSize: "1MB"
+      }, { status: 400 });
+    }
+
     // 获取当前用户
     const user = await getCurrentUser();
     let userId = user?.id;
