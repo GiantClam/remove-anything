@@ -94,26 +94,32 @@ export function DownloadAction({
               throw new Error("下载的文件大小为0，可能下载失败");
             }
             
-            // 创建下载链接
+            // 优先走 Web Share API（移动端可保存到相册/文件）
+            try {
+              const file = new File([blob], fileName, { type: blob.type || 'video/mp4' });
+              // @ts-ignore - canShare 存在于支持的浏览器
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                // @ts-ignore
+                await navigator.share({ files: [file], title: fileName, text: fileName });
+                console.log("✅ 使用 Web Share API 分享/保存成功");
+                return;
+              }
+            } catch (e) {
+              console.log("ℹ️ Web Share API 不可用或被拒绝，使用下载链接回退", e);
+            }
+
+            // 回退：创建下载链接（Android/桌面保存到下载目录）
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
             link.download = fileName;
-            
-            // 设置下载属性
             link.style.display = "none";
             link.setAttribute("download", fileName);
-            
-            // 添加到DOM并触发下载
             document.body.appendChild(link);
-            
-            // 延迟一下再点击，确保DOM已更新
             setTimeout(() => {
               link.click();
               console.log("🔍 触发下载点击");
             }, 100);
-            
-            // 清理
             setTimeout(() => {
               document.body.removeChild(link);
               window.URL.revokeObjectURL(url);
