@@ -219,8 +219,8 @@ export default function History({ locale, explore }: { locale: string, explore?:
                           )}
                         </div>
                         <div className="flex flex-row justify-between space-x-2 p-4 pt-0">
-                          {/* 只为非背景移除任务和非水印移除任务显示复制prompt按钮 */}
-                          {item.taskType !== "background-removal" && item.taskType !== "watermark-removal" && (
+                          {/* 只为非背景移除任务、非水印移除任务和非Sora2视频去水印任务显示复制prompt按钮 */}
+                          {item.taskType !== "background-removal" && item.taskType !== "watermark-removal" && item.taskType !== "sora2-video-watermark-removal" && (
                             <button
                               className="focus-ring text-content-strong border-stroke-strong hover:border-stroke-stronger data-[state=open]:bg-surface-alpha-light inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border bg-transparent px-2.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
                               onClick={() => copyPrompt(item.inputPrompt!)}
@@ -233,7 +233,8 @@ export default function History({ locale, explore }: { locale: string, explore?:
                             disabled={item.taskStatus === FluxTaskStatus.Processing}
                             id={item.id}
                             taskType={item.taskType === "background-removal" ? "background-removal" : 
-                                     item.taskType === "watermark-removal" ? "watermark-removal" : "flux"}
+                                     item.taskType === "watermark-removal" ? "watermark-removal" : 
+                                     item.taskType === "sora2-video-watermark-removal" ? "sora2-video-watermark-removal" : "flux"}
                           />
                         </div>
                       </>

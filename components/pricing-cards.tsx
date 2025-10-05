@@ -110,7 +110,7 @@ const PricingCard = ({
 
         <SignedOut>
           <div className="flex justify-center">
-            <SignInButton mode="modal" forceRedirectUrl={url(pathname).href}>
+            <SignInButton mode="modal" forceRedirectUrl={pathname}>
               <Button
                 variant={offer.amount === 1990 ? "default" : "outline"}
                 className="w-full"

@@ -56,6 +56,14 @@ export async function GET(req: NextRequest) {
         take: pageSize,
         skip: offset,
         orderBy: { createdAt: "desc" },
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
       }),
       prisma.chargeOrder.count({ where: whereConditions }),
     ]);
