@@ -58,6 +58,11 @@ export async function POST(req: Request) {
     ) {
       return new Response("", { status: 200 });
     }
+    if (!fluxData.userId) {
+      console.log("⚠️ 任务没有关联用户，跳过积分处理");
+      return new Response("", { status: 200 });
+    }
+    
     const account = await getUserCredit(fluxData.userId);
 
     const billingData = await prisma.userBilling.findFirst({

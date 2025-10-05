@@ -6,11 +6,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { FileUpload } from "@/components/ui/file-upload";
 import { Icons } from "@/components/shared/icons";
 import { Credits, model } from "@/config/constants";
-import { Sora2VideoWatermarkRemovalTaskStatus } from "@/db/type";
-import { useUserCredit } from "@/hooks/use-user-credit";
+import { FluxTaskStatus } from "@/db/type";
+import Upload from "../upload";
 
 interface Sora2VideoWatermarkRemovalR2Props {
   locale?: string;
@@ -19,12 +18,27 @@ interface Sora2VideoWatermarkRemovalR2Props {
 export default function Sora2VideoWatermarkRemovalR2({ 
   locale = "en" 
 }: Sora2VideoWatermarkRemovalR2Props) {
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [taskId, setTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { data: userCredit } = useUserCredit();
+  const { data: userCredit } = useQuery({
+    queryKey: ["userCredit"],
+    queryFn: async () => {
+      const res = await fetch("/api/account", {
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        throw new Error("Failed to fetch user credit");
+      }
+      return res.json();
+    },
+  });
+
+  const handleFileChange = (files: any[]) => {
+    setUploadedFiles(files);
+  };
 
   // 直接上传到 R2 的 mutation
   const uploadToR2Mutation = useMutation({
@@ -215,16 +229,15 @@ export default function Sora2VideoWatermarkRemovalR2({
               <Label className="text-base font-semibold">Upload Video</Label>
             </div>
             
-            <FileUpload
-              onDrop={handleFileSelect}
-              onSelect={handleFileSelect}
-              accept={{
-                "video/*": [".mp4", ".mov", ".avi", ".mkv", ".webm"]
-              }}
-              maxFiles={1}
+            <Upload
+              value={uploadedFiles}
+              onChange={handleFileChange}
+              accept={{ "video/*": [".mp4", ".mov", ".avi", ".mkv", ".webm"] }}
               maxSize={50 * 1024 * 1024} // 50MB
+              maxFiles={1}
+              multiple={false}
               placeholder={
-                <div className="flex flex-col items-center justify-center text-center">
+                <div className="flex flex-col items-center justify-center p-6 text-center">
                   <Icons.Video className="h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-lg font-medium mb-2">Drop your video here</p>
                   <p className="text-sm text-muted-foreground mb-4">
