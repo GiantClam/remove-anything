@@ -6,6 +6,7 @@ import AWS from 'aws-sdk';
 import { nanoid } from "nanoid";
 import { env } from "@/env.mjs";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
+import { taskQueueManager } from "@/lib/task-queue";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = 'force-dynamic';
@@ -218,6 +219,14 @@ export async function POST(req: NextRequest) {
     }
     
     console.log(`✅ RunningHub webhook 处理完成: ${taskId}，状态: ${status}`);
+
+    // 进入终态后停止 watcher
+    try {
+      const finalStatus = updateData.taskStatus;
+      if (finalStatus === 'succeeded' || finalStatus === 'failed') {
+        taskQueueManager.stopStatusWatcher(taskId);
+      }
+    } catch {}
     
     return NextResponse.json({ 
       message: "Webhook processed successfully",

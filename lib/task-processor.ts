@@ -21,28 +21,62 @@ export class TaskProcessor {
    * 处理Sora2视频去水印任务
    */
   public async processSora2VideoWatermarkRemoval(task: any) {
-    const { taskRecordId, r2Url, runninghubFileName, orientation } = task.metadata;
+    const { taskRecordId, r2Url, transformUrl, orientation, userId } = task.metadata;
     
     try {
       console.log(`🚀 开始处理Sora2视频去水印任务: ${task.id}`);
       console.log(`📋 任务记录ID: ${taskRecordId}`);
       console.log(`🔗 R2 URL: ${r2Url}`);
-      console.log(`📁 RunningHub 文件名: ${runninghubFileName}`);
+      console.log(`🔗 Transform URL: ${transformUrl}`);
 
       if (!taskRecordId) {
         throw new Error("任务记录ID未找到");
       }
 
-      // 对于 R2 集成的任务，RunningHub 任务已经在 API 路由中创建
-      // 这里只需要更新任务状态为处理中
+      // 等待变换就绪
+      const { waitForTransformReady } = await import('@/lib/cf-media');
+      const ready = await waitForTransformReady(transformUrl, { timeoutMs: 120000, intervalMs: 1000 });
+      if (!ready) throw new Error('Media transform not ready within timeout');
+
+      // 创建 RunningHub 任务
+      const workflowId = orientation === 'portrait' 
+        ? process.env.SORA2_PORTRAIT_WORKFLOW_ID 
+        : process.env.SORA2_LANDSCAPE_WORKFLOW_ID;
+      if (!workflowId) throw new Error('workflowId missing');
+
+      const nodeInfoList = [
+        { nodeId: '205', fieldName: 'video', fieldValue: transformUrl }
+      ];
+
+      const runninghubTaskId = await runninghubAPI.createTaskGeneric({
+        workflowId,
+        nodeInfoList,
+        taskRecordId,
+      });
+
+      // 更新记录并启动状态监控
       await prisma.fluxData.update({
         where: { id: taskRecordId },
         data: {
-          taskStatus: "Processing",
+          taskStatus: "processing",
+          replicateId: runninghubTaskId,
         },
       });
 
-      console.log(`✅ Sora2视频去水印任务 ${task.id} 处理完成`);
+      try {
+        const { taskQueueManager } = await import('./task-queue');
+        taskQueueManager.startStatusWatcher(taskRecordId, runninghubTaskId);
+      } catch {}
+
+      // 积分扣除（仅登录用户且非开发环境）
+      if (userId && process.env.NODE_ENV !== 'development') {
+        try {
+          const requiredCredits = Credits[model.sora2VideoWatermarkRemoval];
+          await this.deductCredits(userId, requiredCredits, taskRecordId);
+        } catch {}
+      }
+
+      console.log(`✅ Sora2视频去水印任务 ${task.id} 已创建 RunningHub 任务: ${runninghubTaskId}`);
 
       // 注意：这里不调用 completeTask，因为任务还在RunningHub中处理
       // 任务完成会通过webhook或状态轮询来处理

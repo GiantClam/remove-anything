@@ -9,6 +9,7 @@ import { BillingType } from "@/db/type";
 import { getUserCredit } from "@/db/queries/account";
 import { env } from "@/env.mjs";
 import { uploadToR2, downloadFromR2 } from "@/lib/r2-upload";
+import { buildMediaTransformUrl, prewarmTransformUrl, waitForTransformReady } from "@/lib/cf-media";
 
 export const dynamic = 'force-dynamic';
 
@@ -112,32 +113,19 @@ export async function POST(req: NextRequest) {
       finalContentType = 'video/mp4';
     }
 
-    // 步骤2: 从 R2 下载文件并上传到 RunningHub
-    console.log("📥 步骤2: 从 R2 下载文件并上传到 RunningHub...");
-    
-    let fileName: string;
-    
-    if (video) {
-      // 模式1: 直接上传文件到 RunningHub
-      console.log("📤 直接上传文件到 RunningHub...");
-      const videoBuffer = Buffer.from(await video.arrayBuffer());
-      fileName = await runninghubAPI.uploadFile(videoBuffer, {
-        fileType: 'video',
-        filename: finalFilename,
-        contentType: finalContentType
-      });
-    } else {
-      // 模式2: 从 R2 下载文件并上传到 RunningHub
-      console.log("📥 从 R2 下载文件并上传到 RunningHub...");
-      const videoBuffer = await downloadFromR2(finalR2Url);
-      fileName = await runninghubAPI.uploadFile(videoBuffer, {
-        fileType: 'video',
-        filename: finalFilename,
-        contentType: finalContentType
-      });
-    }
-    
-    console.log("✅ RunningHub 上传成功，文件名:", fileName);
+    // 步骤2: 构造 Cloudflare Media 变换 URL（避免放大，仅约束尺寸）并预热
+    console.log("📐 步骤2: 构造变换 URL 并预热...");
+    const zoneHost = (process.env.R2_URL_BASE || 'https://s.remove-anything.com').replace('https://', '').replace(/\/$/, '');
+    const transformUrl = buildMediaTransformUrl(zoneHost, finalR2Url, {
+      width: 704,
+      height: 1280,
+      fit: 'scale-down',
+      audio: true,
+      filename: finalFilename
+    });
+    await prewarmTransformUrl(transformUrl);
+    console.log("⏳ 等待变换结果就绪...");
+    // 改为异步：不阻塞请求（立即返回202），后台 watcher 负责等待就绪并创建 RunningHub 任务
 
     // 步骤3: 创建任务记录
     console.log("📝 步骤3: 创建任务记录...");
@@ -157,45 +145,8 @@ export async function POST(req: NextRequest) {
 
     console.log("✅ 任务记录创建成功，ID:", taskRecord.id);
 
-    // 步骤4: 创建 RunningHub 任务
-    console.log("🚀 步骤4: 创建 RunningHub 任务...");
-    const workflowId = orientation === 'portrait' 
-      ? env.SORA2_PORTRAIT_WORKFLOW_ID 
-      : env.SORA2_LANDSCAPE_WORKFLOW_ID;
-
-    const nodeInfoList = [
-      {
-        nodeId: "205", // 正确的节点ID
-        fieldName: "video", // 正确的字段名
-        fieldValue: fileName // 使用 RunningHub 文件名
-      }
-    ];
-
-    const taskId = await runninghubAPI.createTaskGeneric({
-      workflowId,
-      nodeInfoList,
-      taskRecordId: taskRecord.id
-    });
-
-    console.log("✅ RunningHub 任务创建成功，任务ID:", taskId);
-
-    // 步骤5: 更新任务记录
-    await prisma.fluxData.update({
-      where: { id: taskRecord.id },
-      data: {
-        replicateId: taskId
-      }
-    });
-
-    // 步骤6: 扣除积分（仅对登录用户）
-    if (userId && process.env.NODE_ENV !== "development") {
-      console.log("💰 步骤6: 扣除用户积分...");
-      const requiredCredits = Credits[model.sora2VideoWatermarkRemoval];
-      await deductCredits(userId, requiredCredits, taskRecord.id);
-    }
-
-    // 步骤7: 添加到任务队列
-    console.log("📋 步骤7: 添加到任务队列...");
+    // 入队一个延迟创建 RunningHub 任务的后台工作
+    const { taskQueueManager } = await import('@/lib/task-queue');
     await taskQueueManager.addTask({
       taskType: "sora2-video-watermark-removal",
       priority: 1,
@@ -205,20 +156,22 @@ export async function POST(req: NextRequest) {
         userId: userId,
         orientation: orientation,
         r2Url: finalR2Url,
-        runninghubFileName: fileName
+        transformUrl
       }
     });
 
-    console.log("🎉 Sora2 视频去水印任务创建完成！");
+    // 立即返回 202，表示后台继续处理
+
+    // 积分扣除改在 RunningHub 任务真正创建成功后进行（由后台流程负责）
+
+    console.log("🎉 已排入后台变换就绪与任务创建流程（202 Accepted）");
 
     return NextResponse.json({
       success: true,
-      taskId: taskId,
       recordId: taskRecord.id,
-      message: "Sora2 video watermark removal task created successfully",
-      r2Url: finalR2Url,
-      runninghubFileName: fileName
-    });
+      message: "Accepted. Background processing will create RunningHub task after transform is ready.",
+      transformUrl,
+    }, { status: 202 });
 
   } catch (error) {
     console.error("❌ Sora2 视频去水印任务创建失败:", error);

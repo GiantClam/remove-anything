@@ -38,6 +38,7 @@ import Upload from "../upload";
 import { WebhookHandler } from "../marketing/webhook-handler";
 import ComfortingMessages from "./comforting";
 import Loading from "./loading/index";
+import { TASK_QUEUE_CONFIG } from "@/config/constants";
 
 const useCreateSora2VideoWatermarkRemovalMutation = (config?: {
   onSuccess: (result: any) => void;
@@ -85,8 +86,23 @@ export default function Sora2VideoWatermarkRemoval({
 }) {
   const [loading, setLoading] = useState(false);
   const [taskId, setTaskId] = useState("");
+  const [pollMode, setPollMode] = useState<'runninghub' | 'record'>('runninghub');
+  const [queueBusy, setQueueBusy] = useState(false);
   const [taskData, setTaskData] = useState<any>();
-  const useCreateTask = useCreateSora2VideoWatermarkRemovalMutation();
+  const useCreateTask = useCreateSora2VideoWatermarkRemovalMutation({
+    onSuccess: (result: any) => {
+      // 后端可能返回立即创建的 RunningHub 任务ID，或 202 模式仅返回 recordId
+      const rid = result?.recordId || result?.id;
+      const rhId = result?.taskId;
+      if (rhId) {
+        setPollMode('runninghub');
+        setTaskId(rhId);
+      } else if (rid) {
+        setPollMode('record');
+        setTaskId(String(rid));
+      }
+    }
+  });
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('portrait');
   const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
@@ -116,7 +132,10 @@ export default function Sora2VideoWatermarkRemoval({
     },
     queryFn: async () => {
       console.log("🔍 开始查询Sora2视频去水印任务状态，taskId:", taskId);
-      const res = await fetch(`/api/sora2-video-watermark-removal/${taskId}`, {
+      const url = pollMode === 'record'
+        ? `/api/sora2-video-watermark-removal-by-id/${taskId}`
+        : `/api/sora2-video-watermark-removal/${taskId}`;
+      const res = await fetch(url, {
         credentials: 'include',
       });
       console.log("📡 API响应状态:", res.status, res.statusText);
@@ -129,6 +148,13 @@ export default function Sora2VideoWatermarkRemoval({
       }
       
       const data = await res.json();
+      // 容错：成功但未带 imageUrl，尝试切换 record 模式再拉一次
+      if (pollMode === 'runninghub' && data?.taskStatus === 'succeeded' && !data?.imageUrl && data?.id) {
+        try {
+          const r2 = await fetch(`/api/sora2-video-watermark-removal-by-id/${data.id}`, { credentials: 'include' });
+          if (r2.ok) return await r2.json();
+        } catch {}
+      }
       console.log("✅ 获取到任务数据:", data);
       return data;
     }
@@ -289,6 +315,8 @@ export default function Sora2VideoWatermarkRemoval({
     }
 
     try {
+      setLoading(true);
+      setProcessingStartTime(Date.now());
       const result = await useCreateTask.mutateAsync({
         file: videoFile,
         orientation: orientation,
@@ -299,11 +327,17 @@ export default function Sora2VideoWatermarkRemoval({
         setLoading(false);
         return;
       }
-
-      setTaskId(result.taskId || result.id);
+      // onSuccess 回调中已经设置了 poll 模式与 taskId
       toast.success("Sora2 video watermark removal started!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Sora2 video watermark removal error:", error);
+      if (typeof error?.message === 'string' && error.message.includes('TASK_QUEUE_MAXED')) {
+        setLoading(false);
+        setProcessingStartTime(null);
+        setQueueBusy(true);
+        toast.error("当前任务队列已满，请稍后重试或稍等片刻再开始。", { duration: 6000 });
+        return;
+      }
       
       // 处理特定的错误类型
       if (error instanceof Error) {
@@ -370,6 +404,20 @@ export default function Sora2VideoWatermarkRemoval({
 
   return (
     <div className="container mx-auto max-w-4xl p-6">
+      {/* 并发提示条（仅在队列繁忙时展示） */}
+      {queueBusy && (
+        <div className="mb-4">
+          <div className="rounded-md border border-amber-200 bg-amber-50 text-amber-900 px-4 py-3 text-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                当前系统最大并发任务数：{TASK_QUEUE_CONFIG.MAX_CONCURRENT_TASKS}。
+                当队列已满时，新任务会被拒绝，请稍后重试。
+              </div>
+              <div className="ml-4 text-amber-900/80">系统繁忙，已拒绝新任务</div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mb-8 text-center">
         <h1 className="mb-4 text-3xl font-bold">Sora2 Video Watermark Removal</h1>
         <p className="text-muted-foreground">
