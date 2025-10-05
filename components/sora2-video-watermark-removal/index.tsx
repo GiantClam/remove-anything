@@ -45,20 +45,50 @@ const useCreateSora2VideoWatermarkRemovalMutation = (config?: {
 }) => {
   return useMutation({
     mutationFn: async (values: any) => {
-      const formData = new FormData();
-      formData.append("video", values.file);
-      formData.append("orientation", values.orientation);
-      
-      const res = await fetch("/api/sora2-video-watermark-removal-r2", {
-        method: "POST",
-        body: formData,
-        credentials: 'include',
+      // 1) 获取 R2 预签名 URL
+      const filename = values.file?.name || `video-${Date.now()}.mp4`;
+      const contentType = values.file?.type || 'video/mp4';
+      const presignedRes = await fetch('/api/r2-presigned-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename, contentType })
       });
+      if (!presignedRes.ok) {
+        const t = await presignedRes.text();
+        throw new Error(`PRESIGNED_FAILED ${presignedRes.status} ${t}`);
+      }
+      const { presignedUrl } = await presignedRes.json();
 
-      if (!res.ok && res.status >= 500) {
-        throw new Error("Network response error");
+      // 2) 前端直传到 R2（PUT）
+      const uploadRes = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: values.file,
+        headers: { 'Content-Type': contentType }
+      });
+      if (!uploadRes.ok) {
+        throw new Error(`R2_UPLOAD_FAILED ${uploadRes.status} ${uploadRes.statusText}`);
       }
 
+      // 3) 构造公共 URL（与后端一致：uploads/<key>）
+      const key = presignedUrl.split('?')[0].split('/').pop() as string;
+      const r2Url = `https://s.remove-anything.com/uploads/${key}`;
+
+      // 4) 通知后端创建任务（仅传 r2Url 与 meta，避免大请求体 413）
+      const fd = new FormData();
+      fd.append('r2Url', r2Url);
+      fd.append('orientation', values.orientation);
+      fd.append('filename', filename);
+
+      const res = await fetch('/api/sora2-video-watermark-removal-r2', {
+        method: 'POST',
+        body: fd,
+        credentials: 'include'
+      });
+
+      // 后端可能返回 202（异步）或 200（同步）
+      if (!res.ok && res.status >= 500) {
+        throw new Error('Network response error');
+      }
       return res.json();
     },
     onSuccess: async (result) => {
