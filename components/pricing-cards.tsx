@@ -261,9 +261,15 @@ export function PricingCards({
         </div> */}
 
         <div className="grid gap-5 bg-inherit py-5 md:grid-cols-3">
-          {chargeProduct?.map((offer) => (
-            <PricingCard offer={offer} key={offer.id} />
-          ))}
+          {(chargeProduct ?? [])
+            .filter(Boolean)
+            .map((offer, idx) => (
+              <PricingCard
+                // @ts-ignore
+                offer={offer as ChargeProductSelectDto}
+                key={(offer as any)?.id ?? `${(offer as any)?.title ?? 'offer'}-${idx}`}
+              />
+            ))}
         </div>
 
         <p className="mt-3 text-balance text-center text-base text-muted-foreground">
@@ -302,11 +308,15 @@ export function PricingCardDialog({
   const t = useTranslations("PricingPage");
   const { isSm, isMobile } = useMediaQuery();
   const product = useMemo(() => {
+    let base: ChargeProductSelectDto[] = [];
     if (isSm || isMobile) {
-      return ([chargeProduct?.[1]] ?? []) as ChargeProductSelectDto[];
+      if (chargeProduct?.[1]) base = [chargeProduct[1]] as ChargeProductSelectDto[];
+      else base = (chargeProduct ?? []) as ChargeProductSelectDto[];
+    } else {
+      base = (chargeProduct ?? []) as ChargeProductSelectDto[];
     }
-    return chargeProduct ?? ([] as ChargeProductSelectDto[]);
-  }, [isSm, isMobile]);
+    return (base || []).filter(Boolean) as ChargeProductSelectDto[];
+  }, [isSm, isMobile, chargeProduct]);
 
   return (
     <Dialog
@@ -319,8 +329,8 @@ export function PricingCardDialog({
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
           <div className="grid grid-cols-1 gap-5 bg-inherit py-5 lg:grid-cols-3">
-            {product?.map((offer) => (
-              <PricingCard offer={offer} key={offer.id} />
+            {product?.map((offer, idx) => (
+              <PricingCard offer={offer} key={offer?.id ?? `${offer?.title ?? 'offer'}-${idx}`} />
             ))}
           </div>
         </DialogHeader>

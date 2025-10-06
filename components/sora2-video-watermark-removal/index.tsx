@@ -138,17 +138,27 @@ export default function Sora2VideoWatermarkRemoval({
   const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
   const [estimatedProgress, setEstimatedProgress] = useState<number>(0);
   
+  const queryClient = useQueryClient();
+  const [pricingCardOpen, setPricingCardOpen] = useState(false);
+
   // 处理文件上传状态变化
   const handleFileChange = useCallback((files: any[]) => {
     console.log("📁 handleFileChange 被调用:", files);
     setUploadedFiles(files);
-  }, []);
-  
-  const queryClient = useQueryClient();
-  const [pricingCardOpen, setPricingCardOpen] = useState(false);
+    // 重置任务相关状态，避免复用上一次结果
+    setTaskId("");
+    setTaskData(undefined);
+    setEstimatedProgress(0);
+    setProcessingStartTime(null);
+    setPollMode('runninghub');
+    try {
+      // 清理上一次查询缓存
+      queryClient.removeQueries({ queryKey: ["querySora2VideoWatermarkRemovalTask"] });
+    } catch {}
+  }, [queryClient]);
 
   const queryTask = useQuery({
-    queryKey: ["querySora2VideoWatermarkRemovalTask", taskId],
+    queryKey: ["querySora2VideoWatermarkRemovalTask", pollMode, taskId],
     enabled: !!taskId,
     refetchInterval: (query) => {
       const data = query.state.data as any;
@@ -162,11 +172,14 @@ export default function Sora2VideoWatermarkRemoval({
     },
     queryFn: async () => {
       console.log("🔍 开始查询Sora2视频去水印任务状态，taskId:", taskId);
-      const url = pollMode === 'record'
+      let url = pollMode === 'record'
         ? `/api/sora2-video-watermark-removal-by-id/${taskId}`
         : `/api/sora2-video-watermark-removal/${taskId}`;
+      // 追加时间戳避免缓存
+      url += (url.includes('?') ? '&' : '?') + `_t=${Date.now()}`;
       const res = await fetch(url, {
         credentials: 'include',
+        cache: 'no-store',
       });
       console.log("📡 API响应状态:", res.status, res.statusText);
       
