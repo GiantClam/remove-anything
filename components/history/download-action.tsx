@@ -108,7 +108,24 @@ export function DownloadAction({
               console.log("ℹ️ Web Share API 不可用或被拒绝，使用下载链接回退", e);
             }
 
-            // 回退：创建下载链接（Android/桌面保存到下载目录）
+            // 平台检测
+            const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+            const isIOS = /iP(hone|od|ad)/.test(ua);
+            const isAndroid = /Android/.test(ua);
+            const isImage = (blob.type || '').startsWith('image/');
+
+            // iOS Safari 对文件下载支持有限：
+            // - 图片：打开新标签，用户可长按或点分享→保存到相册
+            // - 视频：打开新标签，通过系统分享保存到相册
+            if (isIOS) {
+              const iosUrl = window.URL.createObjectURL(blob);
+              window.open(iosUrl, '_blank');
+              toast.info(isImage ? "长按图片或点分享保存到相册" : "点分享→保存视频到相册", { duration: 5000 });
+              // 不 revoke，避免新标签立即失效；交由浏览器回收
+              return;
+            }
+
+            // Android/桌面回退：创建下载链接（大多数机型可出现在“下载”，部分图库会自动扫描导入）
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
@@ -125,6 +142,10 @@ export function DownloadAction({
               window.URL.revokeObjectURL(url);
               console.log("🔍 清理完成");
             }, 200);
+
+            if (isAndroid) {
+              toast.info("文件已保存到下载目录，可在相册中刷新查看", { duration: 4000 });
+            }
             
             console.log("✅ 下载完成:", fileName);
             

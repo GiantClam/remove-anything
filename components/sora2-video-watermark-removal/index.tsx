@@ -40,13 +40,24 @@ import ComfortingMessages from "./comforting";
 import Loading from "./loading/index";
 import { TASK_QUEUE_CONFIG } from "@/config/constants";
 
+function buildUniqueFilename(file?: File): string {
+  const originalName = file?.name || "video.mp4";
+  const dotIndex = originalName.lastIndexOf(".");
+  const base = dotIndex > -1 ? originalName.slice(0, dotIndex) : originalName;
+  const ext = dotIndex > -1 ? originalName.slice(dotIndex) : ".mp4";
+  const unique = (typeof crypto !== "undefined" && (crypto as any).randomUUID)
+    ? (crypto as any).randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${base}-${unique}${ext}`;
+}
+
 const useCreateSora2VideoWatermarkRemovalMutation = (config?: {
   onSuccess: (result: any) => void;
 }) => {
   return useMutation({
     mutationFn: async (values: any) => {
       // 1) 获取 R2 预签名 URL
-      const filename = values.file?.name || `video-${Date.now()}.mp4`;
+      const filename = buildUniqueFilename(values.file);
       const contentType = values.file?.type || 'video/mp4';
       const presignedRes = await fetch('/api/r2-presigned-url', {
         method: 'POST',
@@ -137,6 +148,7 @@ export default function Sora2VideoWatermarkRemoval({
   const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('portrait');
   const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
   const [estimatedProgress, setEstimatedProgress] = useState<number>(0);
+  const [videoSrcTs, setVideoSrcTs] = useState<number | null>(null);
   
   const queryClient = useQueryClient();
   const [pricingCardOpen, setPricingCardOpen] = useState(false);
@@ -151,6 +163,7 @@ export default function Sora2VideoWatermarkRemoval({
     setEstimatedProgress(0);
     setProcessingStartTime(null);
     setPollMode('runninghub');
+    setVideoSrcTs(null);
     try {
       // 清理上一次查询缓存
       queryClient.removeQueries({ queryKey: ["querySora2VideoWatermarkRemovalTask"] });
@@ -223,6 +236,8 @@ export default function Sora2VideoWatermarkRemoval({
         setLoading(false);
         setProcessingStartTime(null);
         setEstimatedProgress(100);
+        // 设置一次时间戳用于避免视频播放器缓存
+        setVideoSrcTs(Date.now());
         toast.success("Sora2 video watermark removal completed!");
       } else if (queryTask.data.taskStatus === Sora2VideoWatermarkRemovalTaskStatus.Failed) {
         setLoading(false);
@@ -625,7 +640,12 @@ export default function Sora2VideoWatermarkRemoval({
                 <div className="space-y-4">
                   <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
                     <video
-                      src={taskData.imageUrl}
+                      src={(function () {
+                        const base = taskData.imageUrl as string;
+                        const sep = base.includes('?') ? '&' : '?';
+                        const ts = videoSrcTs ?? Date.now();
+                        return `${base}${sep}_t=${ts}`;
+                      })()}
                       controls
                       className="h-full w-full object-cover"
                     >

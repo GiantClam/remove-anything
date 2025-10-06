@@ -40,9 +40,21 @@ export default function Sora2VideoWatermarkRemovalR2({
     setUploadedFiles(files);
   };
 
+  function buildUniqueFilename(file?: File): string {
+    const originalName = file?.name || "video.mp4";
+    const dotIndex = originalName.lastIndexOf(".");
+    const base = dotIndex > -1 ? originalName.slice(0, dotIndex) : originalName;
+    const ext = dotIndex > -1 ? originalName.slice(dotIndex) : ".mp4";
+    const unique = (typeof crypto !== "undefined" && (crypto as any).randomUUID)
+      ? (crypto as any).randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    return `${base}-${unique}${ext}`;
+  }
+
   // 直接上传到 R2 的 mutation
   const uploadToR2Mutation = useMutation({
     mutationFn: async (file: File) => {
+      const uniqueFilename = buildUniqueFilename(file);
       // 步骤1: 获取预签名 URL
       const presignedResponse = await fetch('/api/r2-presigned-url', {
         method: 'POST',
@@ -50,7 +62,7 @@ export default function Sora2VideoWatermarkRemovalR2({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          filename: file.name,
+          filename: uniqueFilename,
           contentType: file.type
         }),
       });
@@ -81,10 +93,10 @@ export default function Sora2VideoWatermarkRemovalR2({
       const key = r2Url.split('/').pop(); // 提取文件名作为 key
       const publicUrl = `https://s.remove-anything.com/uploads/${key}`;
       
-      return publicUrl;
+      return { publicUrl, uniqueFilename } as { publicUrl: string; uniqueFilename: string };
     },
-    onSuccess: (r2Url) => {
-      console.log("✅ 文件上传到 R2 成功:", r2Url);
+    onSuccess: (res) => {
+      console.log("✅ 文件上传到 R2 成功:", res?.publicUrl);
       toast.success("文件上传成功！");
     },
     onError: (error) => {
@@ -194,14 +206,14 @@ export default function Sora2VideoWatermarkRemovalR2({
     try {
       // 步骤1: 上传文件到 R2
       console.log("📤 开始上传文件到 R2...");
-      const r2Url = await uploadToR2Mutation.mutateAsync(videoFile);
+      const { publicUrl, uniqueFilename } = await uploadToR2Mutation.mutateAsync(videoFile) as unknown as { publicUrl: string; uniqueFilename: string };
       
       // 步骤2: 创建任务
       console.log("🚀 开始创建任务...");
       await createTaskMutation.mutateAsync({
-        r2Url,
+        r2Url: publicUrl,
         orientation,
-        filename: videoFile.name
+        filename: uniqueFilename
       });
       
     } catch (error) {
