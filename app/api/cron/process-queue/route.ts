@@ -65,13 +65,23 @@ export async function GET(req: NextRequest) {
     const nowMs = Date.now();
     const syncThreshold = 10 * 1000; // 10秒后开始同步，更激进
     
-    // 同步背景去除任务 - 包括所有非最终状态的任务
+    // 同步背景去除任务 - 包括所有非最终状态和成功但缺少结果的任务
     const backgroundTasks = await prisma.backgroundRemovalTask.findMany({
       where: { 
-        taskStatus: { in: ['pending', 'starting', 'processing'] },
         OR: [
-          { executeStartTime: { lt: BigInt(nowMs - syncThreshold) } },
-          { executeStartTime: null } // 处理还未开始的任务
+          // 非最终状态的任务
+          {
+            taskStatus: { in: ['pending', 'starting', 'processing'] },
+            OR: [
+              { executeStartTime: { lt: BigInt(nowMs - syncThreshold) } },
+              { executeStartTime: null }
+            ]
+          },
+          // 成功但缺少结果的任务
+          {
+            taskStatus: 'succeeded',
+            outputImageUrl: null
+          }
         ]
       },
       take: 5,
@@ -113,15 +123,23 @@ export async function GET(req: NextRequest) {
           if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
             const outputFile = result.data[0];
             updateData.outputImageUrl = outputFile.fileUrl;
+            console.log(`📦 获取到结果URL: ${outputFile.fileUrl}`);
           }
 
-          await prisma.backgroundRemovalTask.update({
-            where: { replicateId: task.replicateId },
-            data: updateData
-          });
+          // 只有当结果发生变化时才更新数据库
+          const needsUpdate = task.taskStatus !== 'succeeded' || 
+                             (result?.data && Array.isArray(result.data) && result.data.length > 0 && !task.outputImageUrl);
 
-          console.log(`✅ 背景去除任务同步成功: ${task.replicateId}`);
-          synced++;
+          if (needsUpdate) {
+            await prisma.backgroundRemovalTask.update({
+              where: { replicateId: task.replicateId },
+              data: updateData
+            });
+            console.log(`✅ 背景去除任务同步成功: ${task.replicateId}`);
+            synced++;
+          } else {
+            console.log(`ℹ️ 背景去除任务已是最新状态: ${task.replicateId}`);
+          }
         } else if (status === 'FAILED' || status === 'failed') {
           await prisma.backgroundRemovalTask.update({
             where: { replicateId: task.replicateId },
@@ -161,13 +179,23 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 同步去水印任务 - 包括所有非最终状态的任务
+    // 同步去水印任务 - 包括所有非最终状态和成功但缺少结果的任务
     const watermarkTasks = await prisma.watermarkRemovalTask.findMany({
       where: { 
-        taskStatus: { in: ['pending', 'starting', 'processing'] },
         OR: [
-          { executeStartTime: { lt: BigInt(nowMs - syncThreshold) } },
-          { executeStartTime: null } // 处理还未开始的任务
+          // 非最终状态的任务
+          {
+            taskStatus: { in: ['pending', 'starting', 'processing'] },
+            OR: [
+              { executeStartTime: { lt: BigInt(nowMs - syncThreshold) } },
+              { executeStartTime: null }
+            ]
+          },
+          // 成功但缺少结果的任务
+          {
+            taskStatus: 'succeeded',
+            outputZipUrl: null
+          }
         ]
       },
       take: 5,
@@ -209,15 +237,23 @@ export async function GET(req: NextRequest) {
           if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
             const outputFile = result.data[0];
             updateData.outputZipUrl = outputFile.fileUrl;
+            console.log(`📦 获取到结果URL: ${outputFile.fileUrl}`);
           }
 
-          await prisma.watermarkRemovalTask.update({
-            where: { id: task.id },
-            data: updateData
-          });
+          // 只有当结果发生变化时才更新数据库
+          const needsUpdate = task.taskStatus !== 'succeeded' || 
+                             (result?.data && Array.isArray(result.data) && result.data.length > 0 && !task.outputZipUrl);
 
-          console.log(`✅ 去水印任务同步成功: ${task.runninghubTaskId}`);
-          synced++;
+          if (needsUpdate) {
+            await prisma.watermarkRemovalTask.update({
+              where: { id: task.id },
+              data: updateData
+            });
+            console.log(`✅ 去水印任务同步成功: ${task.runninghubTaskId}`);
+            synced++;
+          } else {
+            console.log(`ℹ️ 去水印任务已是最新状态: ${task.runninghubTaskId}`);
+          }
         } else if (status === 'FAILED' || status === 'failed') {
           await prisma.watermarkRemovalTask.update({
             where: { id: task.id },
