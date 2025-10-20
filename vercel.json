@@ -6,13 +6,13 @@
     "app/api/cron/process-queue/route.ts": {
       "maxDuration": 60
     },
-    "app/api/sync-runninghub-tasks/route.ts": {
-      "maxDuration": 30
-    },
     "app/api/task/[id]/route.ts": {
       "maxDuration": 15
     },
     "app/api/webhooks/runninghub/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/task-status-stream/[taskId]/route.ts": {
       "maxDuration": 30
     }
   },
@@ -36,7 +36,6 @@
     }
   ],
   "crons": [
-    { "path": "/api/cron/process-queue", "schedule": "*/1 * * * *" },
-    { "path": "/api/cron/process-queue", "schedule": "*/30 * * * * *" }
+    { "path": "/api/cron/process-queue", "schedule": "*/1 * * * *" }
   ]
 }
