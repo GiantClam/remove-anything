@@ -92,9 +92,15 @@ export function WebhookHandler({ taskId, onComplete, onError }: WebhookHandlerPr
           console.log("🔍 开发环境状态检查:", data.status);
           
           if (data.status === 'succeeded' && data.output) {
+            console.log("✅ 任务完成，停止轮询");
             onComplete(data.output);
+            if (intervalId) clearInterval(intervalId);
+            return;
           } else if (data.status === 'failed') {
+            console.log("❌ 任务失败，停止轮询");
             onError(data.error || 'Task failed');
+            if (intervalId) clearInterval(intervalId);
+            return;
           }
           // 继续轮询直到任务完成
         }

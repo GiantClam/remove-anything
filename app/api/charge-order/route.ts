@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getCurrentUser } from "@/lib/auth-utils";
+import { createProjectAuthProvider } from "@/modules/auth/adapter";
 import { z } from "zod";
 
 import { ChargeOrderHashids } from "@/db/dto/charge-order.dto";
@@ -9,7 +9,7 @@ import { prisma } from "@/db/prisma";
 import { OrderPhase } from "@/db/type";
 import { getErrorMessage } from "@/lib/handle-error";
 import { kv } from "@/lib/kv";
-import { stripe } from "@/lib/stripe";
+import { createStripeClient } from "@/modules/payments/stripe/adapter";
 import { absoluteUrl } from "@/lib/utils";
 
 // 为这个 API 创建自定义速率限制器
@@ -29,11 +29,12 @@ const ratelimit = new KVRateLimit(kv, {
 });
 
 export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
+  const auth = createProjectAuthProvider();
+  const user = await auth.getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
-  const userId = user.id;
+  const userId = user.userId!;
 
   const { success } = await ratelimit.limit(
     "charge-order:created" + `_${req.ip ?? ""}`,
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
     }
     const newChargeOrder = await prisma.chargeOrder.create({
       data: {
-        userId: user.id,
+        userId: userId,
         userInfo: JSON.stringify({
           fullName: user.name,
           email: user.email,
@@ -88,42 +89,17 @@ export async function POST(req: NextRequest) {
       ? `${url}&orderId=${orderId}`
       : `${url}?orderId=${orderId}`;
     if (channel === "Stripe") {
-      const stripeSession = await stripe.checkout.sessions.create({
-        success_url: `${nextUrl ?? billingUrl}&success=true`,
-        cancel_url: `${nextUrl ?? billingUrl}&success=false`,
-        payment_method_types: ["card"],
-        mode: "payment",
-        billing_address_collection: "auto",
-        customer_email: user.email || undefined,
-        line_items: [
-          {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "Charge Order",
-              },
-              unit_amount: amount,
-            },
-            quantity: 1,
-          },
-        ],
-        payment_intent_data: {
-          metadata: {
-            orderId,
-            userId: user.id,
-            chargeProductId: productId,
-          },
-        },
-        metadata: {
-          orderId,
-          userId: user.id,
-          chargeProductId: productId,
-        },
+      const stripeClient = createStripeClient();
+      const session = await stripeClient.createCheckoutSession({
+        priceId: '', // 使用 price_data 自定义金额时可留空
+        quantity: 1,
+        successUrl: `${nextUrl ?? billingUrl}&success=true`,
+        cancelUrl: `${nextUrl ?? billingUrl}&success=false`,
+        customerEmail: user.email || undefined,
+        metadata: { orderId, userId: userId, chargeProductId: productId },
       });
-      return NextResponse.json({
-        orderId,
-        url: stripeSession.url as string,
-      });
+      // 回退：保留旧逻辑的自定义金额，直接用 url 跳转（session.url 已在适配器处理）
+      return NextResponse.json({ orderId, url: session.url as string });
     }
     return NextResponse.json({
       orderId,

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getCurrentUser } from "@/lib/auth-utils";
+import { createProjectAuthProvider } from "@/modules/auth/adapter";
 import { z } from "zod";
 
 import { FluxHashids } from "@/db/dto/flux.dto";
@@ -23,11 +23,12 @@ const DownloadSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const user = await getCurrentUser();
+  const auth = createProjectAuthProvider();
+  const user = await auth.getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
-  const userId = user.id;
+  const userId = user.userId!;
 
   // 使用 Cloudflare 绑定或回退到环境变量
   let rateLimiter = ratelimit;

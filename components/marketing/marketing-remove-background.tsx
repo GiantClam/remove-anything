@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Upload, Download, LogIn, Sparkles, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { WebhookHandler } from './webhook-handler';
+import { BeforeAfterSlider } from '@/components/ui/before-after-slider';
 
 interface MarketingRemoveBackgroundProps {
   locale: string;
@@ -27,6 +29,9 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [hasError, setHasError] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [queuedFiles, setQueuedFiles] = useState<File[]>([]);
+  const [recentImages, setRecentImages] = useState<Array<{url: string, timestamp: number}>>([]);
   
   // 使用useMemo来避免重复计算，添加安全检查
   const isAuthenticated = useMemo(() => {
@@ -56,6 +61,67 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       return 'Instantly remove the background from any image with our free AI-powered tool.';
     }
   }, [t]);
+
+  // URL 输入与处理
+  const [urlInput, setUrlInput] = useState('');
+  const urlInputRef = useRef<HTMLInputElement | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [showUrlDialog, setShowUrlDialog] = useState(false);
+  const dialogInputWrapperRef = useRef<HTMLDivElement | null>(null);
+
+  async function processImageFromUrl(imageUrl: string) {
+    // 基础校验：URL 与扩展名
+    try {
+      const u = new URL(imageUrl);
+      const hasExt = /(jpg|jpeg|png|webp|gif)$/i.test(u.pathname);
+      setUrlError(hasExt ? null : 'Please provide a direct image URL (jpg/png/webp).');
+    } catch {
+      setUrlError('Invalid URL');
+      return;
+    }
+    try {
+      const res = await fetch(imageUrl);
+      const blob = await res.blob();
+      const ext = (blob.type && blob.type.split('/')[1]) || 'jpg';
+      const file = new File([blob], `uploaded-url.${ext}`, { type: blob.type || 'image/jpeg' });
+      
+      // 添加到最近图片历史
+      setRecentImages(prev => {
+        const newImages = [{url: imageUrl, timestamp: Date.now()}, ...prev.filter(img => img.url !== imageUrl)];
+        return newImages.slice(0, 4); // 只保留最近4张
+      });
+      
+      await processImage(file);
+    } catch (e) {
+      console.error('Fetch URL image failed:', e);
+      toast.error(tPage('uploadFile'));
+    }
+  }
+
+  // 粘贴交互：支持直接粘贴图片或 URL
+  useEffect(() => {
+    function handlePaste(e: any) {
+      try {
+        const items = e.clipboardData?.items || [];
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type && item.type.startsWith('image/')) {
+            const file = item.getAsFile();
+            if (file) {
+              processImage(file);
+            }
+            return;
+          }
+        }
+        const text = e.clipboardData?.getData('text');
+        if (text && /^https?:\/\//.test(text)) processImageFromUrl(text);
+      } catch {
+        // no-op
+      }
+    }
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
 
   // 添加错误处理和登录后处理逻辑
   useEffect(() => {
@@ -107,18 +173,47 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       return;
     }
 
+    // 重置之前的状态，并进入处理中的不可编辑态
+    setProcessedImage(null);
+    setHasError(false);
+    setCurrentTaskId(null);
+    setIsProcessing(true);
+
     setUploadedFile(file);
 
     // 显示原始图片
     const reader = new FileReader();
     reader.onload = (e) => {
-      setOriginalImage(e.target?.result as string);
+      const imageUrl = e.target?.result as string;
+      setOriginalImage(imageUrl);
+      
+      // 添加到最近图片历史
+      setRecentImages(prev => {
+        const newImages = [{url: imageUrl, timestamp: Date.now()}, ...prev.filter(img => img.url !== imageUrl)];
+        return newImages.slice(0, 4); // 只保留最近4张
+      });
     };
     reader.readAsDataURL(file);
 
     // 开始处理
     await processImage(file);
   };
+
+  function enqueueFiles(files: FileList | File[]) {
+    const list = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (list.length === 0) return;
+    // 如果当前没有在处理，则立刻处理第一张，其余入队
+    if (!isProcessing && !uploadedFile) {
+      setUploadedFile(list[0]);
+      const reader = new FileReader();
+      reader.onload = (e) => setOriginalImage(e.target?.result as string);
+      reader.readAsDataURL(list[0]);
+      processImage(list[0]);
+      if (list.length > 1) setQueuedFiles(prev => [...prev, ...list.slice(1)]);
+    } else {
+      setQueuedFiles(prev => [...prev, ...list]);
+    }
+  }
 
   const processImage = async (file: File) => {
     setIsProcessing(true);
@@ -163,9 +258,48 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         reader.readAsDataURL(uploadedFile);
       }
     } finally {
-      setIsProcessing(false);
+      // 结束与队列推进逻辑由成功/失败回调统一处理，避免生产环境下提前关闭遮罩
     }
   };
+
+  // 通过URL启动任务（服务器端拉取，避免浏览器CORS）
+  const processImageByUrl = async (imageUrl: string) => {
+    setIsProcessing(true);
+    setProcessedImage(null);
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageUrl }),
+      });
+      if (!response.ok) throw new Error('Failed to create background removal task');
+      const result = await response.json();
+      if (result.success && result.taskId) {
+        setCurrentTaskId(result.taskId);
+        await pollTaskStatus(result.taskId);
+      } else {
+        throw new Error('No task ID received');
+      }
+    } catch (error) {
+      console.error('Error processing image by URL:', error);
+      toast.error(tPage('processingFailed'));
+    }
+  };
+
+  // 统一推进队列函数：在任务真正完成/失败时调用
+  function advanceQueue() {
+    setQueuedFiles(prev => {
+      if (prev.length === 0) return prev;
+      const [next, ...rest] = prev;
+      setUploadedFile(next);
+      const reader = new FileReader();
+      reader.onload = (e) => setOriginalImage(e.target?.result as string);
+      reader.readAsDataURL(next);
+      // 触发下一张处理（异步）
+      setTimeout(() => { processImage(next); }, 0);
+      return rest;
+    });
+  }
 
   // 轮询任务状态（仅在开发环境中使用）
   const pollTaskStatus = async (taskId: string) => {
@@ -185,8 +319,14 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     // 开发环境：使用轮询模式
     const maxAttempts = 60;
     let attempts = 0;
+    let pollTimeout: NodeJS.Timeout | null = null;
+    let isPollingStopped = false;
     
     const poll = async (): Promise<void> => {
+      if (isPollingStopped) {
+        console.log("🛑 轮询已停止，跳过查询");
+        return;
+      }
       try {
         console.log(`🔍 第 ${attempts + 1} 次查询任务状态: ${taskId}`);
         
@@ -200,12 +340,13 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         console.log("任务状态:", taskStatus);
         
         switch (taskStatus.status) {
+          case 'pending':
           case 'starting':
           case 'processing':
             if (attempts < maxAttempts) {
               attempts++;
-              console.log(`⏳ 任务处理中，${attempts}/${maxAttempts}，5秒后再次查询...`);
-              setTimeout(() => poll(), 5000);
+              console.log(`⏳ 任务处理中，${attempts}/${maxAttempts}，3秒后再次查询...`);
+              pollTimeout = setTimeout(() => poll(), 3000);
             } else {
               console.log(`⏰ 任务超时，已轮询 ${maxAttempts} 次`);
               throw new Error('Task timeout');
@@ -214,6 +355,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             
           case 'succeeded':
             console.log('✅ 任务成功完成!');
+            isPollingStopped = true;
+            if (pollTimeout) {
+              clearTimeout(pollTimeout);
+              pollTimeout = null;
+            }
             if (taskStatus.output) {
               setProcessedImage(taskStatus.output);
               toast.success(tPage('backgroundRemoved'));
@@ -225,6 +371,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           case 'failed':
           case 'canceled':
             console.log(`❌ 任务失败: ${taskStatus.error || 'Task failed'}`);
+            isPollingStopped = true;
+            if (pollTimeout) {
+              clearTimeout(pollTimeout);
+              pollTimeout = null;
+            }
             throw new Error(taskStatus.error || 'Task failed');
             
           default:
@@ -233,6 +384,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         }
       } catch (error) {
         console.error('Error polling task status:', error);
+        isPollingStopped = true;
+        if (pollTimeout) {
+          clearTimeout(pollTimeout);
+          pollTimeout = null;
+        }
         toast.error(tPage('getStatusFailed'));
       }
     };
@@ -310,17 +466,298 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     }
   };
 
+  const hasUpload = !!(originalImage || processedImage);
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4">
-          {title}
+      {/* 主上传区域 - 未上传时显示 */}
+      {!hasUpload && (
+      <div className="text-center mb-10">
+        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
+          Upload an image to remove the background
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          {description}
+        
+        {/* 上传区域 */}
+        <div
+          className={cn(
+            "border-2 border-dashed rounded-lg p-8 text-center transition-colors mx-auto max-w-2xl",
+            isDragging ? "border-primary bg-primary/5" : "border-gray-300"
+          )}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            const files = e.dataTransfer.files;
+            if (files && files.length) enqueueFiles(files);
+          }}
+        >
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+            id="image-upload-main"
+            disabled={isProcessing}
+          />
+          <label
+            htmlFor="image-upload-main"
+            className={cn(
+              "cursor-pointer inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-lg",
+              isProcessing && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            <Upload className="w-5 h-5" />
+            {isProcessing ? tPage('processing') : 'Upload Image'}
+          </label>
+          <p className="text-sm text-muted-foreground mt-3">
+            or drag and drop your image here
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">
+            paste image or 
+            <button
+              type="button"
+              onClick={() => setShowUrlDialog(true)}
+              className="underline underline-offset-2 ml-1"
+            >URL</button>
+          </p>
+          
+          {/* 示例缩略图 */}
+          <div className="mt-6 flex items-center justify-center gap-4">
+            {[
+              'https://s.remove-anything.com/sample/1.png',
+              'https://s.remove-anything.com/sample/2.png',
+              'https://s.remove-anything.com/sample/3.png',
+              'https://s.remove-anything.com/sample/4.png',
+            ].map((u, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={async () => {
+                  try {
+                    // 先即时显示原图，确保Processed Image card先出现，且对比滑块有beforeSrc
+                    setOriginalImage(u);
+                    setProcessedImage(null);
+                    setHasError(false);
+                    setCurrentTaskId(null);
+                    setIsProcessing(true);
+                    // 记录到最近图片
+                    setRecentImages(prev => {
+                      const next = [{ url: u, timestamp: Date.now() }, ...prev.filter(img => img.url !== u)];
+                      return next.slice(0, 4);
+                    });
+
+                    // 通过服务端创建任务，避免浏览器CORS
+                    await processImageByUrl(u);
+                  } catch (e) {
+                    console.error('Sample load error', e);
+                  }
+                }}
+                className="h-16 w-16 rounded-xl overflow-hidden ring-1 ring-border hover:ring-primary transition"
+                aria-label="Try a sample"
+              >
+                <img src={u} alt="sample" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+          
+          <div className="mt-4 grid gap-1 text-xs text-muted-foreground">
+            <p>• PNG, JPG, WEBP up to 15&nbsp;MB</p>
+            <p>• Drag multiple files to auto-queue them</p>
+            {queuedFiles.length > 0 && (
+              <p>• In queue: {queuedFiles.length} image(s)</p>
+            )}
+          </div>
+          
+          {isProcessing && (
+            <div className="mt-4 h-1 w-full bg-muted overflow-hidden rounded">
+              <div className="h-full w-1/3 bg-primary animate-[progress_1.2s_ease-in-out_infinite]" />
+            </div>
+          )}
+        </div>
+        
+        {/* 条款说明 */}
+        <p className="mt-6 text-xs text-muted-foreground max-w-2xl mx-auto">
+          By uploading an image or URL you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>
+      )}
+
+      {/* 结果/编辑视图：上传后替换首屏 */}
+      {hasUpload && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>{tPage('processedImage')}</span>
+              <Button onClick={handleDownload} size="sm" className="flex items-center gap-2">
+                {isAuthenticated ? (<><Download className="w-4 h-4" />{tPage('download')}</>) : (<><LogIn className="w-4 h-4" />{tPage('loginDownload')}</>)}
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* 轻量工具栏 - 暂时隐藏，后续补充功能 */}
+            {/* <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 p-2 text-sm max-w-[520px] mx-auto">
+              <Button variant="ghost" size="sm" className="rounded-full">Cutout</Button>
+              <Button variant="ghost" size="sm" className="rounded-full">Background</Button>
+              <Button variant="ghost" size="sm" className="rounded-full">Effects</Button>
+              <div className="ml-auto flex gap-1">
+                <Button variant="ghost" size="sm">↶</Button>
+                <Button variant="ghost" size="sm">↷</Button>
+              </div>
+            </div> */}
+            <div
+              className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center p-2 h-[520px] w-[520px] mx-auto"
+              onDoubleClick={() => {
+                // 双击在 Before/After 与单张 After 之间切换：若只有一张则忽略
+                if (processedImage && originalImage) {
+                  setProcessedImage(prev => prev ? prev : processedImage);
+                  // 通过切换一个哨兵状态：若 processed 存在且 slider 显示中，则改为仅 after 图
+                  // 简化处理：切换一个本地布尔 via data-attr
+                  const el = document.getElementById('ba-toggle');
+                  if (el) {
+                    const v = el.getAttribute('data-on') === '1' ? '0' : '1';
+                    el.setAttribute('data-on', v);
+                  }
+                }
+              }}
+            >
+            {isProcessing ? (
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {/* 半透明禁用的原图（非灰度） */}
+                  <img
+                    src={originalImage || ''}
+                    alt="Processing"
+                    className="max-w-full max-h-full object-contain rounded opacity-60 pointer-events-none select-none"
+                    decoding="async"
+                  />
+                  {/* 明显的等待遮罩与呼吸灯 */}
+                  <div className="absolute inset-0 z-10 rounded bg-background/40 backdrop-blur-sm grid place-items-center">
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 shadow-sm animate-[pulse_1.8s_ease-in-out_infinite]"
+                    >
+                      <span className="h-4 w-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+                      <span className="text-xs font-medium text-foreground/80">{tPage('removingBackground')}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : processedImage ? (
+                <BeforeAfterSlider
+                  beforeSrc={originalImage || ''}
+                  afterSrc={processedImage}
+                  beforeLabel="Original"
+                  afterLabel="Result"
+                  showLabels={false}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <img
+                      src={originalImage || ''}
+                      alt="Original"
+                      className="max-w-full max-h-full object-contain rounded"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            {hasError && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{hasError}</p>
+              </div>
+            )}
+            
+            {/* 底部控制区域：+按钮和最近图片 */}
+            <div className="mt-6 flex items-center justify-center gap-3">
+              {/* + 按钮 */}
+              <button
+                onClick={() => {
+                  const el = document.getElementById('image-upload-hidden') as HTMLInputElement | null;
+                  const fallback = document.getElementById('image-upload-main') as HTMLInputElement | null;
+                  (el || fallback)?.click();
+                }}
+                className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 transition-colors flex items-center justify-center"
+                aria-label="Upload new image"
+              >
+                <span className="text-2xl text-gray-400 hover:text-primary">+</span>
+              </button>
+              
+              {/* 最近图片缩略图 */}
+              {recentImages.map((img, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setOriginalImage(img.url);
+                    setProcessedImage(null);
+                    setCurrentTaskId(null);
+                    setHasError(false);
+                    setIsProcessing(false);
+                  }}
+                  className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-transparent hover:ring-primary transition-all"
+                  aria-label="Select recent image"
+                >
+                  <img 
+                    src={img.url} 
+                    alt={`Recent image ${index + 1}`} 
+                    className="h-full w-full object-cover" 
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* 始终挂载的隐藏文件输入，用于 + 按钮触发 */}
+            <input
+              id="image-upload-hidden"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              disabled={isProcessing}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* URL 对话框 */}
+      <Dialog open={showUrlDialog} onOpenChange={setShowUrlDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Paste image URL</DialogTitle>
+          </DialogHeader>
+          <div ref={dialogInputWrapperRef} className="flex items-center gap-3">
+            <input
+              ref={urlInputRef}
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              type="url"
+              placeholder="https://example.com/image.jpg"
+              className="flex-1 h-11 rounded-md border px-3 text-sm bg-background"
+              autoFocus
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter' && urlInput && !isProcessing) {
+                  await processImageFromUrl(urlInput);
+                  setShowUrlDialog(false);
+                }
+                if (e.key === 'Escape') setShowUrlDialog(false);
+              }}
+            />
+            <Button
+              size="lg"
+              className="h-11"
+              disabled={!urlInput || isProcessing}
+              onClick={async () => { if (urlInput) { await processImageFromUrl(urlInput); setShowUrlDialog(false); } }}
+            >
+              Start
+            </Button>
+          </div>
+          {urlError && (
+            <p className="mt-2 text-xs text-red-600">{urlError}</p>
+          )}
+          <DialogFooter />
+        </DialogContent>
+      </Dialog>
+
 
       {/* Features */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -515,131 +952,74 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         </CardContent>
       </Card>
 
-      {/* Upload Area */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5" />
-            {tPage('uploadImage')}
-          </CardTitle>
-          <CardDescription>
-            {isAuthenticated 
-              ? tPage('uploadImageDesc')
-              : tPage('demoModeDesc')
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-              id="image-upload"
-              disabled={isProcessing}
-            />
-            <label
-              htmlFor="image-upload"
-              className={cn(
-                "cursor-pointer inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors",
-                isProcessing && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <Upload className="w-4 h-4" />
-              {isProcessing ? tPage('processing') : tPage('chooseImage')}
-            </label>
-            <p className="text-sm text-muted-foreground mt-2">
-              {tPage('dragDropText')}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* 原位置上传区已上移至顶部，删除重复 */}
 
-      {/* Results */}
-      {(originalImage || processedImage) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Original Image */}
-          {originalImage && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{tPage('originalImage')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  <img
-                    src={originalImage}
-                    alt={tPage('originalImage')}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Processed Image */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>{tPage('processedImage')}</span>
-                {processedImage && !isProcessing && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleDownload}
-                      size="sm"
-                      className="flex items-center gap-2"
-                    >
-                      {isAuthenticated ? (
-                        <>
-                          <Download className="w-4 h-4" />
-                          {tPage('download')}
-                        </>
-                      ) : (
-                        <>
-                          <LogIn className="w-4 h-4" />
-                          {tPage('loginDownload')}
-                        </>
-                      )}
-                    </Button>
-                    {uploadedFile && (
-                      <Button
-                        onClick={handleTryAgain}
-                        variant="outline"
-                        size="sm"
-                      >
-                        {tPage('tryAgain')}
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                {isProcessing ? (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                      <p className="text-sm text-muted-foreground">
-                        {isAuthenticated ? tPage('removingBackground') : tPage('demoProcessing')}
-                      </p>
-                    </div>
-                  </div>
-                ) : processedImage ? (
-                  <img
-                    src={processedImage}
-                    alt={tPage('processedImage')}
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                    <p>{tPage('processing')}</p>
-                  </div>
-                )}
+      {/* 结果/编辑视图：上传后替换首屏 */}
+      {hasUpload && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>{tPage('processedImage')}</span>
+              <Button onClick={handleDownload} size="sm" className="flex items-center gap-2">
+                {isAuthenticated ? (<><Download className="w-4 h-4" />{tPage('download')}</>) : (<><LogIn className="w-4 h-4" />{tPage('loginDownload')}</>)}
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* 轻量工具栏 - 暂时隐藏，后续补充功能 */}
+            {/* <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 p-2 text-sm max-w-[520px] mx-auto">
+              <Button variant="ghost" size="sm" className="rounded-full">Cutout</Button>
+              <Button variant="ghost" size="sm" className="rounded-full">Background</Button>
+              <Button variant="ghost" size="sm" className="rounded-full">Effects</Button>
+              <div className="ml-auto flex gap-1">
+                <Button variant="ghost" size="sm">↶</Button>
+                <Button variant="ghost" size="sm">↷</Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div> */}
+            <div
+              className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center p-2 max-h-[500px] max-w-[500px] mx-auto"
+              onDoubleClick={() => {
+                // 双击在 Before/After 与单张 After 之间切换：若只有一张则忽略
+                if (processedImage && originalImage) {
+                  setProcessedImage(prev => prev ? prev : processedImage);
+                  // 通过切换一个哨兵状态：若 processed 存在且 slider 显示中，则改为仅 after 图
+                  // 简化处理：切换一个本地布尔 via data-attr
+                  const el = document.getElementById('ba-toggle');
+                  if (el) {
+                    const v = el.getAttribute('data-on') === '1' ? '0' : '1';
+                    el.setAttribute('data-on', v);
+                  }
+                }
+              }}
+            >
+              {isProcessing ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                    <p className="text-sm text-muted-foreground">{tPage('removingBackground')}</p>
+                  </div>
+                </div>
+              ) : (
+                processedImage && originalImage ? (
+                  <div id="ba-toggle" data-on="1" className="w-full h-full flex items-center justify-center">
+                    {/* data-on=1 显示 Slider；=0 显示 After 单图 */}
+                    {true ? (
+                      <BeforeAfterSlider
+                        beforeSrc={originalImage}
+                        afterSrc={processedImage}
+                        beforeLabel="Original"
+                        afterLabel="Background removed"
+                        className="w-full"
+                      />
+                    ) : null}
+                  </div>
+                ) : (
+                  <img src={processedImage || originalImage || ''} alt="preview" className="w-full h-full object-contain" />
+                )
+              )}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Webhook Handler */}
@@ -651,11 +1031,13 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             setIsProcessing(false);
             setCurrentTaskId(null);
             toast.success(tPage('backgroundRemoved'));
+            advanceQueue();
           }}
           onError={(error) => {
             setIsProcessing(false);
             setCurrentTaskId(null);
             toast.error(tPage('processingFailed'));
+            advanceQueue();
           }}
         />
       )}

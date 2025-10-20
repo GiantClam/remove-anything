@@ -17,6 +17,7 @@ import Loading from "@/components/loading/index";
 import BlurFade from "@/components/magicui/blur-fade";
 import PlaygroundLoading from "@/components/playground/loading";
 import { EmptyPlaceholder } from "@/components/shared/empty-placeholder";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LoraConfig, ModelName, Ratio } from "@/config/constants";
 import { FluxSelectDto } from "@/db/type";
 import { cn, createRatio } from "@/lib/utils";
@@ -106,13 +107,15 @@ export default function History({ locale, explore }: { locale: string, explore?:
 
   const debounceLoadMore = debounce(loadMore, 500);
 
+  const containerClass = cn({
+    "h-[calc(100vh_-_76px)]": !explore,
+    "min-h-screen": explore,
+  });
+
   // Don't render until auth is loaded to prevent SSR issues
   if (!isLoaded) {
     return (
-      <Container className={cn({
-        "h-[calc(100vh_-_76px)]": !explore,
-        "min-h-screen": explore,
-      })}>
+      <Container className={containerClass}>
         <div className="flex h-full min-h-96 w-full items-center justify-center">
           <Loading />
         </div>
@@ -120,13 +123,20 @@ export default function History({ locale, explore }: { locale: string, explore?:
     );
   }
 
+  if (!init) {
+    return (
+      <Container className={containerClass}>
+        <div className="grid gap-4 p-6 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={index} className="h-64 w-full rounded-xl bg-muted" />
+          ))}
+        </div>
+      </Container>
+    );
+  }
+
   return (
-    <Container className={
-      cn({
-        "h-[calc(100vh_-_76px)]": !explore,
-        "min-h-screen": explore,
-      })
-    }>
+    <Container className={containerClass}>
       <div
         className="no-scrollbar h-full overflow-y-auto overflow-x-hidden"
         id={id}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -17,6 +17,15 @@ import { Credits, model } from "@/config/constants";
 import type { ChargeProductSelectDto } from "@/db/type";
 import { Copy } from "lucide-react";
 import FormUpload from "@/components/upload";
+import { Badge } from "@/components/ui/badge";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 interface BatchRemoveBackgroundProps {
   locale: string;
@@ -96,7 +105,17 @@ export default function BatchRemoveBackground({
       return Promise.all(statusPromises);
     },
     enabled: processingTasks.length > 0,
-    refetchInterval: 3000, // 每3秒轮询一次
+    refetchInterval: (query) => {
+      // 检查是否还有正在处理的任务
+      const data = query.state.data as any[];
+      if (!data || data.length === 0) return false;
+      
+      const hasProcessingTasks = data.some(task => 
+        task && (task.status === 'pending' || task.status === 'processing' || task.status === 'starting')
+      );
+      
+      return hasProcessingTasks ? 3000 : false; // 如果有处理中的任务则轮询，否则停止
+    },
     refetchIntervalInBackground: false,
   });
 
@@ -217,13 +236,96 @@ export default function BatchRemoveBackground({
   const needCredit = Credits[model.backgroundRemoval] * uploadedImages.filter(img => img.status === 'uploaded').length;
   const hasEnoughCredit = userCredit && userCredit.credit >= needCredit;
 
+  const queueStats = useMemo(() => {
+    const total = batchResults.length;
+    const completed = batchResults.filter(result => result.status === "succeeded").length;
+    const failed = batchResults.filter(result => result.status === "failed").length;
+    const active = batchResults.filter(result => result.status === "processing" || result.status === "pending").length;
+    return { total, completed, failed, active };
+  }, [batchResults]);
+
+  const queueProgress = queueStats.total
+    ? Math.round(((queueStats.completed + queueStats.failed) / queueStats.total) * 100)
+    : 0;
+
+  const hasActiveTasks = queueStats.active > 0;
+
   return (
     <div className="container mx-auto max-w-6xl p-6">
-      <div className="mb-8 text-center">
-        <h1 className="mb-4 text-3xl font-bold">Batch Background Removal</h1>
-        <p className="text-muted-foreground">
-          Remove backgrounds from multiple images at once. Upload up to 100MB of images and get clean results.
-        </p>
+      <div className="mb-8 flex flex-col items-center gap-4 text-center md:flex-row md:items-end md:justify-between md:text-left">
+        <div>
+          <h1 className="mb-2 text-3xl font-bold">Batch Background Removal</h1>
+          <p className="text-muted-foreground">
+            Queue up to 50 images and monitor progress without leaving the page.
+          </p>
+        </div>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="gap-2" disabled={!batchResults.length}>
+              Queue
+              {hasActiveTasks && (
+                <Badge variant="default" className="bg-primary text-primary-foreground">
+                  {queueStats.active} active
+                </Badge>
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-full sm:max-w-md">
+            <SheetHeader>
+              <SheetTitle>Processing Queue</SheetTitle>
+              <p className="text-sm text-muted-foreground">
+                {queueStats.total > 0
+                  ? `${queueStats.completed} done · ${queueStats.active} in progress · ${queueStats.failed} failed`
+                  : "Upload images to start a queue."}
+              </p>
+            </SheetHeader>
+            <div className="mt-6 space-y-4">
+              {batchResults.length === 0 && (
+                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  No items yet. Start a batch to see live updates here.
+                </div>
+              )}
+              {batchResults.map((result) => (
+                <div key={result.id} className="rounded-lg border p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium">#{result.index + 1}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {result.status === "succeeded"
+                          ? "Completed"
+                          : result.status === "failed"
+                          ? "Failed"
+                          : result.status === "processing"
+                          ? "Processing"
+                          : "Pending"}
+                      </p>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        "capitalize",
+                        result.status === "succeeded" && "bg-emerald-100 text-emerald-800",
+                        result.status === "failed" && "bg-red-100 text-red-800",
+                        result.status === "processing" && "bg-blue-100 text-blue-800",
+                      )}
+                    >
+                      {result.status || "pending"}
+                    </Badge>
+                  </div>
+                  <div className="mt-3 space-y-2 text-xs text-muted-foreground">
+                    <p className="truncate">Source: {result.originalImageUrl}</p>
+                    {result.processedImageUrl && (
+                      <p className="truncate">Output: {result.processedImageUrl}</p>
+                    )}
+                    {result.error && (
+                      <p className="text-red-600">Error: {result.error}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -323,16 +425,18 @@ export default function BatchRemoveBackground({
 
         {/* Right: Results Area */}
         <div className="space-y-6">
-          {isProcessing && (
+          {(isProcessing || hasActiveTasks) && (
             <Card>
               <CardHeader>
                 <CardTitle>Processing Images</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <Progress value={0} className="h-2" />
+                  <Progress value={hasActiveTasks ? queueProgress : 15} className="h-2" />
                   <p className="text-sm text-muted-foreground">
-                    Processing {uploadedImages.filter(img => img.status === 'uploaded').length} images...
+                    {hasActiveTasks
+                      ? `Completed ${queueStats.completed + queueStats.failed} of ${queueStats.total}`
+                      : "Preparing upload..."}
                   </p>
                 </div>
               </CardContent>

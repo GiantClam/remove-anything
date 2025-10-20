@@ -173,7 +173,7 @@ class TaskQueueManager {
   /**
    * 启动 RunningHub 状态监控（后端托管，无需前端）
    */
-  public startStatusWatcher(taskRecordId: number, runninghubTaskId: string) {
+  public startStatusWatcher(taskRecordId: number, runninghubTaskId: string, taskType: string = 'flux') {
     // 已有 watcher 则先清理
     const existing = this.statusWatchers.get(runninghubTaskId);
     if (existing) clearInterval(existing);
@@ -183,14 +183,25 @@ class TaskQueueManager {
       try {
         // 超时保护
         if (Date.now() - startedAt > this.watcherConfig.maxMinutes * 60 * 1000) {
-          await prisma.fluxData.update({
-            where: { id: taskRecordId },
-            data: {
-              taskStatus: 'failed',
-              errorMsg: 'Watch timeout',
-              executeEndTime: BigInt(Date.now()),
-            }
-          });
+          if (taskType === 'background-removal') {
+            await prisma.backgroundRemovalTask.update({
+              where: { replicateId: runninghubTaskId },
+              data: {
+                taskStatus: 'failed',
+                errorMsg: 'Watch timeout',
+                executeEndTime: BigInt(Date.now()),
+              }
+            });
+          } else {
+            await prisma.fluxData.update({
+              where: { id: taskRecordId },
+              data: {
+                taskStatus: 'failed',
+                errorMsg: 'Watch timeout',
+                executeEndTime: BigInt(Date.now()),
+              }
+            });
+          }
           this.stopStatusWatcher(runninghubTaskId);
           return;
         }
@@ -198,15 +209,48 @@ class TaskQueueManager {
         // 查询任务状态
         const statusResp = await runninghubAPI.getTaskStatus(runninghubTaskId);
         let status: string | undefined;
+        
+        console.log(`🔍 RunningHub状态响应:`, statusResp);
+        
         if (typeof (statusResp as any)?.data === 'string') {
           status = (statusResp as any).data as string;
         } else if ((statusResp as any)?.data && typeof (statusResp as any).data.status === 'string') {
           status = (statusResp as any).data.status as string;
+        } else if ((statusResp as any)?.data && typeof (statusResp as any).data === 'object') {
+          status = (statusResp as any).data.status || (statusResp as any).data;
         }
 
-        if (!status) return; // 未知状态，继续轮询
+        console.log(`📊 解析的任务状态: ${status}`);
+
+        if (!status) {
+          console.log(`⚠️ 无法解析任务状态，继续轮询`);
+          return; // 未知状态，继续轮询
+        }
 
         if (status === 'RUNNING' || status === 'running' || status === 'Processing' || status === 'processing' || status === 'queued' || status === 'starting') {
+          // 更新数据库状态为processing（如果当前不是processing状态）
+          try {
+            if (taskType === 'background-removal') {
+              await prisma.backgroundRemovalTask.update({
+                where: { replicateId: runninghubTaskId },
+                data: {
+                  taskStatus: 'processing',
+                  executeStartTime: BigInt(Date.now()),
+                }
+              });
+            } else {
+              await prisma.fluxData.update({
+                where: { id: taskRecordId },
+                data: {
+                  taskStatus: 'processing',
+                  executeStartTime: BigInt(Date.now()),
+                }
+              });
+            }
+            console.log(`🔄 任务状态更新为processing`);
+          } catch (updateError) {
+            console.error("❌ 更新任务状态为processing失败:", updateError);
+          }
           return; // 继续轮询
         }
 
@@ -215,26 +259,54 @@ class TaskQueueManager {
           try {
             const result = await runninghubAPI.getTaskResult(runninghubTaskId);
             let outputUrl: string | null = null;
-            if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
+            
+            // 检查是否是 APIKEY_TASK_IS_RUNNING 响应
+            if (result.code === 804 && result.msg === 'APIKEY_TASK_IS_RUNNING') {
+              console.log(`ℹ️ 任务状态为SUCCESS但结果API仍返回运行中，保持当前状态等待下次轮询`);
+              return; // 继续轮询
+            } else if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
               outputUrl = result.data[0]?.fileUrl || null;
             }
 
-            await prisma.fluxData.update({
-              where: { id: taskRecordId },
-              data: {
-                taskStatus: 'succeeded',
-                imageUrl: outputUrl,
-                executeEndTime: BigInt(Date.now()),
-              }
-            });
+            if (taskType === 'background-removal') {
+              await prisma.backgroundRemovalTask.update({
+                where: { replicateId: runninghubTaskId },
+                data: {
+                  taskStatus: 'succeeded',
+                  outputImageUrl: outputUrl,
+                  executeEndTime: BigInt(Date.now()),
+                }
+              });
+            } else {
+              await prisma.fluxData.update({
+                where: { id: taskRecordId },
+                data: {
+                  taskStatus: 'succeeded',
+                  imageUrl: outputUrl,
+                  executeEndTime: BigInt(Date.now()),
+                }
+              });
+            }
+            console.log(`✅ 任务成功完成，输出URL: ${outputUrl}`);
           } catch (e) {
-            await prisma.fluxData.update({
-              where: { id: taskRecordId },
-              data: {
-                taskStatus: 'succeeded',
-                executeEndTime: BigInt(Date.now()),
-              }
-            });
+            console.error("❌ 获取任务结果失败:", e);
+            if (taskType === 'background-removal') {
+              await prisma.backgroundRemovalTask.update({
+                where: { replicateId: runninghubTaskId },
+                data: {
+                  taskStatus: 'succeeded',
+                  executeEndTime: BigInt(Date.now()),
+                }
+              });
+            } else {
+              await prisma.fluxData.update({
+                where: { id: taskRecordId },
+                data: {
+                  taskStatus: 'succeeded',
+                  executeEndTime: BigInt(Date.now()),
+                }
+              });
+            }
           } finally {
             this.stopStatusWatcher(runninghubTaskId);
           }
@@ -242,13 +314,23 @@ class TaskQueueManager {
         }
 
         if (status === 'FAILED' || status === 'failed') {
-          await prisma.fluxData.update({
-            where: { id: taskRecordId },
-            data: {
-              taskStatus: 'failed',
-              executeEndTime: BigInt(Date.now()),
-            }
-          });
+          if (taskType === 'background-removal') {
+            await prisma.backgroundRemovalTask.update({
+              where: { replicateId: runninghubTaskId },
+              data: {
+                taskStatus: 'failed',
+                executeEndTime: BigInt(Date.now()),
+              }
+            });
+          } else {
+            await prisma.fluxData.update({
+              where: { id: taskRecordId },
+              data: {
+                taskStatus: 'failed',
+                executeEndTime: BigInt(Date.now()),
+              }
+            });
+          }
           this.stopStatusWatcher(runninghubTaskId);
           return;
         }

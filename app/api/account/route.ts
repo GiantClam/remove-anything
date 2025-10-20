@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getCurrentUser } from "@/lib/auth-utils";
+import { createProjectAuthProvider } from "@/modules/auth/adapter";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 import { AccountHashids } from "@/db/dto/account.dto";
@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
     }
 
     console.time("stat");
-    const user = await getCurrentUser();
+    const auth = createProjectAuthProvider();
+    const user = await auth.getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
     //   });
     // }
 
-    const accountInfo = await getUserCredit(user.id);
+    const accountInfo = await getUserCredit(user.userId!);
     console.timeEnd("stat");
 
     return NextResponse.json({

@@ -1,14 +1,10 @@
-import { Eraser } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-import { DashboardIcon } from "@/assets";
 import { Icons } from "@/components/shared/icons";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { siteConfig } from "@/config/site";
+import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/lib/navigation";
-import { cn, nFormatter } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
-import ShimmerButton from "../forms/shimmer-button";
 import AnimatedGradientText from "../magicui/animated-gradient-text";
 
 export default async function HeroLanding() {
@@ -47,22 +43,6 @@ export default async function HeroLanding() {
           className="flex flex-col justify-center space-y-4 md:flex-row md:space-x-4 md:space-y-0"
           style={{ animationDelay: "0.4s", animationFillMode: "forwards" }}
         >
-          <Link
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "group relative w-full max-w-52 items-center justify-center gap-2 overflow-hidden whitespace-pre rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-all duration-300 ease-out hover:bg-primary/90 hover:ring-2 hover:ring-primary hover:ring-offset-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 md:flex",
-            )}
-            href="/remove-background"
-          >
-            <span className="absolute right-0 -mt-12 h-32 w-8 translate-x-12 rotate-12 bg-white opacity-10 transition-all duration-1000 ease-out group-hover:-translate-x-40" />
-            <div className="flex items-center">
-              <Eraser className="mr-2 size-4" />
-              <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 dark:text-slate-900">
-                {t("action.generate")}
-              </span>
-            </div>
-          </Link>
-
           <Link
             href="/pricing"
             className={cn(

@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 
 import { getErrorMessage } from "@/lib/handle-error";
 import { kv, KVRateLimit } from "@/lib/kv";
-import { aiGateway } from "@/lib/ai-gateway";
+// import { aiGateway } from "@/lib/ai-gateway"; // 切换到 RunningHub
 import { env } from "@/env.mjs";
 import AWS from 'aws-sdk';
 import crypto from 'crypto';
@@ -14,6 +14,7 @@ import { getUserCredit } from "@/db/queries/account";
 import { prisma } from "@/db/prisma";
 import { Credits, model } from "@/config/constants";
 import { BillingType } from "@/db/type";
+import { createRunningHubClient } from "@/modules/runninghub/adapter";
 
 const ratelimit = new KVRateLimit(kv, {
   limit: 10,
@@ -159,74 +160,101 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log("🚀 开始调用 Cloudflare AI Gateway + Replicate 进行背景移除...");
+    console.log("🚀 使用 RunningHub API 进行背景移除...");
     console.log("图片URL:", imageUrl);
     console.log("用户ID:", userId || "anonymous");
 
-    // 使用异步调用
-    const result = await aiGateway.removeBackgroundAsync({
-      image: imageUrl,
-      resolution: "1024x1024", // 使用默认分辨率
-    });
+    const rh = createRunningHubClient();
+    const workflowId = "1977998138864795650";
+    const uploadNodeId = "233"; // image node
 
-    // 创建任务记录
+    let runninghubTaskId: string;
+    try {
+      runninghubTaskId = await rh.createTaskGeneric({
+        workflowId,
+        nodeInfoList: [
+          { nodeId: uploadNodeId, fieldName: "image", fieldValue: imageUrl }
+        ],
+        taskRecordId: undefined, // 暂时不传，避免webhook问题
+      });
+    } catch (e: any) {
+      console.error("❌ RunningHub 创建任务失败:", e);
+      return NextResponse.json({ error: "Failed to create RunningHub task", details: e?.message || String(e) }, { status: 500 });
+    }
+
+    // 创建任务记录（沿用 replicateId 字段存储外部任务ID）
     const taskRecord = await createBackgroundRemovalTask({
-      userId: userId || undefined, // 对于匿名用户，传递undefined
-      replicateId: result.id,
+      userId: userId || undefined,
+      replicateId: runninghubTaskId,
       inputImageUrl: imageUrl,
       resolution: "1024x1024",
-      model: "men1scus/birefnet"
+      model: "runninghub/background-removal"
     });
-    
-    console.log("✅ 异步任务创建成功:", result);
+
+    console.log("✅ RunningHub 任务创建成功:", runninghubTaskId);
     console.log("✅ 任务记录创建成功:", taskRecord);
+
+    // 启动任务状态监控
+    try {
+      const { taskQueueManager } = await import("@/lib/task-queue");
+      taskQueueManager.startStatusWatcher(taskRecord.id, runninghubTaskId, 'background-removal');
+      console.log("✅ 任务状态监控已启动");
+    } catch (error) {
+      console.error("❌ 启动任务状态监控失败:", error);
+      // 不影响主流程，继续执行
+    }
 
     // 对于登录用户，扣除积分并创建计费记录
     if (userId && taskRecord) {
       try {
         const requiredCredits = Credits[model.backgroundRemoval] || 2;
         
-        await prisma.$transaction(async (tx) => {
-          // 扣除用户积分
-          const userCredit = await tx.userCredit.findFirst({
-            where: { userId },
-          });
+        // 开发模式：跳过积分扣除
+        if (process.env.NODE_ENV === "development") {
+          console.log(`🔧 开发模式：跳过用户 ${userId} 的积分扣除`);
+        } else {
+          await prisma.$transaction(async (tx) => {
+            // 扣除用户积分
+            const userCredit = await tx.userCredit.findFirst({
+              where: { userId },
+            });
 
-          if (!userCredit || userCredit.credit < requiredCredits) {
-            throw new Error("Insufficient credits");
-          }
+            if (!userCredit || userCredit.credit < requiredCredits) {
+              throw new Error("Insufficient credits");
+            }
 
-          const newCreditBalance = userCredit.credit - requiredCredits;
-          
-          await tx.userCredit.update({
-            where: { id: userCredit.id },
-            data: {
-              credit: newCreditBalance,
-            },
-          });
+            const newCreditBalance = userCredit.credit - requiredCredits;
+            
+            await tx.userCredit.update({
+              where: { id: userCredit.id },
+              data: {
+                credit: newCreditBalance,
+              },
+            });
 
-          // 创建计费记录
-          const billing = await tx.userBilling.create({
-            data: {
-              userId,
-              state: "Done",
-              amount: requiredCredits,
-              type: BillingType.Withdraw,
-              description: `Background Removal - Task ${result.id}`,
-            },
-          });
+            // 创建计费记录
+            const billing = await tx.userBilling.create({
+              data: {
+                userId,
+                state: "Done",
+                amount: requiredCredits,
+                type: BillingType.Withdraw,
+                description: `Background Removal - Task ${runninghubTaskId}`,
+              },
+            });
 
-          // 创建积分交易记录
-          await tx.userCreditTransaction.create({
-            data: {
-              userId,
-              credit: -requiredCredits,
-              balance: newCreditBalance,
-              billingId: billing.id,
-              type: "Background Removal",
-            },
+            // 创建积分交易记录
+            await tx.userCreditTransaction.create({
+              data: {
+                userId,
+                credit: -requiredCredits,
+                balance: newCreditBalance,
+                billingId: billing.id,
+                type: "Background Removal",
+              },
+            });
           });
-        });
+        }
 
         console.log(`✅ 用户 ${userId} 成功扣除 ${requiredCredits} 积分`);
       } catch (error) {
@@ -237,14 +265,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 返回任务信息
-    return NextResponse.json({
-      success: true,
-      taskId: result.id,
-      status: result.status,
-      message: "Background removal task created successfully",
-      urls: result.urls,
-      taskRecordId: taskRecord?.id
-    });
+    return NextResponse.json({ success: true, taskId: runninghubTaskId, taskRecordId: taskRecord?.id });
 
   } catch (error) {
     console.error("❌ 处理失败:", error);

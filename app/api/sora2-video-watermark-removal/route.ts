@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
 import { runninghubAPI } from "@/lib/runninghub-api";
-import { getCurrentUser } from "@/lib/auth-utils";
+import { createProjectAuthProvider } from "@/modules/auth/adapter";
 import { prisma } from "@/db/prisma";
 import { taskQueueManager } from "@/lib/task-queue";
 import { Credits, model, TASK_QUEUE_CONFIG } from "@/config/constants";
@@ -45,8 +45,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 获取当前用户
-    const user = await getCurrentUser();
-    let userId = user?.id;
+    const auth = createProjectAuthProvider();
+    const user = await auth.getCurrentUser();
+    let userId = user?.userId;
     
     // 开发模式：如果getCurrentUser返回null，使用测试用户ID
     if (!userId && process.env.NODE_ENV === "development") {

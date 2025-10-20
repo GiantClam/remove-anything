@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import type { ChargeProductSelectDto } from "@/db/type";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { url } from "@/lib";
@@ -37,9 +38,11 @@ interface PricingCardsProps {
 const PricingCard = ({
   userId,
   offer,
+  isRecommended = false,
 }: {
   userId?: string;
   offer: ChargeProductSelectDto;
+  isRecommended?: boolean;
 }) => {
   const pathname = usePathname();
   const t = useTranslations("PricingPage");
@@ -48,10 +51,15 @@ const PricingCard = ({
     <div
       className={cn(
         "relative flex flex-col overflow-hidden rounded-3xl border shadow-sm",
-        offer.amount === 1990 ? "-m-0.5 border-2 border-purple-400" : "",
+        isRecommended && "-m-0.5 border-2 border-primary shadow-md",
       )}
       key={offer.title}
     >
+      {isRecommended && (
+        <Badge className="absolute right-4 top-4 bg-primary text-primary-foreground">
+          Most popular
+        </Badge>
+      )}
       <div className="min-h-[150px] items-start space-y-4 bg-muted/50 p-6">
         <p className="flex font-urban text-sm font-bold uppercase tracking-wider text-muted-foreground">
           {offer.title}
@@ -112,7 +120,7 @@ const PricingCard = ({
           <div className="flex justify-center">
             <SignInButton mode="modal" forceRedirectUrl={pathname}>
               <Button
-                variant={offer.amount === 1990 ? "default" : "outline"}
+                variant={isRecommended ? "default" : "outline"}
                 className="w-full"
                 // onClick={() => setShowSignInModal(true)}
               >
@@ -215,6 +223,18 @@ export function PricingCards({
     }
   }, [searchParams]);
 
+  const curatedProducts = useMemo(() => {
+    const items = (chargeProduct ?? []).filter(
+      (item): item is ChargeProductSelectDto => Boolean(item),
+    );
+    return items
+      .slice()
+      .sort((a, b) => a.amount - b.amount)
+      .slice(0, 3);
+  }, [chargeProduct]);
+
+  const recommendedId = curatedProducts[1]?.id ?? curatedProducts[0]?.id;
+
   return (
     <MaxWidthWrapper>
       <section className="flex flex-col items-center text-center">
@@ -261,15 +281,13 @@ export function PricingCards({
         </div> */}
 
         <div className="grid gap-5 bg-inherit py-5 md:grid-cols-3">
-          {(chargeProduct ?? [])
-            .filter(Boolean)
-            .map((offer, idx) => (
-              <PricingCard
-                // @ts-ignore
-                offer={offer as ChargeProductSelectDto}
-                key={(offer as any)?.id ?? `${(offer as any)?.title ?? 'offer'}-${idx}`}
-              />
-            ))}
+          {curatedProducts.map((offer, idx) => (
+            <PricingCard
+              offer={offer}
+              key={offer.id ?? `${offer.title ?? "offer"}-${idx}`}
+              isRecommended={offer.id === recommendedId}
+            />
+          ))}
         </div>
 
         <p className="mt-3 text-balance text-center text-base text-muted-foreground">
@@ -330,7 +348,11 @@ export function PricingCardDialog({
           <DialogTitle>{t("title")}</DialogTitle>
           <div className="grid grid-cols-1 gap-5 bg-inherit py-5 lg:grid-cols-3">
             {product?.map((offer, idx) => (
-              <PricingCard offer={offer} key={offer?.id ?? `${offer?.title ?? 'offer'}-${idx}`} />
+              <PricingCard
+                offer={offer}
+                key={offer?.id ?? `${offer?.title ?? "offer"}-${idx}`}
+                isRecommended={idx === 1}
+              />
             ))}
           </div>
         </DialogHeader>

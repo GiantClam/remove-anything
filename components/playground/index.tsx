@@ -394,7 +394,7 @@ export default function Playground({
 
               {fluxData.taskStatus === FluxTaskStatus.Succeeded && fluxData.imageUrl && (
                 <div className="space-y-4">
-                  <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-muted">
+                  <div className="relative w-full overflow-hidden rounded-lg border bg-muted max-h-[500px] max-w-[500px] mx-auto">
                     <img
                       src={fluxData.imageUrl}
                       alt={t("backgroundRemoval.altText")}

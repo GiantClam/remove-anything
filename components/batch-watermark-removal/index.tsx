@@ -96,7 +96,17 @@ export default function BatchWatermarkRemoval({
       return Promise.all(statusPromises);
     },
     enabled: processingTasks.length > 0,
-    refetchInterval: 3000, // 每3秒轮询一次
+    refetchInterval: (query) => {
+      // 检查是否还有正在处理的任务
+      const data = query.state.data as any[];
+      if (!data || data.length === 0) return false;
+      
+      const hasProcessingTasks = data.some(task => 
+        task && (task.status === 'pending' || task.status === 'processing' || task.status === 'starting')
+      );
+      
+      return hasProcessingTasks ? 3000 : false; // 如果有处理中的任务则每3秒轮询，否则停止
+    },
     refetchIntervalInBackground: false,
   });
 

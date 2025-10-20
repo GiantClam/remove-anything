@@ -365,6 +365,21 @@ model UserCreditTransaction {
   @@map(name: "user_credit_transaction")
 }
 
+model ProcessingQueue {
+  id          Int       @id @default(autoincrement())
+  taskType    String    @map(name: "task_type")
+  payload     Json
+  status      String    @default("pending") // pending | running | completed | failed
+  retryCount  Int       @default(0) @map(name: "retry_count")
+  lastError   String?   @map(name: "last_error")
+  scheduledAt DateTime  @default(now()) @map(name: "scheduled_at")
+  createdAt   DateTime  @default(now()) @map(name: "created_at")
+  updatedAt   DateTime  @updatedAt @map(name: "updated_at")
+
+  @@map(name: "processing_queue")
+  @@index([status, scheduledAt])
+}
+
 model UserPaymentInfo {
   id                     Int       @id @default(autoincrement())
   userId                 String    @map(name: "user_id")

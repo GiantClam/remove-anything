@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 import BlurFade from "@/components/magicui/blur-fade";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   HoverCard,
   HoverCardContent,
@@ -56,51 +57,70 @@ const useCreateSora2VideoWatermarkRemovalMutation = (config?: {
 }) => {
   return useMutation({
     mutationFn: async (values: any) => {
-      // 1) 获取 R2 预签名 URL
-      const filename = buildUniqueFilename(values.file);
-      const contentType = values.file?.type || 'video/mp4';
-      const presignedRes = await fetch('/api/r2-presigned-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename, contentType })
-      });
-      if (!presignedRes.ok) {
-        const t = await presignedRes.text();
-        throw new Error(`PRESIGNED_FAILED ${presignedRes.status} ${t}`);
+      if (values.url) {
+        // 使用URL直接创建任务
+        const fd = new FormData();
+        fd.append('url', values.url);
+        fd.append('orientation', values.orientation);
+
+        const res = await fetch('/api/sora2-video-watermark-removal-url', {
+          method: 'POST',
+          body: fd,
+          credentials: 'include'
+        });
+
+        if (!res.ok && res.status >= 500) {
+          throw new Error('Network response error');
+        }
+        return res.json();
+      } else {
+        // 使用文件上传
+        // 1) 获取 R2 预签名 URL
+        const filename = buildUniqueFilename(values.file);
+        const contentType = values.file?.type || 'video/mp4';
+        const presignedRes = await fetch('/api/r2-presigned-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, contentType })
+        });
+        if (!presignedRes.ok) {
+          const t = await presignedRes.text();
+          throw new Error(`PRESIGNED_FAILED ${presignedRes.status} ${t}`);
+        }
+        const { presignedUrl } = await presignedRes.json();
+
+        // 2) 前端直传到 R2（PUT）
+        const uploadRes = await fetch(presignedUrl, {
+          method: 'PUT',
+          body: values.file,
+          headers: { 'Content-Type': contentType }
+        });
+        if (!uploadRes.ok) {
+          throw new Error(`R2_UPLOAD_FAILED ${uploadRes.status} ${uploadRes.statusText}`);
+        }
+
+        // 3) 构造公共 URL（与后端一致：uploads/<key>）
+        const key = presignedUrl.split('?')[0].split('/').pop() as string;
+        const r2Url = `https://s.remove-anything.com/uploads/${key}`;
+
+        // 4) 通知后端创建任务（仅传 r2Url 与 meta，避免大请求体 413）
+        const fd = new FormData();
+        fd.append('r2Url', r2Url);
+        fd.append('orientation', values.orientation);
+        fd.append('filename', filename);
+
+        const res = await fetch('/api/sora2-video-watermark-removal-r2', {
+          method: 'POST',
+          body: fd,
+          credentials: 'include'
+        });
+
+        // 后端可能返回 202（异步）或 200（同步）
+        if (!res.ok && res.status >= 500) {
+          throw new Error('Network response error');
+        }
+        return res.json();
       }
-      const { presignedUrl } = await presignedRes.json();
-
-      // 2) 前端直传到 R2（PUT）
-      const uploadRes = await fetch(presignedUrl, {
-        method: 'PUT',
-        body: values.file,
-        headers: { 'Content-Type': contentType }
-      });
-      if (!uploadRes.ok) {
-        throw new Error(`R2_UPLOAD_FAILED ${uploadRes.status} ${uploadRes.statusText}`);
-      }
-
-      // 3) 构造公共 URL（与后端一致：uploads/<key>）
-      const key = presignedUrl.split('?')[0].split('/').pop() as string;
-      const r2Url = `https://s.remove-anything.com/uploads/${key}`;
-
-      // 4) 通知后端创建任务（仅传 r2Url 与 meta，避免大请求体 413）
-      const fd = new FormData();
-      fd.append('r2Url', r2Url);
-      fd.append('orientation', values.orientation);
-      fd.append('filename', filename);
-
-      const res = await fetch('/api/sora2-video-watermark-removal-r2', {
-        method: 'POST',
-        body: fd,
-        credentials: 'include'
-      });
-
-      // 后端可能返回 202（异步）或 200（同步）
-      if (!res.ok && res.status >= 500) {
-        throw new Error('Network response error');
-      }
-      return res.json();
     },
     onSuccess: async (result) => {
       config?.onSuccess(result);
@@ -145,6 +165,10 @@ export default function Sora2VideoWatermarkRemoval({
     }
   });
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [showUrlDialog, setShowUrlDialog] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [urlError, setUrlError] = useState<string | null>(null);
   const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('portrait');
   const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
   const [estimatedProgress, setEstimatedProgress] = useState<number>(0);
@@ -166,6 +190,21 @@ export default function Sora2VideoWatermarkRemoval({
     setVideoSrcTs(null);
     try {
       // 清理上一次查询缓存
+      queryClient.removeQueries({ queryKey: ["querySora2VideoWatermarkRemovalTask"] });
+    } catch {}
+  }, [queryClient]);
+
+  // 处理URL输入变化
+  const handleUrlChange = useCallback((url: string) => {
+    setVideoUrl(url);
+    // 重置任务相关状态
+    setTaskId("");
+    setTaskData(undefined);
+    setEstimatedProgress(0);
+    setProcessingStartTime(null);
+    setPollMode('runninghub');
+    setVideoSrcTs(null);
+    try {
       queryClient.removeQueries({ queryKey: ["querySora2VideoWatermarkRemovalTask"] });
     } catch {}
   }, [queryClient]);
@@ -296,89 +335,124 @@ export default function Sora2VideoWatermarkRemoval({
   const handleSubmit = async () => {
     console.log("🚀 handleSubmit 开始执行");
     console.log("📁 uploadedFiles:", uploadedFiles);
+    console.log("🔗 videoUrl:", videoUrl);
     
-    if (uploadedFiles.length === 0) {
-      toast.error("Please upload a video file");
+    // 检查是否有文件上传或URL输入
+    if (uploadedFiles.length === 0 && !videoUrl.trim()) {
+      toast.error("Please upload a video file or enter a video URL");
       return;
     }
 
-    const videoFile = uploadedFiles[0]?.originFile;
-    if (!videoFile) {
-      toast.error("Please upload a valid video file");
-      return;
+    // 如果同时有文件和URL，优先使用文件
+    if (uploadedFiles.length > 0) {
+      const videoFile = uploadedFiles[0]?.originFile;
+      if (!videoFile) {
+        toast.error("Please upload a valid video file");
+        return;
+      }
+    } else if (videoUrl.trim()) {
+      // 验证URL格式
+      try {
+        new URL(videoUrl.trim());
+      } catch {
+        toast.error("Please enter a valid video URL");
+        return;
+      }
     }
 
-    // 检查文件类型
-    if (!videoFile.type.startsWith('video/')) {
-      toast.error('Please select a video file');
-      return;
-    }
-    
-    // 检查文件大小 (50MB 限制，考虑到 Vercel 的限制)
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    if (videoFile.size > maxSize) {
-      toast.error('视频文件大小不能超过 50MB。请压缩视频后重试。');
-      return;
-    }
-    
-    // 检查最小文件大小 (1MB)
-    const minSize = 1024 * 1024; // 1MB
-    if (videoFile.size < minSize) {
-      toast.error('Video file size must be at least 1MB');
-      return;
-    }
-    
-    // 检查文件扩展名
-    const allowedExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
-    const fileExtension = videoFile.name.toLowerCase().substring(videoFile.name.lastIndexOf('.'));
-    if (!allowedExtensions.includes(fileExtension)) {
-      toast.error('Supported video formats: MP4, MOV, AVI, MKV, WEBM');
-      return;
-    }
-    
-    // 检查 MIME 类型
-    const allowedMimeTypes = [
-      'video/mp4',
-      'video/quicktime',
-      'video/x-msvideo',
-      'video/x-matroska',
-      'video/webm'
-    ];
-    if (!allowedMimeTypes.includes(videoFile.type)) {
-      toast.error(`Unsupported video format: ${videoFile.type}. Please use MP4, MOV, AVI, MKV, or WEBM format.`);
-      return;
+    // 如果有文件上传，进行文件验证
+    if (uploadedFiles.length > 0) {
+      const videoFile = uploadedFiles[0]?.originFile;
+      
+      // 检查文件类型
+      if (!videoFile.type.startsWith('video/')) {
+        toast.error('Please select a video file');
+        return;
+      }
+      
+      // 检查文件大小 (50MB 限制，考虑到 Vercel 的限制)
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (videoFile.size > maxSize) {
+        toast.error('视频文件大小不能超过 50MB。请压缩视频后重试。');
+        return;
+      }
+      
+      // 检查最小文件大小 (1MB)
+      const minSize = 1024 * 1024; // 1MB
+      if (videoFile.size < minSize) {
+        toast.error('Video file size must be at least 1MB');
+        return;
+      }
+      
+      // 检查文件扩展名
+      const allowedExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
+      const fileExtension = videoFile.name.toLowerCase().substring(videoFile.name.lastIndexOf('.'));
+      if (!allowedExtensions.includes(fileExtension)) {
+        toast.error('Supported video formats: MP4, MOV, AVI, MKV, WEBM');
+        return;
+      }
+      
+      // 检查 MIME 类型
+      const allowedMimeTypes = [
+        'video/mp4',
+        'video/quicktime',
+        'video/x-msvideo',
+        'video/x-matroska',
+        'video/webm'
+      ];
+      if (!allowedMimeTypes.includes(videoFile.type)) {
+        toast.error(`Unsupported video format: ${videoFile.type}. Please use MP4, MOV, AVI, MKV, or WEBM format.`);
+        return;
+      }
     }
 
     setLoading(true);
     setTaskData(undefined);
 
     // 添加调试信息
-    console.log("🔍 视频文件信息:", {
-      name: videoFile.name,
-      size: videoFile.size,
-      type: videoFile.type,
-      lastModified: videoFile.lastModified
-    });
+    if (uploadedFiles.length > 0) {
+      const videoFile = uploadedFiles[0]?.originFile;
+      console.log("🔍 视频文件信息:", {
+        name: videoFile.name,
+        size: videoFile.size,
+        type: videoFile.type,
+        lastModified: videoFile.lastModified
+      });
 
-    // 检查视频文件是否为空或损坏
-    if (videoFile.size === 0) {
-      toast.error('Video file is empty. Please select a valid video file.');
-      return;
-    }
+      // 检查视频文件是否为空或损坏
+      if (videoFile.size === 0) {
+        toast.error('Video file is empty. Please select a valid video file.');
+        return;
+      }
 
-    // 检查文件是否真的是视频文件
-    if (!videoFile.type.startsWith('video/')) {
-      toast.error('Please select a valid video file.');
-      return;
+      // 检查文件是否真的是视频文件
+      if (!videoFile.type.startsWith('video/')) {
+        toast.error('Please select a valid video file.');
+        return;
+      }
+    } else {
+      console.log("🔍 使用视频URL:", videoUrl);
     }
 
     try {
       setLoading(true);
       setProcessingStartTime(Date.now());
-      const result = await useCreateTask.mutateAsync({
-        file: videoFile,
-        orientation: orientation,
-      });
+      
+      let result;
+      if (uploadedFiles.length > 0) {
+        // 使用文件上传
+        const videoFile = uploadedFiles[0]?.originFile;
+        result = await useCreateTask.mutateAsync({
+          file: videoFile,
+          orientation: orientation,
+        });
+      } else {
+        // 使用URL
+        result = await useCreateTask.mutateAsync({
+          url: videoUrl.trim(),
+          orientation: orientation,
+        });
+      }
 
       if (result.error) {
         toast.error(result.error);
@@ -442,6 +516,22 @@ export default function Sora2VideoWatermarkRemoval({
     }
   };
 
+  // URL 弹窗：Enter 提交 / Esc 关闭
+  const handleStartWithUrl = async () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    try {
+      new URL(url);
+      setUrlError(null);
+    } catch {
+      setUrlError('Invalid URL');
+      return;
+    }
+    handleUrlChange(url);
+    setShowUrlDialog(false);
+    await handleSubmit();
+  };
+
   const copyPrompt = (prompt: string) => {
     copy(prompt);
     toast.success("Copied to clipboard!");
@@ -453,11 +543,12 @@ export default function Sora2VideoWatermarkRemoval({
   // 调试信息
   console.log("🔍 Sora2VideoWatermarkRemoval 组件状态:", {
     uploadedFiles: uploadedFiles.length,
+    videoUrl: videoUrl,
     orientation,
     loading,
     hasEnoughCredit,
     userCredit: userCredit?.credit,
-    buttonDisabled: loading || (!hasEnoughCredit) || (uploadedFiles.length === 0)
+    buttonDisabled: loading || (!hasEnoughCredit) || (uploadedFiles.length === 0 && !videoUrl.trim())
   });
 
   return (
@@ -483,6 +574,8 @@ export default function Sora2VideoWatermarkRemoval({
         </p>
       </div>
 
+      {/* 上传区在处理或有结果时隐藏，实现“结果替换” */}
+      {(!loading && !taskData) && (
       <div className="grid gap-6 lg:grid-cols-2">
         {/* 左侧：输入区域 */}
         <div className="space-y-6">
@@ -511,6 +604,7 @@ export default function Sora2VideoWatermarkRemoval({
                     <Button variant="outline" size="sm">
                       Select Video
                     </Button>
+                    <button className="mt-2 text-xs underline" onClick={() => setShowUrlDialog(true)}>Use URL (YouTube supported)</button>
                   </div>
                 }
                 className="min-h-[200px]"
@@ -520,6 +614,11 @@ export default function Sora2VideoWatermarkRemoval({
                 <p>Supported formats: MP4, MOV, AVI, MKV, WEBM</p>
                 <p>File size: 1MB - 50MB (recommended for mobile devices)</p>
               </div>
+            </div>
+            
+            {/* 改为弹窗触发，简化首屏 */}
+            <div className="text-sm text-muted-foreground">
+              Or <button className="underline underline-offset-2" onClick={() => setShowUrlDialog(true)}>enter video URL</button>
             </div>
           </div>
 
@@ -562,7 +661,7 @@ export default function Sora2VideoWatermarkRemoval({
 
           <Button
             onClick={handleSubmit}
-            disabled={loading || !hasEnoughCredit || (uploadedFiles.length === 0)}
+            disabled={loading || !hasEnoughCredit || (uploadedFiles.length === 0 && !videoUrl.trim())}
             className="w-full"
             size="lg"
           >
@@ -703,6 +802,7 @@ export default function Sora2VideoWatermarkRemoval({
           )}
         </div>
       </div>
+      )}
 
       {/* 定价卡片对话框 */}
       <PricingCardDialog
@@ -710,6 +810,32 @@ export default function Sora2VideoWatermarkRemoval({
         onClose={setPricingCardOpen}
         chargeProduct={chargeProduct}
       />
+
+      {/* URL 输入对话框（支持 YouTube 链接，将由后端按非 R2 URL 入队处理）*/}
+      <Dialog open={showUrlDialog} onOpenChange={setShowUrlDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Paste video URL</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center gap-3">
+            <Input
+              type="url"
+              placeholder="https://youtu.be/... or https://example.com/video.mp4"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter') await handleStartWithUrl();
+                if (e.key === 'Escape') setShowUrlDialog(false);
+              }}
+              className="w-full"
+              autoFocus
+            />
+            <Button onClick={handleStartWithUrl} disabled={!urlInput.trim() || loading} className="shrink-0">Start</Button>
+          </div>
+          {urlError && <p className="mt-2 text-xs text-red-600">{urlError}</p>}
+          <DialogFooter />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

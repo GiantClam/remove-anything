@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Icons } from "@/components/shared/icons";
@@ -22,6 +24,9 @@ export default function Sora2VideoWatermarkRemovalR2({
   const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [taskId, setTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showUrlDialog, setShowUrlDialog] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+  const [urlError, setUrlError] = useState<string | null>(null);
 
   const { data: userCredit } = useQuery({
     queryKey: ["userCredit"],
@@ -196,7 +201,7 @@ export default function Sora2VideoWatermarkRemovalR2({
 
   const handleSubmit = async () => {
     if (uploadedFiles.length === 0) {
-      toast.error("请先选择视频文件");
+      toast.error("请先选择视频文件或使用 URL");
       return;
     }
 
@@ -262,6 +267,9 @@ export default function Sora2VideoWatermarkRemovalR2({
               }
               className="min-h-[200px]"
             />
+            <div className="text-sm text-muted-foreground mt-2">
+              Or <button className="underline underline-offset-2" onClick={() => setShowUrlDialog(true)}>enter video URL</button>
+            </div>
             
             <div className="text-sm text-muted-foreground mt-4">
               <p>Supported formats: MP4, MOV, AVI, MKV, WEBM</p>
@@ -373,6 +381,75 @@ export default function Sora2VideoWatermarkRemovalR2({
           </div>
         )}
       </div>
+
+      {/* URL 输入对话框（提示非 R2 URL 会入队异步处理）*/}
+      <Dialog open={showUrlDialog} onOpenChange={setShowUrlDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Paste video URL</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center gap-3">
+            <Input
+              type="url"
+              placeholder="https://youtu.be/... or https://example.com/video.mp4"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter') {
+                  const url = urlInput.trim();
+                  if (!url) return;
+                  try { new URL(url); setUrlError(null); } catch { setUrlError('Invalid URL'); return; }
+                  // 直接走 URL 接口，交给后端：R2 则同步；非 R2（含 YouTube）入队
+                  setShowUrlDialog(false);
+                  setLoading(true);
+                  try {
+                    const fd = new FormData();
+                    fd.append('url', url);
+                    fd.append('orientation', orientation);
+                    const res = await fetch('/api/sora2-video-watermark-removal-url', { method: 'POST', body: fd, credentials: 'include' });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(JSON.stringify(data));
+                    setTaskId(data.taskId || data.recordId || null);
+                    toast.success('任务已创建');
+                  } catch (err) {
+                    console.error(err);
+                    toast.error('URL 任务创建失败');
+                  } finally {
+                    setLoading(false);
+                  }
+                }
+                if (e.key === 'Escape') setShowUrlDialog(false);
+              }}
+              className="w-full"
+              autoFocus
+            />
+            <Button onClick={async () => {
+              const url = urlInput.trim();
+              if (!url) return;
+              try { new URL(url); setUrlError(null); } catch { setUrlError('Invalid URL'); return; }
+              setShowUrlDialog(false);
+              setLoading(true);
+              try {
+                const fd = new FormData();
+                fd.append('url', url);
+                fd.append('orientation', orientation);
+                const res = await fetch('/api/sora2-video-watermark-removal-url', { method: 'POST', body: fd, credentials: 'include' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(JSON.stringify(data));
+                setTaskId(data.taskId || data.recordId || null);
+                toast.success('任务已创建');
+              } catch (err) {
+                console.error(err);
+                toast.error('URL 任务创建失败');
+              } finally {
+                setLoading(false);
+              }
+            }} disabled={!urlInput.trim() || loading} className="shrink-0">Start</Button>
+          </div>
+          {urlError && <p className="mt-2 text-xs text-red-600">{urlError}</p>}
+          <DialogFooter />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

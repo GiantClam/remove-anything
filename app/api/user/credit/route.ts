@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getCurrentUser } from "@/lib/auth-utils";
+import { createProjectAuthProvider } from "@/modules/auth/adapter";
 import { getUserCredit } from "@/db/queries/account";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
@@ -14,12 +14,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
     }
 
-    const user = await getCurrentUser();
+    const auth = createProjectAuthProvider();
+    const user = await auth.getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const credit = await getUserCredit(user.id);
+    const credit = await getUserCredit(user.userId!);
     return NextResponse.json({ credit });
   } catch (error) {
     console.error("❌ /api/user/credit 错误:", error);

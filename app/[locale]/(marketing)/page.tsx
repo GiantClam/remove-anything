@@ -62,13 +62,10 @@ export default function IndexPage({ params: { locale } }: Props) {
           __html: JSON.stringify(structuredData)
         }}
       />
+      {/* 精简首页：首屏价值主张 + 快速入口 + 案例展示 */}
       <HeroLanding />
       <QuickAccess />
       <Examples />
-      <Features />
-      <HowTo />
-      <UseCases />
-      <PricingCard locale={locale} />
     </>
   );
 }

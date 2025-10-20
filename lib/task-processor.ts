@@ -39,14 +39,20 @@ export class TaskProcessor {
       if (!ready) throw new Error('Media transform not ready within timeout');
 
       // 创建 RunningHub 任务
-      const workflowId = orientation === 'portrait' 
-        ? process.env.SORA2_PORTRAIT_WORKFLOW_ID 
-        : process.env.SORA2_LANDSCAPE_WORKFLOW_ID;
-      if (!workflowId) throw new Error('workflowId missing');
-
-      const nodeInfoList = [
+      let workflowId = process.env.SORA2_LANDSCAPE_WORKFLOW_ID;
+      let nodeInfoList = [
         { nodeId: '205', fieldName: 'video', fieldValue: transformUrl }
       ];
+      if (orientation === 'portrait'){
+        workflowId = process.env.SORA2_PORTRAIT_WORKFLOW_ID;
+        nodeInfoList = [
+          { nodeId: '153', fieldName: 'video', fieldValue: transformUrl }
+        ];
+      }
+      
+      if (!workflowId) throw new Error('workflowId missing');
+
+      
 
       const runninghubTaskId = await runninghubAPI.createTaskGeneric({
         workflowId,

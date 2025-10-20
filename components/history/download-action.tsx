@@ -63,91 +63,56 @@ export function DownloadAction({
             
             console.log("🔍 开始下载:", { apiUrl, fileName, taskType });
             
-            const response = await fetch(apiUrl, {
-              credentials: 'include',
-            });
-            
-            if (!response.ok) {
-              throw new Error(`下载失败: ${response.status} ${response.statusText}`);
-            }
-            
-            // 检查Content-Type和Content-Disposition
-            const contentType = response.headers.get("content-type");
-            const contentDisposition = response.headers.get("content-disposition");
-            console.log("🔍 响应头:", { 
-              contentType, 
-              contentDisposition,
-              status: response.status,
-              statusText: response.statusText
-            });
-            
-            // 获取文件数据
-            const blob = await response.blob();
-            console.log("🔍 获取到blob:", { 
-              size: blob.size, 
-              type: blob.type,
-              fileName: fileName
-            });
-            
-            // 验证blob大小
-            if (blob.size === 0) {
-              throw new Error("下载的文件大小为0，可能下载失败");
-            }
-            
-            // 优先走 Web Share API（移动端可保存到相册/文件）
+            // 直接下载：不再创建 blob，交给浏览器/系统下载器处理
+            const absUrl = apiUrl.startsWith('http') ? apiUrl : `${window.location.origin}${apiUrl}`;
+
+            // 优先尝试 Web Share API 分享链接（部分移动端可直接保存到相册/文件）
             try {
-              const file = new File([blob], fileName, { type: blob.type || 'video/mp4' });
-              // @ts-ignore - canShare 存在于支持的浏览器
-              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              // @ts-ignore
+              if (navigator.share && typeof navigator.share === 'function') {
                 // @ts-ignore
-                await navigator.share({ files: [file], title: fileName, text: fileName });
-                console.log("✅ 使用 Web Share API 分享/保存成功");
+                await navigator.share({ url: absUrl, title: fileName, text: fileName });
+                console.log("✅ 使用 Web Share API 分享链接成功");
                 return;
               }
             } catch (e) {
-              console.log("ℹ️ Web Share API 不可用或被拒绝，使用下载链接回退", e);
+              console.log("ℹ️ Web Share API（url）不可用或被拒绝，使用直接下载回退", e);
             }
 
             // 平台检测
             const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
             const isIOS = /iP(hone|od|ad)/.test(ua);
             const isAndroid = /Android/.test(ua);
-            const isImage = (blob.type || '').startsWith('image/');
+            const isMobile = isIOS || isAndroid;
 
-            // iOS Safari 对文件下载支持有限：
-            // - 图片：打开新标签，用户可长按或点分享→保存到相册
-            // - 视频：打开新标签，通过系统分享保存到相册
-            if (isIOS) {
-              const iosUrl = window.URL.createObjectURL(blob);
-              window.open(iosUrl, '_blank');
-              toast.info(isImage ? "长按图片或点分享保存到相册" : "点分享→保存视频到相册", { duration: 5000 });
-              // 不 revoke，避免新标签立即失效；交由浏览器回收
-              return;
+            if (isMobile) {
+              // 移动端：优先尝试直接下载到相册/文件管理器
+              if (isIOS) {
+                // iOS：新开标签展示，由用户通过分享保存到相册
+                window.open(absUrl, '_blank');
+                toast.info("点分享→保存到相册", { duration: 4000 });
+              } else if (isAndroid) {
+                // Android：使用 a[download] 触发保存到下载目录
+                const link = document.createElement("a");
+                link.href = absUrl;
+                link.download = fileName;
+                link.style.display = "none";
+                document.body.appendChild(link);
+                setTimeout(() => link.click(), 50);
+                setTimeout(() => document.body.removeChild(link), 200);
+                toast.info("文件已保存到下载目录，图库会自动扫描导入", { duration: 4000 });
+              }
+            } else {
+              // PC端：直接下载到本地
+              const link = document.createElement("a");
+              link.href = absUrl;
+              link.download = fileName;
+              link.style.display = "none";
+              document.body.appendChild(link);
+              setTimeout(() => link.click(), 50);
+              setTimeout(() => document.body.removeChild(link), 200);
+              toast.success("文件已开始下载", { duration: 2000 });
             }
-
-            // Android/桌面回退：创建下载链接（大多数机型可出现在“下载”，部分图库会自动扫描导入）
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = fileName;
-            link.style.display = "none";
-            link.setAttribute("download", fileName);
-            document.body.appendChild(link);
-            setTimeout(() => {
-              link.click();
-              console.log("🔍 触发下载点击");
-            }, 100);
-            setTimeout(() => {
-              document.body.removeChild(link);
-              window.URL.revokeObjectURL(url);
-              console.log("🔍 清理完成");
-            }, 200);
-
-            if (isAndroid) {
-              toast.info("文件已保存到下载目录，可在相册中刷新查看", { duration: 4000 });
-            }
-            
-            console.log("✅ 下载完成:", fileName);
             
           } catch (error) {
             console.error("❌ 下载失败:", error);

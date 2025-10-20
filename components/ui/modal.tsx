@@ -4,7 +4,8 @@ import { Dispatch, SetStateAction } from "react";
 // import { useRouter } from "next/router";
 import { Drawer } from "vaul";
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
+import { Root as VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ interface ModalProps {
   onClose?: () => void;
   desktopOnly?: boolean;
   preventDefaultClose?: boolean;
+  ariaTitle?: string; // 无障碍标题；若不需要显示，将以隐藏方式渲染
 }
 
 export function Modal({
@@ -26,6 +28,7 @@ export function Modal({
   onClose,
   desktopOnly,
   preventDefaultClose,
+  ariaTitle = "Dialog",
 }: ModalProps) {
   // const router = useRouter();
 
@@ -92,6 +95,11 @@ export function Modal({
           className,
         )}
       >
+        <DialogHeader>
+          <VisuallyHidden>
+            <DialogTitle>{ariaTitle}</DialogTitle>
+          </VisuallyHidden>
+        </DialogHeader>
         {children}
       </DialogContent>
     </Dialog>

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
-import { runninghubAPI } from "@/lib/runninghub-api";
-import { getCurrentUser } from "@/lib/auth-utils";
+import { createRunningHubClient } from "@/modules/runninghub/adapter";
+import { createPrismaTaskRepository } from "@/modules/tasks/adapters/prisma-repo";
+import { createPrismaTaskQueue } from "@/modules/tasks/adapters/prisma-queue";
+import { createVideoTaskWithR2Url } from "@/modules/tasks/sdk";
+import { createProjectAuthProvider } from "@/modules/auth/adapter";
 import { prisma } from "@/db/prisma";
 import { taskQueueManager } from "@/lib/task-queue";
 import { Credits, model, TASK_QUEUE_CONFIG } from "@/config/constants";
@@ -55,8 +58,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 获取当前用户
-    const user = await getCurrentUser();
-    let userId = user?.id;
+    const auth = createProjectAuthProvider();
+    const user = await auth.getCurrentUser();
+    let userId = user?.userId;
     
     // 开发模式：如果getCurrentUser返回null，使用测试用户ID
     if (!userId && process.env.NODE_ENV === "development") {
@@ -116,16 +120,16 @@ export async function POST(req: NextRequest) {
     // 步骤2: 构造 Cloudflare Media 变换 URL（避免放大，仅约束尺寸）并预热
     console.log("📐 步骤2: 构造变换 URL 并预热...");
     const zoneHost = (process.env.R2_URL_BASE || 'https://s.remove-anything.com').replace('https://', '').replace(/\/$/, '');
+    const isPortrait = orientation === 'portrait';
     const transformUrl = buildMediaTransformUrl(zoneHost, finalR2Url, {
-      width: 704,
-      height: 1280,
+      width: isPortrait ? 704 : 1280,
+      height: isPortrait ? 1280 : 704,
       fit: 'scale-down',
       audio: true,
       filename: finalFilename
     });
     await prewarmTransformUrl(transformUrl);
-    console.log("⏳ 等待变换结果就绪...");
-    // 改为异步：不阻塞请求（立即返回202），后台 watcher 负责等待就绪并创建 RunningHub 任务
+    console.log("⏳ 预热完成，准备创建任务记录并同步触发 RunningHub 任务...");
 
     // 步骤3: 创建任务记录
     console.log("📝 步骤3: 创建任务记录...");
@@ -145,33 +149,34 @@ export async function POST(req: NextRequest) {
 
     console.log("✅ 任务记录创建成功，ID:", taskRecord.id);
 
-    // 入队一个延迟创建 RunningHub 任务的后台工作
-    const { taskQueueManager } = await import('@/lib/task-queue');
-    await taskQueueManager.addTask({
-      taskType: "sora2-video-watermark-removal",
-      priority: 1,
-      userId: userId || "anonymous",
-      metadata: {
-        taskRecordId: taskRecord.id,
-        userId: userId,
-        orientation: orientation,
-        r2Url: finalR2Url,
-        transformUrl
-      }
-    });
+    // 步骤4: 通过可复用编排 SDK 同步创建；失败则入队
+    const workflowId = (orientation === 'portrait')
+      ? process.env.SORA2_PORTRAIT_WORKFLOW_ID!
+      : process.env.SORA2_LANDSCAPE_WORKFLOW_ID!;
+    const rh = createRunningHubClient();
+    const repo = createPrismaTaskRepository();
+    const queue = createPrismaTaskQueue();
+    const uploadNodeId = isPortrait ? '153' : '205';
+    const result = await createVideoTaskWithR2Url({
+      model: 'sora2-video-watermark-removal',
+      userId: userId || undefined,
+      workflowId,
+      uploadNodeId,
+      uploadFieldName: 'video',
+      r2Url: transformUrl,
+    }, { repo, queue, rh });
 
-    // 立即返回 202，表示后台继续处理
+    if (result.ok) {
+      // 启动后端状态监控
+      try {
+        const { taskQueueManager } = await import('@/lib/task-queue');
+        taskQueueManager.startStatusWatcher(taskRecord.id, result.taskId);
+      } catch {}
 
-    // 积分扣除改在 RunningHub 任务真正创建成功后进行（由后台流程负责）
-
-    console.log("🎉 已排入后台变换就绪与任务创建流程（202 Accepted）");
-
-    return NextResponse.json({
-      success: true,
-      recordId: taskRecord.id,
-      message: "Accepted. Background processing will create RunningHub task after transform is ready.",
-      transformUrl,
-    }, { status: 202 });
+      return NextResponse.json({ success: true, taskId: result.taskId, recordId: taskRecord.id, message: 'Task started', transformUrl }, { status: 200 });
+    }
+    console.error("RunningHub 同步创建失败，转入队列:", { error: result.error, workflowId, uploadNodeId, transformUrl });
+    return NextResponse.json({ success: true, recordId: taskRecord.id, message: 'Accepted. Enqueued for background retry via Cron.', transformUrl, error: result.error }, { status: 202 });
 
   } catch (error) {
     console.error("❌ Sora2 视频去水印任务创建失败:", error);
