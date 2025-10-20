@@ -24,7 +24,7 @@ class TaskQueueManager {
   private isProcessing = false;
   private statusWatchers: Map<string, NodeJS.Timeout> = new Map(); // key: runninghubTaskId
   private watcherConfig = {
-    intervalMs: 5000,
+    intervalMs: 2000, // 2秒轮询一次，更频繁
     maxMinutes: 15,
   };
 
@@ -179,8 +179,22 @@ class TaskQueueManager {
     if (existing) clearInterval(existing);
 
     const startedAt = Date.now();
+    
+    // 立即执行一次状态检查，不等待间隔
+    this.checkTaskStatus(taskRecordId, runninghubTaskId, taskType, startedAt);
+    
     const interval = setInterval(async () => {
-      try {
+      await this.checkTaskStatus(taskRecordId, runninghubTaskId, taskType, startedAt);
+    }, this.watcherConfig.intervalMs);
+
+    this.statusWatchers.set(runninghubTaskId, interval);
+  }
+
+  /**
+   * 检查任务状态的核心逻辑
+   */
+  private async checkTaskStatus(taskRecordId: number, runninghubTaskId: string, taskType: string, startedAt: number) {
+    try {
         // 超时保护
         if (Date.now() - startedAt > this.watcherConfig.maxMinutes * 60 * 1000) {
           if (taskType === 'background-removal') {
@@ -334,13 +348,10 @@ class TaskQueueManager {
           this.stopStatusWatcher(runninghubTaskId);
           return;
         }
-      } catch (err) {
-        // 网络/临时错误，忽略并继续下次
-      }
-    }, this.watcherConfig.intervalMs);
-
-    this.statusWatchers.set(runninghubTaskId, interval);
-    console.log(`👀 已启动状态监控: runninghubTaskId=${runninghubTaskId}`);
+    } catch (error) {
+      console.error("❌ 状态监控错误:", error);
+      // 继续轮询，不因单次错误停止
+    }
   }
 
   /** 停止状态监控 */
