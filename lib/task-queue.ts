@@ -2,6 +2,9 @@ import { prisma } from "@/db/prisma";
 import { TASK_QUEUE_CONFIG } from "@/config/constants";
 import { taskProcessor } from "./task-processor";
 import { runninghubAPI } from "@/lib/runninghub-api";
+import AWS from 'aws-sdk';
+import { env } from "@/env.mjs";
+import { nanoid } from 'nanoid';
 
 export interface TaskQueueItem {
   id: string;
@@ -308,8 +311,16 @@ class TaskQueueManager {
               console.log(`ℹ️ 任务状态为SUCCESS但结果API仍返回运行中，保持当前状态等待下次轮询`);
               return; // 继续轮询
             } else if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
-              outputUrl = result.data[0]?.fileUrl || null;
-              console.log(`✅ 获取到输出URL: ${outputUrl}`);
+              const remoteUrl = result.data[0]?.fileUrl || null;
+              console.log(`✅ 获取到远端输出URL: ${remoteUrl}`);
+              // 将远端图片转存到 R2
+              try {
+                outputUrl = await this.saveImageToR2(remoteUrl, runninghubTaskId);
+                console.log(`📤 已转存到R2: ${outputUrl}`);
+              } catch (uploadErr) {
+                console.error("❌ 转存到R2失败，回退使用远端URL:", uploadErr);
+                outputUrl = remoteUrl;
+              }
             } else {
               console.log(`⚠️ 结果数据格式异常:`, result);
             }
@@ -383,6 +394,42 @@ class TaskQueueManager {
     } catch (error) {
       console.error("❌ 状态监控错误:", error);
       // 继续轮询，不因单次错误停止
+    }
+  }
+
+  /**
+   * 将远端图片下载并上传到 Cloudflare R2，返回公共访问URL
+   */
+  private async saveImageToR2(remoteUrl: string | null, taskId: string): Promise<string | null> {
+    if (!remoteUrl) return null;
+    try {
+      const resp = await fetch(remoteUrl);
+      if (!resp.ok) throw new Error(`fetch image failed: ${resp.status}`);
+      const arrayBuffer = await resp.arrayBuffer();
+      const contentType = resp.headers.get('content-type') || 'image/png';
+
+      const s3 = new AWS.S3({
+        endpoint: env.R2_ENDPOINT,
+        accessKeyId: env.R2_ACCESS_KEY,
+        secretAccessKey: env.R2_SECRET_KEY,
+        region: env.R2_REGION || 'auto',
+        s3ForcePathStyle: true,
+      });
+
+      const key = `background-removal/processed/${taskId}-${nanoid(8)}.png`;
+      await s3
+        .upload({
+          Bucket: env.R2_BUCKET,
+          Key: key,
+          Body: Buffer.from(arrayBuffer),
+          ContentType: contentType,
+        })
+        .promise();
+
+      return `${env.R2_URL_BASE}/${key}`;
+    } catch (e) {
+      console.error('saveImageToR2 error:', e);
+      return null;
     }
   }
 

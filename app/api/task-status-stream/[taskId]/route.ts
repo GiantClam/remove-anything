@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { findBackgroundRemovalTaskByReplicateId } from "@/db/queries/background-removal";
 import { runninghubAPI } from "@/lib/runninghub-api";
+import AWS from 'aws-sdk';
+import { env } from "@/env.mjs";
+import { nanoid } from 'nanoid';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,7 +80,30 @@ export async function GET(
                 let outputUrl: string | null = null;
                 
                 if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
-                  outputUrl = result.data[0]?.fileUrl || null;
+                  const remoteUrl = result.data[0]?.fileUrl || null;
+                  // 下载并转存到 R2
+                  try {
+                    const resp = await fetch(remoteUrl!);
+                    if (resp.ok) {
+                      const arrayBuffer = await resp.arrayBuffer();
+                      const contentType = resp.headers.get('content-type') || 'image/png';
+                      const s3 = new AWS.S3({
+                        endpoint: env.R2_ENDPOINT,
+                        accessKeyId: env.R2_ACCESS_KEY,
+                        secretAccessKey: env.R2_SECRET_KEY,
+                        region: env.R2_REGION || 'auto',
+                        s3ForcePathStyle: true,
+                      });
+                      const key = `background-removal/processed/${taskId}-${nanoid(8)}.png`;
+                      await s3.upload({ Bucket: env.R2_BUCKET, Key: key, Body: Buffer.from(arrayBuffer), ContentType: contentType }).promise();
+                      outputUrl = `${env.R2_URL_BASE}/${key}`;
+                    } else {
+                      outputUrl = remoteUrl;
+                    }
+                  } catch (e) {
+                    console.error('SSE R2 upload error:', e);
+                    outputUrl = remoteUrl;
+                  }
                 }
                 
                 // 更新数据库
