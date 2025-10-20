@@ -16,7 +16,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const batchSize = Number(process.env.QUEUE_BATCH_SIZE || 5);
+  // 设置超时保护 - 25秒后强制返回
+  const timeoutId = setTimeout(() => {
+    console.log('⏰ Cron job timeout, returning partial results');
+  }, 25000);
+
+  const batchSize = Number(process.env.QUEUE_BATCH_SIZE || 3); // 减少批次大小
   let processed = 0;
   let synced = 0;
 
@@ -206,6 +211,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    clearTimeout(timeoutId);
     return NextResponse.json({ 
       processed, 
       synced,
@@ -213,6 +219,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error("❌ Cron job error:", error);
     return NextResponse.json({ error: "Cron job failed" }, { status: 500 });
   }

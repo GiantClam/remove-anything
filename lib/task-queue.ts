@@ -402,35 +402,46 @@ class TaskQueueManager {
    */
   private async saveImageToR2(remoteUrl: string | null, taskId: string): Promise<string | null> {
     if (!remoteUrl) return null;
+    
+    // 设置超时保护 - 15秒
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('R2 upload timeout')), 15000);
+    });
+    
     try {
-      const resp = await fetch(remoteUrl);
-      if (!resp.ok) throw new Error(`fetch image failed: ${resp.status}`);
-      const arrayBuffer = await resp.arrayBuffer();
-      const contentType = resp.headers.get('content-type') || 'image/png';
-
-      const s3 = new AWS.S3({
-        endpoint: env.R2_ENDPOINT,
-        accessKeyId: env.R2_ACCESS_KEY,
-        secretAccessKey: env.R2_SECRET_KEY,
-        region: env.R2_REGION || 'auto',
-        s3ForcePathStyle: true,
-      });
-
-      const key = `background-removal/processed/${taskId}-${nanoid(8)}.png`;
-      await s3
-        .upload({
-          Bucket: env.R2_BUCKET,
-          Key: key,
-          Body: Buffer.from(arrayBuffer),
-          ContentType: contentType,
-        })
-        .promise();
-
-      return `${env.R2_URL_BASE}/${key}`;
+      const uploadPromise = this.performR2Upload(remoteUrl, taskId);
+      return await Promise.race([uploadPromise, timeoutPromise]);
     } catch (e) {
       console.error('saveImageToR2 error:', e);
       return null;
     }
+  }
+
+  private async performR2Upload(remoteUrl: string, taskId: string): Promise<string | null> {
+    const resp = await fetch(remoteUrl);
+    if (!resp.ok) throw new Error(`fetch image failed: ${resp.status}`);
+    const arrayBuffer = await resp.arrayBuffer();
+    const contentType = resp.headers.get('content-type') || 'image/png';
+
+    const s3 = new AWS.S3({
+      endpoint: env.R2_ENDPOINT,
+      accessKeyId: env.R2_ACCESS_KEY,
+      secretAccessKey: env.R2_SECRET_KEY,
+      region: env.R2_REGION || 'auto',
+      s3ForcePathStyle: true,
+    });
+
+    const key = `background-removal/processed/${taskId}-${nanoid(8)}.png`;
+    await s3
+      .upload({
+        Bucket: env.R2_BUCKET,
+        Key: key,
+        Body: Buffer.from(arrayBuffer),
+        ContentType: contentType,
+      })
+      .promise();
+
+    return `${env.R2_URL_BASE}/${key}`;
   }
 
   /** 停止状态监控 */
