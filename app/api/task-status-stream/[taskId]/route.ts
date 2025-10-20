@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { findBackgroundRemovalTaskByReplicateId } from "@/db/queries/background-removal";
+import { runninghubAPI } from "@/lib/runninghub-api";
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +35,7 @@ export async function GET(
       const checkTaskStatus = async () => {
         try {
           attempts++;
+          console.log(`🔍 SSE 检查任务状态: ${taskId} (第${attempts}次)`);
           
           // 查询任务状态
           const taskRecord = await findBackgroundRemovalTaskByReplicateId(taskId);
@@ -47,21 +49,98 @@ export async function GET(
             return;
           }
 
+          // 如果任务还在进行中，主动检查 RunningHub 状态
+          if (['pending', 'starting', 'processing'].includes(taskRecord.taskStatus)) {
+            console.log(`🔄 任务进行中，检查 RunningHub 状态: ${taskId}`);
+            
+            try {
+              const statusResp = await runninghubAPI.getTaskStatus(taskId);
+              console.log(`📡 RunningHub 状态响应:`, JSON.stringify(statusResp, null, 2));
+              
+              let status: string | undefined;
+              if (statusResp && typeof statusResp === 'object') {
+                if (statusResp.code === 0 && statusResp.data) {
+                  if (typeof statusResp.data === 'string') {
+                    status = statusResp.data;
+                  } else if (statusResp.data && typeof statusResp.data.status === 'string') {
+                    status = statusResp.data.status;
+                  }
+                }
+              }
+              
+              console.log(`📊 解析的 RunningHub 状态: ${status}`);
+              
+              if (status === 'SUCCESS' || status === 'succeeded') {
+                // 获取结果并更新数据库
+                console.log(`🎯 任务成功，获取结果: ${taskId}`);
+                const result = await runninghubAPI.getTaskResult(taskId);
+                let outputUrl: string | null = null;
+                
+                if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
+                  outputUrl = result.data[0]?.fileUrl || null;
+                }
+                
+                // 更新数据库
+                await prisma.backgroundRemovalTask.update({
+                  where: { replicateId: taskId },
+                  data: {
+                    taskStatus: 'succeeded',
+                    outputImageUrl: outputUrl,
+                    executeEndTime: BigInt(Date.now())
+                  }
+                });
+                
+                console.log(`✅ 数据库已更新: ${taskId} -> succeeded`);
+                
+              } else if (status === 'FAILED' || status === 'failed') {
+                // 更新数据库为失败
+                await prisma.backgroundRemovalTask.update({
+                  where: { replicateId: taskId },
+                  data: {
+                    taskStatus: 'failed',
+                    executeEndTime: BigInt(Date.now()),
+                    errorMsg: 'Task failed on RunningHub'
+                  }
+                });
+                
+                console.log(`❌ 数据库已更新: ${taskId} -> failed`);
+                
+              } else if (status === 'RUNNING' || status === 'running' || status === 'Processing' || status === 'processing') {
+                // 更新数据库为处理中
+                await prisma.backgroundRemovalTask.update({
+                  where: { replicateId: taskId },
+                  data: {
+                    taskStatus: 'processing',
+                    executeStartTime: BigInt(Date.now())
+                  }
+                });
+                
+                console.log(`🔄 数据库已更新: ${taskId} -> processing`);
+              }
+              
+            } catch (apiError) {
+              console.error(`❌ RunningHub API 调用失败: ${taskId}`, apiError);
+            }
+          }
+
+          // 重新查询更新后的任务状态
+          const updatedTaskRecord = await findBackgroundRemovalTaskByReplicateId(taskId);
+          
           const statusData = {
             taskId: taskId,
-            status: taskRecord.taskStatus,
-            output: taskRecord.outputImageUrl,
-            error: taskRecord.errorMsg,
+            status: updatedTaskRecord?.taskStatus || taskRecord.taskStatus,
+            output: updatedTaskRecord?.outputImageUrl || taskRecord.outputImageUrl,
+            error: updatedTaskRecord?.errorMsg || taskRecord.errorMsg,
             attempts: attempts,
             maxAttempts: maxAttempts
           };
 
-          // 发送状态更新
+          console.log(`📤 SSE 发送状态:`, statusData);
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(statusData)}\n\n`));
 
           // 如果任务完成或失败，关闭连接
-          if (taskRecord.taskStatus === 'succeeded' || taskRecord.taskStatus === 'failed') {
-            console.log(`✅ SSE 任务完成: ${taskId} -> ${taskRecord.taskStatus}`);
+          if (statusData.status === 'succeeded' || statusData.status === 'failed') {
+            console.log(`✅ SSE 任务完成: ${taskId} -> ${statusData.status}`);
             clearInterval(intervalId);
             controller.close();
             return;
