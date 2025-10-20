@@ -413,6 +413,12 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     }
 
     try {
+      // 平台检测
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+      const isIOS = /iP(hone|od|ad)/.test(ua);
+      const isAndroid = /Android/.test(ua);
+      const isMobile = isIOS || isAndroid;
+
       // 如果有任务ID，使用API下载（支持统计和权限控制）
       if (currentTaskId) {
         const response = await fetch(`/api/download-background?taskId=${currentTaskId}`, {
@@ -422,15 +428,59 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         if (response.ok) {
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `background-removed-${currentTaskId}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
+          const fileName = `background-removed-${currentTaskId}.png`;
           
-          toast.success(tPage('downloadSuccess'));
+          if (isMobile) {
+            // 移动端：优先尝试 Web Share API
+            try {
+              // @ts-ignore
+              if (navigator.share && typeof navigator.share === 'function') {
+                // 将 blob 转换为 File 对象
+                const file = new File([blob], fileName, { type: blob.type });
+                // @ts-ignore
+                await navigator.share({ 
+                  files: [file], 
+                  title: fileName,
+                  text: '去背景图片'
+                });
+                console.log("✅ 使用 Web Share API 分享文件成功");
+                window.URL.revokeObjectURL(url);
+                toast.success('图片已保存到相册');
+                return;
+              }
+            } catch (e) {
+              console.log("ℹ️ Web Share API 不可用或被拒绝，使用其他方案", e);
+            }
+
+            if (isIOS) {
+              // iOS：新开标签展示，由用户通过分享保存到相册
+              window.open(url, '_blank');
+              toast.info("长按图片→保存到相册", { duration: 4000 });
+            } else if (isAndroid) {
+              // Android：使用 a[download] 触发保存到下载目录
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = fileName;
+              link.style.display = "none";
+              document.body.appendChild(link);
+              setTimeout(() => link.click(), 50);
+              setTimeout(() => document.body.removeChild(link), 200);
+              toast.info("图片已保存到下载目录，图库会自动扫描导入", { duration: 4000 });
+            }
+          } else {
+            // PC端：直接下载到本地
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            link.style.display = "none";
+            document.body.appendChild(link);
+            setTimeout(() => link.click(), 50);
+            setTimeout(() => document.body.removeChild(link), 200);
+            toast.success("图片已开始下载");
+          }
+          
+          // 延迟释放 URL 对象
+          setTimeout(() => window.URL.revokeObjectURL(url), 1000);
           return;
         } else {
           console.warn('API download failed, falling back to direct download');
@@ -438,25 +488,39 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       }
       
       // 降级方案：直接下载图片URL
-      const link = document.createElement('a');
-      link.href = processedImage;
-      link.download = 'removed-background.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const fileName = 'removed-background.png';
       
-      toast.success('Image downloaded successfully!');
+      if (isMobile) {
+        // 移动端降级方案
+        if (isIOS) {
+          // iOS：新开标签展示
+          window.open(processedImage, '_blank');
+          toast.info("长按图片→保存到相册", { duration: 4000 });
+        } else if (isAndroid) {
+          // Android：使用 a[download]
+          const link = document.createElement("a");
+          link.href = processedImage;
+          link.download = fileName;
+          link.style.display = "none";
+          document.body.appendChild(link);
+          setTimeout(() => link.click(), 50);
+          setTimeout(() => document.body.removeChild(link), 200);
+          toast.info("图片已保存到下载目录，图库会自动扫描导入", { duration: 4000 });
+        }
+      } else {
+        // PC端降级方案
+        const link = document.createElement("a");
+        link.href = processedImage;
+        link.download = fileName;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        setTimeout(() => link.click(), 50);
+        setTimeout(() => document.body.removeChild(link), 200);
+        toast.success("图片已开始下载");
+      }
     } catch (error) {
       console.error('Download error:', error);
-      // 降级方案：直接下载图片URL
-      const link = document.createElement('a');
-      link.href = processedImage;
-      link.download = 'removed-background.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast.success('Image downloaded successfully!');
+      toast.error('下载失败，请重试');
     }
   };
 

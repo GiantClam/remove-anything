@@ -66,17 +66,30 @@ export function DownloadAction({
             // 直接下载：不再创建 blob，交给浏览器/系统下载器处理
             const absUrl = apiUrl.startsWith('http') ? apiUrl : `${window.location.origin}${apiUrl}`;
 
-            // 优先尝试 Web Share API 分享链接（部分移动端可直接保存到相册/文件）
+            // 优先尝试 Web Share API 分享文件（移动端可直接保存到相册/文件）
             try {
-              // @ts-ignore
-              if (navigator.share && typeof navigator.share === 'function') {
+              // 先获取文件内容
+              const response = await fetch(absUrl, { credentials: 'include' });
+              if (response.ok) {
+                const blob = await response.blob();
+                const file = new File([blob], fileName, { type: blob.type });
+                
                 // @ts-ignore
-                await navigator.share({ url: absUrl, title: fileName, text: fileName });
-                console.log("✅ 使用 Web Share API 分享链接成功");
-                return;
+                if (navigator.share && typeof navigator.share === 'function') {
+                  // @ts-ignore
+                  await navigator.share({ 
+                    files: [file], 
+                    title: fileName,
+                    text: taskType === "background-removal" ? "去背景图片" : 
+                          taskType === "watermark-removal" ? "去水印图片" :
+                          taskType === "sora2-video-watermark-removal" ? "去水印视频" : "AI生成图片"
+                  });
+                  console.log("✅ 使用 Web Share API 分享文件成功");
+                  return;
+                }
               }
             } catch (e) {
-              console.log("ℹ️ Web Share API（url）不可用或被拒绝，使用直接下载回退", e);
+              console.log("ℹ️ Web Share API 不可用或被拒绝，使用直接下载回退", e);
             }
 
             // 平台检测
@@ -90,7 +103,7 @@ export function DownloadAction({
               if (isIOS) {
                 // iOS：新开标签展示，由用户通过分享保存到相册
                 window.open(absUrl, '_blank');
-                toast.info("点分享→保存到相册", { duration: 4000 });
+                toast.info("长按图片→保存到相册", { duration: 4000 });
               } else if (isAndroid) {
                 // Android：使用 a[download] 触发保存到下载目录
                 const link = document.createElement("a");
