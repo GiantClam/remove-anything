@@ -65,16 +65,17 @@ export async function GET(req: NextRequest) {
     const nowMs = Date.now();
     const syncThreshold = 10 * 1000; // 10秒后开始同步，更激进
     
-    // 同步背景去除任务
+    // 同步背景去除任务 - 包括所有非最终状态的任务
     const backgroundTasks = await prisma.backgroundRemovalTask.findMany({
       where: { 
-        taskStatus: 'processing',
-        executeStartTime: { 
-          lt: BigInt(nowMs - syncThreshold)
-        }
+        taskStatus: { in: ['pending', 'starting', 'processing'] },
+        OR: [
+          { executeStartTime: { lt: BigInt(nowMs - syncThreshold) } },
+          { executeStartTime: null } // 处理还未开始的任务
+        ]
       },
       take: 5,
-      orderBy: { executeStartTime: 'asc' }
+      orderBy: { createdAt: 'asc' }
     });
 
     for (const task of backgroundTasks) {
@@ -132,22 +133,45 @@ export async function GET(req: NextRequest) {
           });
           console.log(`❌ 背景去除任务同步失败: ${task.replicateId}`);
           synced++;
+        } else if (status === 'RUNNING' || status === 'running' || status === 'Processing' || status === 'processing') {
+          // 更新为处理中状态
+          await prisma.backgroundRemovalTask.update({
+            where: { replicateId: task.replicateId },
+            data: {
+              taskStatus: "processing",
+              executeStartTime: BigInt(nowMs)
+            }
+          });
+          console.log(`🔄 背景去除任务更新为处理中: ${task.replicateId}`);
+          synced++;
+        } else if (status === 'PENDING' || status === 'pending' || status === 'QUEUED' || status === 'queued') {
+          // 更新为开始状态
+          await prisma.backgroundRemovalTask.update({
+            where: { replicateId: task.replicateId },
+            data: {
+              taskStatus: "starting",
+              executeStartTime: BigInt(nowMs)
+            }
+          });
+          console.log(`⏳ 背景去除任务更新为开始中: ${task.replicateId}`);
+          synced++;
         }
       } catch (error) {
         console.error(`❌ 同步背景去除任务失败 ${task.replicateId}:`, error);
       }
     }
 
-    // 同步去水印任务
+    // 同步去水印任务 - 包括所有非最终状态的任务
     const watermarkTasks = await prisma.watermarkRemovalTask.findMany({
       where: { 
-        taskStatus: 'processing',
-        executeStartTime: { 
-          lt: BigInt(nowMs - syncThreshold)
-        }
+        taskStatus: { in: ['pending', 'starting', 'processing'] },
+        OR: [
+          { executeStartTime: { lt: BigInt(nowMs - syncThreshold) } },
+          { executeStartTime: null } // 处理还未开始的任务
+        ]
       },
       take: 5,
-      orderBy: { executeStartTime: 'asc' }
+      orderBy: { createdAt: 'asc' }
     });
 
     for (const task of watermarkTasks) {
@@ -204,6 +228,28 @@ export async function GET(req: NextRequest) {
             }
           });
           console.log(`❌ 去水印任务同步失败: ${task.runninghubTaskId}`);
+          synced++;
+        } else if (status === 'RUNNING' || status === 'running' || status === 'Processing' || status === 'processing') {
+          // 更新为处理中状态
+          await prisma.watermarkRemovalTask.update({
+            where: { id: task.id },
+            data: {
+              taskStatus: "processing",
+              executeStartTime: BigInt(nowMs)
+            }
+          });
+          console.log(`🔄 去水印任务更新为处理中: ${task.runninghubTaskId}`);
+          synced++;
+        } else if (status === 'PENDING' || status === 'pending' || status === 'QUEUED' || status === 'queued') {
+          // 更新为开始状态
+          await prisma.watermarkRemovalTask.update({
+            where: { id: task.id },
+            data: {
+              taskStatus: "starting",
+              executeStartTime: BigInt(nowMs)
+            }
+          });
+          console.log(`⏳ 去水印任务更新为开始中: ${task.runninghubTaskId}`);
           synced++;
         }
       } catch (error) {
