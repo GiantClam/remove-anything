@@ -95,6 +95,13 @@ export async function POST(req: NextRequest) {
       ? env.SORA2_LANDSCAPE_WORKFLOW_ID 
       : env.SORA2_PORTRAIT_WORKFLOW_ID;
     
+    if (!workflowId || workflowId === 'placeholder') {
+      return NextResponse.json(
+        { error: 'Sora2 workflow ID not configured. Please set SORA2_LANDSCAPE_WORKFLOW_ID and SORA2_PORTRAIT_WORKFLOW_ID environment variables.' },
+        { status: 500 }
+      );
+    }
+    
     const uploadNodeId = '205';
     const uploadFieldName = 'video';
 

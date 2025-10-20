@@ -57,14 +57,8 @@ export const env = createEnv({
     RUNNINGHUB_WORKFLOW_ID: z.string().min(1).default("placeholder"),
     
     // Sora2 Video Watermark Removal Workflow IDs
-    SORA2_LANDSCAPE_WORKFLOW_ID: z.string().min(1).refine(
-      (val) => val !== "placeholder",
-      { message: "SORA2_LANDSCAPE_WORKFLOW_ID must be set in environment variables" }
-    ),
-    SORA2_PORTRAIT_WORKFLOW_ID: z.string().min(1).refine(
-      (val) => val !== "placeholder",
-      { message: "SORA2_PORTRAIT_WORKFLOW_ID must be set in environment variables" }
-    ),
+    SORA2_LANDSCAPE_WORKFLOW_ID: z.string().min(1).default("placeholder"),
+    SORA2_PORTRAIT_WORKFLOW_ID: z.string().min(1).default("placeholder"),
     
     // Legacy OpenAI config (now replaced by Gemini via AI Gateway)
     OPEN_AI_API_ENDPOINT: z.string().url().optional(),

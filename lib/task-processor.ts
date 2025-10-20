@@ -50,7 +50,9 @@ export class TaskProcessor {
         ];
       }
       
-      if (!workflowId) throw new Error('workflowId missing');
+      if (!workflowId || workflowId === 'placeholder') {
+        throw new Error('Sora2 workflow ID not configured. Please set SORA2_LANDSCAPE_WORKFLOW_ID and SORA2_PORTRAIT_WORKFLOW_ID environment variables.');
+      }
 
       
 
