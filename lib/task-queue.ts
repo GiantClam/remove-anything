@@ -224,17 +224,26 @@ class TaskQueueManager {
         const statusResp = await runninghubAPI.getTaskStatus(runninghubTaskId);
         let status: string | undefined;
         
-        console.log(`🔍 RunningHub状态响应:`, statusResp);
+        console.log(`🔍 RunningHub状态响应:`, JSON.stringify(statusResp, null, 2));
         
-        if (typeof (statusResp as any)?.data === 'string') {
-          status = (statusResp as any).data as string;
-        } else if ((statusResp as any)?.data && typeof (statusResp as any).data.status === 'string') {
-          status = (statusResp as any).data.status as string;
-        } else if ((statusResp as any)?.data && typeof (statusResp as any).data === 'object') {
-          status = (statusResp as any).data.status || (statusResp as any).data;
+        // 改进状态解析逻辑
+        if (statusResp && typeof statusResp === 'object') {
+          if (statusResp.code === 0 && statusResp.data) {
+            if (typeof statusResp.data === 'string') {
+              status = statusResp.data;
+            } else if (statusResp.data && typeof statusResp.data.status === 'string') {
+              status = statusResp.data.status;
+            } else if (statusResp.data && typeof statusResp.data === 'object') {
+              status = statusResp.data.status || statusResp.data.taskStatus;
+            }
+          } else if (statusResp.code !== 0) {
+            console.log(`⚠️ RunningHub API返回错误: code=${statusResp.code}, msg=${statusResp.msg}`);
+            // API错误，继续轮询
+            return;
+          }
         }
 
-        console.log(`📊 解析的任务状态: ${status}`);
+        console.log(`📊 解析的任务状态: ${status} (原始响应: ${JSON.stringify(statusResp)})`);
 
         if (!status) {
           console.log(`⚠️ 无法解析任务状态，继续轮询`);
@@ -271,7 +280,10 @@ class TaskQueueManager {
         if (status === 'SUCCESS' || status === 'succeeded') {
           // 拉取结果
           try {
+            console.log(`🎯 任务状态为SUCCESS，开始获取结果: ${runninghubTaskId}`);
             const result = await runninghubAPI.getTaskResult(runninghubTaskId);
+            console.log(`📦 结果响应:`, JSON.stringify(result, null, 2));
+            
             let outputUrl: string | null = null;
             
             // 检查是否是 APIKEY_TASK_IS_RUNNING 响应
@@ -280,6 +292,9 @@ class TaskQueueManager {
               return; // 继续轮询
             } else if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
               outputUrl = result.data[0]?.fileUrl || null;
+              console.log(`✅ 获取到输出URL: ${outputUrl}`);
+            } else {
+              console.log(`⚠️ 结果数据格式异常:`, result);
             }
 
             if (taskType === 'background-removal') {
