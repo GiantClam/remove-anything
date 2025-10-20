@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 2. 同步 RunningHub 任务状态 - 优化版本
-    const now = Date.now();
+    const nowMs = Date.now();
     const syncThreshold = 10 * 1000; // 10秒后开始同步，更激进
     
     // 同步背景去除任务
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
       where: { 
         taskStatus: 'processing',
         executeStartTime: { 
-          lt: BigInt(now - syncThreshold)
+          lt: BigInt(nowMs - syncThreshold)
         }
       },
       take: 5,
@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
 
           let updateData: any = {
             taskStatus: "succeeded",
-            executeEndTime: BigInt(now)
+            executeEndTime: BigInt(nowMs)
           };
 
           if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
             where: { replicateId: task.replicateId },
             data: {
               taskStatus: "failed",
-              executeEndTime: BigInt(now),
+              executeEndTime: BigInt(nowMs),
               errorMsg: "Task failed on RunningHub"
             }
           });
@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
       where: { 
         taskStatus: 'processing',
         executeStartTime: { 
-          lt: BigInt(now - syncThreshold)
+          lt: BigInt(nowMs - syncThreshold)
         }
       },
       take: 5,
@@ -174,7 +174,7 @@ export async function GET(req: NextRequest) {
 
           let updateData: any = {
             taskStatus: "succeeded",
-            executeEndTime: BigInt(now)
+            executeEndTime: BigInt(nowMs)
           };
 
           if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
@@ -194,7 +194,7 @@ export async function GET(req: NextRequest) {
             where: { id: task.id },
             data: {
               taskStatus: "failed",
-              executeEndTime: BigInt(now),
+              executeEndTime: BigInt(nowMs),
               errorMsg: "Task failed on RunningHub"
             }
           });
