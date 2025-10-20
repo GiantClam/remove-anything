@@ -27,7 +27,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [hasError, setHasError] = useState(false);
+  const [hasError, setHasError] = useState<string | false>(false);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [queuedFiles, setQueuedFiles] = useState<File[]>([]);
@@ -301,23 +301,74 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     });
   }
 
-  // 轮询任务状态（仅在开发环境中使用）
+  // 使用 SSE 监听任务状态（生产环境）或轮询（开发环境）
   const pollTaskStatus = async (taskId: string) => {
-    // 在生产环境中，使用webhook模式，不进行轮询
     const isProduction = typeof window !== 'undefined' && 
       (window.location.hostname === 'www.remove-anything.com' || 
        window.location.hostname === 'remove-anything.com' ||
        window.location.hostname === 'vercel.app');
     
     if (isProduction) {
-      console.log("🔗 生产环境：使用webhook模式，不进行轮询");
+      console.log("🔗 生产环境：使用 SSE 实时监听");
       console.log("📝 任务已创建，ID:", taskId);
       toast.success(tPage('taskCreated'));
+      
+      // 使用 Server-Sent Events 实时监听
+      const eventSource = new EventSource(`/api/task-status-stream/${taskId}`);
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log("📡 SSE 收到状态更新:", data);
+          
+          if (data.status === 'succeeded' && data.output) {
+            console.log("✅ 任务完成，输出:", data.output);
+            setProcessedImage(data.output);
+            setIsProcessing(false);
+            toast.success(tPage('backgroundRemoved'));
+            eventSource.close();
+          } else if (data.status === 'failed') {
+            console.log("❌ 任务失败:", data.error);
+            setHasError(data.error || 'Task failed');
+            setIsProcessing(false);
+            toast.error(data.error || 'Task failed');
+            eventSource.close();
+          } else if (data.status === 'timeout') {
+            console.log("⏰ 任务超时");
+            setHasError('Task timeout');
+            setIsProcessing(false);
+            toast.error('Task timeout');
+            eventSource.close();
+          } else if (data.error) {
+            console.log("❌ SSE 错误:", data.error);
+            setHasError(data.error);
+            setIsProcessing(false);
+            toast.error(data.error);
+            eventSource.close();
+          }
+        } catch (error) {
+          console.error("❌ 解析 SSE 数据失败:", error);
+        }
+      };
+      
+      eventSource.onerror = (error) => {
+        console.error("❌ SSE 连接错误:", error);
+        eventSource.close();
+        // 降级到轮询
+        fallbackToPolling(taskId);
+      };
+      
       return;
     }
 
     // 开发环境：使用轮询模式
-    const maxAttempts = 60;
+    fallbackToPolling(taskId);
+  };
+
+  // 降级轮询函数
+  const fallbackToPolling = async (taskId: string) => {
+    console.log("🔍 开发环境：使用轮询模式");
+    const maxAttempts = 40; // 减少轮询次数（约2分钟）
     let attempts = 0;
     let pollTimeout: NodeJS.Timeout | null = null;
     let isPollingStopped = false;
@@ -529,6 +580,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       processImage(uploadedFile);
     }
   };
+
 
   const hasUpload = !!(originalImage || processedImage);
 

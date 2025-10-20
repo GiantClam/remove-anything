@@ -25,7 +25,7 @@ export function WebhookHandler({ taskId, onComplete, onError }: WebhookHandlerPr
       console.log("🔗 生产环境：使用数据库状态检查模式");
       
       let attempts = 0;
-      const maxAttempts = 60; // 增加最大尝试次数（10分钟）
+      const maxAttempts = 120; // 增加最大尝试次数（20分钟）
       
       const checkDatabaseStatus = async () => {
         try {
@@ -49,14 +49,16 @@ export function WebhookHandler({ taskId, onComplete, onError }: WebhookHandlerPr
           
           attempts++;
           if (attempts < maxAttempts) {
-            // 动态调整检查间隔：开始频繁，后来递减
+            // 优化检查间隔：减少服务器负载
             let delay;
-            if (attempts <= 10) {
-              delay = 2000; // 前10次每2秒检查一次
-            } else if (attempts <= 30) {
-              delay = 3000; // 11-30次每3秒检查一次  
+            if (attempts <= 5) {
+              delay = 3000; // 前5次每3秒检查一次
+            } else if (attempts <= 20) {
+              delay = 5000; // 6-20次每5秒检查一次  
+            } else if (attempts <= 60) {
+              delay = 10000; // 21-60次每10秒检查一次
             } else {
-              delay = 5000; // 之后每5秒检查一次
+              delay = 15000; // 之后每15秒检查一次
             }
             
             timeoutId = setTimeout(checkDatabaseStatus, delay);
@@ -67,7 +69,7 @@ export function WebhookHandler({ taskId, onComplete, onError }: WebhookHandlerPr
           console.error('Error checking database status:', error);
           attempts++;
           if (attempts < maxAttempts) {
-            timeoutId = setTimeout(checkDatabaseStatus, 3000);
+            timeoutId = setTimeout(checkDatabaseStatus, 5000);
           } else {
             onError('Task timeout - database check failed');
           }
