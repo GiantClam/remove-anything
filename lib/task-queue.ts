@@ -174,20 +174,36 @@ class TaskQueueManager {
    * 启动 RunningHub 状态监控（后端托管，无需前端）
    */
   public startStatusWatcher(taskRecordId: number, runninghubTaskId: string, taskType: string = 'flux') {
+    console.log(`🚀 启动状态监控: ${runninghubTaskId} (类型: ${taskType}, 记录ID: ${taskRecordId})`);
+    
     // 已有 watcher 则先清理
     const existing = this.statusWatchers.get(runninghubTaskId);
-    if (existing) clearInterval(existing);
+    if (existing) {
+      console.log(`🔄 清理现有监控: ${runninghubTaskId}`);
+      clearInterval(existing);
+    }
 
     const startedAt = Date.now();
     
     // 立即执行一次状态检查，不等待间隔
-    this.checkTaskStatus(taskRecordId, runninghubTaskId, taskType, startedAt);
+    console.log(`⚡ 立即执行状态检查: ${runninghubTaskId}`);
+    this.checkTaskStatus(taskRecordId, runninghubTaskId, taskType, startedAt).catch(error => {
+      console.error(`❌ 初始状态检查异常: ${runninghubTaskId}`, error);
+    });
     
     const interval = setInterval(async () => {
-      await this.checkTaskStatus(taskRecordId, runninghubTaskId, taskType, startedAt);
+      try {
+        await this.checkTaskStatus(taskRecordId, runninghubTaskId, taskType, startedAt);
+      } catch (error) {
+        console.error(`❌ 状态检查异常: ${runninghubTaskId}`, error);
+        // 如果连续出错，停止监控
+        this.stopStatusWatcher(runninghubTaskId);
+      }
     }, this.watcherConfig.intervalMs);
 
     this.statusWatchers.set(runninghubTaskId, interval);
+    console.log(`✅ 状态监控已设置: ${runninghubTaskId}, 间隔: ${this.watcherConfig.intervalMs}ms`);
+    console.log(`📊 当前活跃监控数量: ${this.statusWatchers.size}`);
   }
 
   /**
@@ -195,6 +211,7 @@ class TaskQueueManager {
    */
   private async checkTaskStatus(taskRecordId: number, runninghubTaskId: string, taskType: string, startedAt: number) {
     try {
+      console.log(`🔍 开始检查任务状态: ${runninghubTaskId} (类型: ${taskType}, 记录ID: ${taskRecordId})`);
         // 超时保护
         if (Date.now() - startedAt > this.watcherConfig.maxMinutes * 60 * 1000) {
           if (taskType === 'background-removal') {
@@ -377,6 +394,14 @@ class TaskQueueManager {
       this.statusWatchers.delete(runninghubTaskId);
       console.log(`🛑 已停止状态监控: runninghubTaskId=${runninghubTaskId}`);
     }
+  }
+
+  /** 获取当前活跃监控状态 */
+  public getActiveWatchers() {
+    return {
+      count: this.statusWatchers.size,
+      taskIds: Array.from(this.statusWatchers.keys())
+    };
   }
 
   /**
