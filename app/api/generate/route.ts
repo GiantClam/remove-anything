@@ -197,13 +197,8 @@ export async function POST(req: NextRequest) {
     // 启动任务状态监控
     try {
       const { taskQueueManager } = await import("@/lib/task-queue");
-      console.log(`🚀 准备启动状态监控: ${runninghubTaskId} (记录ID: ${taskRecord.id})`);
       taskQueueManager.startStatusWatcher(taskRecord.id, runninghubTaskId, 'background-removal');
       console.log("✅ 任务状态监控已启动");
-      
-      // 验证监控是否真的启动了
-      const watchers = taskQueueManager.getActiveWatchers();
-      console.log(`📊 当前活跃监控: ${watchers.count} 个`, watchers.taskIds);
     } catch (error) {
       console.error("❌ 启动任务状态监控失败:", error);
       // 不影响主流程，继续执行
