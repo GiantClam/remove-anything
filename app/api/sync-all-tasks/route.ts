@@ -22,7 +22,15 @@ export async function GET() {
 
     console.log(`📋 找到 ${processingTasks.length} 个进行中的任务`);
 
-    const results = [];
+    const results: Array<{
+      taskId: string;
+      oldStatus: string;
+      newStatus?: string;
+      runninghubStatus?: string;
+      syncResult: string;
+      updated?: boolean;
+      error?: string;
+    }> = [];
 
     for (const task of processingTasks) {
       try {
