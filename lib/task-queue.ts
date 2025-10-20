@@ -234,7 +234,7 @@ class TaskQueueManager {
             } else if (statusResp.data && typeof statusResp.data.status === 'string') {
               status = statusResp.data.status;
             } else if (statusResp.data && typeof statusResp.data === 'object') {
-              status = statusResp.data.status || statusResp.data.taskStatus;
+              status = statusResp.data.status;
             }
           } else if (statusResp.code !== 0) {
             console.log(`⚠️ RunningHub API返回错误: code=${statusResp.code}, msg=${statusResp.msg}`);
