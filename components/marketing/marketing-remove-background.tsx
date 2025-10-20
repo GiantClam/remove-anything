@@ -472,9 +472,12 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
 
       // 如果有任务ID，使用API下载（支持统计和权限控制）
       if (currentTaskId) {
+        console.log(`🔍 开始API下载: ${currentTaskId}`);
         const response = await fetch(`/api/download-background?taskId=${currentTaskId}`, {
           credentials: 'include',
         });
+        
+        console.log(`📡 API下载响应: ${response.status} ${response.statusText}`);
         
         if (response.ok) {
           const blob = await response.blob();
@@ -520,21 +523,49 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             }
           } else {
             // PC端：直接下载到本地
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = fileName;
-            link.style.display = "none";
-            document.body.appendChild(link);
-            setTimeout(() => link.click(), 50);
-            setTimeout(() => document.body.removeChild(link), 200);
-            toast.success("图片已开始下载");
+            console.log(`💾 PC端下载: ${fileName}`);
+            
+            // 尝试多种下载方式
+            try {
+              // 方式1：创建下载链接
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = fileName;
+              link.style.display = "none";
+              document.body.appendChild(link);
+              
+              // 立即触发点击
+              link.click();
+              console.log(`🖱️ 触发下载点击`);
+              
+              // 清理
+              setTimeout(() => {
+                if (document.body.contains(link)) {
+                  document.body.removeChild(link);
+                }
+              }, 100);
+              
+              toast.success("图片已开始下载");
+            } catch (downloadError) {
+              console.error("下载失败，尝试备用方案:", downloadError);
+              
+              // 备用方案：新窗口打开
+              const newWindow = window.open(url, '_blank');
+              if (newWindow) {
+                toast.info("图片已在新窗口中打开，请右键保存");
+              } else {
+                toast.error("下载失败，请检查浏览器设置");
+              }
+            }
           }
           
           // 延迟释放 URL 对象
           setTimeout(() => window.URL.revokeObjectURL(url), 1000);
           return;
         } else {
-          console.warn('API download failed, falling back to direct download');
+          console.warn(`❌ API下载失败: ${response.status} ${response.statusText}，降级到直接下载`);
+          const errorText = await response.text();
+          console.warn(`错误详情: ${errorText}`);
         }
       }
       
@@ -560,14 +591,38 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         }
       } else {
         // PC端降级方案
-        const link = document.createElement("a");
-        link.href = processedImage;
-        link.download = fileName;
-        link.style.display = "none";
-        document.body.appendChild(link);
-        setTimeout(() => link.click(), 50);
-        setTimeout(() => document.body.removeChild(link), 200);
-        toast.success("图片已开始下载");
+        console.log(`🔄 PC端降级下载: ${processedImage}`);
+        
+        try {
+          const link = document.createElement("a");
+          link.href = processedImage;
+          link.download = fileName;
+          link.style.display = "none";
+          document.body.appendChild(link);
+          
+          // 立即触发点击
+          link.click();
+          console.log(`🖱️ 触发降级下载点击`);
+          
+          // 清理
+          setTimeout(() => {
+            if (document.body.contains(link)) {
+              document.body.removeChild(link);
+            }
+          }, 100);
+          
+          toast.success("图片已开始下载");
+        } catch (downloadError) {
+          console.error("降级下载失败，尝试新窗口打开:", downloadError);
+          
+          // 备用方案：新窗口打开
+          const newWindow = window.open(processedImage, '_blank');
+          if (newWindow) {
+            toast.info("图片已在新窗口中打开，请右键保存");
+          } else {
+            toast.error("下载失败，请检查浏览器设置");
+          }
+        }
       }
     } catch (error) {
       console.error('Download error:', error);
