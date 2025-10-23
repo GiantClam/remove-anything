@@ -413,6 +413,34 @@
     "taskCreated": "背景去除任務已創建！正在後台處理...",
     "processingFailed": "去除背景失敗，請重試。",
     "taskFailed": "任務失敗",
+    "addBackground": "添加背景",
+    "backgroundSelector": {
+      "title": "選擇背景",
+      "solid": "純色",
+      "gradient": "漸變", 
+      "image": "圖片",
+      "template": "模板",
+      "uploadImage": "點擊上傳圖片",
+      "preview": "預覽效果",
+      "download": "下載圖片",
+      "previewResult": "預覽結果"
+    },
+    "adjustmentControls": {
+      "title": "調整參數",
+      "size": "大小",
+      "position": "位置",
+      "rotation": "旋轉",
+      "zoomIn": "放大",
+      "zoomOut": "縮小"
+    },
+    "messages": {
+      "selectBackgroundFirst": "請先選擇背景",
+      "previewGenerated": "預覽生成成功",
+      "previewFailed": "預覽生成失敗，請重試",
+      "downloadSuccess": "下載成功",
+      "downloadFailed": "下載失敗，請重試",
+      "backgroundSelected": "背景已選擇，查看左側預覽效果"
+    },
     "taskTimeout": "任務超時",
     "noOutputReceived": "未收到處理結果",
     "getStatusFailed": "獲取任務狀態失敗，請重試。",

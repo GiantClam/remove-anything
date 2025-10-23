@@ -11,6 +11,9 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { WebhookHandler } from './webhook-handler';
 import { BeforeAfterSlider } from '@/components/ui/before-after-slider';
+import { BackgroundSelector } from '@/components/add-background/background-selector';
+import { AdjustmentControls } from '@/components/add-background/adjustment-controls';
+// 移除不再需要的导入，使用原生Canvas API
 
 interface MarketingRemoveBackgroundProps {
   locale: string;
@@ -32,6 +35,137 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
   const [isDragging, setIsDragging] = useState(false);
   const [queuedFiles, setQueuedFiles] = useState<File[]>([]);
   const [recentImages, setRecentImages] = useState<Array<{url: string, timestamp: number}>>([]);
+  const [showAddBackground, setShowAddBackground] = useState(false);
+  
+  // 背景相关状态
+  const [backgroundType, setBackgroundType] = useState<"solid" | "gradient" | "image" | "template">("solid");
+  const [selectedBackground, setSelectedBackground] = useState<any>(null);
+  const [compositionParams, setCompositionParams] = useState({
+    position: { x: 0, y: 0 },
+    scale: 1,
+    rotation: 0,
+    blendMode: 'normal' as const
+  });
+  const [composedImage, setComposedImage] = useState<string | null>(null);
+  
+  // 移除图片合成逻辑，使用CSS层叠实现预览
+  
+  // 选择背景后自动生成预览 - 使用CSS层叠，不进行图片合成
+  useEffect(() => {
+    if (selectedBackground && processedImage) {
+      // 不需要合成图片，直接设置预览状态
+      setComposedImage(processedImage); // 用于显示预览状态
+    }
+  }, [selectedBackground, compositionParams, processedImage]);
+  
+  // 预览合成效果 - 现在使用CSS层叠，无需额外处理
+  const handlePreview = async () => {
+    if (!processedImage || !selectedBackground) {
+      toast.error(tPage('messages.selectBackgroundFirst'));
+      return;
+    }
+    
+    // CSS层叠预览已经自动显示，无需额外处理
+    toast.success(tPage('messages.previewGenerated'));
+  };
+
+  // 下载合成后的图片
+  const handleDownloadComposed = async () => {
+    if (!processedImage || !selectedBackground) {
+      toast.error(tPage('messages.selectBackgroundFirst'));
+      return;
+    }
+    
+    try {
+      // 使用Canvas API在客户端合成图片，避免CORS问题
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas context not available');
+      
+      // 设置画布尺寸
+      canvas.width = 1024;
+      canvas.height = 1024;
+      
+      // 绘制背景
+      if (selectedBackground.type === 'solid') {
+        ctx.fillStyle = selectedBackground.data.color || '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else if (selectedBackground.type === 'gradient') {
+        const gradient = selectedBackground.data.gradient;
+        if (gradient.type === 'radial') {
+          const radialGradient = ctx.createRadialGradient(
+            canvas.width / 2, canvas.height / 2, 0,
+            canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
+          );
+          gradient.colors.forEach((color: string, index: number) => {
+            radialGradient.addColorStop(index / (gradient.colors.length - 1), color);
+          });
+          ctx.fillStyle = radialGradient;
+        } else {
+          const linearGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+          gradient.colors.forEach((color: string, index: number) => {
+            linearGradient.addColorStop(index / (gradient.colors.length - 1), color);
+          });
+          ctx.fillStyle = linearGradient;
+        }
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else if (selectedBackground.type === 'image') {
+        // 对于图片背景，先绘制白色背景
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // 注意：由于CORS限制，这里暂时使用白色背景
+        // 在实际应用中，需要确保背景图片支持CORS或使用代理
+      }
+      
+      // 加载并绘制前景图片
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      await new Promise((resolve, reject) => {
+        img.onload = () => {
+          try {
+            // 应用变换
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.scale(compositionParams.scale, compositionParams.scale);
+            ctx.rotate((compositionParams.rotation * Math.PI) / 180);
+            ctx.translate(compositionParams.position.x, compositionParams.position.y);
+            
+            // 绘制图片
+            ctx.drawImage(img, -img.width / 2, -img.height / 2);
+            ctx.restore();
+            
+            resolve(void 0);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        img.onerror = reject;
+        img.src = processedImage;
+      });
+      
+      // 转换为blob并下载
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'composed-image.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          toast.success(tPage('messages.downloadSuccess'));
+        } else {
+          throw new Error('Failed to create blob');
+        }
+      }, 'image/png');
+      
+    } catch (error) {
+      console.error('下载失败:', error);
+      toast.error(tPage('messages.downloadFailed'));
+    }
+  };
   
   // 使用useMemo来避免重复计算，添加安全检查
   const isAuthenticated = useMemo(() => {
@@ -147,7 +281,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       const response = await fetch(`/api/task/${taskId}?dbOnly=true`);
       if (response.ok) {
         const data = await response.json();
-        if (data.status === 'succeeded' && data.output) {
+        if ((data.status === 'succeeded' || data.status === 'SUCCESS') && data.output) {
           setProcessedImage(data.output);
           toast.success(tPage('foundProcessedImage'));
         }
@@ -321,7 +455,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           const data = JSON.parse(event.data);
           console.log("📡 SSE 收到状态更新:", data);
           
-          if (data.status === 'succeeded' && data.output) {
+          if ((data.status === 'succeeded' || data.status === 'SUCCESS') && data.output) {
             console.log("✅ 任务完成，输出:", data.output);
             setProcessedImage(data.output);
             setIsProcessing(false);
@@ -394,6 +528,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           case 'pending':
           case 'starting':
           case 'processing':
+          case 'RUNNING':
             if (attempts < maxAttempts) {
               attempts++;
               console.log(`⏳ 任务处理中，${attempts}/${maxAttempts}，3秒后再次查询...`);
@@ -405,6 +540,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             break;
             
           case 'succeeded':
+          case 'SUCCESS':
             console.log('✅ 任务成功完成!');
             isPollingStopped = true;
             if (pollTimeout) {
@@ -760,24 +896,43 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>{tPage('processedImage')}</span>
-              <Button onClick={handleDownload} size="sm" className="flex items-center gap-2">
-                {isAuthenticated ? (<><Download className="w-4 h-4" />{tPage('download')}</>) : (<><LogIn className="w-4 h-4" />{tPage('loginDownload')}</>)}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowAddBackground(true)}
+                  size="sm" 
+                  className="flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {tPage('addBackground')}
+                </Button>
+                <Button onClick={handleDownload} size="sm" className="flex items-center gap-2">
+                  {isAuthenticated ? (<><Download className="w-4 h-4" />{tPage('download')}</>) : (<><LogIn className="w-4 h-4" />{tPage('loginDownload')}</>)}
+                </Button>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* 轻量工具栏 - 暂时隐藏，后续补充功能 */}
-            {/* <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 p-2 text-sm max-w-[520px] mx-auto">
-              <Button variant="ghost" size="sm" className="rounded-full">Cutout</Button>
-              <Button variant="ghost" size="sm" className="rounded-full">Background</Button>
-              <Button variant="ghost" size="sm" className="rounded-full">Effects</Button>
-              <div className="ml-auto flex gap-1">
-                <Button variant="ghost" size="sm">↶</Button>
-                <Button variant="ghost" size="sm">↷</Button>
-              </div>
-            </div> */}
-            <div
-              className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center p-2 h-[520px] w-[520px] mx-auto"
+            <div className="relative overflow-hidden">
+              {/* 遮罩层 - 只覆盖背景选择器区域，不覆盖图片区域 */}
+              {showAddBackground && (
+                <div 
+                  className="absolute top-0 right-0 w-80 h-full bg-black/10 z-10 transition-opacity duration-300"
+                  onClick={() => setShowAddBackground(false)}
+                />
+              )}
+              
+              {/* 图片展示区域 - 支持左滑动效 */}
+              <div 
+                className={`transition-all duration-700 ease-out ${
+                  showAddBackground ? 'transform -translate-x-80' : 'transform translate-x-0'
+                }`}
+                style={{
+                  willChange: 'transform'
+                }}
+              >
+                <div
+                  className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center p-2 h-[520px] w-[520px] mx-auto"
               onDoubleClick={() => {
                 // 双击在 Before/After 与单张 After 之间切换：若只有一张则忽略
                 if (processedImage && originalImage) {
@@ -818,8 +973,32 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                   beforeSrc={originalImage || ''}
                   afterSrc={processedImage}
                   beforeLabel="Original"
-                  afterLabel="Result"
-                  showLabels={false}
+                  afterLabel={selectedBackground ? "With Background" : "Background Removed"}
+                  showLabels={true}
+                  afterOverlay={selectedBackground ? (
+                    <div 
+                      className="absolute inset-0 w-full h-full"
+                      style={{
+                        background: selectedBackground.type === 'solid' 
+                          ? selectedBackground.data.color
+                          : selectedBackground.type === 'gradient'
+                          ? selectedBackground.data.gradient.type === 'radial'
+                            ? `radial-gradient(circle, ${selectedBackground.data.gradient.colors.join(', ')})`
+                            : `linear-gradient(${selectedBackground.data.gradient.direction || 45}deg, ${selectedBackground.data.gradient.colors.join(', ')})`
+                          : selectedBackground.type === 'image'
+                          ? `url(${selectedBackground.data.imageUrl})`
+                          : '#ffffff',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                      }}
+                    />
+                  ) : undefined}
+                  afterTransform={selectedBackground ? {
+                    transform: `scale(${compositionParams.scale}) translate(${compositionParams.position.x}px, ${compositionParams.position.y}px) rotate(${compositionParams.rotation}deg)`,
+                    transformOrigin: 'center',
+                    zIndex: 2
+                  } : undefined}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -832,15 +1011,15 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                   </div>
                 </div>
               )}
-            </div>
-            {hasError && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600">{hasError}</p>
-              </div>
-            )}
-            
-            {/* 底部控制区域：+按钮和最近图片 */}
-            <div className="mt-6 flex items-center justify-center gap-3">
+                </div>
+                {hasError && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600">{hasError}</p>
+                  </div>
+                )}
+                
+                {/* 底部控制区域：+按钮和最近图片 */}
+                <div className="mt-6 flex items-center justify-center gap-3">
               {/* + 按钮 */}
               <button
                 onClick={() => {
@@ -877,15 +1056,100 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
               ))}
             </div>
 
-            {/* 始终挂载的隐藏文件输入，用于 + 按钮触发 */}
-            <input
-              id="image-upload-hidden"
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-              disabled={isProcessing}
-            />
+                {/* 始终挂载的隐藏文件输入，用于 + 按钮触发 */}
+                <input
+                  id="image-upload-hidden"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  disabled={isProcessing}
+                />
+              </div>
+              
+              {/* 背景选择器 - 从右侧渐入动画 */}
+              {processedImage && (
+                <div
+                  className={`absolute top-0 right-0 w-80 h-full bg-background/95 backdrop-blur-sm border-l shadow-lg transition-all duration-700 ease-out z-20 ${
+                    showAddBackground
+                      ? 'opacity-100 transform translate-x-0'
+                      : 'opacity-0 transform translate-x-full pointer-events-none'
+                  }`}
+                  style={{
+                    willChange: 'transform, opacity'
+                  }}
+                >
+                  <div className="p-4 h-full overflow-y-auto">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-semibold">{tPage('backgroundSelector.title')}</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowAddBackground(false)}
+                        className="h-8 w-8 p-0"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <BackgroundSelector 
+                        type={backgroundType}
+                        onTypeChange={(type: string) => setBackgroundType(type as "image" | "gradient" | "solid" | "template")}
+                        selected={selectedBackground}
+                        onSelect={setSelectedBackground}
+                      />
+                      
+                      {selectedBackground && (
+                        <AdjustmentControls 
+                          params={compositionParams}
+                          onChange={setCompositionParams}
+                        />
+                      )}
+                      
+                      {selectedBackground && (
+                        <div className="space-y-2">
+                          <div className="text-sm text-muted-foreground mb-2">
+                            💡 {tPage('messages.backgroundSelected')}
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button 
+                              onClick={handlePreview}
+                              variant="outline"
+                              className="flex-1"
+                              size="sm"
+                            >
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              {tPage('backgroundSelector.preview')}
+                            </Button>
+                            <Button 
+                              onClick={handleDownloadComposed}
+                              className="flex-1"
+                              size="sm"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              {tPage('backgroundSelector.download')}
+                            </Button>
+                          </div>
+                          
+                          {composedImage && (
+                            <div className="border rounded-lg p-2">
+                              <h4 className="font-medium mb-2">{tPage('backgroundSelector.previewResult')}</h4>
+                              <img 
+                                src={composedImage} 
+                                alt="Preview result" 
+                                className="w-full h-32 object-cover rounded"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -1170,18 +1434,78 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                     <p className="text-sm text-muted-foreground">{tPage('removingBackground')}</p>
                   </div>
                 </div>
-              ) : (
+                ) : (
                 processedImage && originalImage ? (
                   <div id="ba-toggle" data-on="1" className="w-full h-full flex items-center justify-center">
                     {/* data-on=1 显示 Slider；=0 显示 After 单图 */}
                     {true ? (
-                      <BeforeAfterSlider
-                        beforeSrc={originalImage}
-                        afterSrc={processedImage}
-                        beforeLabel="Original"
-                        afterLabel="Background removed"
-                        className="w-full"
-                      />
+                      // 如果有背景预览，显示背景对比；否则显示原图对比
+                      selectedBackground ? (
+                        <div className="relative w-full h-full">
+                          {/* 自定义对比滑块 */}
+                          <div className="relative w-full h-full overflow-hidden rounded-lg">
+                            {/* 左侧：去背景图片 */}
+                            <div className="absolute inset-0 w-1/2">
+                              <img 
+                                src={processedImage}
+                                alt="Background Removed"
+                                className="w-full h-full object-contain"
+                              />
+                              <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                                Background Removed
+                              </div>
+                            </div>
+                            
+                            {/* 右侧：带背景的预览 */}
+                            <div className="absolute inset-0 w-1/2 left-1/2">
+                              <div className="relative w-full h-full">
+                                {/* 背景层 */}
+                                <div 
+                                  className="absolute inset-0 w-full h-full"
+                                  style={{
+                                    background: selectedBackground.type === 'solid' 
+                                      ? selectedBackground.data.color
+                                      : selectedBackground.type === 'gradient'
+                                      ? selectedBackground.data.gradient.type === 'radial'
+                                        ? `radial-gradient(circle, ${selectedBackground.data.gradient.colors.join(', ')})`
+                                        : `linear-gradient(${selectedBackground.data.gradient.direction || 45}deg, ${selectedBackground.data.gradient.colors.join(', ')})`
+                                      : selectedBackground.type === 'image'
+                                      ? `url(${selectedBackground.data.imageUrl})`
+                                      : '#ffffff',
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat'
+                                  }}
+                                />
+                                {/* 前景层 - 去背景图片 */}
+                                <img 
+                                  src={processedImage}
+                                  alt="With Background"
+                                  className="absolute inset-0 w-full h-full object-contain"
+                                  style={{
+                                    transform: `scale(${compositionParams.scale}) translate(${compositionParams.position.x}px, ${compositionParams.position.y}px) rotate(${compositionParams.rotation}deg)`,
+                                    transformOrigin: 'center'
+                                  }}
+                                />
+                              </div>
+                              <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                                With Background
+                              </div>
+                            </div>
+                            
+                            {/* 分割线 */}
+                            <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white shadow-lg transform -translate-x-1/2" />
+                          </div>
+                        </div>
+                      ) : (
+                        <BeforeAfterSlider
+                          beforeSrc={originalImage}
+                          afterSrc={processedImage}
+                          beforeLabel="Original"
+                          afterLabel="Background Removed"
+                          className="w-full"
+                        />
+                      )
                     ) : null}
                   </div>
                 ) : (
@@ -1242,6 +1566,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           </div>
         </CardContent>
       </Card>
+
     </div>
   );
 } 

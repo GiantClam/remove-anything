@@ -67,6 +67,7 @@ model User {
   batchTasks             BatchTask[]
   backgroundRemovalTasks BackgroundRemovalTask[]
   watermarkRemovalTasks  WatermarkRemovalTask[]
+  backgroundCompositions BackgroundComposition[]
 
   @@map("users")
 }
@@ -394,4 +395,84 @@ model UserPaymentInfo {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map(name: "user_payment_info")
+}
+
+model BackgroundImage {
+  id          Int      @id @default(autoincrement())
+  name        String   // 背景图片名称
+  description String?  // 描述
+  type        String   // 类型: solid, gradient, image, template
+  category    String?  // 分类: office, nature, abstract, studio, beach, city, etc.
+  
+  // 图片相关字段
+  imageUrl    String   @map(name: "image_url") // Cloudflare CDN URL
+  thumbnailUrl String? @map(name: "thumbnail_url") // 缩略图URL
+  fileSize    Int?     @map(name: "file_size") // 文件大小(字节)
+  width       Int?     // 图片宽度
+  height      Int?     // 图片高度
+  
+  // 颜色相关字段 (用于纯色和渐变背景)
+  color       String?  // 纯色背景的颜色值
+  gradient    Json?    // 渐变背景的配置 {type: 'linear'|'radial', colors: string[], direction?: number}
+  
+  // 元数据
+  tags        String[] // 标签数组
+  isPublic    Boolean  @default(true) @map(name: "is_public") // 是否公开
+  isDefault   Boolean  @default(false) @map(name: "is_default") // 是否为默认背景
+  sortOrder   Int      @default(0) @map(name: "sort_order") // 排序顺序
+  
+  // 统计字段
+  usageCount  Int      @default(0) @map(name: "usage_count") // 使用次数
+  downloadCount Int    @default(0) @map(name: "download_count") // 下载次数
+  
+  // 时间字段
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  // 关联关系
+  compositions BackgroundComposition[]
+
+  @@map(name: "background_images")
+  @@index([type])
+  @@index([category])
+  @@index([isPublic])
+  @@index([isDefault])
+  @@index([sortOrder])
+}
+
+model BackgroundComposition {
+  id                Int      @id @default(autoincrement())
+  userId            String?  @map(name: "user_id") // 可以为空，支持匿名用户
+  foregroundImageUrl String  @map(name: "foreground_image_url") // 前景图片URL
+  backgroundImageId Int?     @map(name: "background_image_id") // 背景图片ID
+  backgroundType    String   @map(name: "background_type") // 背景类型
+  backgroundData    Json     @map(name: "background_data") // 背景数据(颜色、渐变等)
+  
+  // 合成参数
+  compositionParams Json     @map(name: "composition_params") // 合成参数 {position, scale, rotation, blendMode}
+  
+  // 结果
+  resultImageUrl    String?  @map(name: "result_image_url") // 合成结果图片URL
+  resultImageSize   Int?     @map(name: "result_image_size") // 结果图片大小
+  
+  // 状态
+  status            String   @default("pending") // pending, processing, completed, failed
+  errorMessage      String?  @map(name: "error_message") // 错误信息
+  
+  // 统计
+  downloadCount     Int      @default(0) @map(name: "download_count") // 下载次数
+  viewCount         Int      @default(0) @map(name: "view_count") // 查看次数
+  
+  // 时间字段
+  createdAt         DateTime @default(now()) @map(name: "created_at")
+  updatedAt         DateTime @updatedAt @map(name: "updated_at")
+  completedAt       DateTime? @map(name: "completed_at") // 完成时间
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  backgroundImage BackgroundImage? @relation(fields: [backgroundImageId], references: [id], onDelete: SetNull)
+
+  @@map(name: "background_compositions")
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }

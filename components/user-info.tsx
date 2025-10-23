@@ -55,7 +55,6 @@ export function UserInfo() {
     const candidate = segments[0];
     return candidate.length <= 5 ? candidate : "en";
   }, [pathname]);
-  const uploadHref = `/${localeSegment}/remove-background`;
   const { user } = useAuth();
   const StrategyIcon = React.useMemo(() => {
     // Since we're using Google OAuth through NextAuth, always show Google icon
@@ -72,11 +71,6 @@ export function UserInfo() {
         <SignedIn key="user-info">
           <div className="flex items-center space-x-3">
             <LocaleSwitcher />
-            <Link href={uploadHref} className="hidden md:block">
-              <Button size="sm" className="rounded-full">
-                Upload
-              </Button>
-            </Link>
             <div className="pointer-events-auto relative flex h-10 items-center">
               <UserButton
                 afterSignOutUrl={pathname}
@@ -106,11 +100,6 @@ export function UserInfo() {
         <SignedOut key="sign-in">
           <div className="flex items-center space-x-3">
             <LocaleSwitcher />
-            <Link href={uploadHref} className="hidden md:block">
-              <Button size="sm" className="rounded-full">
-                Upload
-              </Button>
-            </Link>
             <div className="pointer-events-auto">
               <SignInButton
                 mode="modal"
@@ -136,11 +125,6 @@ export function UserInfo() {
         <SignedIn key="user-info">
           <div className="flex items-center space-x-3">
           <LocaleSwitcher />
-          <Link href={uploadHref} className="hidden md:block">
-            <Button size="sm" className="rounded-full">
-              Upload
-            </Button>
-          </Link>
           <motion.div
             className="pointer-events-auto relative flex h-10 items-center"
             initial={{ opacity: 0, x: 25 }}
@@ -175,11 +159,6 @@ export function UserInfo() {
               <SignedOut key="sign-in">
         <div className="flex items-center space-x-3">
           <LocaleSwitcher />
-          <Link href={uploadHref} className="hidden md:block">
-            <Button size="sm" className="rounded-full">
-              Upload
-            </Button>
-          </Link>
           <motion.div
             className="pointer-events-auto"
             initial={{ opacity: 0, x: 25 }}

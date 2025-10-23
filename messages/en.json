@@ -417,6 +417,34 @@
     "taskCreated": "Background removal task created! Processing in the background...",
     "processingFailed": "Failed to remove background. Please try again.",
     "taskFailed": "Task failed",
+    "addBackground": "Add Background",
+    "backgroundSelector": {
+      "title": "Select Background",
+      "solid": "Solid",
+      "gradient": "Gradient", 
+      "image": "Image",
+      "template": "Template",
+      "uploadImage": "Click to upload image",
+      "preview": "Preview Effect",
+      "download": "Download Image",
+      "previewResult": "Preview Result"
+    },
+    "adjustmentControls": {
+      "title": "Adjust Parameters",
+      "size": "Size",
+      "position": "Position",
+      "rotation": "Rotation",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out"
+    },
+    "messages": {
+      "selectBackgroundFirst": "Please select a background first",
+      "previewGenerated": "Preview generated successfully",
+      "previewFailed": "Preview generation failed, please try again",
+      "downloadSuccess": "Download successful",
+      "downloadFailed": "Download failed, please try again",
+      "backgroundSelected": "Background selected, check preview on the left"
+    },
     "taskTimeout": "Task timeout",
     "noOutputReceived": "No output received",
     "getStatusFailed": "Failed to get task status. Please try again.",

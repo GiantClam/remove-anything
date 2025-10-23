@@ -13,6 +13,8 @@ interface BeforeAfterSliderProps {
   alt?: string;
   allowZoom?: boolean;
   showLabels?: boolean;
+  afterOverlay?: React.ReactNode;
+  afterTransform?: React.CSSProperties;
 }
 
 /**
@@ -28,6 +30,8 @@ export function BeforeAfterSlider({
   alt = "Comparison preview",
   allowZoom = false,
   showLabels = true,
+  afterOverlay,
+  afterTransform,
 }: BeforeAfterSliderProps) {
   const [position, setPosition] = useState(50);
 
@@ -85,14 +89,22 @@ export function BeforeAfterSlider({
       className={cn("relative w-full select-none touch-none overscroll-none", className)}
     >
       <div className="relative overflow-hidden rounded-xl bg-muted">
-        <img
-          src={afterSrc}
-          alt={alt}
-          className="h-full w-full object-contain max-h-[500px] max-w-[500px]"
-          draggable={false}
-          decoding="async"
-          loading="eager"
-        />
+        <div className="relative h-full w-full">
+          {afterOverlay && (
+            <div className="absolute inset-0">
+              {afterOverlay}
+            </div>
+          )}
+          <img
+            src={afterSrc}
+            alt={alt}
+            className="h-full w-full object-contain max-h-[500px] max-w-[500px]"
+            draggable={false}
+            decoding="async"
+            loading="eager"
+            style={afterTransform}
+          />
+        </div>
         <img
           ref={beforeImgRef}
           src={beforeSrc}
