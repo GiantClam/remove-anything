@@ -77,7 +77,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     }
     
     try {
-      // 使用Canvas API在客户端合成图片，避免CORS问题
+      // 使用Canvas API在客户端合成图片
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Canvas context not available');
@@ -117,9 +117,16 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         // 在实际应用中，需要确保背景图片支持CORS或使用代理
       }
       
-      // 加载并绘制前景图片
+      // 加载并绘制前景图片 - 使用代理避免CORS问题
       const img = new Image();
       img.crossOrigin = 'anonymous';
+      
+      // 如果图片URL是R2 CDN链接，尝试通过代理加载
+      let imageUrl = processedImage;
+      if (processedImage.includes('r2.dev') || processedImage.includes('cloudflare')) {
+        // 通过我们的API代理加载图片，避免CORS问题
+        imageUrl = `/api/proxy-image?url=${encodeURIComponent(processedImage)}`;
+      }
       
       await new Promise((resolve, reject) => {
         img.onload = () => {
@@ -140,8 +147,17 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             reject(error);
           }
         };
-        img.onerror = reject;
-        img.src = processedImage;
+        img.onerror = (error) => {
+          console.error('图片加载失败:', error);
+          // 如果代理失败，尝试直接加载原图
+          if (imageUrl !== processedImage) {
+            console.log('尝试直接加载原图...');
+            img.src = processedImage;
+          } else {
+            reject(error);
+          }
+        };
+        img.src = imageUrl;
       });
       
       // 转换为blob并下载
