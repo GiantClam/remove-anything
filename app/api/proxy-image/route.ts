@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
     const allowedDomains = [
       'r2.dev',
       'cloudflare',
+      'remove-anything.com',
       'pub-.*\\.r2\\.dev', // R2 public bucket pattern
     ];
     

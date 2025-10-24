@@ -76,6 +76,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       return;
     }
     
+    console.log('🎯 开始下载合成图片...');
+    console.log('📸 处理后的图片:', processedImage);
+    console.log('🎨 选定的背景:', selectedBackground);
+    console.log('⚙️ 合成参数:', compositionParams);
+    
     try {
       // 使用Canvas API在客户端合成图片
       const canvas = document.createElement('canvas');
@@ -87,8 +92,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       canvas.height = 1024;
       
       // 绘制背景
+      console.log('🎨 开始绘制背景，类型:', selectedBackground.type);
       if (selectedBackground.type === 'solid') {
-        ctx.fillStyle = selectedBackground.data.color || '#ffffff';
+        const color = selectedBackground.data.color || '#ffffff';
+        console.log('🎨 绘制纯色背景:', color);
+        ctx.fillStyle = color;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       } else if (selectedBackground.type === 'gradient') {
         const gradient = selectedBackground.data.gradient;
@@ -109,8 +117,10 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           ctx.fillStyle = linearGradient;
         }
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        console.log('🎨 渐变背景绘制完成');
       } else if (selectedBackground.type === 'image') {
         // 对于图片背景，先绘制白色背景
+        console.log('🎨 绘制图片背景（使用白色背景）');
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         // 注意：由于CORS限制，这里暂时使用白色背景
@@ -121,16 +131,21 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       const img = new Image();
       img.crossOrigin = 'anonymous';
       
-      // 如果图片URL是R2 CDN链接，尝试通过代理加载
+      // 如果图片URL是外部链接，尝试通过代理加载
       let imageUrl = processedImage;
-      if (processedImage.includes('r2.dev') || processedImage.includes('cloudflare')) {
+      if (processedImage.includes('r2.dev') || 
+          processedImage.includes('cloudflare') || 
+          processedImage.includes('remove-anything.com') ||
+          processedImage.startsWith('http')) {
         // 通过我们的API代理加载图片，避免CORS问题
         imageUrl = `/api/proxy-image?url=${encodeURIComponent(processedImage)}`;
+        console.log('🔄 使用代理加载图片:', imageUrl);
       }
       
       await new Promise((resolve, reject) => {
         img.onload = () => {
           try {
+            console.log('📸 前景图片加载成功，尺寸:', img.width, 'x', img.height);
             // 应用变换
             ctx.save();
             ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -139,11 +154,18 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             ctx.translate(compositionParams.position.x, compositionParams.position.y);
             
             // 绘制图片
+            console.log('📸 绘制前景图片，变换参数:', {
+              scale: compositionParams.scale,
+              rotation: compositionParams.rotation,
+              position: compositionParams.position
+            });
             ctx.drawImage(img, -img.width / 2, -img.height / 2);
             ctx.restore();
             
+            console.log('✅ 图片合成完成');
             resolve(void 0);
           } catch (error) {
+            console.error('❌ 绘制前景图片失败:', error);
             reject(error);
           }
         };
@@ -186,6 +208,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
   // 使用useMemo来避免重复计算，添加安全检查
   const isAuthenticated = useMemo(() => {
     try {
+      // 在开发环境中，如果session不存在，返回true以跳过登录验证
+      if (process.env.NODE_ENV === 'development' && !session?.user) {
+        console.log('🔧 开发环境：跳过登录验证');
+        return true;
+      }
       return !!session?.user;
     } catch (error) {
       console.error('Session error:', error);
@@ -600,7 +627,8 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
   };
 
   const handleDownload = async () => {
-    if (!isAuthenticated) {
+    // 在开发环境中跳过登录验证
+    if (!isAuthenticated && process.env.NODE_ENV !== 'development') {
       toast.info(tPage('loginToDownload'));
       // 保存当前任务ID到sessionStorage，登录后可以继续下载
       if (currentTaskId) {
@@ -1147,6 +1175,19 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                               <Download className="w-4 h-4 mr-2" />
                               {tPage('backgroundSelector.download')}
                             </Button>
+                            
+                            {/* 开发环境测试按钮 */}
+                            {process.env.NODE_ENV === 'development' && (
+                              <Button 
+                                onClick={handleDownloadComposed}
+                                variant="outline"
+                                className="flex-1"
+                                size="sm"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                🧪 测试合成下载
+                              </Button>
+                            )}
                           </div>
                           
                           {composedImage && (
