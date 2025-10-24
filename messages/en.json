@@ -629,6 +629,16 @@
       "pricingButton": "View Pricing"
     }
   },
+  "BatchRemoveBackgroundPage": {
+    "title": "Batch Background Removal - Process Multiple Images at Once",
+    "description": "Efficiently remove backgrounds from multiple images simultaneously with our AI-powered batch processing tool. Perfect for e-commerce, product photography, and bulk image editing. No image loss, permanent storage, professional quality results.",
+    "keywords": "batch background removal, bulk image processing, multiple image editing, e-commerce product images, batch photo editing, AI batch processing, bulk background removal, mass image editing, batch image processing, professional batch editing"
+  },
+  "BatchWatermarkRemovalPage": {
+    "title": "Batch Watermark Removal - Remove Watermarks from Multiple Images",
+    "description": "Remove watermarks from multiple images simultaneously with our AI-powered batch processing tool. Perfect for content creators, photographers, and businesses. Fast, efficient, and professional quality results.",
+    "keywords": "batch watermark removal, bulk watermark removal, multiple image watermark removal, batch image processing, bulk image editing, AI batch processing, mass watermark removal, professional batch editing, content creator tools, photographer tools"
+  },
   "Sora2VideoWatermarkRemovalPage": {
     "title": "Sora2 Video Watermark Removal Tool - Professional AI Video Processing",
     "description": "Remove watermarks from Sora2 generated videos using advanced AI technology. Professional video watermark removal tool with high-quality output, fast processing, and batch support. Free online tool for content creators.",
