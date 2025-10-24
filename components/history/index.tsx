@@ -191,7 +191,7 @@ export default function History({ locale, explore }: { locale: string, explore?:
                     >
                       <img
                         src={item.imageUrl!}
-                        alt={item.inputPrompt!}
+                        alt={`AI processed image: ${item.inputPrompt || 'background removal result'}`}
                         title={item.inputPrompt!}
                         className={`w-full rounded-xl object-cover ${createRatio(item.aspectRatio as Ratio)} pointer-events-none`}
                       />

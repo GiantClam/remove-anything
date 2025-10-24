@@ -279,7 +279,7 @@ export default function BatchWatermarkRemoval({
                   <div className="aspect-square bg-gray-100 rounded overflow-hidden">
                     <img 
                       src={result.originalImageUrl} 
-                      alt={`Original ${index + 1}`}
+                      alt={`Original image ${index + 1} before AI watermark removal`}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -289,7 +289,7 @@ export default function BatchWatermarkRemoval({
                       <div className="aspect-square bg-gray-100 rounded overflow-hidden">
                         <img 
                           src={result.processedImageUrl} 
-                          alt={`Processed ${index + 1}`}
+                          alt={`AI watermark removal result ${index + 1} - processed image`}
                           className="w-full h-full object-cover"
                         />
                       </div>

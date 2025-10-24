@@ -397,7 +397,7 @@ export default function Playground({
                   <div className="relative w-full overflow-hidden rounded-lg border bg-muted max-h-[500px] max-w-[500px] mx-auto">
                     <img
                       src={fluxData.imageUrl}
-                      alt={t("backgroundRemoval.altText")}
+                      alt="AI background removal result - processed image with transparent background"
                       className="h-full w-full object-contain"
                     />
                   </div>

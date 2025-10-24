@@ -97,7 +97,7 @@ export function BeforeAfterSlider({
           )}
           <img
             src={afterSrc}
-            alt={alt}
+            alt={alt || "AI processed image comparison - before and after"}
             className="h-full w-full object-contain max-h-[500px] max-w-[500px]"
             draggable={false}
             decoding="async"
@@ -108,7 +108,7 @@ export function BeforeAfterSlider({
         <img
           ref={beforeImgRef}
           src={beforeSrc}
-          alt={alt}
+          alt={alt || "Original image before AI processing"}
           className="absolute inset-0 h-full w-full object-contain max-h-[500px] max-w-[500px]"
           style={{ willChange: "clip-path" }}
           draggable={false}

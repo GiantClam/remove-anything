@@ -22,7 +22,7 @@ export default async function PreviewLanding() {
                     className="rounded-lg"
                     width={400}
                     height={400}
-                    alt={`${item.inputPrompt}`}
+                    alt={`AI background removal example: ${item.inputPrompt || 'processed image result'}`}
                     src={item.imageUrl}
                   />
                 )}

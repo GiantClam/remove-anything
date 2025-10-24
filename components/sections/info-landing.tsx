@@ -51,7 +51,7 @@ export default function InfoLanding({
             <Image
               className="size-full object-cover object-center"
               src={data.image}
-              alt={data.title}
+              alt={`${data.title} - AI background removal feature demonstration`}
               width={1000}
               height={500}
               priority={true}

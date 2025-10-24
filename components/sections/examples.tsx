@@ -11,21 +11,21 @@ export default function Examples() {
       category: "Portraits",
       before: "/images/portrait_before.png",
       after: "/images/portrait_after.png",
-      alt: "Portrait background removal example",
+      alt: "AI portrait background removal - professional headshot editing",
       description: "Perfect for profile photos and portraits"
     },
     {
       category: "Products",
       before: "/images/product_before.png",
       after: "/images/product_after.png",
-      alt: "Product background removal example",
+      alt: "AI product background removal - e-commerce photo editing",
       description: "Ideal for e-commerce and product photography"
     },
     {
       category: "Objects",
       before: "/images/object_before.png",
       after: "/images/object_after.png",
-      alt: "Object background removal example",
+      alt: "AI object background removal - clean object isolation",
       description: "Great for object isolation and editing"
     }
   ];
@@ -56,10 +56,11 @@ export default function Examples() {
                     <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-border">
                       <Image
                         src={example.before}
-                        alt={`${example.category} - Before`}
+                        alt={`${example.alt} - original image before AI processing`}
                         width={200}
                         height={200}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
                       />
                       <div className="absolute top-2 left-2">
                         <Badge variant="secondary" className="bg-black/80 text-white border-0">
@@ -73,10 +74,11 @@ export default function Examples() {
                     <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-border">
                       <Image
                         src={example.after}
-                        alt={`${example.category} - After`}
+                        alt={`${example.alt} - processed result after AI background removal`}
                         width={200}
                         height={200}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
                       />
                       <div className="absolute top-2 left-2">
                         <Badge variant="default" className="bg-green-600 border-0">

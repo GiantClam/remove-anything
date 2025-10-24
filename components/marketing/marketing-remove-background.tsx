@@ -946,7 +946,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                 className="h-16 w-16 rounded-xl overflow-hidden ring-1 ring-border hover:ring-primary transition"
                 aria-label="Try a sample"
               >
-                <img src={u} alt="sample" className="h-full w-full object-cover" />
+                <img src={u} alt="AI background removal sample image - try this example" className="h-full w-full object-cover" />
               </button>
             ))}
           </div>
@@ -1039,7 +1039,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                   {/* 半透明禁用的原图（非灰度） */}
                   <img
                     src={originalImage || ''}
-                    alt="Processing"
+                    alt="AI background removal in progress - processing your image"
                     className="max-w-full max-h-full object-contain rounded opacity-60 pointer-events-none select-none"
                     decoding="async"
                   />
@@ -1092,7 +1092,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                   <div className="text-center">
                     <img
                       src={originalImage || ''}
-                      alt="Original"
+                      alt="Original image before AI background removal processing"
                       className="max-w-full max-h-full object-contain rounded"
                     />
                   </div>
@@ -1136,7 +1136,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                 >
                   <img 
                     src={img.url} 
-                    alt={`Recent image ${index + 1}`} 
+                    alt={`Recent AI background removal result ${index + 1} - processed image`} 
                     className="h-full w-full object-cover" 
                   />
                 </button>

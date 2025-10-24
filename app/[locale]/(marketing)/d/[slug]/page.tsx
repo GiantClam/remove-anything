@@ -96,7 +96,7 @@ export default async function FluxPage({
         <div className="w-full md:w-1/2 checkerboard h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900">
           <img
             src={flux.imageUrl!}
-            alt={flux.inputPrompt!}
+            alt={`AI processed image: ${flux.inputPrompt || 'background removal result'}`}
             title={flux.inputPrompt!}
             className={`h-full rounded-xl object-cover ${createRatio(flux.aspectRatio as Ratio)} pointer-events-none`}
           />

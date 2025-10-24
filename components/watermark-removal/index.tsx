@@ -130,7 +130,7 @@ export default function WatermarkRemoval({
         {isInView && (
           <Image
             src={src}
-            alt={alt}
+            alt={alt || "AI watermark removal - processed image result"}
             fill
             sizes="(max-width: 640px) 100vw, 500px"
             priority={priority}
@@ -470,7 +470,7 @@ export default function WatermarkRemoval({
                 <div className="grid grid-cols-2 gap-3">
                   {taskData.outputImageUrls.map((url: string, idx: number) => (
                     <div key={idx} className="relative w-full overflow-hidden rounded-lg border bg-muted max-h-[500px] max-w-[500px] mx-auto">
-                      <LazyImage src={url} alt={`Processed ${idx + 1}`} priority={idx === 0} />
+                      <LazyImage src={url} alt={`AI watermark removal result ${idx + 1} - processed image`} priority={idx === 0} />
                     </div>
                   ))}
                 </div>

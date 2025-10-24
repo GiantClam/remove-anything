@@ -476,7 +476,7 @@ export default function BatchRemoveBackground({
                           <p className="text-sm font-medium mb-2">Original</p>
                           <img 
                             src={result.originalImageUrl} 
-                            alt={`Original ${index + 1}`}
+                            alt={`Original image ${index + 1} before AI background removal`}
                             className="w-full h-32 object-cover rounded"
                           />
                         </div>
@@ -486,7 +486,7 @@ export default function BatchRemoveBackground({
                             <div className="relative">
                               <img 
                                 src={result.processedImageUrl} 
-                                alt={`Processed ${index + 1}`}
+                                alt={`AI background removal result ${index + 1} - processed image`}
                                 className="w-full h-32 object-cover rounded"
                               />
                               <div className="absolute top-2 right-2 flex gap-1">

@@ -175,7 +175,7 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
                 <div className="border rounded-lg p-2">
                   <img
                     src={uploadedImage}
-                    alt="Uploaded background"
+                    alt="User uploaded background image for AI composition"
                     className="w-full h-24 object-cover rounded"
                   />
                 </div>

@@ -29,7 +29,7 @@ export function BlogCard({
       {data.image && (
         <div className="w-full overflow-hidden rounded-xl border">
           <BlurImage
-            alt={data.title}
+            alt={`${data.title} - AI background removal blog post`}
             blurDataURL={data.blurDataURL ?? placeholderBlurhash}
             className={cn(
               "size-full object-cover object-center",

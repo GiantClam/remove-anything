@@ -208,7 +208,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                           >
                             <img
                               src={item.imageUrl || item.inputImageUrl || ""}
-                              alt={item.inputPrompt || "Watermark removal"}
+                              alt={`AI watermark removal result: ${item.inputPrompt || 'processed image'}`}
                               className="w-full h-full object-cover"
                             />
                           </BlurFade>
@@ -309,7 +309,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                           >
                             <img
                               src={item.imageUrl || item.inputImageUrl || ""}
-                              alt={item.inputPrompt || "Background removal"}
+                              alt={`AI background removal result: ${item.inputPrompt || 'processed image'}`}
                               className="w-full h-full object-cover"
                             />
                           </BlurFade>
