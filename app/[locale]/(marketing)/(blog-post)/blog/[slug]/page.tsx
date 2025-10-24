@@ -69,12 +69,14 @@ export default async function PostPage({ params }: PageProps) {
 
   const relatedArticles =
     (post.related &&
-      post.related.map(
-        (slug) =>
-          allPosts.find(
-            (post) => post.slugAsParams === `${params.locale}/${slug}`,
-          )!,
-      )) ||
+      post.related
+        .map(
+          (slug) =>
+            allPosts.find(
+              (post) => post.slugAsParams === `${params.locale}/${slug}`,
+            ),
+        )
+        .filter(Boolean)) ||
     [];
 
   const toc = await getTableOfContents(post.body.raw);
@@ -164,23 +166,26 @@ export default async function PostPage({ params }: PageProps) {
             </p>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:gap-6">
-              {relatedArticles.map((post) => (
-                <Link
-                  key={post.slug}
-                  href={post.slug}
-                  className="flex flex-col space-y-2 rounded-xl border p-5 transition-colors duration-300 hover:bg-muted/80"
-                >
-                  <h3 className="font-heading text-xl text-foreground">
-                    {post.title}
-                  </h3>
-                  <p className="line-clamp-2 text-[15px] text-muted-foreground">
-                    {post.description}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDate(post.date)}
-                  </p>
-                </Link>
-              ))}
+              {relatedArticles.map((post) => {
+                if (!post) return null;
+                return (
+                  <Link
+                    key={post.slug}
+                    href={post.slug}
+                    className="flex flex-col space-y-2 rounded-xl border p-5 transition-colors duration-300 hover:bg-muted/80"
+                  >
+                    <h3 className="font-heading text-xl text-foreground">
+                      {post.title}
+                    </h3>
+                    <p className="line-clamp-2 text-[15px] text-muted-foreground">
+                      {post.description}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(post.date)}
+                    </p>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}
