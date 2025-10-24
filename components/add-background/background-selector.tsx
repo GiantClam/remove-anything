@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, Image, Sparkles, Layers } from 'lucide-react';
+import { Palette, Image, Sparkles, Layers, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface BackgroundSelectorProps {
@@ -98,6 +98,16 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
 
           <TabsContent value="solid" className="mt-4">
             <div className="grid grid-cols-6 gap-2">
+              {/* 去背景选项 */}
+              <button
+                onClick={() => onSelect(null)}
+                className={`w-8 h-8 rounded border-2 flex items-center justify-center ${
+                  !selected ? 'border-primary ring-2 ring-primary/20 bg-gray-100' : 'border-gray-200 bg-gray-100'
+                }`}
+                title="Remove background"
+              >
+                <X className="w-4 h-4 text-gray-600" />
+              </button>
               {solidColors.map((color, index) => (
                 <button
                   key={index}
@@ -114,6 +124,16 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
 
           <TabsContent value="gradient" className="mt-4">
             <div className="grid grid-cols-2 gap-2">
+              {/* 去背景选项 */}
+              <button
+                onClick={() => onSelect(null)}
+                className={`h-16 rounded border-2 flex items-center justify-center ${
+                  !selected ? 'border-primary ring-2 ring-primary/20 bg-gray-100' : 'border-gray-200 bg-gray-100'
+                }`}
+                title="Remove background"
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
               {gradients.map((gradient, index) => (
                 <button
                   key={index}
@@ -165,6 +185,16 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
 
           <TabsContent value="template" className="mt-4">
             <div className="grid grid-cols-2 gap-2">
+              {/* 去背景选项 */}
+              <button
+                onClick={() => onSelect(null)}
+                className={`h-16 rounded border-2 flex items-center justify-center ${
+                  !selected ? 'border-primary ring-2 ring-primary/20 bg-gray-100' : 'border-gray-200 bg-gray-100'
+                }`}
+                title="Remove background"
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
               {templates.map((template, index) => (
                 <button
                   key={index}
