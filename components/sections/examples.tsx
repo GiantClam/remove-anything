@@ -38,7 +38,7 @@ export default function Examples() {
           subtitle={t("examples.subtitle")}
         />
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-12">
+        <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto mt-12">
           {examples.map((example, index) => (
             <div key={index} className="group">
               <div className="text-center mb-4">
@@ -51,15 +51,14 @@ export default function Examples() {
               </div>
               
               <div className="relative bg-white dark:bg-gray-900 rounded-xl p-4 shadow-lg border border-border hover:shadow-xl transition-all duration-300">
-                <div className="flex flex-col gap-4">
-                  {/* Before Image */}
+                <div className="grid grid-cols-2 gap-4">
                   <div className="relative">
-                    <div className="aspect-[4/3] bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-border">
+                    <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-border">
                       <Image
                         src={example.before}
                         alt={`${example.alt} - original image before AI processing`}
-                        width={300}
-                        height={225}
+                        width={200}
+                        height={200}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
                       />
@@ -71,22 +70,13 @@ export default function Examples() {
                     </div>
                   </div>
                   
-                  {/* Arrow Indicator */}
-                  <div className="flex justify-center">
-                    <div className="bg-primary text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-                      <span>AI Processing</span>
-                      <span className="text-lg">↓</span>
-                    </div>
-                  </div>
-                  
-                  {/* After Image */}
                   <div className="relative">
-                    <div className="aspect-[4/3] bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-border">
+                    <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-border">
                       <Image
                         src={example.after}
                         alt={`${example.alt} - processed result after AI background removal`}
-                        width={300}
-                        height={225}
+                        width={200}
+                        height={200}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
                       />
@@ -103,6 +93,13 @@ export default function Examples() {
                   <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
                     <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
                     AI Powered
+                  </div>
+                </div>
+                
+                {/* 添加箭头指示 */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                  <div className="bg-primary text-white px-2 py-1 rounded-full text-xs font-bold">
+                    →
                   </div>
                 </div>
               </div>
