@@ -21,7 +21,7 @@
   "IndexPage": {
     "intro": "🎉 All-in-One AI Image Eraser",
     "description": "More than background removal - your all-in-one AI image eraser! AI-powered, just paint to precisely remove people, objects, text, and blemishes from images. Batch processing ensures no image is lost, permanent storage preserves your work. HD quality, no watermarks, completely free download.",
-    "title": "Smart Eraser Tool, Easily Remove Any Flaws from Photos",
+    "title": "Free AI Eraser - Remove Anything from Photos in 3 Steps",
     "subtitle": "Upload, Paint, Download - Three Steps to Remove Everything Unwanted from Photos",
     "examples": {
       "label": "Example",
@@ -491,9 +491,9 @@
     "getStartedText": "Upload images and click \"Remove Backgrounds\" to get started."
   },
   "LocaleLayout": {
-    "title": "Remove Anything - BiRefNet vs rembg Algorithm, Free AI Object & Background Remover",
-    "description": "Advanced BiRefNet algorithm vs traditional rembg: superior precision, automatic background detection, no manual selection required. Remove any object, background, or person from images using advanced AI technology. Batch processing ensures no image is lost, permanent storage preserves your work. Fast, accurate, and easy to use. Free online tool.",
-    "keywords": "object removal, image eraser, online photo editing, photo object remover, remove objects from photo, remove background, AI removal tool, free background remover, image editing, object eraser, person removal, watermark removal, text removal, Remove Anything, AI photo editor, online image processing tool, BiRefNet algorithm, hair-level matting, high-precision matting, AI background removal, intelligent matting tool, professional matting software, online matting tool, free matting software, image background removal, portrait matting, product matting, e-commerce image processing, batch processing, permanent storage, no image loss, efficient workflow, time-saving tool"
+    "title": "Free AI Object & Background Remover | Remove Anything",
+    "description": "Remove unwanted objects, backgrounds, and watermarks from photos in 3 seconds using AI. Free online tool with batch processing and permanent storage. No signup required.",
+    "keywords": "AI background remover, free object removal, online photo editor, remove background, watermark removal, batch processing, BiRefNet algorithm"
   },
   "LocaleSwitcher": {
     "label": "Change language",

@@ -40,6 +40,17 @@ export async function generateMetadata({
   return {
     title: t("title"),
     metadataBase: new URL(siteConfig.url),
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
     alternates: {
       canonical: `/${locale === "en" ? "" : locale}`,
       languages: {
@@ -56,7 +67,21 @@ export async function generateMetadata({
       },
     },
     openGraph: {
+      type: 'website',
+      url: `/${locale === "en" ? "" : locale}`,
+      title: t("title"),
+      description: t("description"),
       images: siteConfig.ogImage,
+      locale: locale === 'en' ? 'en_US' : locale === 'tw' ? 'zh_TW' : locale,
+      siteName: 'Remove Anything',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t("title"),
+      description: t("description"),
+      images: [siteConfig.ogImage],
+      creator: '@removeanything',
+      site: '@removeanything',
     },
     description: t("description"),
     keywords: t("keywords"),
