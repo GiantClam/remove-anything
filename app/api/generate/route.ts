@@ -30,7 +30,9 @@ export const maxDuration = 60;
 // 简化的文件上传到R2的函数
 async function uploadToR2(file: File): Promise<string> {
   try {
-    console.log("📤 开始上传文件到R2...");
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("📤 开始上传文件到R2...");
+    }
     
     // 生成唯一文件名
     const fileExtension = file.name.split('.').pop() || 'jpg';
@@ -51,11 +53,13 @@ async function uploadToR2(file: File): Promise<string> {
       s3ForcePathStyle: true, // 强制使用路径样式
     });
     
-    console.log("文件大小:", buffer.length, "bytes");
-    console.log("文件类型:", file.type);
-    console.log("上传键:", key);
-    console.log("R2端点:", env.R2_ENDPOINT);
-    console.log("R2存储桶:", env.R2_BUCKET);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("文件大小:", buffer.length, "bytes");
+      console.log("文件类型:", file.type);
+      console.log("上传键:", key);
+      console.log("R2端点:", env.R2_ENDPOINT);
+      console.log("R2存储桶:", env.R2_BUCKET);
+    }
     
     // 上传文件到R2
     const uploadParams = {
@@ -70,15 +74,17 @@ async function uploadToR2(file: File): Promise<string> {
     
     // 构建公共访问URL
     const publicUrl = `${env.R2_URL_BASE}/${key}`;
-    console.log("✅ 文件上传成功:", publicUrl);
-    console.log("S3结果:", result);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("✅ 文件上传成功:", publicUrl);
+      console.log("S3结果:", result);
+    }
     
     return publicUrl;
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ 文件上传失败:", error);
     
-    // 如果是认证错误，提供更详细的调试信息
-    if (error.code === 'SignatureDoesNotMatch') {
+    // 如果是认证错误，提供更详细的调试信息（仅在非生产环境输出）
+    if (error.code === 'SignatureDoesNotMatch' && process.env.NODE_ENV !== 'production') {
       console.error("🔍 R2认证调试信息:");
       console.error("- R2_ENDPOINT:", env.R2_ENDPOINT);
       console.error("- R2_BUCKET:", env.R2_BUCKET);

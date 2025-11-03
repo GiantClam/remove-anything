@@ -15,7 +15,7 @@ import { DownloadAction } from "@/components/history/download-action";
 import { useAuth } from "@/hooks/use-auth";
 import { Credits, model } from "@/config/constants";
 import type { ChargeProductSelectDto } from "@/db/type";
-import { Copy } from "lucide-react";
+import { Copy, Share2 } from "lucide-react";
 import FormUpload from "@/components/upload";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -478,6 +478,8 @@ export default function BatchRemoveBackground({
                             src={result.originalImageUrl} 
                             alt={`Original image ${index + 1} before AI background removal`}
                             className="w-full h-32 object-cover rounded"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </div>
                         <div>
@@ -488,6 +490,8 @@ export default function BatchRemoveBackground({
                                 src={result.processedImageUrl} 
                                 alt={`AI background removal result ${index + 1} - processed image`}
                                 className="w-full h-32 object-cover rounded"
+                                loading="lazy"
+                                decoding="async"
                               />
                               <div className="absolute top-2 right-2 flex gap-1">
                                 <Button
@@ -496,6 +500,28 @@ export default function BatchRemoveBackground({
                                   onClick={() => copyPrompt(result.processedImageUrl!)}
                                 >
                                   <Copy className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    try {
+                                      const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                                      const mode = isDark ? 'dark' : 'light';
+                                      const params = new URLSearchParams();
+                                      params.set('after', result.processedImageUrl!);
+                                      params.set('id', result.replicateId || result.id);
+                                      params.set('mode', mode);
+                                      if (result.originalImageUrl) params.set('before', result.originalImageUrl);
+                                      const url = `${window.location.origin}/${locale}/batch-remove-background?${params.toString()}`;
+                                      navigator.clipboard.writeText(url);
+                                      toast.success('Share link copied');
+                                    } catch {
+                                      toast.error('Failed to copy share link');
+                                    }
+                                  }}
+                                >
+                                  <Share2 className="h-3 w-3" />
                                 </Button>
                                 <DownloadAction
                                   id={result.replicateId!}

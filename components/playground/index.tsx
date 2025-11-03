@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import copy from "copy-to-clipboard";
 import { debounce } from "lodash-es";
-import { Copy } from "lucide-react";
+import { Copy, Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -87,6 +87,7 @@ export default function Playground({
   const t = useTranslations("Playground");
   const queryClient = useQueryClient();
   const [pricingCardOpen, setPricingCardOpen] = useState(false);
+  const [originalForShare, setOriginalForShare] = useState<string>("");
 
   // 检查是否是生产环境
   const isProduction = typeof window !== 'undefined' && 
@@ -204,6 +205,10 @@ export default function Playground({
         }
 
         result = await res.json();
+        try {
+          const localUrl = URL.createObjectURL(uploadedFile.originFile);
+          setOriginalForShare(localUrl);
+        } catch {}
       } else {
         // 使用URL模式（R2上传或手动输入的URL）
         const finalImageUrl = uploadedFile?.url || imageUrl;
@@ -215,6 +220,7 @@ export default function Playground({
           isPrivate: isPublic ? 0 : 1,
           locale,
         });
+        setOriginalForShare(finalImageUrl);
       }
 
       if (result.error) {
@@ -399,6 +405,8 @@ export default function Playground({
                       src={fluxData.imageUrl}
                       alt="AI background removal result - processed image with transparent background"
                       className="h-full w-full object-contain"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   
@@ -415,6 +423,29 @@ export default function Playground({
                     >
                       <Copy className="mr-2 h-4 w-4" />
                       Copy URL
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        try {
+                          const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                          const mode = isDark ? 'dark' : 'light';
+                          const params = new URLSearchParams();
+                          if (originalForShare) params.set('before', originalForShare);
+                          params.set('after', fluxData.imageUrl || '');
+                          params.set('id', fluxId || fluxData.id || '');
+                          params.set('mode', mode);
+                          const shareUrl = `${window.location.origin}/${locale}/remove-background?${params.toString()}`;
+                          navigator.clipboard.writeText(shareUrl);
+                          toast.success('Share link copied');
+                        } catch {
+                          toast.error('Failed to copy share link');
+                        }
+                      }}
+                    >
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Share
                     </Button>
                   </div>
                 </div>

@@ -22,6 +22,7 @@
     "description": "使用我們的免費 AI 驅動工具立即去除任何圖片背景。批量處理確保不丟失任何圖片，永久存儲保護您的工作。高品質、快速且易於使用。上傳您的照片，幾秒鐘內即可獲得透明背景。",
     "title": "AI 智能摳圖 - 3步去除照片中的任何內容",
     "subtitle": "上傳、標記、下載 - 三步去除照片中不需要的內容",
+    "seeOthers": "看看別人的移除效果",
     "powered": {
       "title": "技術支援服務"
     },
@@ -38,6 +39,11 @@
         "description": "準備好親自試試了嗎？上傳您的圖片，見證奇蹟發生！",
         "button": "立即試用"
       }
+    },
+    "social": {
+      "todayRemoved": "今日已移除",
+      "objects": "個物體",
+      "marquee": "一鍵移除 · 3秒出圖 · 完全免費"
     },
     "features": {
       "title": "為什麼選擇我們的背景去除器？",
@@ -393,8 +399,8 @@
     }
   },
   "RemoveBackgroundPage": {
-    "title": "AI 背景去除器 - BiRefNet vs rembg 算法",
-    "description": "先進的 BiRefNet 算法 vs 傳統 rembg：優越精度、自動背景檢測、無需手動選擇。AI 技術快速去除圖片背景，支援批次處理，專業品質，完全免費。",
+    "title": "AI 背景去除器 - 快速、精準、免費",
+    "description": "使用 AI 在幾秒內去除圖片背景。自動主體檢測、發絲級邊緣、批次處理與專業品質，永久保存且完全免費。",
     "processing": "處理中...",
     "chooseImage": "選擇圖片",
     "dragDropText": "拖拽或點擊上傳",
@@ -447,12 +453,12 @@
     "loginToDownload": "請登入以下載處理後的圖片",
     "noImageToDownload": "沒有可下載的處理圖片",
     "downloadSuccess": "圖片下載成功！",
-    "aiPowered": "BiRefNet vs rembg",
-    "aiPoweredDesc": "先進的 BiRefNet 算法 vs 傳統 rembg，優越精度",
+    "aiPowered": "AI 驅動",
+    "aiPoweredDesc": "AI 秒級去背景，無需手動選擇",
     "highQuality": "發絲級精度",
-    "highQualityDesc": "BiRefNet 實現發絲級精度，rembg 在複雜邊緣處理困難",
+    "highQualityDesc": "精準識別髮絲等細節，保持自然質感",
     "freeTrial": "免費試用",
-    "freeTrialDesc": "免費試用我們的服務，無需信用卡",
+    "freeTrialDesc": "免費試用，無需信用卡",
     "readyToGetStarted": "準備好體驗先進 AI 摳圖了嗎？",
     "uploadImage": "上傳圖片",
     "uploadImageDesc": "上傳圖片以去除其背景。無需選擇背景 - AI 自動檢測並去除背景。支援 JPG、PNG 和 WebP 格式，最大 5MB。",
@@ -460,20 +466,20 @@
     "signUpFreeDesc": "免費註冊，立即體驗先進 AI 摳圖技術！",
     "getStartedFree": "免費開始",
     "viewPricing": "查看定價",
-    "birefnetAdvantage": "BiRefNet vs rembg 算法對比",
-    "birefnetAdvantageDesc": "先進的 BiRefNet 算法 vs 傳統 rembg：優越精度和自動背景檢測",
+    "birefnetAdvantage": "為什麼選擇我們",
+    "birefnetAdvantageDesc": "高品質邊緣、自動檢測與極速出圖",
     "hairLevelPrecision": "發絲級精度",
-    "hairLevelPrecisionDesc": "BiRefNet 實現發絲級精度，rembg 在複雜邊緣處理困難",
+    "hairLevelPrecisionDesc": "在複雜邊緣上也能保持精準與自然",
     "professionalQuality": "專業品質",
-    "professionalQualityDesc": "BiRefNet 提供專業結果，rembg 僅限於基本背景去除",
+    "professionalQualityDesc": "適用人像、產品、物體等多種場景",
     "fastProcessing": "快速處理",
-    "fastProcessingDesc": "兩種算法都很快，但 BiRefNet 在高速下保持品質",
+    "fastProcessingDesc": "在高品質下依然保持極速處理",
     "multiScenario": "多場景適用",
-    "multiScenarioDesc": "BiRefNet 在所有場景中表現優異，rembg 最適合簡單背景",
-    "algorithmComparison": "算法技術對比",
-    "algorithmComparisonDesc": "BiRefNet 和 rembg 算法的詳細對比",
-    "birefnetFeatures": "BiRefNet 特性",
-    "rembgFeatures": "rembg 特性",
+    "multiScenarioDesc": "人像、產品、物體與場景皆有出色表現",
+    "algorithmComparison": "核心優勢",
+    "algorithmComparisonDesc": "我們的 AI 背景去除器的關鍵優勢",
+    "birefnetFeatures": "核心特性",
+    "rembgFeatures": "更多特性",
     "noBackgroundSelection": "無需選擇背景",
     "noBackgroundSelectionDesc": "AI 自動檢測並去除背景，無需手動輸入",
     "automaticMatting": "自動 AI 摳圖",
@@ -489,7 +495,7 @@
   "LocaleLayout": {
     "title": "免費AI摳圖工具 - 一鍵去除背景和物體 | Remove Anything",
     "description": "免費AI摳圖工具，3秒自動去除背景、擦除物體和水印。無需PS技能，支持批量處理，永久保存。立即免費使用，無需註冊！",
-    "keywords": "AI摳圖, 去除背景, 免費摳圖, 線上摳圖, 物體擦除, 水印去除, 批量處理, BiRefNet算法"
+    "keywords": "AI摳圖, 去除背景, 免費摳圖, 線上摳圖, 物體擦除, 水印去除, 批量處理"
   },
   "LocaleSwitcher": {
     "label": "更改語言",

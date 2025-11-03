@@ -1,0 +1,92 @@
+[
+  {
+    "id": "portrait",
+    "title": "Portrait",
+    "before": "https://s.remove-anything.com/examples/portrait_before.webp",
+    "after": "https://s.remove-anything.com/examples/portrait_after.webp",
+    "altBefore": "Original portrait before AI background removal",
+    "altAfter": "Portrait after AI background removal",
+    "description": "Hair‑level edges, studio‑quality result."
+  },
+  {
+    "id": "product",
+    "title": "Product",
+    "before": "https://s.remove-anything.com/examples/product_before.webp",
+    "after": "https://s.remove-anything.com/examples/product_after.webp",
+    "altBefore": "Original product photo before AI background removal",
+    "altAfter": "Product photo after AI background removal",
+    "description": "E‑commerce ready, clean background."
+  },
+  {
+    "id": "object",
+    "title": "Object",
+    "before": "https://s.remove-anything.com/examples/object_before.webp",
+    "after": "https://s.remove-anything.com/examples/object_after.webp",
+    "altBefore": "Original object before AI background removal",
+    "altAfter": "Object after AI background removal",
+    "description": "Clean isolation for catalogs and mockups."
+  },
+  {
+    "id": "model",
+    "title": "Model",
+    "before": "https://s.remove-anything.com/examples/model_before.webp",
+    "after": "https://s.remove-anything.com/examples/model_after.png",
+    "altBefore": "Original model photo before AI background removal",
+    "altAfter": "Model photo after AI background removal",
+    "description": "Apparel & model shots with accurate edges."
+  },
+  {
+    "id": "pet",
+    "title": "Pet",
+    "before": "https://s.remove-anything.com/examples/pet_before.webp",
+    "after": "https://s.remove-anything.com/examples/pet_after.webp",
+    "altBefore": "Original pet photo before AI background removal",
+    "altAfter": "Pet photo after AI background removal",
+    "description": "Fur details preserved for natural results."
+  },
+  {
+    "id": "furniture",
+    "title": "Furniture",
+    "before": "https://s.remove-anything.com/examples/furniture_before.webp",
+    "after": "https://s.remove-anything.com/examples/furniture_after.webp",
+    "altBefore": "Original furniture photo before AI background removal",
+    "altAfter": "Furniture photo after AI background removal",
+    "description": "Home & furniture scenes cleaned for catalogs."
+  },
+  {
+    "id": "logo",
+    "title": "Logo",
+    "before": "https://s.remove-anything.com/examples/logo_before.webp",
+    "after": "https://s.remove-anything.com/examples/logo_after.webp",
+    "altBefore": "Original logo image before AI background removal",
+    "altAfter": "Logo after AI background removal",
+    "description": "Sharp edges for graphics and branding."
+  },
+  {
+    "id": "metal",
+    "title": "Metal / Jewelry",
+    "before": "https://s.remove-anything.com/examples/metal_before.webp",
+    "after": "https://s.remove-anything.com/examples/metal_after.webp",
+    "altBefore": "Original metal/jewelry photo before AI background removal",
+    "altAfter": "Metal/jewelry photo after AI background removal",
+    "description": "High‑reflection small objects handled cleanly."
+  },
+  {
+    "id": "glass",
+    "title": "Glass / Transparent",
+    "before": "https://s.remove-anything.com/examples/glass_before.webp",
+    "after": "https://s.remove-anything.com/examples/glass_after.webp",
+    "altBefore": "Original glass/transparent object before AI background removal",
+    "altAfter": "Glass/transparent object after AI background removal",
+    "description": "Transparent materials (glass/liquid) preserved."
+  },
+  {
+    "id": "complex_background",
+    "title": "Complex Background",
+    "before": "https://s.remove-anything.com/examples/complex_background_before.webp",
+    "after": "https://s.remove-anything.com/examples/complex_background_after.webp",
+    "altBefore": "Original photo with complex background before AI background removal",
+    "altAfter": "Photo after AI background removal from complex background",
+    "description": "Crowded scenes and complex backgrounds cleaned."
+  }
+]

@@ -93,6 +93,16 @@
     @apply ml-[-50px] mt-[-4px];
     content: counter(step);
   }
+
+  /* 社交证明条滚动动画 */
+  @keyframes slide {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
 }
 
 :root {

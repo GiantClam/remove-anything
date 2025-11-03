@@ -56,6 +56,20 @@ export default async function HeroLanding() {
             <p>{t("action.pricing")}</p>
             <Icons.arrowRight className="ml-2 size-4" />
           </Link>
+          {/* 添加"看看别人移除效果"按钮，锚点到瀑布流 */}
+          <Link
+            href="#examples-gallery"
+            className={cn(
+              buttonVariants({
+                variant: "default",
+                size: "lg",
+              }),
+              "min-w-34 rounded-full px-5",
+            )}
+          >
+            <p>{t("seeOthers")}</p>
+            <Icons.arrowRight className="ml-2 size-4" />
+          </Link>
         </div>
       </div>
     </section>

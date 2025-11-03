@@ -15,7 +15,7 @@ import { DownloadAction } from "@/components/history/download-action";
 import { useAuth } from "@/hooks/use-auth";
 import { Credits, model } from "@/config/constants";
 import type { ChargeProductSelectDto } from "@/db/type";
-import { Copy } from "lucide-react";
+import { Copy, Share2 } from "lucide-react";
 import FormUpload from "@/components/upload";
 
 interface BatchWatermarkRemovalProps {
@@ -281,6 +281,8 @@ export default function BatchWatermarkRemoval({
                       src={result.originalImageUrl} 
                       alt={`Original image ${index + 1} before AI watermark removal`}
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   
@@ -291,12 +293,38 @@ export default function BatchWatermarkRemoval({
                           src={result.processedImageUrl} 
                           alt={`AI watermark removal result ${index + 1} - processed image`}
                           className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
-                      <DownloadAction
-                        id={result.id}
-                        taskType="watermark-removal"
-                      />
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            try {
+                              const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                              const mode = isDark ? 'dark' : 'light';
+                              const params = new URLSearchParams();
+                              params.set('after', result.processedImageUrl!);
+                              params.set('id', result.replicateId || result.id);
+                              params.set('mode', mode);
+                              if (result.originalImageUrl) params.set('before', result.originalImageUrl);
+                              const url = `${window.location.origin}/${locale}/batch-watermark-removal?${params.toString()}`;
+                              navigator.clipboard.writeText(url);
+                              toast.success('Share link copied');
+                            } catch {
+                              toast.error('Failed to copy share link');
+                            }
+                          }}
+                        >
+                          <Share2 className="h-3 w-3" />
+                        </Button>
+                        <DownloadAction
+                          id={result.id}
+                          taskType="watermark-removal"
+                        />
+                      </div>
                     </div>
                   )}
                   

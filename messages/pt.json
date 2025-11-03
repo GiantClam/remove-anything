@@ -22,6 +22,12 @@
     "description": "Revolutionando o modelo avançado de texto para imagem de próxima geração, suporte para os modelos flux.1 pro/dev e flux.1 schnell. O processamento em lote garante que nenhuma imagem seja perdida, o armazenamento permanente protege seu trabalho.",
     "title": "Gerador de Imagens Flux AI",
     "subtitle": "Texto para Imagem Avançado",
+    "social": {
+      "todayRemoved": "Removidos hoje",
+      "objects": "objetos",
+      "marquee": "Remoção com um clique · Imagem em 3s · Totalmente grátis"
+    },
+    "seeOthers": "Ver resultados de outros",
     "examples": {
       "label": "Exemplo",
       "title": "Exemplos de Imagens Flux AI",

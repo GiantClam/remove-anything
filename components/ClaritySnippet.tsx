@@ -1,13 +1,26 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Script from "next/script";
 
 export default function ClaritySnippet() {
+  useEffect(() => {
+    // 使用 requestIdleCallback 延迟加载 Clarity，避免阻塞首屏
+    const loadClarity = () => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          // Clarity 脚本通过 lazyOnload 策略自动延迟加载
+        }, { timeout: 2000 });
+      }
+    };
+
+    loadClarity();
+  }, []);
+
   return (
     <Script
       id="clarity-base"
-      strategy="afterInteractive"
+      strategy="lazyOnload"
       dangerouslySetInnerHTML={{
         __html: `
     (function(c,l,a,r,i,t,y){

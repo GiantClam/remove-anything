@@ -8,11 +8,16 @@ import PricingCard from "@/components/sections/pricing-card";
 import HowTo from "@/components/sections/how-to";
 import UseCases from "@/components/sections/use-cases";
 import QuickAccess from "@/components/sections/quick-access";
+import PreviewLanding from "@/components/sections/preview-landing";
 import { env } from "@/env.mjs";
 
 type Props = {
   params: { locale: string };
 };
+
+// 避免构建期预渲染命中数据库：强制动态渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default function IndexPage({ params: { locale } }: Props) {
   // Enable static rendering
@@ -46,8 +51,7 @@ export default function IndexPage({ params: { locale } }: Props) {
       "永久免费存储",
       "无需注册登录",
       "支持高清图片",
-      "3秒快速处理",
-      "BiRefNet高精度算法"
+      "3秒快速处理"
     ],
     "screenshot": [
       `${env.NEXT_PUBLIC_SITE_URL}/og.png`,
@@ -116,14 +120,7 @@ export default function IndexPage({ params: { locale } }: Props) {
           "text": "支持 JPG、PNG、WEBP 等常见图片格式。最大支持 10MB 的图片文件。"
         }
       },
-      {
-        "@type": "Question",
-        "name": "Remove Anything 和 remove.bg 有什么区别？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Remove Anything 使用更先进的 BiRefNet 算法，提供更高精度的抠图效果。同时支持物体擦除、批量处理和永久存储，完全免费无限制使用。"
-        }
-      },
+      
       {
         "@type": "Question",
         "name": "处理后的图片会保存多久？",
@@ -176,6 +173,36 @@ export default function IndexPage({ params: { locale } }: Props) {
     ]
   };
 
+  // BeforeAndAfterGallery 结构化数据 - 用于搜索结果显示对比图
+  const beforeAfterGalleryData = {
+    "@context": "https://schema.org",
+    "@type": "ImageGallery",
+    "name": "AI Background Removal Before and After Examples",
+    "description": "See amazing AI-powered background removal results. Compare before and after images.",
+    "image": [
+      {
+        "@type": "ImageObject",
+        "contentUrl": `${env.NEXT_PUBLIC_SITE_URL}/images/portrait_before.webp`,
+        "caption": "Portrait before AI background removal"
+      },
+      {
+        "@type": "ImageObject",
+        "contentUrl": `${env.NEXT_PUBLIC_SITE_URL}/images/portrait_after.webp`,
+        "caption": "Portrait after AI background removal"
+      },
+      {
+        "@type": "ImageObject",
+        "contentUrl": `${env.NEXT_PUBLIC_SITE_URL}/images/product_before.webp`,
+        "caption": "Product before AI background removal"
+      },
+      {
+        "@type": "ImageObject",
+        "contentUrl": `${env.NEXT_PUBLIC_SITE_URL}/images/product_after.webp`,
+        "caption": "Product after AI background removal"
+      }
+    ]
+  };
+
   return (
     <>
       <Script
@@ -192,10 +219,21 @@ export default function IndexPage({ params: { locale } }: Props) {
           __html: JSON.stringify(faqStructuredData)
         }}
       />
+      <Script
+        id="before-after-gallery"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(beforeAfterGalleryData)
+        }}
+      />
       {/* 精简首页：首屏价值主张 + 快速入口 + 案例展示 */}
       <HeroLanding />
       <QuickAccess />
       <Examples />
+      {/* 瀑布流展示：添加id用于锚点导航 */}
+      <section id="examples-gallery" className="scroll-mt-20">
+        <PreviewLanding />
+      </section>
     </>
   );
 }

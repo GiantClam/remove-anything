@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Upload, Download, LogIn, Sparkles, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { Upload, Download, LogIn, Sparkles, CheckCircle, AlertCircle, ArrowRight, Share2, Copy } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -13,6 +14,12 @@ import { WebhookHandler } from './webhook-handler';
 import { BeforeAfterSlider } from '@/components/ui/before-after-slider';
 import { BackgroundSelector } from '@/components/add-background/background-selector';
 import { AdjustmentControls } from '@/components/add-background/adjustment-controls';
+import dynamic from 'next/dynamic';
+const SocialProofBar = dynamic(() => import('./social-proof-bar'), {
+  ssr: false,
+  loading: () => <div data-social-proof-placeholder></div>,
+});
+import Script from 'next/script';
 // 移除不再需要的导入，使用原生Canvas API
 
 interface MarketingRemoveBackgroundProps {
@@ -188,7 +195,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           console.error('图片加载失败:', error);
           // 如果代理失败，尝试直接加载原图
           if (imageUrl !== processedImage) {
-            console.log('尝试直接加载原图...');
+            console.log('Try loading original image directly...');
             img.src = processedImage;
           } else {
             reject(error);
@@ -215,7 +222,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
       }, 'image/png');
       
     } catch (error) {
-      console.error('下载失败:', error);
+      console.error('Download failed:', error);
       toast.error(tPage('messages.downloadFailed'));
     }
   };
@@ -342,12 +349,58 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         if ((data.status === 'succeeded' || data.status === 'SUCCESS') && data.output) {
           setProcessedImage(data.output);
           toast.success(tPage('foundProcessedImage'));
+          
+          // 保存到localStorage历史记录
+          saveTaskToHistory(taskId, data.output);
         }
       }
     } catch (error) {
       console.error('Error fetching task result:', error);
     }
   };
+
+  // localStorage保存最近5次任务历史
+  const saveTaskToHistory = (taskId: string, outputUrl: string) => {
+    try {
+      const historyKey = 'backgroundRemovalHistory';
+      const existing = localStorage.getItem(historyKey);
+      const history: Array<{ taskId: string; outputUrl: string; timestamp: number }> = existing 
+        ? JSON.parse(existing) 
+        : [];
+      
+      // 移除重复项
+      const filtered = history.filter(item => item.taskId !== taskId);
+      
+      // 添加到开头，只保留最近5次
+      const updated = [{ taskId, outputUrl, timestamp: Date.now() }, ...filtered].slice(0, 5);
+      
+      localStorage.setItem(historyKey, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to save task to history:', error);
+    }
+  };
+
+  // 加载localStorage历史记录
+  useEffect(() => {
+    const originalImage = uploadedFile || null;
+    const processedImageLocal = null; // 在加载时还没有处理结果
+    
+    if (originalImage || processedImageLocal) return; // 已有上传时不需要加载
+    
+    try {
+      const historyKey = 'backgroundRemovalHistory';
+      const existing = localStorage.getItem(historyKey);
+      if (existing) {
+        const history: Array<{ taskId: string; outputUrl: string; timestamp: number }> = JSON.parse(existing);
+        // 可以在UI中显示历史记录提示
+        if (history.length > 0) {
+          console.log('Found history tasks:', history.length);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load task history:', error);
+    }
+  }, [uploadedFile]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -518,6 +571,12 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             setProcessedImage(data.output);
             setIsProcessing(false);
             toast.success(tPage('backgroundRemoved'));
+            
+            // 保存到localStorage历史记录
+            if (taskId) {
+              saveTaskToHistory(taskId, data.output);
+            }
+            
             eventSource.close();
           } else if (data.status === 'failed') {
             console.log("❌ 任务失败:", data.error);
@@ -608,6 +667,11 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             if (taskStatus.output) {
               setProcessedImage(taskStatus.output);
               toast.success(tPage('backgroundRemoved'));
+              
+              // 保存到localStorage历史记录
+              if (taskId) {
+                saveTaskToHistory(taskId, taskStatus.output);
+              }
             } else {
               throw new Error('No output received');
             }
@@ -748,7 +812,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
               
               toast.success("图片已开始下载");
             } catch (downloadError) {
-              console.error("下载失败，尝试备用方案:", downloadError);
+              console.error("Download failed, trying fallback:", downloadError);
               
               // 备用方案：尝试直接下载
               try {
@@ -765,8 +829,8 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                 }, 100);
                 toast.success("图片已开始下载");
               } catch (fallbackError) {
-                console.error("备用下载也失败:", fallbackError);
-                toast.error("下载失败，请检查浏览器设置");
+                console.error("Fallback download also failed:", fallbackError);
+                toast.error("Download failed. Please check your browser settings");
               }
             }
           }
@@ -775,9 +839,9 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           setTimeout(() => window.URL.revokeObjectURL(url), 1000);
           return;
         } else {
-          console.warn(`❌ API下载失败: ${response.status} ${response.statusText}，降级到直接下载`);
+          console.warn(`❌ API download failed: ${response.status} ${response.statusText}, falling back to direct download`);
           const errorText = await response.text();
-          console.warn(`错误详情: ${errorText}`);
+          console.warn(`Error details: ${errorText}`);
         }
       }
       
@@ -812,8 +876,8 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             toast.success("图片已开始下载");
           }
         } catch (downloadError) {
-          console.error("移动端降级下载失败:", downloadError);
-          toast.error("下载失败，请检查浏览器设置或尝试刷新页面重试");
+          console.error("Mobile fallback download failed:", downloadError);
+          toast.error("Download failed. Please check browser settings or refresh and try again");
         }
       } else {
         // PC端降级方案
@@ -839,13 +903,13 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           
           toast.success("图片已开始下载");
         } catch (downloadError) {
-          console.error("PC端降级下载失败:", downloadError);
-          toast.error("下载失败，请检查浏览器设置或尝试刷新页面重试");
+          console.error("Desktop fallback download failed:", downloadError);
+          toast.error("Download failed. Please check browser settings or refresh and try again");
         }
       }
     } catch (error) {
       console.error('Download error:', error);
-      toast.error('下载失败，请重试');
+      toast.error('Download failed. Please try again');
     }
   };
 
@@ -855,20 +919,272 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
     }
   };
 
+  // 分享功能：生成带UTM与SSR可抓取的OG参数
+  const handleShare = async () => {
+    if (!processedImage) {
+      toast.error('No shareable result');
+      return;
+    }
+
+    try {
+      // 根据系统主题设置OG渲染模式
+      const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const mode = isDark ? 'dark' : 'light';
+
+      // 生成分享URL：包含 before/after，便于社交爬虫在SSR阶段生成OG卡片
+      const params = new URLSearchParams();
+      if (currentTaskId) params.set('task', currentTaskId);
+      params.set('ref', isAuthenticated ? 'user' : 'guest');
+      if (originalImage) params.set('before', originalImage);
+      params.set('after', processedImage);
+      if (currentTaskId) params.set('id', currentTaskId);
+      params.set('mode', mode);
+
+      const shareUrl = `${window.location.origin}/${locale}/remove-background?${params.toString()}`;
+      
+      // 分享文案
+      const shareText = `🎨 AI background removed in seconds — free.\n${shareUrl}`;
+
+      // 尝试使用Web Share API
+      if (navigator.share && typeof navigator.share === 'function') {
+        try {
+          await navigator.share({
+            title: 'AI Background Removal – Remove Anything',
+            text: shareText,
+            url: shareUrl,
+          });
+          toast.success('Shared! You may get 2 extra free uses');
+          
+          // TODO: 记录分享事件到后端，给予奖励
+        } catch (err) {
+          // 用户取消分享或分享失败，降级到复制链接
+          handleCopyShareLink(shareUrl, shareText);
+        }
+      } else {
+        // 降级：复制链接到剪贴板
+        handleCopyShareLink(shareUrl, shareText);
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      toast.error('Share failed. Please try again');
+    }
+  };
+
+  function openCenteredPopup(url: string, name: string, w = 640, h = 640) {
+    const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : (window as any).screenX;
+    const dualScreenTop = window.screenTop !== undefined ? window.screenTop : (window as any).screenY;
+    const width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth;
+    const height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight;
+    const left = (width - w) / 2 + dualScreenLeft;
+    const top = (height - h) / 2 + dualScreenTop;
+    const features = `scrollbars=yes, width=${w}, height=${h}, top=${top}, left=${left}`;
+    window.open(url, name, features);
+  }
+
+  function buildPlatformShareUrl(platform: string, url: string, text: string) {
+    const u = encodeURIComponent(url);
+    const t = encodeURIComponent(text);
+    switch (platform) {
+      case 'twitter':
+        return `https://twitter.com/intent/tweet?url=${u}&text=${t}`;
+      case 'facebook':
+        return `https://www.facebook.com/sharer/sharer.php?u=${u}`;
+      case 'linkedin':
+        return `https://www.linkedin.com/sharing/share-offsite/?url=${u}`;
+      case 'reddit':
+        return `https://www.reddit.com/submit?url=${u}&title=${t}`;
+      case 'whatsapp':
+        return `https://api.whatsapp.com/send?text=${t}%20${u}`;
+      case 'telegram':
+        return `https://t.me/share/url?url=${u}&text=${t}`;
+      default:
+        return url;
+    }
+  }
+
+  const handleShareVia = async (platform: 'twitter'|'facebook'|'linkedin'|'reddit'|'whatsapp'|'telegram'|'instagram') => {
+    if (!processedImage) {
+      toast.error('No shareable result');
+      return;
+    }
+    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const mode = isDark ? 'dark' : 'light';
+    const params = new URLSearchParams();
+    if (currentTaskId) params.set('task', currentTaskId);
+    params.set('ref', isAuthenticated ? 'user' : 'guest');
+    if (originalImage) params.set('before', originalImage);
+    params.set('after', processedImage);
+    if (currentTaskId) params.set('id', currentTaskId);
+    params.set('mode', mode);
+    const shareUrl = `${window.location.origin}/${locale}/remove-background?${params.toString()}`;
+    const shareText = `AI background removed in seconds — free.`;
+
+    if (platform === 'instagram') {
+      // Instagram web 不提供标准的链接分享入口，降级为复制链接
+      await handleCopyShareLink(shareUrl, `${shareText}\n${shareUrl}`);
+      return;
+    }
+    const url = buildPlatformShareUrl(platform, shareUrl, shareText);
+    openCenteredPopup(url, `share-${platform}`);
+  };
+
+  // 复制分享链接
+  const handleCopyShareLink = async (url: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Link copied! Share to get 2 more free uses');
+    } catch (error) {
+      // 降级：使用传统方法
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        toast.success('Link copied! Share to get 2 more free uses');
+      } catch (err) {
+        toast.error('Copy failed. Please copy manually');
+      }
+      document.body.removeChild(textarea);
+    }
+  };
+
 
   const hasUpload = !!(originalImage || processedImage);
 
+  // 动态更新页面title和meta标签（当有结果时）
+  useEffect(() => {
+    if (processedImage && currentTaskId) {
+      // 更新title
+      const title = locale === 'zh' || locale === 'tw'
+        ? `移除完成！前后对比 #${currentTaskId.slice(-4)} | Remove Anything`
+        : `Removed! Before & After #${currentTaskId.slice(-4)} | Remove Anything`;
+      document.title = title;
+
+      // 更新meta description
+      let metaDescription = document.querySelector('meta[name="description"]');
+      if (!metaDescription) {
+        metaDescription = document.createElement('meta');
+        metaDescription.setAttribute('name', 'description');
+        document.head.appendChild(metaDescription);
+      }
+      metaDescription.setAttribute('content', 
+        locale === 'zh' || locale === 'tw'
+          ? `AI成功移除图片背景！查看前后对比效果 #${currentTaskId.slice(-4)}`
+          : `AI successfully removed background! See before & after comparison #${currentTaskId.slice(-4)}`
+      );
+
+      // 更新og:title
+      let ogTitle = document.querySelector('meta[property="og:title"]');
+      if (!ogTitle) {
+        ogTitle = document.createElement('meta');
+        ogTitle.setAttribute('property', 'og:title');
+        document.head.appendChild(ogTitle);
+      }
+      ogTitle.setAttribute('content', title);
+
+      // 更新og:description
+      let ogDescription = document.querySelector('meta[property="og:description"]');
+      if (!ogDescription) {
+        ogDescription = document.createElement('meta');
+        ogDescription.setAttribute('property', 'og:description');
+        document.head.appendChild(ogDescription);
+      }
+      ogDescription.setAttribute('content', 
+        locale === 'zh' || locale === 'tw'
+          ? `AI成功移除图片背景！查看前后对比效果 #${currentTaskId.slice(-4)}`
+          : `AI successfully removed background! See before & after comparison #${currentTaskId.slice(-4)}`
+      );
+
+      // 更新og:image（如果有before和after图片）
+      if (originalImage && processedImage) {
+        let ogImage = document.querySelector('meta[property="og:image"]');
+        if (!ogImage) {
+          ogImage = document.createElement('meta');
+          ogImage.setAttribute('property', 'og:image');
+          document.head.appendChild(ogImage);
+        }
+        // 生成动态og图片URL
+        const ogImageUrl = `${window.location.origin}/api/og?before=${encodeURIComponent(originalImage)}&after=${encodeURIComponent(processedImage)}&id=${currentTaskId}&type=before-after`;
+        ogImage.setAttribute('content', ogImageUrl);
+      }
+
+      // 更新og:url
+      let ogUrl = document.querySelector('meta[property="og:url"]');
+      if (!ogUrl) {
+        ogUrl = document.createElement('meta');
+        ogUrl.setAttribute('property', 'og:url');
+        document.head.appendChild(ogUrl);
+      }
+      ogUrl.setAttribute('content', `${window.location.origin}${window.location.pathname}?task=${currentTaskId}`);
+
+      // 添加结构化数据 BeforeAndAfterGallery
+      const structuredData = {
+        "@context": "https://schema.org",
+        "@type": "ImageGallery",
+        "name": `AI Background Removal Result #${currentTaskId.slice(-4)}`,
+        "description": "Before and after comparison of AI background removal",
+        "image": [
+          {
+            "@type": "ImageObject",
+            "contentUrl": originalImage || '',
+            "caption": "Original image before AI background removal",
+            "name": "Before"
+          },
+          {
+            "@type": "ImageObject",
+            "contentUrl": processedImage,
+            "caption": "Processed image after AI background removal",
+            "name": "After"
+          }
+        ]
+      };
+
+      // 移除旧的structured data script
+      const oldScript = document.getElementById('before-after-structured-data');
+      if (oldScript) {
+        oldScript.remove();
+      }
+
+      // 添加新的structured data
+      const script = document.createElement('script');
+      script.id = 'before-after-structured-data';
+      script.type = 'application/ld+json';
+      script.textContent = JSON.stringify(structuredData);
+      document.head.appendChild(script);
+    }
+
+    // 清理函数
+    return () => {
+      const script = document.getElementById('before-after-structured-data');
+      if (script) {
+        script.remove();
+      }
+    };
+  }, [processedImage, currentTaskId, originalImage, locale]);
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
+      {/* 社交证明动态条：今日已移除物体数 */}
+      <div suppressHydrationWarning>
+        <SocialProofBar />
+      </div>
+      
       {/* 主上传区域 - 未上传时显示 */}
       {!hasUpload && (
       <div className="text-center mb-10">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
           Upload an image to remove the background
         </h1>
+        <div className="mb-6">
+          {/* Removed redundant hero CTA button */}
+        </div>
         
         {/* 上传区域 */}
         <div
+          id="upload"
           className={cn(
             "border-2 border-dashed rounded-lg p-8 text-center transition-colors mx-auto max-w-2xl",
             isDragging ? "border-primary bg-primary/5" : "border-gray-300"
@@ -881,11 +1197,27 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
             const files = e.dataTransfer.files;
             if (files && files.length) enqueueFiles(files);
           }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              document.getElementById('image-upload-main')?.click();
+            }
+          }}
         >
           <input
             type="file"
             accept="image/*"
-            onChange={handleImageUpload}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file && file.size > 10 * 1024 * 1024) {
+                toast.error('File too large (>10MB). Please compress and try again');
+                e.currentTarget.value = '';
+                return;
+              }
+              handleImageUpload(e);
+            }}
             className="hidden"
             id="image-upload-main"
             disabled={isProcessing}
@@ -893,62 +1225,96 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
           <label
             htmlFor="image-upload-main"
             className={cn(
-              "cursor-pointer inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-lg",
-              isProcessing && "opacity-50 cursor-not-allowed"
+              "cursor-pointer inline-flex items-center gap-2 px-8 py-4 rounded-lg transition-all text-lg font-semibold shadow-lg",
+              // 优化按钮颜色：使用#FF4F5E高对比度，符合WCAG 3:1
+              "bg-[#FF4F5E] text-white hover:bg-[#FF3D4E] hover:shadow-xl",
+              // 添加pulse动画，吸引注意力
+              "animate-[pulse_2s_ease-in-out_infinite] hover:animate-none",
+              isProcessing && "opacity-50 cursor-not-allowed animate-none"
             )}
           >
-            <Upload className="w-5 h-5" />
-            {isProcessing ? tPage('processing') : 'Upload Image'}
+            <Upload className="size-5" />
+            {isProcessing ? tPage('processing') : (
+              <span className="relative">
+                {/* A/B测试文案：显示更紧迫的文案 */}
+                <span className="block">One‑click removal, image in 3s</span>
+                <span className="absolute -bottom-5 inset-x-0 text-xs font-normal opacity-70 whitespace-nowrap">
+                  50 free uses daily → Try now
+                </span>
+              </span>
+            )}
           </label>
           <p className="text-sm text-muted-foreground mt-3">
             or drag and drop your image here
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            paste image or 
-            <button
+          {/* 优化URL输入框：更突出显示 */}
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <span className="text-sm text-muted-foreground">or</span>
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setShowUrlDialog(true)}
-              className="underline underline-offset-2 ml-1"
-            >URL</button>
-          </p>
+              className="border-primary text-primary hover:bg-primary hover:text-white"
+            >
+              <span>📎 Paste image URL</span>
+            </Button>
+            <span className="text-xs text-muted-foreground">Supports Instagram public images</span>
+          </div>
           
-          {/* 示例缩略图 */}
-          <div className="mt-6 flex items-center justify-center gap-4">
-            {[
-              'https://s.remove-anything.com/sample/1.png',
-              'https://s.remove-anything.com/sample/2.png',
-              'https://s.remove-anything.com/sample/3.png',
-              'https://s.remove-anything.com/sample/4.png',
-            ].map((u, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={async () => {
-                  try {
-                    // 先即时显示原图，确保Processed Image card先出现，且对比滑块有beforeSrc
-                    setOriginalImage(u);
-                    setProcessedImage(null);
-                    setHasError(false);
-                    setCurrentTaskId(null);
-                    setIsProcessing(true);
-                    // 记录到最近图片
-                    setRecentImages(prev => {
-                      const next = [{ url: u, timestamp: Date.now() }, ...prev.filter(img => img.url !== u)];
-                      return next.slice(0, 4);
-                    });
+          {/* 优化示例图片：更突出的展示 */}
+          <div className="mt-8">
+            <p className="text-sm font-medium text-muted-foreground mb-4">
+              🎯 Quick demo – click a sample to try instantly
+            </p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              {[
+                { url: 'https://s.remove-anything.com/sample/1.png', label: 'Portrait' },
+                { url: 'https://s.remove-anything.com/sample/2.png', label: 'Product' },
+                { url: 'https://s.remove-anything.com/sample/3.png', label: 'Object' },
+                { url: 'https://s.remove-anything.com/sample/4.png', label: 'Animal' },
+              ].map((sample, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      // 先即时显示原图，确保Processed Image card先出现，且对比滑块有beforeSrc
+                      setOriginalImage(sample.url);
+                      setProcessedImage(null);
+                      setHasError(false);
+                      setCurrentTaskId(null);
+                      setIsProcessing(true);
+                      // 记录到最近图片
+                      setRecentImages(prev => {
+                        const next = [{ url: sample.url, timestamp: Date.now() }, ...prev.filter(img => img.url !== sample.url)];
+                        return next.slice(0, 4);
+                      });
 
-                    // 通过服务端创建任务，避免浏览器CORS
-                    await processImageByUrl(u);
-                  } catch (e) {
-                    console.error('Sample load error', e);
-                  }
-                }}
-                className="h-16 w-16 rounded-xl overflow-hidden ring-1 ring-border hover:ring-primary transition"
-                aria-label="Try a sample"
-              >
-                <img src={u} alt="AI background removal sample image - try this example" className="h-full w-full object-cover" />
-              </button>
-            ))}
+                      // 通过服务端创建任务，避免浏览器CORS
+                      await processImageByUrl(sample.url);
+                    } catch (e) {
+                      console.error('Sample load error', e);
+                    }
+                  }}
+                  className="group relative h-20 w-20 rounded-xl overflow-hidden ring-2 ring-border hover:ring-[#FF4F5E] hover:scale-110 transition-all duration-300 shadow-md hover:shadow-lg"
+                  aria-label={`Try ${sample.label} sample`}
+                >
+                  <img 
+                    src={sample.url} 
+                    alt={`AI background removal ${sample.label} sample - click to try this example`} 
+                    className="h-full w-full object-cover group-hover:brightness-110 transition-all duration-300"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-1">
+                    <span className="text-white text-xs font-medium">{sample.label}</span>
+                  </div>
+                  <div className="absolute top-1 right-1 bg-[#FF4F5E] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Try
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
           
           <div className="mt-4 grid gap-1 text-xs text-muted-foreground">
@@ -986,15 +1352,82 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                   size="sm" 
                   className="flex items-center gap-2"
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <Sparkles className="size-4" />
                   {tPage('addBackground')}
                 </Button>
+                {/* 分享按钮：激励用户分享 */}
+                {processedImage && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 border-[#FF4F5E] text-[#FF4F5E] hover:bg-[#FF4F5E] hover:text-white"
+                      >
+                        <Share2 className="size-4" />
+                        Share to get 2 more free uses
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="min-w-52">
+                      <DropdownMenuItem onClick={() => handleShare()}>
+                        Native Share (Device)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareVia('twitter')}>
+                        Share to Twitter / X
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareVia('facebook')}>
+                        Share to Facebook
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareVia('linkedin')}>
+                        Share to LinkedIn
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareVia('reddit')}>
+                        Share to Reddit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareVia('whatsapp')}>
+                        Share to WhatsApp
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareVia('telegram')}>
+                        Share to Telegram
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShareVia('instagram')}>
+                        Share to Instagram (copy link)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+                {processedImage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      try {
+                        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        const mode = isDark ? 'dark' : 'light';
+                        const params = new URLSearchParams();
+                        if (originalImage) params.set('before', originalImage);
+                        params.set('after', processedImage);
+                        if (currentTaskId) params.set('id', currentTaskId);
+                        params.set('mode', mode);
+                        const shareUrl = `${window.location.origin}/${locale}/remove-background?${params.toString()}`;
+                        navigator.clipboard.writeText(shareUrl);
+                        toast.success('Share link copied');
+                      } catch {
+                        toast.error('Copy failed, please try again');
+                      }
+                    }}
+                  >
+                    <Copy className="size-4" />
+                    Copy share link
+                  </Button>
+                )}
                 <Button 
                   onClick={selectedBackground ? handleDownloadComposed : handleDownload} 
                   size="sm" 
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 bg-[#FF4F5E] hover:bg-[#FF3D4E] text-white"
                 >
-                  {isAuthenticated ? (<><Download className="w-4 h-4" />{tPage('download')}</>) : (<><LogIn className="w-4 h-4" />{tPage('loginDownload')}</>)}
+                  {isAuthenticated ? (<><Download className="size-4" />{tPage('download')}</>) : (<><LogIn className="size-4" />{tPage('loginDownload')}</>)}
                 </Button>
               </div>
             </CardTitle>
@@ -1010,9 +1443,9 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
               )}
               
               {/* 图片展示区域 - 支持左滑动效 */}
-              <div 
+                <div 
                 className={`transition-all duration-700 ease-out ${
-                  showAddBackground ? 'transform -translate-x-80' : 'transform translate-x-0'
+                  showAddBackground ? '-translate-x-80' : 'translate-x-0'
                 }`}
                 style={{
                   willChange: 'transform'
@@ -1094,6 +1527,8 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
                       src={originalImage || ''}
                       alt="Original image before AI background removal processing"
                       className="max-w-full max-h-full object-contain rounded"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                 </div>
@@ -1289,118 +1724,7 @@ export default function MarketingRemoveBackground({ locale }: MarketingRemoveBac
         </Card>
       </div>
 
-      {/* BiRefNet vs rembg Algorithm Comparison */}
-      <Card className="mb-8">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl mb-2">{tPage('birefnetAdvantage')}</CardTitle>
-          <CardDescription className="text-lg">
-            {tPage('birefnetAdvantageDesc')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <h4 className="font-semibold">{tPage('hairLevelPrecision')}</h4>
-                  <p className="text-sm text-muted-foreground">{tPage('hairLevelPrecisionDesc')}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <h4 className="font-semibold">{tPage('professionalQuality')}</h4>
-                  <p className="text-sm text-muted-foreground">{tPage('professionalQualityDesc')}</p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <h4 className="font-semibold">{tPage('fastProcessing')}</h4>
-                  <p className="text-sm text-muted-foreground">{tPage('fastProcessingDesc')}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <h4 className="font-semibold">{tPage('multiScenario')}</h4>
-                  <p className="text-sm text-muted-foreground">{tPage('multiScenarioDesc')}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Algorithm Technology Comparison */}
-      <Card className="mb-8">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl mb-2">{tPage('algorithmComparison')}</CardTitle>
-          <CardDescription className="text-lg">
-            {tPage('algorithmComparisonDesc')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* BiRefNet Features */}
-            <div className="border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-blue-100">
-              <h3 className="text-xl font-bold text-blue-800 mb-4 text-center">{tPage('birefnetFeatures')}</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm">Hair-level precision matting</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm">Automatic background detection</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm">Complex edge handling</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm">Professional quality output</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm">High-resolution support</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* rembg Features */}
-            <div className="border rounded-lg p-4 bg-gradient-to-br from-gray-50 to-gray-100">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">{tPage('rembgFeatures')}</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm">Basic background removal</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm">Fast processing</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm">Simple backgrounds</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-yellow-600" />
-                  <span className="text-sm">Limited complex edges</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-yellow-600" />
-                  <span className="text-sm">Basic quality output</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Algorithm marketing comparison removed for SEO simplicity */}
 
       {/* No Background Selection Required */}
       <Card className="mb-8 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">

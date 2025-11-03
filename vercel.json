@@ -33,6 +33,28 @@
           "value": "Content-Type, Authorization"
         }
       ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Encoding",
+          "value": "br, gzip"
+        },
+        {
+          "key": "Accept-Encoding",
+          "value": "br, gzip, deflate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(js|css|json|wasm))",
+      "headers": [
+        {
+          "key": "Content-Encoding",
+          "value": "br"
+        }
+      ]
     }
   ],
   "crons": [
