@@ -17,14 +17,21 @@ interface ExampleItem {
 }
 
 async function loadExamples(): Promise<ExampleItem[]> {
+  // 优先从公开 URL 拉取（Vercel 环境稳定），失败时再回退到 fs
+  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (base) {
+    try {
+      const res = await fetch(`${base}/data/examples.json`, { next: { revalidate: 3600 } });
+      if (res.ok) return (await res.json()) as ExampleItem[];
+    } catch {}
+  }
   try {
     const { promises: fs } = await import("fs");
     const path = await import("path");
     const filePath = path.join(process.cwd(), "public", "data", "examples.json");
     const fileContents = await fs.readFile(filePath, "utf8");
     return JSON.parse(fileContents) as ExampleItem[];
-  } catch (e) {
-    console.error("examples: fs load failed", e);
+  } catch {
     return [];
   }
 }
