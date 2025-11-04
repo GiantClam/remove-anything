@@ -63,71 +63,32 @@ export async function getChargeProduct(locale?: string) {
     });
   }
 
-  // 添加重试机制
-  const maxRetries = 3;
-  let lastError: any;
+  // 简化：直接尝试查询，失败立即返回默认值，避免 RSC 中的 setTimeout 导致 thenable 错误
+  try {
+    const data = await prisma.chargeProduct.findMany({
+      where: {
+        locale,
+      },
+      orderBy: {
+        credit: "asc",
+      },
+    });
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`🔍 getChargeProduct 尝试 ${attempt}/${maxRetries}`);
-      
-      // 对于prepared statement错误，先尝试重新连接
-      if (attempt > 1 && lastError?.message?.includes('prepared statement')) {
-        console.log("🔄 检测到prepared statement错误，重新连接数据库...");
-        try {
-          await prisma.$disconnect();
-          // 等待一下确保连接完全断开
-          await new Promise(resolve => setTimeout(resolve, 100));
-          await prisma.$connect();
-        } catch (reconnectError) {
-          console.error("重连失败:", reconnectError);
-        }
-      }
-      
-      const data = await prisma.chargeProduct.findMany({
-        where: {
-          locale,
-        },
-        orderBy: {
-          credit: "asc",
-        },
-      });
-
-      console.log(`✅ getChargeProduct 查询成功，获取到 ${data.length} 条记录`);
-      
-      return {
-        data: (data.map(({ id, ...rest }) => ({
-          ...rest,
-          id: ChargeProductHashids.encode(id),
-        })) ?? []) as ChargeProductSelectDto[],
-      };
-    } catch (error) {
-      lastError = error;
-      console.error(`❌ getChargeProduct 第 ${attempt} 次尝试失败:`, error);
-      
-      // 如果是连接错误，等待后重试
-      if (attempt < maxRetries && (
-        error?.message?.includes('prepared statement') ||
-        error?.message?.includes('connection') ||
-        error?.message?.includes('timeout')
-      )) {
-        const delay = Math.pow(2, attempt) * 1000; // 指数退避
-        console.log(`⏳ 等待 ${delay}ms 后重试...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-      
-      // 最后一次尝试失败，跳出循环
-      break;
-    }
+    console.log(`✅ getChargeProduct 查询成功，获取到 ${data.length} 条记录`);
+    
+    return {
+      data: (data.map(({ id, ...rest }) => ({
+        ...rest,
+        id: ChargeProductHashids.encode(id),
+      })) ?? []) as ChargeProductSelectDto[],
+    };
+  } catch (error) {
+    console.error("❌ getChargeProduct 数据库查询失败，返回默认值:", error);
+    // 立即返回默认值，不进行重试，避免 RSC 中的异步操作导致 thenable 错误
+    return {
+      data: getDefaultProducts(locale),
+    };
   }
-
-  // 所有重试都失败了，返回默认值
-  console.error("❌ getChargeProduct 所有重试都失败，返回默认值:", lastError);
-  
-  return {
-    data: getDefaultProducts(locale),
-  };
 }
 const activityCode = "NEW_REGISTER_ACTIVITY";
 

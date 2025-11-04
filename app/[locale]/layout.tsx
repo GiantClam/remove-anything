@@ -174,7 +174,6 @@ export default async function RootLayout({
             data-website-id={env.NEXT_PUBLIC_UMAMI_DATA_ID}
           />
         )}
-        <RegisterSW />
         <footer className="mt-10 border-t">
           <div className="container mx-auto px-4 py-6 text-sm text-muted-foreground flex items-center justify-center gap-4">
             <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline-offset-4 hover:underline">Privacy</a>

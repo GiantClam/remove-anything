@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { HeaderSection } from "@/components/shared/header-section";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
@@ -17,16 +17,6 @@ interface ExampleItem {
 }
 
 async function loadExamples(): Promise<ExampleItem[]> {
-  // 优先尝试通过站点绝对地址获取，失败则回退到读取本地文件
-  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  if (base) {
-    try {
-      const res = await fetch(`${base}/data/examples.json`, { next: { revalidate: 3600 } });
-      if (res.ok) return res.json();
-    } catch (e) {
-      console.error("examples: remote fetch failed, fallback to fs", e);
-    }
-  }
   try {
     const { promises: fs } = await import("fs");
     const path = await import("path");
@@ -34,13 +24,13 @@ async function loadExamples(): Promise<ExampleItem[]> {
     const fileContents = await fs.readFile(filePath, "utf8");
     return JSON.parse(fileContents) as ExampleItem[];
   } catch (e) {
-    console.error("examples: fs fallback failed", e);
+    console.error("examples: fs load failed", e);
     return [];
   }
 }
 
 export default async function Examples() {
-  const t = useTranslations("IndexPage");
+  const t = await getTranslations({ namespace: "IndexPage" });
   const examples = await loadExamples();
 
   return (

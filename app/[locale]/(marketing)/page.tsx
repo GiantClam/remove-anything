@@ -2,13 +2,9 @@ import { unstable_setRequestLocale } from "next-intl/server";
 import Script from "next/script";
 
 import Examples from "@/components/sections/examples";
-import Features from "@/components/sections/features";
 import HeroLanding from "@/components/sections/hero-landing";
-import PricingCard from "@/components/sections/pricing-card";
-import HowTo from "@/components/sections/how-to";
-import UseCases from "@/components/sections/use-cases";
 import QuickAccess from "@/components/sections/quick-access";
-import PreviewLanding from "@/components/sections/preview-landing";
+// import PreviewLanding from "@/components/sections/preview-landing";
 import { env } from "@/env.mjs";
 
 type Props = {
@@ -230,10 +226,10 @@ export default function IndexPage({ params: { locale } }: Props) {
       <HeroLanding />
       <QuickAccess />
       <Examples />
-      {/* 瀑布流展示：添加id用于锚点导航 */}
-      <section id="examples-gallery" className="scroll-mt-20">
+      {/* 瀑布流展示：暂时注释以避免服务端数据库查询导致的 RSC thenable 错误 */}
+      {/* <section id="examples-gallery" className="scroll-mt-20">
         <PreviewLanding />
-      </section>
+      </section> */}
     </>
   );
 }
