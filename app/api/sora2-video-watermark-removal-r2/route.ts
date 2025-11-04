@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
     const rh = createRunningHubClient();
     const repo = createPrismaTaskRepository();
     const queue = createPrismaTaskQueue();
-    const uploadNodeId = isPortrait ? '153' : '205';
+    const uploadNodeId = env.SORA2_UPLOAD_NODE_ID || (isPortrait ? '153' : '205');
     const result = await createVideoTaskWithR2Url({
       model: 'sora2-video-watermark-removal',
       userId: userId || undefined,

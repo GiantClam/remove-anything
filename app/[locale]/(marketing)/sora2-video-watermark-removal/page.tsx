@@ -1,6 +1,10 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { Metadata } from "next";
-import Sora2VideoWatermarkRemoval from "@/components/sora2-video-watermark-removal";
+import dynamic from "next/dynamic";
+const Sora2VideoWatermarkRemoval = dynamic(
+  () => import("@/components/sora2-video-watermark-removal"),
+  { ssr: false }
+);
 import { getChargeProduct } from "@/db/queries/charge-product";
 
 interface PageProps {

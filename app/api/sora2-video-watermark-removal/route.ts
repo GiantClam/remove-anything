@@ -102,8 +102,8 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    const uploadNodeId = '205';
-    const uploadFieldName = 'video';
+    const uploadNodeId = env.SORA2_UPLOAD_NODE_ID || '205';
+    const uploadFieldName = env.SORA2_UPLOAD_FIELD_NAME || 'video';
 
     // 创建任务记录
     let taskRecord;

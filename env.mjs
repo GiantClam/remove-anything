@@ -59,6 +59,9 @@ export const env = createEnv({
     // Sora2 Video Watermark Removal Workflow IDs
     SORA2_LANDSCAPE_WORKFLOW_ID: z.string().min(1).default("placeholder"),
     SORA2_PORTRAIT_WORKFLOW_ID: z.string().min(1).default("placeholder"),
+    // Sora2 upload node configuration
+    SORA2_UPLOAD_NODE_ID: z.string().min(1).default("205"),
+    SORA2_UPLOAD_FIELD_NAME: z.string().min(1).default("video"),
     
     // Legacy OpenAI config (now replaced by Gemini via AI Gateway)
     OPEN_AI_API_ENDPOINT: z.string().url().optional(),
@@ -139,6 +142,8 @@ export const env = createEnv({
     RUNNINGHUB_WORKFLOW_ID: process.env.RUNNINGHUB_WORKFLOW_ID,
     SORA2_LANDSCAPE_WORKFLOW_ID: process.env.SORA2_LANDSCAPE_WORKFLOW_ID,
     SORA2_PORTRAIT_WORKFLOW_ID: process.env.SORA2_PORTRAIT_WORKFLOW_ID,
+    SORA2_UPLOAD_NODE_ID: process.env.SORA2_UPLOAD_NODE_ID,
+    SORA2_UPLOAD_FIELD_NAME: process.env.SORA2_UPLOAD_FIELD_NAME,
     
     // Legacy OpenAI config
     OPEN_AI_API_ENDPOINT: process.env.OPEN_AI_API_ENDPOINT,

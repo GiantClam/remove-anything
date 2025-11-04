@@ -21,7 +21,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Locale } from "@/config";
 import { Credits, model, ModelName } from "@/config/constants";
 import {
@@ -61,7 +60,6 @@ const useCreateSora2VideoWatermarkRemovalMutation = (config?: {
         // 使用URL直接创建任务
         const fd = new FormData();
         fd.append('url', values.url);
-        fd.append('orientation', values.orientation);
 
         const res = await fetch('/api/sora2-video-watermark-removal-url', {
           method: 'POST',
@@ -106,7 +104,6 @@ const useCreateSora2VideoWatermarkRemovalMutation = (config?: {
         // 4) 通知后端创建任务（仅传 r2Url 与 meta，避免大请求体 413）
         const fd = new FormData();
         fd.append('r2Url', r2Url);
-        fd.append('orientation', values.orientation);
         fd.append('filename', filename);
 
         const res = await fetch('/api/sora2-video-watermark-removal-r2', {
@@ -169,7 +166,7 @@ export default function Sora2VideoWatermarkRemoval({
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [urlInput, setUrlInput] = useState('');
   const [urlError, setUrlError] = useState<string | null>(null);
-  const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('portrait');
+  // orientation removed: model auto-detects
   const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
   const [estimatedProgress, setEstimatedProgress] = useState<number>(0);
   const [videoSrcTs, setVideoSrcTs] = useState<number | null>(null);
@@ -444,13 +441,11 @@ export default function Sora2VideoWatermarkRemoval({
         const videoFile = uploadedFiles[0]?.originFile;
         result = await useCreateTask.mutateAsync({
           file: videoFile,
-          orientation: orientation,
         });
       } else {
         // 使用URL
         result = await useCreateTask.mutateAsync({
           url: videoUrl.trim(),
-          orientation: orientation,
         });
       }
 
@@ -544,12 +539,18 @@ export default function Sora2VideoWatermarkRemoval({
   console.log("🔍 Sora2VideoWatermarkRemoval 组件状态:", {
     uploadedFiles: uploadedFiles.length,
     videoUrl: videoUrl,
-    orientation,
+    // orientation removed
     loading,
     hasEnoughCredit,
     userCredit: userCredit?.credit,
     buttonDisabled: loading || (!hasEnoughCredit) || (uploadedFiles.length === 0 && !videoUrl.trim())
   });
+
+  const isProcessing = useMemo(() => {
+    if (loading) return true;
+    const s = (taskData?.taskStatus as string) || '';
+    return ['pending', 'starting', 'processing', 'Processing'].includes(s);
+  }, [loading, taskData?.taskStatus]);
 
   return (
     <div className="container mx-auto max-w-4xl p-6">
@@ -574,11 +575,10 @@ export default function Sora2VideoWatermarkRemoval({
         </p>
       </div>
 
-      {/* 上传区在处理或有结果时隐藏，实现“结果替换” */}
-      {(!loading && !taskData) && (
+      {/* 网格容器始终渲染；仅左侧上传区在处理或有结果时隐藏 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* 左侧：输入区域 */}
-        <div className="space-y-6">
+        {/* 左侧：输入区域（仅在非加载且无结果时显示） */}
+        <div className={`space-y-6 ${isProcessing ? 'pointer-events-none opacity-60' : ''}`} aria-disabled={isProcessing}>
           <div className="rounded-lg border bg-card p-6">
             <div className="mb-4">
               <Label className="text-base font-semibold">
@@ -587,28 +587,33 @@ export default function Sora2VideoWatermarkRemoval({
             </div>
             
             <div className="space-y-4">
-              <Upload
-                value={uploadedFiles}
-                onChange={handleFileChange}
-                accept={{ "video/*": [".mp4", ".mov", ".avi", ".mkv", ".webm"] }}
-                maxSize={100 * 1024 * 1024} // 100MB
-                maxFiles={1}
-                multiple={false}
-                placeholder={
-                  <div className="flex flex-col items-center justify-center p-6 text-center">
-                    <Icons.Video className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-lg font-medium mb-2">Drop your video here</p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      or click to browse your files
-                    </p>
-                    <Button variant="outline" size="sm">
-                      Select Video
-                    </Button>
-                    <button className="mt-2 text-xs underline" onClick={() => setShowUrlDialog(true)}>Use URL (YouTube supported)</button>
-                  </div>
-                }
-                className="min-h-[200px]"
-              />
+              <div className="relative">
+                <Upload
+                  value={uploadedFiles}
+                  onChange={handleFileChange}
+                  accept={{ "video/*": [".mp4", ".mov", ".avi", ".mkv", ".webm"] }}
+                  maxSize={100 * 1024 * 1024} // 100MB
+                  maxFiles={1}
+                  multiple={false}
+                  placeholder={
+                    <div className="flex flex-col items-center justify-center p-6 text-center">
+                      <Icons.Video className="h-12 w-12 text-muted-foreground mb-4" />
+                      <p className="text-lg font-medium mb-2">Drop your video here</p>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        or click to browse your files
+                      </p>
+                      <Button variant="outline" size="sm" disabled={isProcessing}>
+                        Select Video
+                      </Button>
+                      <button className="mt-2 text-xs underline disabled:no-underline disabled:opacity-70" onClick={() => setShowUrlDialog(true)} disabled={isProcessing}>Use URL (YouTube supported)</button>
+                    </div>
+                  }
+                  className="min-h-[200px]"
+                />
+                {isProcessing && (
+                  <div className="absolute inset-0 rounded-lg" />
+                )}
+              </div>
               
               <div className="text-sm text-muted-foreground">
                 <p>Supported formats: MP4, MOV, AVI, MKV, WEBM</p>
@@ -628,19 +633,7 @@ export default function Sora2VideoWatermarkRemoval({
             </div>
             
             <div className="space-y-4">
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Video Orientation</Label>
-                <RadioGroup value={orientation} onValueChange={(value) => setOrientation(value as 'landscape' | 'portrait')}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="landscape" id="landscape" />
-                    <Label htmlFor="landscape">Landscape (16:9)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="portrait" id="portrait" />
-                    <Label htmlFor="portrait">Portrait (9:16)</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              {/* Orientation settings removed: model auto-detects */}
               
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
@@ -661,11 +654,11 @@ export default function Sora2VideoWatermarkRemoval({
 
           <Button
             onClick={handleSubmit}
-            disabled={loading || !hasEnoughCredit || (uploadedFiles.length === 0 && !videoUrl.trim())}
+            disabled={isProcessing || !hasEnoughCredit || (uploadedFiles.length === 0 && !videoUrl.trim())}
             className="w-full"
             size="lg"
           >
-            {loading ? (
+            {isProcessing ? (
               <>
                 <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                 Processing...
@@ -712,10 +705,10 @@ export default function Sora2VideoWatermarkRemoval({
           )}
         </div>
 
-        {/* 右侧：结果区域 */}
+        {/* 右侧：结果区域（始终显示容器，根据状态渲染内容） */}
         <div className="space-y-6">
           {loading && <Loading progress={estimatedProgress} processingStartTime={processingStartTime} />}
-          
+
           {taskData && (
             <div className="rounded-lg border bg-card p-6">
               <div className="mb-4">
@@ -751,7 +744,7 @@ export default function Sora2VideoWatermarkRemoval({
                       Your browser does not support the video tag.
                     </video>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <DownloadAction
                       id={taskData.runninghubTaskId}
@@ -802,7 +795,6 @@ export default function Sora2VideoWatermarkRemoval({
           )}
         </div>
       </div>
-      )}
 
       {/* 定价卡片对话框 */}
       <PricingCardDialog
