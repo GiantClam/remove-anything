@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Icons } from "@/components/shared/icons";
 import { Credits, model } from "@/config/constants";
-import { FluxTaskStatus } from "@/db/type";
+import { TaskStatus } from "@/db/type";
 import Upload from "../upload";
 
 interface Sora2VideoWatermarkRemovalR2Props {

@@ -1,7 +1,12 @@
+/**
+ * @deprecated 请使用 @/modules/runninghub 替代
+ * 此文件保留仅用于向后兼容，新代码请直接从 @/modules/runninghub 导入
+ */
 export {
   RunningHubAPI,
   runninghubAPI,
-} from "@/modules/runninghub/sdk";
+  createRunningHubClient,
+} from "@/modules/runninghub";
 
 export type {
   RunningHubUploadResponse,
@@ -10,4 +15,5 @@ export type {
   RunningHubNodeInput,
   CreateTaskOptions,
   UploadFileOptions,
-} from "@/modules/runninghub/sdk";
+  RunningHubAPIConfig,
+} from "@/modules/runninghub";

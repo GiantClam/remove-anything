@@ -20,7 +20,7 @@ export const pathnames: Pathnames<typeof locales> = {
   "/blog": "/blog",
 };
 
-export const localePrefix: LocalePrefix<typeof locales> = "always";
+export const localePrefix = "as-needed";
 
 export const port = process.env.PORT || 3000;
 export const host = process.env.VERCEL_URL

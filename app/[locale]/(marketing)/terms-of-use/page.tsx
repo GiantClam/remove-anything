@@ -95,7 +95,7 @@ export default function IndexPage({ params: { locale } }: Props) {
           <li className="mt-2">
             <p className="leading-7 [&:not(:first-child)]:mt-6">
               <strong>Company</strong> (referred to as either "the Company",
-              "We", "Us" or "Our" in this Agreement) refers to FluxAIProTeam.
+              "We", "Us" or "Our" in this Agreement) refers to RemoveAnything.
             </p>
           </li>
           <li className="mt-2">
@@ -135,12 +135,12 @@ export default function IndexPage({ params: { locale } }: Props) {
           </li>
           <li className="mt-2">
             <p className="leading-7 [&:not(:first-child)]:mt-6">
-              <strong>Website</strong> refers to FluxAIProTeam, accessible from{" "}
+              <strong>Website</strong> refers to RemoveAnything, accessible from{" "}
               <a
                 className="font-medium underline underline-offset-4"
-                href="https://fluxaipro.art"
+                href="https://remove-anything.com"
               >
-                https://fluxaipro.art
+                https://remove-anything.com
               </a>
             </p>
           </li>
@@ -531,9 +531,9 @@ export default function IndexPage({ params: { locale } }: Props) {
             By email:{" "}
             <a
               className="font-medium underline underline-offset-4"
-              href="mailto:support@fluxaipro.art"
+              href="mailto:support@remove-anything.com"
             >
-              support@fluxaipro.art
+              support@remove-anything.com
             </a>
           </li>
         </ul>

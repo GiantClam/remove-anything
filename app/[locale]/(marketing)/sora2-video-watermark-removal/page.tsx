@@ -1,6 +1,8 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { Metadata } from "next";
 import dynamic from "next/dynamic";
+import { constructAlternates } from "@/lib/seo";
+
 const Sora2VideoWatermarkRemoval = dynamic(
   () => import("@/components/sora2-video-watermark-removal"),
   { ssr: false }
@@ -18,6 +20,7 @@ export async function generateMetadata({ params: { locale } }: PageProps): Promi
     title: t("title"),
     description: t("description"),
     keywords: t("keywords"),
+    alternates: constructAlternates({ locale, path: "/sora2-video-watermark-removal" }),
     openGraph: {
       title: t("title"),
       description: t("description"),

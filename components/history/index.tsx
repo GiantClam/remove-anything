@@ -19,22 +19,20 @@ import PlaygroundLoading from "@/components/playground/loading";
 import { EmptyPlaceholder } from "@/components/shared/empty-placeholder";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoraConfig, ModelName, Ratio } from "@/config/constants";
-import { FluxSelectDto } from "@/db/type";
+import { TaskSelectDto, TaskStatus } from "@/db/type";
 import { cn, createRatio } from "@/lib/utils";
-
-import { FluxTaskStatus } from "../playground";
 import { Button } from "../ui/button";
 import Container from "./container";
 import { DownloadAction } from "./download-action";
 import LoadMoreLoading from "./loading";
 
-const useQueryMineFluxMutation = (config?: {
+const useQueryMineTasksMutation = (config?: {
   explore?: boolean;
   onSuccess: (result: any) => void;
 }) => {
   return useMutation({
     mutationFn: async (values: any) => {
-      const path = config?.explore ? "/api/explore" : "/api/mine-flux";
+      const path = config?.explore ? "/api/explore" : "/api/mine-tasks";
       const res = await fetch(`${path}?${qs.stringify(values)}`, {
         credentials: 'include', // 使用 cookie 认证而不是 Bearer token
       });
@@ -69,8 +67,8 @@ export default function History({ locale, explore }: { locale: string, explore?:
     pageSize: 12,
   });
   const [hasMore, setHasMore] = useState(true);
-  const [dataSource, setDataSource] = useState<FluxSelectDto[]>([]);
-  const useQueryMineFlux = useQueryMineFluxMutation({
+  const [dataSource, setDataSource] = useState<TaskSelectDto[]>([]);
+  const useQueryMineTasks = useQueryMineTasksMutation({
     explore,
     onSuccess(result) {
       const { page, pageSize, total, data } = result.data ?? {};
@@ -85,7 +83,7 @@ export default function History({ locale, explore }: { locale: string, explore?:
 
   useEffect(() => {
     if (isLoaded) {
-      useQueryMineFlux.mutateAsync({
+      useQueryMineTasks.mutateAsync({
         page: pageParams.page,
         pageSize: pageParams.pageSize,
       });
@@ -94,7 +92,7 @@ export default function History({ locale, explore }: { locale: string, explore?:
 
   const loadMore = () => {
     console.log("load more");
-    useQueryMineFlux.mutateAsync({
+    useQueryMineTasks.mutateAsync({
       page: pageParams.page + 1,
       pageSize: pageParams.pageSize,
     });
@@ -177,7 +175,7 @@ export default function History({ locale, explore }: { locale: string, explore?:
                   key={item.id}
                   className="border-stroke-light bg-surface-300 hover:border-stroke-strong mb-4 flex break-inside-avoid flex-col space-y-4 overflow-hidden rounded-xl border relative"
                 >
-                  {item.taskStatus === FluxTaskStatus.Processing ? (
+                  {item.taskStatus === TaskStatus.Processing ? (
                     <div
                       className={`bg-pattern flx w-full items-center justify-center rounded-xl ${createRatio(item.aspectRatio as Ratio)} pointer-events-none`}
                     >
@@ -240,11 +238,11 @@ export default function History({ locale, explore }: { locale: string, explore?:
                             </button>
                           )}
                           <DownloadAction
-                            disabled={item.taskStatus === FluxTaskStatus.Processing}
+                            disabled={item.taskStatus === TaskStatus.Processing}
                             id={item.id}
                             taskType={item.taskType === "background-removal" ? "background-removal" : 
                                      item.taskType === "watermark-removal" ? "watermark-removal" : 
-                                     item.taskType === "sora2-video-watermark-removal" ? "sora2-video-watermark-removal" : "flux"}
+                                     item.taskType === "sora2-video-watermark-removal" ? "sora2-video-watermark-removal" : "image"}
                           />
                         </div>
                       </>

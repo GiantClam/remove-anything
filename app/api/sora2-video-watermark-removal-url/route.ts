@@ -1,17 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createProjectAuthProvider } from "@/modules/auth/adapter";
+import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { createVideoTaskWithR2Url } from "@/modules/tasks/sdk";
 import { createPrismaTaskRepository } from "@/modules/tasks/adapters/prisma-repo";
 import { createPrismaTaskQueue } from "@/modules/tasks/adapters/prisma-queue";
-import { createRunningHubClient } from "@/modules/runninghub/adapter";
-import { taskQueueManager } from "@/modules/tasks";
+import { createRunningHubClient } from "@/modules/runninghub";
+import { taskQueueManager } from "@/lib/task-queue";
 import { db as prisma } from "@/lib/db";
 import { buildMediaTransformUrl, prewarmTransformUrl } from "@/lib/cf-media";
+
+// 包装函数以匹配适配器期望的类型
+const getCurrentUser = async () => {
+  const user = await getCurrentUserOriginal();
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email ?? undefined,
+    name: user.name ?? undefined,
+  };
+};
 
 export async function POST(req: NextRequest) {
   try {
     // 1. 用户认证
-    const auth = createProjectAuthProvider();
+    const auth = createProjectAuthProvider(getCurrentUser);
     const user = await auth.getCurrentUser();
     if (!user?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -50,16 +62,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. 创建任务记录
-    const taskRecord = await prisma.fluxData.create({
+    const taskRecord = await prisma.taskData.create({
       data: {
         userId,
         model: "sora2-video-watermark-removal",
-        prompt: `Remove watermark from video: ${url}`,
-        orientation: orientation as "landscape" | "portrait",
+        inputPrompt: `Remove watermark from video: ${url}`,
+        inputImageUrl: url,
         taskStatus: "pending",
-        replicateId: null,
-        imageUrl: null,
-        errorMsg: null,
+        isPrivate: true,
       },
     });
 
@@ -146,7 +156,7 @@ export async function POST(req: NextRequest) {
       const runninghubTaskId = result.taskId;
 
       // 8. 更新任务记录
-      await prisma.fluxData.update({
+      await prisma.taskData.update({
         where: { id: taskRecord.id },
         data: {
           replicateId: runninghubTaskId,
@@ -203,11 +213,11 @@ export async function POST(req: NextRequest) {
       }
 
       // 其他错误直接返回失败
-      await prisma.fluxData.update({
+      await prisma.taskData.update({
         where: { id: taskRecord.id },
         data: {
           taskStatus: "failed",
-          errorMsg: String(error),
+          errorMsg: error instanceof Error ? error.message : "Failed to start task",
         },
       });
 

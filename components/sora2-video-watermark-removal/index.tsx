@@ -25,7 +25,8 @@ import { Locale } from "@/config";
 import { Credits, model, ModelName } from "@/config/constants";
 import {
   ChargeProductSelectDto,
-  FluxSelectDto,
+  TaskSelectDto,
+  TaskStatus,
   UserCreditSelectDto,
 } from "@/db/type";
 import { cn } from "@/lib/utils";

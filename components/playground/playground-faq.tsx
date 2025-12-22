@@ -46,17 +46,7 @@ export function PlaygroundFaq() {
 
   return (
     <section className="container max-w-4xl py-2">
-      <HeaderSection title={t("schnell_faq.title")} subtitle={t("schnell_faq.subtitle")} />
-      <Accordion type="single" collapsible className="my-12 w-full">
-        {pricingFaqData.map((faqItem) => (
-          <AccordionItem key={faqItem.id} value={faqItem.id}>
-            <AccordionTrigger>{t(`schnell_faq.${faqItem.question}`)}</AccordionTrigger>
-            <AccordionContent className="text-sm text-muted-foreground sm:text-[15px]">
-              {t(`schnell_faq.${faqItem.answer}`)}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+      {/* FAQ Removed */}
     </section>
   );
 }

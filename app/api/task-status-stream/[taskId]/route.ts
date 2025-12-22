@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { findBackgroundRemovalTaskByReplicateId } from "@/db/queries/background-removal";
-import { runninghubAPI } from "@/lib/runninghub-api";
+import { runninghubAPI } from "@/modules/runninghub";
 
 export const dynamic = 'force-dynamic';
 

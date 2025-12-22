@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import BatchRemoveBackground from "@/components/batch-remove-background";
 import { locales, defaultLocale } from "@/config";
 import { env } from "@/env.mjs";
+import { constructAlternates } from "@/lib/seo";
 
 interface PageProps {
   params: { locale: string };
@@ -16,7 +17,7 @@ export async function generateMetadata(
 
   const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
   const path = "/batch-remove-background";
-
+  
   const hasPair = !!(searchParams?.before && searchParams?.after);
   const ogImage = hasPair
     ? `${base}/api/og?before=${encodeURIComponent(searchParams!.before!)}&after=${encodeURIComponent(searchParams!.after!)}${searchParams?.id ? `&id=${encodeURIComponent(searchParams!.id!)}` : ''}${searchParams?.mode ? `&mode=${searchParams!.mode}` : ''}`
@@ -26,18 +27,7 @@ export async function generateMetadata(
     title: t("title"),
     description: t("description"),
     keywords: t("keywords"),
-    alternates: {
-      canonical: `${base}${locale === defaultLocale ? "" : `/${locale}`}${path}`,
-      languages: {
-        "x-default": `${base}${path}`,
-        ...Object.fromEntries(
-          locales.map((loc) => [
-            loc,
-            `${base}${loc === defaultLocale ? "" : `/${loc}`}${path}`,
-          ])
-        ),
-      },
-    },
+    alternates: constructAlternates({ locale, path: "/batch-remove-background" }),
     openGraph: {
       title: t("title"),
       description: t("description"),

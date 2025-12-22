@@ -22,8 +22,8 @@ async function testDownloadAPI() {
       expectedHeaders: ['content-disposition', 'content-type']
     },
     {
-      name: 'Flux下载',
-      url: 'http://localhost:3000/api/download?fluxId=test123',
+      name: '通用任务下载',
+      url: 'http://localhost:3000/api/download?taskId=test123',
       expectedHeaders: ['content-disposition', 'content-type']
     }
   ];

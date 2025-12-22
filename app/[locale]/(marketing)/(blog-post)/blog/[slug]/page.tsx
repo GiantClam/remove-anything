@@ -25,11 +25,24 @@ import {
   getBlurDataURL,
   placeholderBlurhash,
 } from "@/lib/utils";
+import { constructAlternates } from "@/lib/seo";
 
 export async function generateStaticParams() {
-  return allPosts.map((post) => ({
-    slug: post.slugAsParams,
-  }));
+  return allPosts.map((post) => {
+    // post.slugAsParams is like "en/ai-background-removal-guide" or "tw/ai-background-removal-guide"
+    const parts = post.slugAsParams.split('/');
+    if (parts.length === 2) {
+      return {
+        locale: parts[0],
+        slug: parts[1],
+      };
+    }
+    // Fallback: if format is different, try to extract locale and slug
+    return {
+      locale: post.language || 'en',
+      slug: post.slugAsParams.split('/').pop() || post.slugAsParams,
+    };
+  });
 }
 
 interface PageProps {
@@ -39,7 +52,9 @@ interface PageProps {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata | undefined> {
-  const post = allPosts.find((post) => post.slugAsParams === params.slug);
+  const post = allPosts.find(
+    (post) => post.slugAsParams === `${params.locale}/${params.slug}`
+  );
   if (!post) {
     return;
   }
@@ -47,11 +62,16 @@ export async function generateMetadata({
 
   const { title, description, image } = post;
 
-  return constructMetadata({
+  const metadata = constructMetadata({
     title: `${title} - ${t("LocaleLayout.title")}`,
     description: description,
     image,
   });
+
+  return {
+    ...metadata,
+    alternates: constructAlternates({ locale: params.locale, path: `/blog/${params.slug}` }),
+  };
 }
 
 export default async function PostPage({ params }: PageProps) {

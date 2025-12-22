@@ -56,9 +56,9 @@ model User {
   // Relations to existing tables
   chargeOrders           ChargeOrder[]
   claimedActivityOrders  ClaimedActivityOrder[]
-  fluxData               FluxData[]
-  fluxDownloads          FluxDownloads[]
-  fluxViews              FluxViews[]
+  taskData               TaskData[]
+  taskDownloads          TaskDownloads[]
+  taskViews              TaskViews[]
   giftCodes              GiftCode[]
   userBillings           UserBilling[]
   userCredits            UserCredit[]
@@ -145,12 +145,12 @@ model BatchTask {
   completedAt     DateTime? @map(name: "completed_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fluxData FluxData[]
+  taskData TaskData[]
 
   @@map(name: "batch_tasks")
 }
 
-model FluxData {
+model TaskData {
   id               Int      @id @default(autoincrement())
   userId           String?  @map(name: "user_id")
   replicateId      String?  @map(name: "replicate_id")
@@ -193,8 +193,9 @@ model FluxData {
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   batchTask BatchTask? @relation(fields: [batchTaskId], references: [id], onDelete: Cascade)
+  userBillings UserBilling[]
 
-  @@map(name: "flux_data")
+  @@map(name: "task_data")
 }
 
 model BackgroundRemovalTask {
@@ -247,28 +248,28 @@ model WatermarkRemovalTask {
   @@index([createdAt])
 }
 
-model FluxDownloads {
+model TaskDownloads {
   id        Int      @id @default(autoincrement())
-  fluxId    Int      @map(name: "flux_id")
+  taskId    Int      @map(name: "task_id")
   userId    String   @map(name: "user_id")
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @map(name: "updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map(name: "flux_downloads")
+  @@map(name: "task_downloads")
 }
 
-model FluxViews {
+model TaskViews {
   id        Int      @id @default(autoincrement())
-  fluxId    Int      @map(name: "flux_id")
+  taskId    Int      @map(name: "task_id")
   userId    String   @map(name: "user_id")
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @default(now()) @map(name: "updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map(name: "flux_views")
+  @@map(name: "task_views")
 }
 
 model GiftCode {
@@ -329,10 +330,11 @@ model UserBilling {
   state       String
   amount      Int
   type        String
-  fluxId      Int?     @map(name: "flux_id")
-  description String?
-  createdAt   DateTime @default(now()) @map(name: "created_at")
-  updatedAt   DateTime @default(now()) @map(name: "updated_at")
+  taskData       TaskData? @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId         Int?      @map(name: "task_id")
+  description    String?   @map(name: "description")
+  createdAt      DateTime  @default(now()) @map(name: "created_at")
+  updatedAt      DateTime  @default(now()) @map(name: "updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

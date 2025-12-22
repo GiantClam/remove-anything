@@ -1,9 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createProjectAuthProvider } from "@/modules/auth/adapter";
+import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { z } from "zod";
 
-import { FluxHashids } from "@/db/dto/flux.dto";
+import { Hashids } from '@/lib/hashid'
+
+const TaskHashids = Hashids('Task')
 import { prisma } from "@/db/prisma";
 import { getErrorMessage } from "@/lib/handle-error";
 import { kv, KVRateLimit } from "@/lib/kv";
@@ -19,11 +22,22 @@ function getKey(id: string) {
 }
 
 const DownloadSchema = z.object({
-  fluxId: z.string(),
+  taskId: z.string(),
 });
 
+// 包装函数以匹配适配器期望的类型
+const getCurrentUser = async () => {
+  const user = await getCurrentUserOriginal();
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email ?? undefined,
+    name: user.name ?? undefined,
+  };
+};
+
 export async function GET(req: NextRequest) {
-  const auth = createProjectAuthProvider();
+  const auth = createProjectAuthProvider(getCurrentUser);
   const user = await auth.getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -52,7 +66,6 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    const fluxId = url.searchParams.get("fluxId");
     const taskId = url.searchParams.get("taskId");
     const type = url.searchParams.get("type");
     
@@ -120,7 +133,7 @@ export async function GET(req: NextRequest) {
     
     // 处理 Sora2 视频去水印任务下载
     if (type === "sora2-video-watermark-removal" && taskId) {
-      const sora2Task = await prisma.fluxData.findFirst({
+      const sora2Task = await prisma.taskData.findFirst({
         where: {
           replicateId: taskId,
           model: "sora2-video-watermark-removal",
@@ -156,45 +169,52 @@ export async function GET(req: NextRequest) {
       });
     }
     
-    // 处理 Flux 任务下载（原有逻辑）
-    if (!fluxId) {
-      return NextResponse.json({ error: "Missing fluxId parameter" }, { status: 400 });
+    // 处理任务下载（原有逻辑，保持对旧任务的兼容）
+    if (!taskId) {
+      return NextResponse.json({ error: "Missing taskId parameter" }, { status: 400 });
     }
 
-    const [id] = FluxHashids.decode(fluxId);
+    const [id] = TaskHashids.decode(taskId);
     if (!id) {
       return new Response("Not found", { status: 404 });
     }
 
-    const fluxData = await prisma.fluxData.findUnique({
+    const taskData = await prisma.taskData.findUnique({
       where: {
         id: id as number,
       },
     });
 
-    if (!fluxData || !fluxData.imageUrl) {
+    if (!taskData || !taskData.imageUrl) {
       return new Response("Not found", { status: 404 });
     }
 
-    // Check if user owns this flux or if it's public
-    if (fluxData.userId !== userId && fluxData.isPrivate) {
+    // Check if user owns this task or if it's public
+    if (taskData.userId !== userId && taskData.isPrivate) {
       return new Response("Forbidden", { status: 403 });
     }
 
     // Fetch the image from the URL
-    const imageResponse = await fetch(fluxData.imageUrl);
+    const imageResponse = await fetch(taskData.imageUrl);
     if (!imageResponse.ok) {
       return new Response("Image not found", { status: 404 });
     }
 
     const imageBuffer = await imageResponse.arrayBuffer();
-    const contentType = imageResponse.headers.get("content-type") || "image/jpeg";
+    const contentType = imageResponse.headers.get("content-type") || "image/png";
     
+    // Guess extension from content-type or URL
+    const fromContentType = contentType.split("/")[1] || "";
+    const guessedExt = fromContentType ? fromContentType.split(";")[0] : "";
+    const urlExtMatch = taskData.imageUrl.match(/\.([a-zA-Z0-9]+)(?:\?|#|$)/);
+    const urlExt = urlExtMatch?.[1];
+    const ext = (guessedExt || urlExt || "png").toLowerCase();
+
     // Return the image with appropriate headers
     return new Response(imageBuffer, {
       headers: {
         "Content-Type": contentType,
-        "Content-Disposition": `attachment; filename="flux-${fluxId}.jpg"`,
+        "Content-Disposition": `attachment; filename="image-${taskId}.${ext}"`,
         "Cache-Control": "public, max-age=3600",
         "X-Content-Type-Options": "nosniff",
       },

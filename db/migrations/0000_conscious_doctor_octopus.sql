@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS "charge_product" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "flux_data" (
+CREATE TABLE IF NOT EXISTS "task_data" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" varchar NOT NULL,
 	"replicate_id" varchar NOT NULL,
@@ -53,17 +53,17 @@ CREATE TABLE IF NOT EXISTS "flux_data" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "flux_downloads" (
+CREATE TABLE IF NOT EXISTS "task_downloads" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"flux_id" integer NOT NULL,
+	"task_id" integer NOT NULL,
 	"user_id" varchar(200) NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "flux_views" (
+CREATE TABLE IF NOT EXISTS "task_views" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"flux_id" integer NOT NULL,
+	"task_id" integer NOT NULL,
 	"user_id" varchar(200) NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now()
@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS "user_billing" (
 	"state" varchar NOT NULL,
 	"amount" integer NOT NULL,
 	"type" varchar NOT NULL,
-	"flux_id" integer,
+	"task_id" integer,
 	"description" varchar,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now()

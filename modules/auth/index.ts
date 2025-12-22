@@ -1,4 +1,5 @@
-// Google / GitHub 登录与鉴权 模块入口
-export { getCurrentUser } from "@/lib/auth-utils";
-export * from "@/components/auth/auth-components";
+// Auth 模块统一导出入口
+// 核心接口和适配器
+export type { AuthSession, AuthProvider } from "./sdk";
+export { createProjectAuthProvider } from "./adapter";
 

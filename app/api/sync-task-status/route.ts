@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
-import { runninghubAPI } from "@/lib/runninghub-api";
+import { runninghubAPI } from "@/modules/runninghub";
 import { findSora2VideoWatermarkRemovalTaskByRunningHubId, updateSora2VideoWatermarkRemovalTask } from "@/db/queries/sora2-video-watermark-removal";
 import { findBackgroundRemovalTaskByReplicateId, updateBackgroundRemovalTask } from "@/db/queries/background-removal";
 import { findWatermarkRemovalTaskByRunningHubId, updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";

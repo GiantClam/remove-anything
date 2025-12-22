@@ -13,8 +13,7 @@ import { Icons } from "@/components/shared/icons";
 import { EmptyPlaceholder } from "@/components/shared/empty-placeholder";
 import Loading from "@/components/loading/index";
 import { DownloadAction } from "@/components/history/download-action";
-import { FluxTaskStatus } from "@/components/playground";
-import { FluxSelectDto } from "@/db/type";
+import { TaskStatus, TaskSelectDto } from "@/db/type";
 import { Link } from "@/lib/navigation";
 import copy from "copy-to-clipboard";
 import { toast } from "sonner";
@@ -35,14 +34,14 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
   const { data: watermarkHistory, isLoading: watermarkLoading } = useQuery({
     queryKey: ["watermark-history", userId],
     queryFn: async () => {
-      const response = await fetch("/api/mine-flux?page=1&pageSize=12", {
+      const response = await fetch("/api/mine-tasks?page=1&pageSize=12", {
         credentials: 'include',
       });
       if (response.ok) {
         const result = await response.json();
         console.log("🔍 Watermark removal API response:", result);
         // 过滤出水印移除任务
-        const filteredTasks = result.data?.data?.filter((task: FluxSelectDto) => 
+        const filteredTasks = result.data?.data?.filter((task: TaskSelectDto) => 
           task.taskType === "watermark-removal"
         ) || [];
         console.log("🔍 Filtered watermark tasks:", filteredTasks);
@@ -57,14 +56,14 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
   const { data: backgroundHistory, isLoading: backgroundLoading } = useQuery({
     queryKey: ["background-history", userId],
     queryFn: async () => {
-      const response = await fetch("/api/mine-flux?page=1&pageSize=12", {
+      const response = await fetch("/api/mine-tasks?page=1&pageSize=12", {
         credentials: 'include',
       });
       if (response.ok) {
         const result = await response.json();
         console.log("🔍 Background removal API response:", result);
         // 过滤出背景移除任务
-        const filteredTasks = result.data?.data?.filter((task: FluxSelectDto) => 
+        const filteredTasks = result.data?.data?.filter((task: TaskSelectDto) => 
           task.taskType === "background-removal"
         ) || [];
         console.log("🔍 Filtered background tasks:", filteredTasks);
@@ -79,14 +78,14 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
   const { data: sora2VideoHistory, isLoading: sora2VideoLoading } = useQuery({
     queryKey: ["sora2-video-history", userId],
     queryFn: async () => {
-      const response = await fetch("/api/mine-flux?page=1&pageSize=12", {
+      const response = await fetch("/api/mine-tasks?page=1&pageSize=12", {
         credentials: 'include',
       });
       if (response.ok) {
         const result = await response.json();
         console.log("🔍 Sora2 video watermark removal API response:", result);
         // 过滤出 Sora2 视频去水印任务
-        const filteredTasks = result.data?.data?.filter((task: FluxSelectDto) => 
+        const filteredTasks = result.data?.data?.filter((task: TaskSelectDto) => 
           task.taskType === "sora2-video-watermark-removal"
         ) || [];
         console.log("🔍 Filtered Sora2 video tasks:", filteredTasks);
@@ -106,11 +105,11 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
   // 获取任务状态显示文本
   const getStatusText = (status: string) => {
     switch (status) {
-      case FluxTaskStatus.Succeeded:
+      case TaskStatus.Succeeded:
         return t("status.succeeded");
-      case FluxTaskStatus.Processing:
+      case TaskStatus.Processing:
         return t("status.processing");
-      case FluxTaskStatus.Failed:
+      case TaskStatus.Failed:
         return t("status.failed");
       case "pending":
         return t("status.pending");
@@ -122,11 +121,11 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
   // 获取任务状态样式
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case FluxTaskStatus.Succeeded:
+      case TaskStatus.Succeeded:
         return "bg-green-100 text-green-800";
-      case FluxTaskStatus.Processing:
+      case TaskStatus.Processing:
         return "bg-yellow-100 text-yellow-800";
-      case FluxTaskStatus.Failed:
+      case TaskStatus.Failed:
         return "bg-red-100 text-red-800";
       case "pending":
         return "bg-gray-100 text-gray-800";
@@ -166,7 +165,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                 </div>
               ) : watermarkHistory && watermarkHistory.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {watermarkHistory.map((item: FluxSelectDto, index: number) => (
+                  {watermarkHistory.map((item: TaskSelectDto, index: number) => (
                     <div
                       key={item.id}
                       className="border rounded-lg p-4 space-y-3 hover:shadow-md transition-shadow"
@@ -196,7 +195,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                       </div>
 
                       <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                        {item.taskStatus === FluxTaskStatus.Processing ? (
+                        {item.taskStatus === TaskStatus.Processing ? (
                           <div className="w-full h-full flex items-center justify-center">
                             <PlaygroundLoading />
                           </div>
@@ -215,7 +214,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                         )}
                       </div>
 
-                      {item.taskStatus === FluxTaskStatus.Succeeded && (
+                      {item.taskStatus === TaskStatus.Succeeded && (
                         <div className="space-y-2">
                           <DownloadAction
                             disabled={false}
@@ -267,7 +266,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                 </div>
               ) : backgroundHistory && backgroundHistory.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {backgroundHistory.map((item: FluxSelectDto, index: number) => (
+                  {backgroundHistory.map((item: TaskSelectDto, index: number) => (
                     <div
                       key={item.id}
                       className="border rounded-lg p-4 space-y-3 hover:shadow-md transition-shadow"
@@ -297,7 +296,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                       </div>
 
                       <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                        {item.taskStatus === FluxTaskStatus.Processing ? (
+                        {item.taskStatus === TaskStatus.Processing ? (
                           <div className="w-full h-full flex items-center justify-center">
                             <PlaygroundLoading />
                           </div>
@@ -316,7 +315,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                         )}
                       </div>
 
-                      {item.taskStatus === FluxTaskStatus.Succeeded && (
+                      {item.taskStatus === TaskStatus.Succeeded && (
                         <div className="space-y-2">
                           <DownloadAction
                             disabled={false}
@@ -368,7 +367,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                 </div>
               ) : sora2VideoHistory && sora2VideoHistory.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {sora2VideoHistory.map((item: FluxSelectDto, index: number) => (
+                  {sora2VideoHistory.map((item: TaskSelectDto, index: number) => (
                     <div
                       key={item.id}
                       className="border rounded-lg p-4 space-y-3 hover:shadow-md transition-shadow"
@@ -398,7 +397,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                       </div>
 
                       <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                        {item.taskStatus === FluxTaskStatus.Processing ? (
+                        {item.taskStatus === TaskStatus.Processing ? (
                           <div className="w-full h-full flex items-center justify-center">
                             <PlaygroundLoading />
                           </div>
@@ -418,7 +417,7 @@ export default function DashboardHome({ locale }: DashboardHomeProps) {
                         )}
                       </div>
 
-                      {item.taskStatus === FluxTaskStatus.Succeeded && (
+                      {item.taskStatus === TaskStatus.Succeeded && (
                         <div className="space-y-2">
                           <DownloadAction
                             disabled={false}

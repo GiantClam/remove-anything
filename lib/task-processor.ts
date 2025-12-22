@@ -1,5 +1,5 @@
 import { prisma } from "@/db/prisma";
-import { runninghubAPI } from "@/lib/runninghub-api";
+import { runninghubAPI } from "@/modules/runninghub";
 import { taskQueueManager } from "@/lib/task-queue";
 import { Credits, model } from "@/config/constants";
 import { BillingType } from "@/db/type";
@@ -18,13 +18,13 @@ export class TaskProcessor {
   }
 
   /**
-   * 处理Sora2视频去水印任务
+   * 处理视频去水印任务
    */
   public async processSora2VideoWatermarkRemoval(task: any) {
     const { taskRecordId, r2Url, transformUrl, orientation, userId } = task.metadata;
     
     try {
-      console.log(`🚀 开始处理Sora2视频去水印任务: ${task.id}`);
+      console.log(`🚀 开始处理视频去水印任务: ${task.id}`);
       console.log(`📋 任务记录ID: ${taskRecordId}`);
       console.log(`🔗 R2 URL: ${r2Url}`);
       console.log(`🔗 Transform URL: ${transformUrl}`);
@@ -51,10 +51,8 @@ export class TaskProcessor {
       }
       
       if (!workflowId || workflowId === 'placeholder') {
-        throw new Error('Sora2 workflow ID not configured. Please set SORA2_LANDSCAPE_WORKFLOW_ID and SORA2_PORTRAIT_WORKFLOW_ID environment variables.');
+        throw new Error('Workflow ID not configured. Please set SORA2_LANDSCAPE_WORKFLOW_ID and SORA2_PORTRAIT_WORKFLOW_ID environment variables.');
       }
-
-      
 
       const runninghubTaskId = await runninghubAPI.createTaskGeneric({
         workflowId,
@@ -63,7 +61,7 @@ export class TaskProcessor {
       });
 
       // 更新记录并启动状态监控
-      await prisma.fluxData.update({
+      await prisma.taskData.update({
         where: { id: taskRecordId },
         data: {
           taskStatus: "processing",
@@ -73,7 +71,7 @@ export class TaskProcessor {
 
       try {
         const { taskQueueManager } = await import('./task-queue');
-        taskQueueManager.startStatusWatcher(taskRecordId, runninghubTaskId);
+        taskQueueManager.startStatusWatcher(taskRecordId, runninghubTaskId, "video-watermark-removal");
       } catch {}
 
       // 积分扣除（仅登录用户且非开发环境）
@@ -84,27 +82,26 @@ export class TaskProcessor {
         } catch {}
       }
 
-      console.log(`✅ Sora2视频去水印任务 ${task.id} 已创建 RunningHub 任务: ${runninghubTaskId}`);
+      console.log(`✅ 视频去水印任务 ${task.id} 已创建 RunningHub 任务: ${runninghubTaskId}`);
 
       // 注意：这里不调用 completeTask，因为任务还在RunningHub中处理
       // 任务完成会通过webhook或状态轮询来处理
 
     } catch (error) {
-      console.error(`❌ 处理Sora2视频去水印任务 ${task.id} 失败:`, error);
+      console.error(`❌ 处理视频去水印任务 ${task.id} 失败:`, error);
       
       // 更新任务状态为失败
       if (taskRecordId) {
-        await prisma.fluxData.update({
+        await prisma.taskData.update({
           where: { id: taskRecordId },
           data: {
-            taskStatus: "Failed",
-            errorMsg: error instanceof Error ? error.message : "Unknown error",
+            taskStatus: "failed",
+            errorMsg: error instanceof Error ? error.message : String(error),
+            executeEndTime: BigInt(Date.now()),
           },
         });
       }
-
-      // 标记队列任务失败
-      await taskQueueManager.failTask(task.id, error);
+      throw error;
     }
   }
 

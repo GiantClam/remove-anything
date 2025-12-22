@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth-utils";
-import { runninghubAPI } from "@/lib/runninghub-api";
+import { runninghubAPI } from "@/modules/runninghub";
 import { createWatermarkRemovalTask, updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";
 import { uploadToR2 } from "@/lib/upload";
 import JSZip from "jszip";

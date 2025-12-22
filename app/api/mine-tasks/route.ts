@@ -8,9 +8,8 @@ export const dynamic = 'force-dynamic';
 import { z } from "zod";
 
 import { model } from "@/config/constants";
-import { FluxHashids } from "@/db/dto/flux.dto";
 import { prisma } from "@/db/prisma";
-import { FluxTaskStatus } from "@/db/type";
+import { TaskStatus } from "@/db/type";
 import { getErrorMessage } from "@/lib/handle-error";
 import { getUserBackgroundRemovalTasks } from "@/db/queries/background-removal";
 
@@ -63,35 +62,33 @@ export async function GET(req: NextRequest) {
     const whereConditions: any = {
       userId,
       taskStatus: {
-        in: [FluxTaskStatus.Succeeded, FluxTaskStatus.Processing],
+        in: [TaskStatus.Succeeded, TaskStatus.Processing],
       },
     };
     if (model) {
       whereConditions.model = model;
     }
 
-    // 获取Flux任务
-    const [fluxData, fluxTotal] = await Promise.all([
-      prisma.fluxData.findMany({
+    // 获取任务数据
+    const [tasks, taskTotal, backgroundRemovalTasks] = await Promise.all([
+      prisma.taskData.findMany({
         where: whereConditions,
         take: pageSize,
         skip: offset,
         orderBy: { createdAt: "desc" },
       }),
-      prisma.fluxData.count({ where: whereConditions }),
-    ]);
-
-    // 获取背景移除任务
-    const backgroundRemovalTasks = await prisma.backgroundRemovalTask.findMany({
-      where: {
-        userId,
-        taskStatus: {
-          in: ["succeeded", "processing", "pending", "starting"],
+      prisma.taskData.count({ where: whereConditions }),
+      prisma.backgroundRemovalTask.findMany({
+        where: {
+          userId,
+          taskStatus: {
+            in: ["succeeded", "processing", "pending", "starting"],
+          },
         },
-      },
-      orderBy: { createdAt: "desc" },
-      take: Math.min(pageSize, 50), // 限制数量，避免过多数据
-    });
+        orderBy: { createdAt: "desc" },
+        take: Math.min(pageSize, 50),
+      }),
+    ]);
 
     // 获取水印移除任务
     const watermarkRemovalTasks = await prisma.watermarkRemovalTask.findMany({
@@ -111,7 +108,7 @@ export async function GET(req: NextRequest) {
       imageUrl: task.outputImageUrl,
       inputImageUrl: task.inputImageUrl,
       inputPrompt: "Background Removal", // 背景移除没有prompt，使用固定值
-      taskStatus: task.taskStatus === "succeeded" ? FluxTaskStatus.Succeeded : FluxTaskStatus.Processing,
+      taskStatus: task.taskStatus === "succeeded" ? TaskStatus.Succeeded : TaskStatus.Processing,
       model: task.model,
       createdAt: task.createdAt,
       userId: task.userId,
@@ -129,7 +126,7 @@ export async function GET(req: NextRequest) {
       imageUrl: task.outputZipUrl || task.inputZipUrl, // 如果有输出文件则使用，否则使用输入文件
       inputImageUrl: task.inputZipUrl, // 使用inputZipUrl作为输入图片URL
       inputPrompt: "Watermark Removal", // 水印移除没有prompt，使用固定值
-      taskStatus: task.taskStatus === "succeeded" ? FluxTaskStatus.Succeeded : FluxTaskStatus.Processing,
+      taskStatus: task.taskStatus === "succeeded" ? TaskStatus.Succeeded : TaskStatus.Processing,
       model: "watermark-removal",
       createdAt: task.createdAt,
       userId: task.userId,
@@ -139,8 +136,8 @@ export async function GET(req: NextRequest) {
       taskType: "watermark-removal", // 添加任务类型标识
     }));
 
-    // 查询 Sora2 视频去水印任务（从 FluxData 表中筛选）
-    const sora2VideoTasks = fluxData.filter((task) => 
+    // 查询 Sora2 视频去水印任务（从 TaskData 表中筛选）
+    const sora2VideoTasks = tasks.filter((task) => 
       task.model === "sora2-video-watermark-removal"
     );
 
@@ -150,7 +147,7 @@ export async function GET(req: NextRequest) {
       imageUrl: task.imageUrl || task.inputImageUrl, // 使用imageUrl或inputImageUrl作为视频URL
       inputImageUrl: task.inputImageUrl, // 使用inputImageUrl作为输入视频URL
       inputPrompt: task.inputPrompt || "Sora2 Video Watermark Removal",
-      taskStatus: task.taskStatus === "succeeded" ? FluxTaskStatus.Succeeded : FluxTaskStatus.Processing,
+      taskStatus: task.taskStatus === "succeeded" ? TaskStatus.Succeeded : TaskStatus.Processing,
       model: task.model,
       createdAt: task.createdAt,
       userId: task.userId,
@@ -162,27 +159,14 @@ export async function GET(req: NextRequest) {
       taskType: "sora2-video-watermark-removal", // 添加任务类型标识
     }));
 
-    // 转换Flux任务为统一格式
-    const transformedFluxTasks = fluxData.map(
-      ({ id, executeEndTime, executeStartTime, loraUrl, ...rest }) => ({
-        ...rest,
-        executeTime:
-          executeEndTime && executeStartTime
-            ? Number(`${executeEndTime - executeStartTime}`)
-            : 0,
-        id: FluxHashids.encode(id),
-        taskType: "flux", // 添加任务类型标识
-      }),
-    );
-
     // 合并所有任务并按创建时间排序
-    const allTasks = [...transformedFluxTasks, ...transformedBackgroundTasks, ...transformedWatermarkTasks, ...transformedSora2VideoTasks]
+    const allTasks = [...transformedBackgroundTasks, ...transformedWatermarkTasks, ...transformedSora2VideoTasks]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, pageSize); // 重新分页
 
     return NextResponse.json({
       data: {
-        total: fluxTotal + backgroundRemovalTasks.length + watermarkRemovalTasks.length + sora2VideoTasks.length,
+        total: backgroundRemovalTasks.length + watermarkRemovalTasks.length + sora2VideoTasks.length,
         page,
         pageSize,
         data: allTasks,

@@ -243,7 +243,7 @@ try {
 // 暂时禁用Sentry以避免Vercel部署警告
 // export default withSentryConfig(withNextIntlConfig(withContentlayer(nextConfig)), {
 //   org: "koya",
-//   project: "fluxaiproart",
+
 //   silent: !process.env.CI,
 //   widenClientFileUpload: true,
 //   hideSourceMaps: true,

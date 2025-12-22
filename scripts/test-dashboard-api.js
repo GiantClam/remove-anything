@@ -11,8 +11,8 @@ async function testDashboardAPI() {
   console.log('========================');
 
   try {
-    // 测试mine-flux API
-    const response = await fetch('http://localhost:3000/api/mine-flux?page=1&pageSize=12', {
+    // 测试mine-tasks API
+    const response = await fetch('http://localhost:3000/api/mine-tasks?page=1&pageSize=12', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

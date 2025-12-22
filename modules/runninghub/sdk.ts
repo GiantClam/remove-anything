@@ -66,7 +66,7 @@ export class RunningHubAPI {
       let bodyText: string | undefined; try { bodyText = await response.text(); } catch {}
       throw new Error(`Upload failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`);
     }
-    const result = await response.json();
+    const result = await response.json() as RunningHubUploadResponse;
     if (result.code !== 0) throw new Error(`Upload failed (api): ${result.msg}`);
     return result.data.fileName as string;
   }
@@ -82,7 +82,7 @@ export class RunningHubAPI {
     const payload = { apiKey: this.apiKey, workflowId, nodeInfoList: nodeInfoListWithR2Url, ...(webhookUrl && { webhookUrl }) };
     const response = await fetch(`${this.baseUrl}/task/openapi/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     if (!response.ok) { let bodyText: string | undefined; try { bodyText = await response.text(); } catch {}; throw new Error(`Create task failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`); }
-    const result: RunningHubCreateTaskResponse = await response.json();
+    const result = await response.json() as RunningHubCreateTaskResponse;
     if (result.code !== 0) throw new Error(`Create task failed (api): ${result.msg}`);
     return result.data.taskId;
   }
@@ -93,7 +93,7 @@ export class RunningHubAPI {
     const payload = { apiKey: this.apiKey, workflowId, nodeInfoList, ...(webhookUrl && { webhookUrl }) };
     const response = await fetch(`${this.baseUrl}/task/openapi/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     if (!response.ok) { let bodyText: string | undefined; try { bodyText = await response.text(); } catch {}; throw new Error(`Create task failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`); }
-    const result: RunningHubCreateTaskResponse = await response.json();
+    const result = await response.json() as RunningHubCreateTaskResponse;
     if (result.code !== 0) throw new Error(`Create task failed (api): ${result.msg}`);
     return result.data.taskId;
   }
@@ -102,7 +102,7 @@ export class RunningHubAPI {
     const payload = { apiKey: this.apiKey, taskId };
     const response = await fetch(`${this.baseUrl}/task/openapi/cancel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     if (!response.ok) { let bodyText: string | undefined; try { bodyText = await response.text(); } catch {}; throw new Error(`Cancel task failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`); }
-    const result = await response.json();
+    const result = await response.json() as { code: number; msg?: string };
     if (result.code !== 0) return false;
     return true;
   }
@@ -122,18 +122,18 @@ export class RunningHubAPI {
     const payload = { apiKey: this.apiKey, taskId };
     const response = await fetch(`${this.baseUrl}/task/openapi/status?t=${Date.now()}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }, body: JSON.stringify(payload) });
     if (!response.ok) { let bodyText: string | undefined; try { bodyText = await response.text(); } catch {}; throw new Error(`Get status failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`); }
-    const result = await response.json();
-    if (typeof result.code !== 'number') return result;
+    const result = await response.json() as RunningHubTaskStatus | { code: number; msg?: string; data?: any };
+    if (typeof result.code !== 'number') return result as RunningHubTaskStatus;
     if (result.code !== 0) throw new Error(`Get status failed (api): ${result.msg || 'Unknown error'}`);
-    if (!result.data) return { code: 0, msg: 'success', data: result };
-    return result;
+    if (!result.data) return { code: 0, msg: 'success', data: result as any };
+    return result as RunningHubTaskStatus;
   }
 
   async getTaskResult(taskId: string): Promise<any> {
     const payload = { apiKey: this.apiKey, taskId };
     const response = await fetch(`${this.baseUrl}/task/openapi/outputs?t=${Date.now()}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }, body: JSON.stringify(payload) });
     if (!response.ok) { let bodyText: string | undefined; try { bodyText = await response.text(); } catch {}; throw new Error(`Get result failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`); }
-    const result = await response.json();
+    const result = await response.json() as { code: number; msg?: string; data?: any };
     if (result.code !== 0) {
       if (result.code === 804 && result.msg === 'APIKEY_TASK_IS_RUNNING') return { code: 804, msg: 'APIKEY_TASK_IS_RUNNING', data: null };
       throw new Error(`Get result failed (api): ${result.msg || 'Unknown error'}`);

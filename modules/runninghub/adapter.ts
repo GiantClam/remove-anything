@@ -1,4 +1,4 @@
-import type { RunningHubClient } from "@/modules/tasks/sdk";
+import type { RunningHubClient } from "../tasks/sdk";
 import { RunningHubAPI } from "./sdk";
 
 export function createRunningHubClient(config?: { baseUrl?: string; apiKey?: string; defaultWorkflowId?: string }): RunningHubClient {

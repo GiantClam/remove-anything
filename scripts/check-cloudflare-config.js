@@ -30,7 +30,7 @@ const REQUIRED_VARS = {
   'AI 模型 API': [
     'REPLICATE_API_TOKEN',
     'GEMINI_API_KEY',
-    'FLUX_AI_PROMPT'
+    'REMOVE_ANYTHING_PROMPT'
   ]
 };
 

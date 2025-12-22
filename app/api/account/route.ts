@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createProjectAuthProvider } from "@/modules/auth/adapter";
+import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 import { AccountHashids } from "@/db/dto/account.dto";
@@ -9,6 +10,17 @@ import { redis } from "@/lib/redis";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = 'force-dynamic';
+
+// 包装函数以匹配适配器期望的类型
+const getCurrentUser = async () => {
+  const user = await getCurrentUserOriginal();
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email ?? undefined,
+    name: user.name ?? undefined,
+  };
+};
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,7 +31,7 @@ export async function GET(req: NextRequest) {
     }
 
     console.time("stat");
-    const auth = createProjectAuthProvider();
+    const auth = createProjectAuthProvider(getCurrentUser);
     const user = await auth.getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

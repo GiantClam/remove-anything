@@ -16,7 +16,7 @@ export async function register() {
       const { prisma } = await import('@/db/prisma');
       const { taskQueueManager } = await import('@/lib/task-queue');
 
-      const pending = await prisma.fluxData.findMany({
+      const pending = await prisma.taskData.findMany({
         where: {
           model: 'sora2-video-watermark-removal',
           taskStatus: { in: ['processing', 'Processing'] },
@@ -27,7 +27,7 @@ export async function register() {
 
       for (const t of pending) {
         if (t.replicateId) {
-          taskQueueManager.startStatusWatcher(t.id, t.replicateId);
+          taskQueueManager.startStatusWatcher(t.id, t.replicateId, "video-watermark-removal");
         }
       }
     }

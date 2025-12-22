@@ -26,7 +26,7 @@ export enum BillingType {
   Withdraw = "Withdraw",
 }
 
-export enum FluxTaskStatus {
+export enum TaskStatus {
   Processing = "processing",
   Succeeded = "succeeded",
   Failed = "failed",
@@ -55,8 +55,8 @@ export type GiftCodeSchema = Prisma.GiftCodeCreateInput;
 
 export type GiftCodeSelectDto = Omit<GiftCodeDto, "id"> & { id: string };
 
-export type FluxDto = Prisma.FluxDataGetPayload<any>;
+export type TaskDto = Prisma.TaskDataGetPayload<any>;
 
-export type FluxSchema = Prisma.FluxDataCreateInput;
+export type TaskSchema = Prisma.TaskDataCreateInput;
 
-export type FluxSelectDto = Omit<FluxDto, "id"> & { id: string; taskType?: "flux" | "background-removal" | "watermark-removal" | "sora2-video-watermark-removal" };
+export type TaskSelectDto = Omit<TaskDto, "id"> & { id: string; taskType?: "image" | "background-removal" | "watermark-removal" | "sora2-video-watermark-removal" };

@@ -36,8 +36,6 @@ export const env = createEnv({
     NEXTAUTH_URL: z.string().min(1).optional(),
     LOG_SNAG_TOKEN: z.string().min(1).default("log-snag-token-placeholder"),
     TASK_HEADER_KEY: z.string().min(1).default("task-header-key-placeholder"),
-    FLUX_HEADER_KEY: z.string().min(1).default("flux-header-key-placeholder"),
-    FLUX_CREATE_URL: z.string().min(1).default("https://placeholder.com/create"),
     APP_ENV: z
       .enum(["development", "production", "staging"])
       .default("development"),
@@ -66,7 +64,7 @@ export const env = createEnv({
     // Legacy OpenAI config (now replaced by Gemini via AI Gateway)
     OPEN_AI_API_ENDPOINT: z.string().url().optional(),
     OPEN_AI_API_KEY: z.string().optional(),
-    FLUX_AI_PROMPT: z.string().min(1).default("placeholder"),
+    TASK_AI_PROMPT: z.string().min(1).default("placeholder"),
     GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
   },
   client: {
@@ -125,8 +123,6 @@ export const env = createEnv({
     NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID:
       process.env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID || "price_placeholder_business_yearly",
     TASK_HEADER_KEY: process.env.TASK_HEADER_KEY || "task-header-key-placeholder",
-    FLUX_HEADER_KEY: process.env.FLUX_HEADER_KEY || "flux-header-key-placeholder",
-    FLUX_CREATE_URL: process.env.FLUX_CREATE_URL || "https://placeholder.com/create",
     APP_ENV: process.env.APP_ENV,
     
     // Cloudflare AI Gateway Configuration
@@ -148,7 +144,7 @@ export const env = createEnv({
     // Legacy OpenAI config
     OPEN_AI_API_ENDPOINT: process.env.OPEN_AI_API_ENDPOINT,
     OPEN_AI_API_KEY: process.env.OPEN_AI_API_KEY,
-    FLUX_AI_PROMPT: process.env.FLUX_AI_PROMPT,
+    TASK_AI_PROMPT: process.env.TASK_AI_PROMPT,
     GEMINI_MODEL: process.env.GEMINI_MODEL,
     NEXT_PUBLIC_UMAMI_DATA_ID: process.env.NEXT_PUBLIC_UMAMI_DATA_ID,
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,

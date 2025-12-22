@@ -15,7 +15,7 @@ import { defaultLocale, localePrefix, locales } from "./config";
 export const config = {
   matcher: [
     "/",
-    "/(zh|en)/:path*",
+    "/(zh|tw|en|fr|ja|ko|de|pt|es|ar)/:path*",
     "/((?!static|.*\\..*|_next).*)",
   ], // Run middleware on API routes],
 };
@@ -129,6 +129,14 @@ export default withAuth(
     if (nextUrl.pathname === '/app') {
       // 让/app路由通过到app/page.tsx，不被next-intl拦截
       return;
+    }
+
+    // 处理 /zh 到 /tw 的重定向（因为配置中没有 zh，只有 tw）
+    if (nextUrl.pathname.startsWith('/zh')) {
+      const newPath = nextUrl.pathname.replace(/^\/zh/, '/tw');
+      const newUrl = new URL(newPath, nextUrl.origin);
+      newUrl.search = nextUrl.search;
+      return NextResponse.redirect(newUrl);
     }
 
     return nextIntlMiddleware(req);

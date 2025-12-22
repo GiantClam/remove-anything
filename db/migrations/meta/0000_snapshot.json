@@ -172,8 +172,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.flux_data": {
-      "name": "flux_data",
+    "public.task_data": {
+      "name": "task_data",
       "schema": "",
       "columns": {
         "id": {
@@ -319,8 +319,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.flux_downloads": {
-      "name": "flux_downloads",
+    "public.task_downloads": {
+      "name": "task_downloads",
       "schema": "",
       "columns": {
         "id": {
@@ -329,8 +329,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "flux_id": {
-          "name": "flux_id",
+        "task_id": {
+          "name": "task_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -361,8 +361,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.flux_views": {
-      "name": "flux_views",
+    "public.task_views": {
+      "name": "task_views",
       "schema": "",
       "columns": {
         "id": {
@@ -371,8 +371,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "flux_id": {
-          "name": "flux_id",
+        "task_id": {
+          "name": "task_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -694,8 +694,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "flux_id": {
-          "name": "flux_id",
+        "task_id": {
+          "name": "task_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false

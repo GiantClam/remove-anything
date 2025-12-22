@@ -75,21 +75,6 @@ export async function generateMetadata({
         'max-snippet': -1,
       },
     },
-    alternates: {
-      canonical: `/${locale === "en" ? "" : locale}`,
-      languages: {
-        "x-default": "/",
-        zh: "/zh",
-        tw: "/tw",
-        ja: "/ja",
-        fr: "/fr",
-        es: "/es",
-        de: "/de",
-        ko: "/ko",
-        pt: "/pt",
-        ar: "/ar"
-      },
-    },
     openGraph: {
       type: 'website',
       url: `/${locale === "en" ? "" : locale}`,

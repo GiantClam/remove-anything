@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { taskProcessor } from "@/lib/task-processor";
-import { runninghubAPI } from "@/lib/runninghub-api";
+import { runninghubAPI } from "@/modules/runninghub";
 
 function computeBackoffMs(retryCount: number): number {
   const steps = [60_000, 5 * 60_000, 15 * 60_000, 60 * 60_000];

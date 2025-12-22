@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Clock, Bell, ArrowRight } from "lucide-react";
 import { Link } from "@/lib/navigation";
+import { constructAlternates } from "@/lib/seo";
 
 interface PageProps {
   params: { locale: string };
@@ -15,6 +16,7 @@ export async function generateMetadata({ params: { locale } }: PageProps): Promi
     title: t("title"),
     description: t("description"),
     keywords: t("keywords"),
+    alternates: constructAlternates({ locale, path: "/remove-objects" }),
     openGraph: {
       title: t("title"),
       description: t("description"),

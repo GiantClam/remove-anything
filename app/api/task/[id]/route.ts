@@ -3,7 +3,7 @@ import { getErrorMessage } from "@/lib/handle-error";
 // import { aiGateway } from "@/lib/ai-gateway"; // 已切换至 RunningHub，状态由 webhook 回写
 import { findBackgroundRemovalTaskByReplicateId } from "@/db/queries/background-removal";
 import { prisma } from "@/db/prisma";
-import { runninghubAPI } from "@/lib/runninghub-api";
+import { runninghubAPI } from "@/modules/runninghub";
 
 export async function GET(
   req: NextRequest,

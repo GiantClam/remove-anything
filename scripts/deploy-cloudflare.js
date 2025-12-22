@@ -163,7 +163,7 @@ function displayDeploymentInfo() {
   console.log('   • 存储: Cloudflare R2');
   console.log('   • AI Gateway: Cloudflare AI Gateway');
   console.log('   • 认证: Google OAuth (NextAuth.js)');
-  console.log('   • 图像生成: Replicate FLUX 模型');
+  console.log('   • 图像处理: RunningHub 模型');
   console.log('   • 文本生成: Google Gemini');
   console.log('');
   console.log('📋 后续步骤:');

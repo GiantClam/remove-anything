@@ -18,10 +18,10 @@
     }
   },
   "IndexPage": {
-    "intro": "Presentamos el Generador de Imágenes Flux AI",
-    "description": "Revolutionando el modelo avanzado de texto a imagen de próxima generación, compatible con los modelos flux.1 pro/dev y flux.1 schnell. El procesamiento por lotes garantiza que no se pierda ninguna imagen, el almacenamiento permanente protege tu trabajo.",
-    "title": "Generador de Imágenes Flux AI",
-    "subtitle": "Texto a Imagen Avanzado",
+    "intro": "Presentamos el Removedor de Objetos AI",
+    "description": "Revoluciona la eliminación de objetos con nuestra herramienta avanzada de IA. El procesamiento por lotes garantiza que no se pierda ninguna imagen, el almacenamiento permanente protege tu trabajo.",
+    "title": "Removedor de Objetos AI",
+    "subtitle": "Eliminación Avanzada de Objetos",
     "social": {
       "todayRemoved": "Eliminados hoy",
       "objects": "objetos",
@@ -30,8 +30,8 @@
     "seeOthers": "Ver resultados de otros",
     "examples": {
       "label": "Ejemplo",
-      "title": "Ejemplos de Imágenes Flux AI",
-      "subtitle": "Generar imágenes a partir de textos.",
+      "title": "Ejemplos de Eliminación de Objetos",
+      "subtitle": "Elimina objetos no deseados de las imágenes.",
       "cta": {
         "description": "¿Listo para probarlo tú mismo? ¡Sube tu imagen y mira la magia suceder!",
         "button": "Pruébalo ahora"
@@ -39,33 +39,21 @@
     },
     "features": {
       "title": "Características",
-      "description": "El Generador de Imágenes Flux AI es una herramienta poderosa que te permite generar imágenes a partir de textos. Utiliza modelos avanzados de IA para crear imágenes impresionantes perfectas para cualquier proyecto.",
+      "description": "El Removedor de Objetos AI es una herramienta poderosa que te permite eliminar objetos no deseados. Utiliza modelos avanzados de IA para crear resultados perfectos para cualquier proyecto.",
       "action": {
-        "visit": "Generar"
-      },
-      "item1": {
-        "title": "FLUX.1 [pro]",
-        "description": "Lo mejor de FLUX.1, ofreciendo generación de imágenes de última generación con seguimiento de avisos de primera clase, calidad visual, detalle de imagen y diversidad de salida."
-      },
-      "item2": {
-        "title": "FLUX.1 [dev]",
-        "description": "Destilado directamente de FLUX.1 [pro], FLUX.1 [dev] obtiene una calidad similar y capacidades de adherencia a avisos, siendo más eficiente que un modelo estándar del mismo tamaño."
-      },
-      "item3": {
-        "title": "FLUX.1 [schnell]",
-        "description": "El modelo de generación de imágenes más rápido, diseñado para desarrollo local y uso personal."
+        "visit": "Eliminar"
       },
       "item4": {
-        "title": "Rápido como un rayo",
-        "description": "Flux AI genera imágenes de alta calidad en segundos, significativamente más rápido que Stable Diffusion 3 y Midjourney. Con su capacidad de generación de imágenes ultrarrápida, Flux AI asegura resultados rápidos y eficientes, ahorrándote tiempo y recursos valiosos."
+        "title": "Ultrarrápido",
+        "description": "La IA procesa imágenes de alta calidad en segundos. Con su capacidad de procesamiento ultrarrápida, asegura resultados rápidos y eficientes, ahorrándote tiempo y recursos valiosos."
       },
       "item5": {
         "title": "Personalizable",
-        "description": "El modelo avanzado Flux.1 produce imágenes más detalladas y coherentes que los competidores. Con sus características personalizables y una interfaz de usuario amigable, el Generador de Imágenes Flux AI es la herramienta definitiva para generar imágenes impresionantes a partir de textos. Ya seas un principiante o un profesional, Flux AI te tiene cubierto. ¡Experimenta el poder de la IA y revoluciona tu proceso de generación de imágenes hoy!"
+        "description": "El modelo avanzado produce resultados más detallados y coherentes. Con sus características personalizables y una interfaz de usuario amigable, es la herramienta definitiva para editar imágenes. ¡Experimenta el poder de la IA hoy!"
       },
       "item6": {
         "title": "Interfaz de Usuario Amigable",
-        "description": "Más fácil de usar que ComfyUI, perfecto para principiantes y profesionales por igual. El Generador de Imágenes Flux AI es la herramienta definitiva para generar imágenes impresionantes a partir de textos. Con su interfaz de usuario amigable y potentes modelos de IA, Flux AI facilita la creación de increíbles visuales tanto para principiantes como para profesionales."
+        "description": "Fácil de usar, perfecto para principiantes y profesionales por igual. El Removedor de Objetos AI es la herramienta definitiva para eliminar objetos no deseados. Con su interfaz de usuario amigable y potentes modelos de IA, facilita la creación de increíbles visuales."
       },
       "item7": {
         "title": "Procesamiento por Lotes",
@@ -84,79 +72,74 @@
         "title": "Personalizable"
       }
     },
-    "schnell": {
-      "title": "Flux.1 [Schnell]",
-      "description": "Flux.1 [schnell] es una versión refinada del modelo base, que opera hasta 10 veces más rápido que el original. Con licencia Apache 2.0, está optimizado para velocidad y eficiencia, atendiendo a usuarios que exigen una generación rápida de imágenes sin comprometer la calidad. Este modelo es ideal para desarrollo local y uso personal, logrando el equilibrio perfecto entre rendimiento y accesibilidad. Ofrecemos a los usuarios 5 oportunidades gratuitas cada mes para experimentar la generación ultrarrápida de imágenes del modelo Flux.1 [schnell], permitiéndote presenciar su increíble velocidad de primera mano.",
-      "action": "Pruébalo ahora"
-    },
     "action": {
       "pricing": "Comprar Créditos",
       "login": "Iniciar Sesión",
       "dashboard": "Panel de Control",
-      "generate": "Generar",
+      "generate": "Eliminar",
       "github": {
         "sm": "Dar Estrella en",
         "normal": "Github"
       }
     },
     "howto": {
-      "title": "How to Remove Background from Image",
-      "description": "Follow these simple steps to remove backgrounds from your images in seconds.",
+      "title": "Cómo eliminar el fondo de una imagen",
+      "description": "Sigue estos sencillos pasos para eliminar fondos de tus imágenes en segundos.",
       "step1": {
-        "title": "1. Upload Your Image",
-        "description": "Click the 'Upload Image' button and select the photo you want to edit from your computer or phone. We support PNG, JPG, and other formats."
+        "title": "1. Sube tu imagen",
+        "description": "Haz clic en el botón 'Subir imagen' y selecciona la foto que deseas editar desde tu computadora o teléfono. Admitimos PNG, JPG y otros formatos."
       },
       "step2": {
-        "title": "2. AI Automatically Removes Background",
-        "description": "Our intelligent AI will automatically detect the subject and accurately remove the background. No manual work needed!"
+        "title": "2. La IA elimina el fondo automáticamente",
+        "description": "Nuestra IA inteligente detectará automáticamente el sujeto y eliminará el fondo con precisión. ¡No se necesita trabajo manual!"
       },
       "step3": {
-        "title": "3. Download Your New Image",
-        "description": "Your new image with a transparent background is ready! Just click the 'Download' button to save it in high resolution."
+        "title": "3. Descarga tu nueva imagen",
+        "description": "¡Tu nueva imagen con fondo transparente está lista! Simplemente haz clic en el botón 'Descargar' para guardarla en alta resolución."
       }
     },
     "usecases": {
-      "title": "Perfect for Any Project",
-      "description": "Our background removal tool is versatile and can be used for various purposes.",
+      "title": "Perfecto para cualquier proyecto",
+      "description": "Nuestra herramienta de eliminación de fondo es versátil y se puede utilizar para diversos fines.",
       "ecommerce": {
-        "title": "For E-commerce",
-        "description": "Create professional product photos for Amazon, Shopify, and more."
+        "title": "Para comercio electrónico",
+        "description": "Crea fotos de productos profesionales para Amazon, Shopify y más."
       },
       "marketing": {
-        "title": "For Marketers",
-        "description": "Design eye-catching social media posts, banners, and ads."
+        "title": "Para especialistas en marketing",
+        "description": "Diseña publicaciones llamativas en redes sociales, banners y anuncios."
       },
       "photography": {
-        "title": "For Photographers",
-        "description": "Speed up your photo editing workflow."
+        "title": "Para fotógrafos",
+        "description": "Acelera tu flujo de trabajo de edición de fotos."
       },
       "personal": {
-        "title": "For Personal Use",
-        "description": "Make fun profile pictures, memes, or greeting cards."
+        "title": "Para uso personal",
+        "description": "Crea fotos de perfil divertidas, memes o tarjetas de felicitación."
       },
       "content": {
-        "title": "For Content Creators",
-        "description": "Easily remove watermarks and text from images, protect your work."
+        "title": "Para creadores de contenido",
+        "description": "Elimina fácilmente marcas de agua y texto de las imágenes, protege tu trabajo."
       }
     },
     "faq": {
-      "title": "Frequently Asked Questions",
-      "description": "Get answers to common questions about our background removal tool.",
+      "title": "Preguntas Frecuentes",
+      "description": "Obtén respuestas a preguntas comunes sobre nuestra herramienta de eliminación de fondo.",
       "q1": {
-        "question": "How to remove background from an image on iPhone?",
-        "answer": "Our website works perfectly on your iPhone's browser. Just open Safari or Chrome, navigate to our site, upload your picture, and download the result directly to your phone."
+        "question": "¿Cómo eliminar el fondo de una imagen en iPhone?",
+        "answer": "Nuestro sitio web funciona perfectamente en el navegador de tu iPhone. Simplemente abre Safari o Chrome, navega a nuestro sitio, sube tu foto y descarga el resultado directamente a tu teléfono."
       },
       "q2": {
-        "question": "Is it free to remove a background from a picture?",
-        "answer": "Yes, our tool is completely free. You can process as many images as you like without any charge."
+        "question": "¿Es gratis eliminar el fondo de una imagen?",
+        "answer": "Sí, nuestra herramienta es completamente gratuita. Puedes procesar tantas imágenes como desees sin ningún cargo."
       },
       "q3": {
-        "question": "Can I remove the background from a logo?",
-        "answer": "Absolutely. Our AI is trained to handle sharp edges, making it ideal for removing the background from logos and graphics. Upload your logo to get a transparent version."
+        "question": "¿Puedo eliminar el fondo de un logotipo?",
+        "answer": "Absolutamente. Nuestra IA está entrenada para manejar bordes nítidos, lo que la hace ideal para eliminar el fondo de logotipos y gráficos. Sube tu logotipo para obtener una versión transparente."
       },
       "q4": {
-        "question": "What image formats are supported?",
-        "answer": "We support all common image formats, including JPG, PNG, and WEBP."
+        "question": "¿Qué formatos de imagen son compatibles?",
+        "answer": "Admitimos todos los formatos de imagen comunes, incluidos JPG, PNG y WEBP."
       }
     }
   },
@@ -178,28 +161,28 @@
       "title": "Preguntas Frecuentes",
       "subtitle": "Explora nuestra FAQ completa para encontrar respuestas rápidas a consultas comunes. Si necesitas más ayuda, no dudes en contactarnos para obtener ayuda personalizada.",
       "item1": {
-        "question": "¿Cómo se compara Flux AI con Stable Diffusion 3?",
-        "answer": "Flux AI ofrece tiempos de generación más rápidos, mayor calidad de imagen y una interfaz de usuario más amigable en comparación con Stable Diffusion 3. El modelo Flux.1 incorpora los últimos avances en investigación de IA."
+        "question": "¿Cómo se compara este Removedor de Objetos AI con otros servicios?",
+        "answer": "Nuestro Removedor de Objetos AI ofrece tiempos de procesamiento más rápidos, mayor calidad y una interfaz de usuario más amigable. Incorpora los últimos avances en investigación de IA."
       },
       "item2": {
-        "question": "¿Está disponible Flux AI en GitHub o Hugging Face?",
-        "answer": "Sí, Flux AI es de código abierto y está disponible tanto en GitHub como en Hugging Face."
+        "question": "¿Están disponibles las imágenes para uso comercial?",
+        "answer": "Sí, las imágenes generadas se pueden utilizar para fines comerciales. Por favor, consulte nuestros términos de servicio para obtener más detalles."
       },
       "item3": {
-        "question": "¿Qué hace que Flux AI sea diferente de otros generadores de imágenes por IA?",
-        "answer": "Flux AI combina velocidad, calidad y facilidad de uso. Es más rápido que Midjourney, más fácil de usar que ComfyUI y produce imágenes de mayor calidad que muchos competidores."
+        "question": "¿Qué hace que este Removedor de Objetos AI sea diferente de otros?",
+        "answer": "Combina velocidad, calidad y facilidad de uso. Es más rápido que muchos competidores y produce resultados de una calidad asombrosa."
       },
       "item4": {
-        "question": "¿Cómo usar Flux AI?",
-        "answer": "Para usar Flux AI, simplemente visita fluxaipro.art, ingresa tu aviso y presencia la creación de impresionantes visuales en cuestión de segundos."
+        "question": "¿Cómo usar el Removedor de Objetos AI?",
+        "answer": "Para usar el Removedor de Objetos AI, simplemente visita nuestro sitio web, sube tu imagen, marca el área no deseada y presencia la creación de impresionantes visuales en cuestión de segundos."
       },
       "item5": {
-        "question": "¿Qué planes de precios ofrece Flux AI?",
+        "question": "¿Qué planes de precios se ofrecen?",
         "answer": "Utilizamos puntos para usar nuestros servicios, y puedes hacer clic en la tarjeta de precio para comprar puntos (solo se requiere un pago)."
       },
       "item6": {
         "question": "¿Cómo puedo obtener soporte en línea?",
-        "answer": "Puedes contactarnos en support@fluxaipro.art."
+        "answer": "Puedes contactarnos en support@remove-anything.com."
       }
     },
     "tip": {
@@ -210,13 +193,13 @@
   },
   "ExplorePage": {
     "layout": {
-      "title": "Explorar el Generador de Imágenes de Flux AI",
-      "description": "Descubre las últimas características y actualizaciones del Generador de Imágenes de Flux AI.",
-      "keywords": "flux AI, AI flux, inteligencia artificial flux, tecnología de IA, aprendizaje automático flux, herramientas flux AI, aplicaciones de IA, soluciones de inteligencia artificial, análisis de datos flux, innovación en IA, analítica predictiva flux, aprendizaje automático flux, desarrollo de IA, IA de próxima generación"
+      "title": "Explora el Borrador de Imágenes por IA",
+      "description": "Descubre las últimas funciones y actualizaciones del borrador de imágenes por IA.",
+      "keywords": "inteligencia artificial, tecnología IA, aprendizaje automático, herramientas de IA, aplicaciones de IA, soluciones de inteligencia artificial, análisis de datos, innovación en IA, análisis predictivo, aprendizaje automático, desarrollo de IA, IA de próxima generación"
     },
-    "title": "Explorar el Generador de Imágenes de Flux AI",
-    "description": "Descubre las últimas características y actualizaciones del Generador de Imágenes de Flux AI.",
-    "flux": {
+    "title": "Explora el Borrador de Imágenes por IA",
+    "description": "Descubre las últimas funciones y actualizaciones del borrador de imágenes por IA.",
+    "image": {
       "model": "Modelo",
       "lora": "Estilo",
       "prompt": "Prompt",
@@ -227,13 +210,13 @@
   },
   "Playground": {
     "layout": {
-      "title": "Generador de Imágenes Gratuito Flux.1 {model}: Crea Imágenes Impresionantes en Segundos",
-      "description": "Descubre el generador de imágenes gratuito Flux.1, tu herramienta ideal para crear visuales impresionantes sin esfuerzo. Genera imágenes de alta calidad fácilmente y libera tu creatividad sin costo alguno. Perfecto para diseñadores, artistas y cualquiera que busque mejorar sus proyectos con imágenes únicas.",
-      "keywords": "generador de imágenes flux.1, generador de imágenes modelo flux.1, generador de imágenes gratis, generador de imágenes IA, herramienta de generación de imágenes, crear imágenes con IA, generar imágenes en línea, software de creación de imágenes, herramienta de diseño de imágenes, plataforma de generación de imágenes"
+      "title": "Borrador Mágico {model} Gratuito: Elimina Objetos en Segundos",
+      "description": "Descubre el borrador mágico gratuito, tu herramienta ideal para eliminar objetos no deseados sin esfuerzo. Retoca imágenes de alta calidad fácilmente y libera tu creatividad sin costo alguno. Perfecto para diseñadores, artistas y cualquiera que busque mejorar sus proyectos con imágenes únicas.",
+      "keywords": "borrador mágico, eliminar objetos, herramienta gratuita, IA, edición de fotos, quitar cosas, editor de imágenes en línea, software de edición, herramienta de diseño"
     },
     "page": {
-      "title": "Generador de Imágenes Gratuito Flux.1 {model}",
-      "subtitle": "Modelos de IA asombrosos para generar imágenes a partir de indicaciones de texto."
+      "title": "Borrador Mágico {model} Gratuito",
+      "subtitle": "Modelos de IA asombrosos para eliminar objetos a partir de descripciones de texto."
     },
     "settings": {
       "display": "Mostrar {mode}",
@@ -241,54 +224,25 @@
       "displayLabel": "El uso gratuito será público",
       "displayAction": "Ver Precios"
     },
-    "schnell_faq": {
-      "label": "Preguntas Frecuentes",
-      "title": "Preguntas frecuentes",
-      "subtitle": "Explora nuestras preguntas frecuentes para encontrar respuestas rápidas a consultas comunes. Si necesitas más ayuda, no dudes en contactarnos para obtener asistencia personalizada.",
-      "item1": {
-        "question": "¿Qué es Flux.1 Schnell?",
-        "answer": "Flux.1 Schnell es el modelo de generación de imágenes más rápido, diseñado para desarrollo local y uso personal."
-      },
-      "item2": {
-        "question": "¿Qué tan importante es la entrada inicial al generar imágenes en Flux.1 Schnell?",
-        "answer": "La entrada inicial en Flux.1 Schnell es crucial para la calidad de la imagen. Proporcionar entradas detalladas y de alta calidad puede resultar en salidas más realistas y detalladas. Asegúrate de que los conceptos y elementos propuestos estén bien definidos para obtener los mejores resultados."
-      },
-      "item3": {
-        "question": "¿Cómo puedo mejorar la calidad de las imágenes generadas por Flux.1 Schnell?",
-        "answer": "Para mejorar la calidad de la imagen, proporciona indicaciones claras y detalladas, experimenta con diferentes estilos artísticos y considera usar la variante pro para tareas más complejas."
-      },
-      "item4": {
-        "question": "¿Existen comunidades en línea o foros que ofrezcan consejos para mejorar la calidad de las imágenes de Flux.1 Schnell?",
-        "answer": "Sí, se puede usar en el sitio web oficial en https://fluxaipro.art/flux-schnell. Los usuarios solo necesitan ingresar sus indicaciones en el sitio web y generar imágenes, lo que puede ayudarte a mejorar la calidad de tus imágenes generadas."
-      },
-      "item5": {
-        "question": "¿Cómo puedo usar Flux.1 Schnell y hay opciones gratuitas?",
-        "answer": "Flux.1 Schnell se puede usar en el sitio web oficial en https://fluxaipro.art/flux-schnell. Cada usuario obtiene 5 usos gratuitos del modelo Flux.1 Schnell por mes calendario, que se reinician al comienzo de cada mes. Para usarlo, simplemente ingresa tu indicación en el sitio web y genera imágenes. Este proceso puede ayudarte a mejorar la calidad de tus imágenes generadas con el tiempo."
-      },
-      "item6": {
-        "question": "¿Cómo puedo obtener soporte en línea?",
-        "answer": "Puedes contactarnos en support@fluxaipro.art."
-      }
-    },
-    "title": "Generador de Imágenes Flux AI",
-    "description": "Modelos de IA asombrosos para generar imágenes a partir de textos.",
+    "title": "Remove Anything - Eliminación de Objetos y Fondo Gratis",
+    "description": "Modelos de IA asombrosos para procesar imágenes a partir de texto.",
     "empty": {
-      "title": "Error del Generador",
+      "title": "Error de Procesamiento",
       "description": "Información del Error: {error}",
       "errorPlaceholder": "Ocurrió un error"
     },
     "form": {
       "input": "Entrada",
       "result": "Resultado",
-      "placeholder": "Ingresa el aviso para generar la imagen...",
+      "placeholder": "Ingresa una descripción para eliminar objetos...",
       "model": "Modelo",
       "lora": "Lora",
       "loraTooltip": "Seleccionar una Lora",
       "loraLabel": "Nombre de la Lora",
-      "modelTooltip": "Elige un modelo para generar imágenes.",
-      "submit": "Generar",
+      "modelTooltip": "Elige un modelo para eliminar objetos.",
+      "submit": "Eliminar",
       "aspectRatio": "Relación de Aspecto",
-      "aspectRatioTooltip": "Relación de aspecto para la imagen generada.",
+      "aspectRatioTooltip": "Relación de aspecto para la imagen procesada.",
       "inputImage": "Imagen",
       "inputImageTooltip": "Imagen de entrada para el modo de imagen a imagen. La relación de aspecto de tu salida coincidirá con esta imagen",
       "inputImagePlaceholder": "Subir imagen de entrada"
@@ -298,12 +252,12 @@
       "limitInsufficient": "Has alcanzado el límite de uso gratuito. Por favor, actualiza a un plan pagado para continuar usando nuestros servicios."
     },
     "action": {
-      "copy": "Copiar aviso",
-      "copySuccess": "Aviso copiado al portapapeles.",
+      "copy": "Copiar descripción",
+      "copySuccess": "Descripción copiada al portapapeles.",
       "download": "Descargar Imagen",
       "downloadSuccess": "Imagen descargada.",
       "downloadLoading": "Descargando...",
-      "upgrade": "Eleva tu arte con las pruebas gratuitas mensuales limitadas de Schnell. Para experiencias de modelo premium sin marca, haz clic aquí para actualizar."
+      "upgrade": "Eleva tu arte con pruebas gratuitas mensuales limitadas. Para experiencias de modelo premium sin marcas, haz clic aquí para actualizar."
     },
     "backgroundRemoval": {
       "failed": "La eliminación del fondo falló",
@@ -328,16 +282,16 @@
     }
   },
   "History": {
-    "title": "Historial de Generación de Imágenes",
-    "description": "Ver tu historial reciente de generación de imágenes.",
+    "title": "Historial de Tareas",
+    "description": "Ver tu historial reciente de procesamiento de imágenes.",
     "empty": {
       "title": "Aún no hay historial.",
-      "description": "Genera una imagen para verla aquí."
+      "description": "Inicia una tarea para verla aquí."
     },
     "action": {
-      "generate": "Generar",
-      "copy": "Copiar aviso",
-      "copySuccess": "Aviso copiado al portapapeles.",
+      "generate": "Iniciar",
+      "copy": "Copiar descripción",
+      "copySuccess": "Descripción copiada al portapapeles.",
       "download": "Descargar Imagen",
       "downloadSuccess": "Imagen descargada.",
       "downloadLoading": "Descargando..."
@@ -345,7 +299,7 @@
   },
   "Billings": {
     "page": {
-      "title": "App – Generador de Imágenes Flux AI",
+      "title": "App – Remove Anything",
       "description": "Ver tus predicciones recientes"
     },
     "title": "Predicciones Recientes",
@@ -354,7 +308,7 @@
       "description": "Aún no hay registros."
     },
     "table": {
-      "fluxId": "ID de Tarea",
+      "taskId": "ID de Tarea",
       "status": "Estado",
       "amount": "Crédito",
       "type": "Tipo",
@@ -493,7 +447,6 @@
     "explore": "Explorar",
     "title": "Remove Anything - Eliminador Gratuito de Objetos y Fondos con IA",
     "blog": "Blog",
-    "prompt": "Generador de Prompts de Remove Anything",
     "dashboard": "Panel de Control",
     "tooltip": {
       "login": "Iniciar Sesión"

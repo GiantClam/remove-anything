@@ -162,7 +162,7 @@ export function FreeCard() {
 
       <div className="flex h-full flex-col justify-between gap-16 p-6">
         <ul className="space-y-2 text-left text-sm font-medium leading-normal">
-          {["Limited models", "Max 5/month Flux.1 Schnell Images"]?.map(
+          {["Limited models", "Max 5/month Images"]?.map(
             (feature) => (
               <li className="flex items-start gap-x-3" key={feature}>
                 <Icons.check className="size-5 shrink-0 text-purple-500" />

@@ -6,6 +6,7 @@ import { BlogPosts } from "@/components/content/blog-posts";
 import { getBlurDataURL } from "@/lib/utils";
 import { locales, defaultLocale } from "@/config";
 import { env } from "@/env.mjs";
+import { constructAlternates } from "@/lib/seo";
 
 interface PageProps {
   params: { locale: string };
@@ -14,24 +15,10 @@ interface PageProps {
 export async function generateMetadata({ params: { locale } }: PageProps): Promise<Metadata> {
   const t = await getTranslations({ locale });
   
-  const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  const path = "/blog";
-
   return {
     title: `${t("BlogPage.title")} - ${t("LocaleLayout.title")}`,
     description: t("BlogPage.description"),
-    alternates: {
-      canonical: `${base}${locale === defaultLocale ? "" : `/${locale}`}${path}`,
-      languages: {
-        "x-default": `${base}${path}`,
-        ...Object.fromEntries(
-          locales.map((loc) => [
-            loc,
-            `${base}${loc === defaultLocale ? "" : `/${loc}`}${path}`,
-          ])
-        ),
-      },
-    },
+    alternates: constructAlternates({ locale, path: "/blog" }),
   };
 }
 

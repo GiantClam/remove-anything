@@ -14,7 +14,7 @@ import { createVideoTaskWithR2Url, syncTaskStatus } from "@/modules/tasks/sdk";
 ```ts
 import { createPrismaTaskRepository } from "@/modules/tasks/adapters/prisma-repo";
 import { createPrismaTaskQueue } from "@/modules/tasks/adapters/prisma-queue";
-import { createRunningHubClient } from "@/modules/runninghub/adapter";
+import { createRunningHubClient } from "@/modules/runninghub";
 
 const repo = createPrismaTaskRepository();
 const queue = createPrismaTaskQueue();

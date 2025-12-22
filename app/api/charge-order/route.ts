@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createProjectAuthProvider } from "@/modules/auth/adapter";
+import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { z } from "zod";
 
 import { ChargeOrderHashids } from "@/db/dto/charge-order.dto";
@@ -28,8 +29,19 @@ const ratelimit = new KVRateLimit(kv, {
   window: "5s"
 });
 
+// 包装函数以匹配适配器期望的类型
+const getCurrentUser = async () => {
+  const user = await getCurrentUserOriginal();
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email ?? undefined,
+    name: user.name ?? undefined,
+  };
+};
+
 export async function POST(req: NextRequest) {
-  const auth = createProjectAuthProvider();
+  const auth = createProjectAuthProvider(getCurrentUser);
   const user = await auth.getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

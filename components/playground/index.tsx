@@ -25,7 +25,8 @@ import { Locale } from "@/config";
 import { Credits, model, ModelName } from "@/config/constants";
 import {
   ChargeProductSelectDto,
-  FluxSelectDto,
+  TaskSelectDto,
+  TaskStatus,
   UserCreditSelectDto,
 } from "@/db/type";
 import { cn } from "@/lib/utils";
@@ -39,36 +40,6 @@ import { WebhookHandler } from "../marketing/webhook-handler";
 import ComfortingMessages from "./comforting";
 import Loading from "./loading";
 
-const useCreateTaskMutation = (config?: {
-  onSuccess: (result: any) => void;
-}) => {
-  return useMutation({
-    mutationFn: async (values: any) => {
-      const res = await fetch("/api/generate", {
-        body: JSON.stringify(values),
-        method: "POST",
-        credentials: 'include', // 使用 cookie 认证而不是 Bearer token
-      });
-
-      if (!res.ok && res.status >= 500) {
-        throw new Error("Network response error");
-      }
-
-      return res.json();
-    },
-    onSuccess: async (result) => {
-      config?.onSuccess(result);
-    },
-  });
-};
-
-export enum FluxTaskStatus {
-  Processing = "processing",
-  Succeeded = "succeeded",
-  Failed = "failed",
-  Canceled = "canceled",
-}
-
 export default function Playground({
   locale,
   chargeProduct,
@@ -78,9 +49,8 @@ export default function Playground({
 }) {
   const [isPublic, setIsPublic] = React.useState(true);
   const [loading, setLoading] = useState(false);
-  const [fluxId, setFluxId] = useState("");
-  const [fluxData, setFluxData] = useState<FluxSelectDto>();
-  const useCreateTask = useCreateTaskMutation();
+  const [taskId, setTaskId] = useState("");
+  const [taskData, setTaskData] = useState<TaskSelectDto>();
   const [uploadInputImage, setUploadInputImage] = useState<any[]>([]);
   const [inputImageUrl, setInputImageUrl] = useState<string>("");
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
@@ -96,14 +66,14 @@ export default function Playground({
      window.location.hostname.includes('vercel.app'));
 
   const queryTask = useQuery({
-    queryKey: ["queryFluxTask", fluxId],
-    enabled: !!fluxId,
+    queryKey: ["queryTask", taskId],
+    enabled: !!taskId,
     refetchInterval: (query) => {
       // 在生产环境中，减少轮询频率，主要依赖WebhookHandler
       if (isProduction) {
-        const data = query.state.data as FluxSelectDto;
+        const data = query.state.data as TaskSelectDto;
         // 只在任务还在处理时进行较少的轮询作为后备机制
-        if (data?.taskStatus === FluxTaskStatus.Processing || 
+        if (data?.taskStatus === TaskStatus.Processing || 
             data?.taskStatus === "pending" || 
             data?.taskStatus === "starting") {
           return 10000; // 10秒轮询一次作为后备
@@ -112,14 +82,14 @@ export default function Playground({
       }
       
       // 开发环境：使用轮询模式
-      const data = query.state.data as FluxSelectDto;
-      if (data?.taskStatus === FluxTaskStatus.Processing) {
+      const data = query.state.data as TaskSelectDto;
+      if (data?.taskStatus === TaskStatus.Processing) {
         return 1000;
       }
       return false;
     },
     queryFn: async () => {
-      const res = await fetch(`/api/task/${fluxId}`, {
+      const res = await fetch(`/api/task/${taskId}`, {
         credentials: 'include',
       });
       if (!res.ok) {
@@ -144,11 +114,11 @@ export default function Playground({
 
   useEffect(() => {
     if (queryTask.data) {
-      setFluxData(queryTask.data);
-      if (queryTask.data.taskStatus === FluxTaskStatus.Succeeded) {
+      setTaskData(queryTask.data);
+      if (queryTask.data.taskStatus === TaskStatus.Succeeded) {
         setLoading(false);
         toast.success("Background removal completed!");
-      } else if (queryTask.data.taskStatus === FluxTaskStatus.Failed) {
+      } else if (queryTask.data.taskStatus === TaskStatus.Failed) {
         setLoading(false);
         toast.error("Background removal failed. Please try again.");
       }
@@ -179,7 +149,7 @@ export default function Playground({
     }
 
     setLoading(true);
-    setFluxData(undefined);
+    setTaskData(undefined);
 
     try {
       let result;
@@ -214,12 +184,26 @@ export default function Playground({
         const finalImageUrl = uploadedFile?.url || imageUrl;
         console.log("🔧 使用URL模式:", finalImageUrl);
         
-        result = await useCreateTask.mutateAsync({
-          model: model.backgroundRemoval,
-          inputImageUrl: finalImageUrl,
-          isPrivate: isPublic ? 0 : 1,
-          locale,
+        // Use fetch directly for URL mode instead of useCreateTaskMutation
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: model.backgroundRemoval,
+            inputImageUrl: finalImageUrl,
+            isPrivate: isPublic ? 0 : 1,
+            locale,
+          }),
+          credentials: 'include',
         });
+
+        if (!res.ok && res.status >= 500) {
+          throw new Error("Network response error");
+        }
+
+        result = await res.json();
         setOriginalForShare(finalImageUrl);
       }
 
@@ -229,7 +213,7 @@ export default function Playground({
         return;
       }
 
-      setFluxId(result.taskId || result.id);
+      setTaskId(result.taskId || result.id);
       toast.success("Background removal started!");
     } catch (error) {
       console.error("Background removal error:", error);
@@ -385,24 +369,24 @@ export default function Playground({
         <div className="space-y-6">
           {loading && <Loading />}
           
-          {fluxData && (
+          {taskData && (
             <div className="rounded-lg border bg-card p-6">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold">Result</h3>
                 <p className="text-sm text-muted-foreground">
-                  {fluxData.taskStatus === FluxTaskStatus.Succeeded
+                  {taskData.taskStatus === TaskStatus.Succeeded
                     ? t("backgroundRemoval.success")
-                    : fluxData.taskStatus === FluxTaskStatus.Failed
+                    : taskData.taskStatus === TaskStatus.Failed
                     ? t("backgroundRemoval.failed")
                     : t("backgroundRemoval.processing")}
                 </p>
               </div>
 
-              {fluxData.taskStatus === FluxTaskStatus.Succeeded && fluxData.imageUrl && (
+              {taskData.taskStatus === TaskStatus.Succeeded && taskData.imageUrl && (
                 <div className="space-y-4">
                   <div className="relative w-full overflow-hidden rounded-lg border bg-muted max-h-[500px] max-w-[500px] mx-auto">
                     <img
-                      src={fluxData.imageUrl}
+                      src={taskData.imageUrl}
                       alt="AI background removal result - processed image with transparent background"
                       className="h-full w-full object-contain"
                       loading="lazy"
@@ -412,14 +396,14 @@ export default function Playground({
                   
                   <div className="flex gap-2">
                     <DownloadAction
-                      id={fluxData.id}
+                      id={taskData.id}
                       showText={true}
                       taskType="background-removal"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => copyPrompt(fluxData.imageUrl || "")}
+                      onClick={() => copyPrompt(taskData.imageUrl || "")}
                     >
                       <Copy className="mr-2 h-4 w-4" />
                       Copy URL
@@ -433,8 +417,8 @@ export default function Playground({
                           const mode = isDark ? 'dark' : 'light';
                           const params = new URLSearchParams();
                           if (originalForShare) params.set('before', originalForShare);
-                          params.set('after', fluxData.imageUrl || '');
-                          params.set('id', fluxId || fluxData.id || '');
+                          params.set('after', taskData.imageUrl || '');
+                          params.set('id', taskId || taskData.id || '');
                           params.set('mode', mode);
                           const shareUrl = `${window.location.origin}/${locale}/remove-background?${params.toString()}`;
                           navigator.clipboard.writeText(shareUrl);
@@ -451,7 +435,7 @@ export default function Playground({
                 </div>
               )}
 
-              {fluxData.taskStatus === FluxTaskStatus.Failed && (
+              {taskData.taskStatus === TaskStatus.Failed && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
                   <div className="flex items-center gap-2">
                     <Icons.close className="h-4 w-4 text-red-600" />
@@ -460,14 +444,14 @@ export default function Playground({
                     </p>
                   </div>
                   <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                    {fluxData.errorMsg || "Please try again with a different image."}
+                    {taskData.errorMsg || "Please try again with a different image."}
                   </p>
                 </div>
               )}
             </div>
           )}
 
-          {!loading && !fluxData && (
+          {!loading && !taskData && (
             <EmptyPlaceholder>
                             <EmptyPlaceholder.Icon name="eraser">
                 <Icons.eraser className="h-8 w-8" />
@@ -489,13 +473,13 @@ export default function Playground({
       />
 
       {/* 生产环境Webhook处理器 */}
-      {isProduction && fluxId && loading && (
+      {isProduction && taskId && loading && (
         <WebhookHandler
-          taskId={fluxId}
+          taskId={taskId}
           onComplete={(imageUrl) => {
             console.log("🎉 WebhookHandler: 任务完成", imageUrl);
             // 刷新查询以获取最新数据
-            queryClient.invalidateQueries({ queryKey: ["queryFluxTask", fluxId] });
+            queryClient.invalidateQueries({ queryKey: ["queryTask", taskId] });
             setLoading(false);
             toast.success("Background removal completed!");
           }}

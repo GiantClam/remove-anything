@@ -1,11 +1,11 @@
 import { prisma } from "@/db/prisma";
 import type { CreateTaskParams, TaskRecord, TaskRepository } from "../sdk";
 
-// 默认实现针对 flux_data（用于视频去水印等任务）
+// 默认实现针对任务数据（用于视频去水印等任务）
 export function createPrismaTaskRepository(): TaskRepository {
   return {
     async create(data: CreateTaskParams & { status?: string }): Promise<TaskRecord> {
-      const rec = await prisma.fluxData.create({
+      const rec = await prisma.taskData.create({
         data: {
           userId: data.userId || null,
           model: data.model,
@@ -30,7 +30,7 @@ export function createPrismaTaskRepository(): TaskRepository {
       };
     },
     async update(id, data): Promise<void> {
-      await prisma.fluxData.update({
+      await prisma.taskData.update({
         where: { id: id as number },
         data: {
           taskStatus: data.status,
@@ -42,7 +42,7 @@ export function createPrismaTaskRepository(): TaskRepository {
       });
     },
     async findByExternalId(model: string, externalId: string): Promise<TaskRecord | null> {
-      const rec = await prisma.fluxData.findFirst({ where: { model, replicateId: externalId } });
+      const rec = await prisma.taskData.findFirst({ where: { model, replicateId: externalId } });
       if (!rec) return null;
       return {
         id: rec.id,

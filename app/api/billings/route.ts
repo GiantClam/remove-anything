@@ -8,7 +8,6 @@ export const dynamic = 'force-dynamic';
 import { z } from "zod";
 
 import { UserBillingHashids } from "@/db/dto/billing.dto";
-import { FluxHashids } from "@/db/dto/flux.dto";
 import { prisma } from "@/db/prisma";
 import { getErrorMessage } from "@/lib/handle-error";
 
@@ -71,6 +70,9 @@ export async function GET(req: NextRequest) {
         take: pageSize,
         skip: offset,
         orderBy: { createdAt: "desc" },
+        include: {
+          taskData: true
+        }
       }),
       prisma.userBilling.count({ where: whereConditions }),
     ]);
@@ -80,10 +82,11 @@ export async function GET(req: NextRequest) {
         total,
         page,
         pageSize,
-        data: data.map(({ id, fluxId, ...rest }) => ({
+        data: data.map(({ id, taskId, taskData, ...rest }) => ({
           ...rest,
-          fluxId: fluxId ? FluxHashids.encode(fluxId!) : null,
           id: UserBillingHashids.encode(id),
+          taskId: taskId,
+          taskInfo: taskData
         })),
       },
     });

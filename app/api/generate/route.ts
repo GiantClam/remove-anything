@@ -14,7 +14,7 @@ import { getUserCredit } from "@/db/queries/account";
 import { prisma } from "@/db/prisma";
 import { Credits, model } from "@/config/constants";
 import { BillingType } from "@/db/type";
-import { createRunningHubClient } from "@/modules/runninghub/adapter";
+import { createRunningHubClient } from "@/modules/runninghub";
 
 const ratelimit = new KVRateLimit(kv, {
   limit: 10,

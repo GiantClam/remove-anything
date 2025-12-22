@@ -1,7 +1,7 @@
 import { prisma } from "@/db/prisma";
 import { TASK_QUEUE_CONFIG } from "@/config/constants";
 import { taskProcessor } from "./task-processor";
-import { runninghubAPI } from "@/lib/runninghub-api";
+import { runninghubAPI } from "@/modules/runninghub";
 import AWS from 'aws-sdk';
 import { env } from "@/env.mjs";
 import { nanoid } from 'nanoid';
@@ -176,7 +176,7 @@ class TaskQueueManager {
   /**
    * 启动 RunningHub 状态监控（后端托管，无需前端）
    */
-  public startStatusWatcher(taskRecordId: number, runninghubTaskId: string, taskType: string = 'flux') {
+  public startStatusWatcher(taskRecordId: number, runninghubTaskId: string, taskType: string = 'image') {
     console.log(`🚀 启动状态监控: ${runninghubTaskId} (类型: ${taskType}, 记录ID: ${taskRecordId})`);
     
     // 已有 watcher 则先清理
@@ -227,15 +227,15 @@ class TaskQueueManager {
               }
             });
           } else {
-            await prisma.fluxData.update({
-              where: { id: taskRecordId },
-              data: {
-                taskStatus: 'failed',
-                errorMsg: 'Watch timeout',
-                executeEndTime: BigInt(Date.now()),
-              }
-            });
-          }
+              await prisma.taskData.update({
+                where: { id: taskRecordId },
+                data: {
+                  taskStatus: 'failed',
+                  errorMsg: 'Watch timeout',
+                  executeEndTime: BigInt(Date.now()),
+                }
+              });
+            }
           this.stopStatusWatcher(runninghubTaskId);
           return;
         }
@@ -282,7 +282,7 @@ class TaskQueueManager {
                 }
               });
             } else {
-              await prisma.fluxData.update({
+              await prisma.taskData.update({
                 where: { id: taskRecordId },
                 data: {
                   taskStatus: 'processing',
@@ -335,7 +335,7 @@ class TaskQueueManager {
                 }
               });
             } else {
-              await prisma.fluxData.update({
+              await prisma.taskData.update({
                 where: { id: taskRecordId },
                 data: {
                   taskStatus: 'succeeded',
@@ -356,7 +356,7 @@ class TaskQueueManager {
                 }
               });
             } else {
-              await prisma.fluxData.update({
+              await prisma.taskData.update({
                 where: { id: taskRecordId },
                 data: {
                   taskStatus: 'succeeded',
@@ -380,7 +380,7 @@ class TaskQueueManager {
               }
             });
           } else {
-            await prisma.fluxData.update({
+            await prisma.taskData.update({
               where: { id: taskRecordId },
               data: {
                 taskStatus: 'failed',
@@ -609,7 +609,7 @@ class TaskQueueManager {
       // 如果 RunningHub 任务已经创建，尝试取消它
       if (runningTask.runninghubTaskId) {
         try {
-          const { runninghubAPI } = await import('./runninghub-api');
+          const { runninghubAPI } = await import('@/modules/runninghub');
           await runninghubAPI.cancelTask(runningTask.runninghubTaskId);
           console.log(`🚫 RunningHub 任务 ${runningTask.runninghubTaskId} 已取消`);
         } catch (error) {

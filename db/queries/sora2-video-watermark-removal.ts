@@ -23,7 +23,7 @@ export async function findSora2VideoWatermarkRemovalTaskByRunningHubId(runninghu
 
   try {
     console.log("🔍 执行数据库查询，runninghubTaskId:", runninghubTaskId);
-    const task = await prisma.fluxData.findFirst({
+    const task = await prisma.taskData.findFirst({
       where: { 
         replicateId: runninghubTaskId,
         model: "sora2-video-watermark-removal"
@@ -57,7 +57,7 @@ export async function updateSora2VideoWatermarkRemovalTask(taskId: number, data:
   }
 
   try {
-    const task = await prisma.fluxData.update({
+    const task = await prisma.taskData.update({
       where: { id: taskId },
       data: data
     });
@@ -80,7 +80,7 @@ export async function findSora2VideoWatermarkRemovalTaskById(id: number) {
   }
 
   try {
-    const task = await prisma.fluxData.findUnique({
+    const task = await prisma.taskData.findUnique({
       where: { id },
       include: {
         user: {

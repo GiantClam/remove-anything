@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
-import { createRunningHubClient } from "@/modules/runninghub/adapter";
+import { createRunningHubClient } from "@/modules/runninghub";
 import { createPrismaTaskRepository } from "@/modules/tasks/adapters/prisma-repo";
 import { createPrismaTaskQueue } from "@/modules/tasks/adapters/prisma-queue";
 import { createVideoTaskWithR2Url } from "@/modules/tasks/sdk";
 import { createProjectAuthProvider } from "@/modules/auth/adapter";
+import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { prisma } from "@/db/prisma";
 import { taskQueueManager } from "@/lib/task-queue";
 import { Credits, model, TASK_QUEUE_CONFIG } from "@/config/constants";
@@ -14,9 +15,21 @@ import { env } from "@/env.mjs";
 import { uploadToR2, downloadFromR2 } from "@/lib/r2-upload";
 import { buildMediaTransformUrl, prewarmTransformUrl, waitForTransformReady } from "@/lib/cf-media";
 
+// 包装函数以匹配适配器期望的类型
+const getCurrentUser = async () => {
+  const user = await getCurrentUserOriginal();
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email ?? undefined,
+    name: user.name ?? undefined,
+  };
+};
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  let taskRecord: any = null;
   try {
     const contentType = req.headers.get('content-type') || '';
     if (!contentType.includes('multipart/form-data')) {
@@ -58,7 +71,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 获取当前用户
-    const auth = createProjectAuthProvider();
+    const auth = createProjectAuthProvider(getCurrentUser);
     const user = await auth.getCurrentUser();
     let userId = user?.userId;
     
@@ -133,18 +146,15 @@ export async function POST(req: NextRequest) {
 
     // 步骤3: 创建任务记录
     console.log("📝 步骤3: 创建任务记录...");
-    const taskRecord = await prisma.fluxData.create({
+    taskRecord = await prisma.taskData.create({
       data: {
         userId: userId,
         model: "sora2-video-watermark-removal",
-        inputPrompt: `Sora2 video watermark removal - ${finalFilename}`,
-        taskStatus: "processing",
-        imageUrl: null, // 将在任务完成后更新
+        inputPrompt: "",
+        inputImageUrl: finalR2Url,
+        taskStatus: "pending",
         isPrivate: true,
-        executeStartTime: BigInt(Date.now()),
-        executeEndTime: null,
-        replicateId: "", // 将在创建 RunningHub 任务后更新
-      } as any,
+      },
     });
 
     console.log("✅ 任务记录创建成功，ID:", taskRecord.id);
@@ -197,6 +207,21 @@ export async function POST(req: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    // 如果已创建任务记录，则更新状态为失败
+    try {
+      if (taskRecord?.id) {
+        await prisma.taskData.update({
+          where: { id: taskRecord.id },
+          data: {
+            taskStatus: "failed",
+            errorMsg: error instanceof Error ? error.message : "Failed to start task",
+          },
+        });
+      }
+    } catch (updateError) {
+      console.error("❌ 更新任务状态失败:", updateError);
     }
 
     return NextResponse.json(

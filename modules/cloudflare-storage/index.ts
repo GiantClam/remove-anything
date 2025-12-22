@@ -1,4 +1,9 @@
-// Cloudflare 文件上传/存储/展示 模块入口
-export { uploadToR2, downloadFromR2 } from "@/lib/r2-upload";
-export { buildMediaTransformUrl, prewarmTransformUrl, waitForTransformReady } from "@/lib/cf-media";
+// Cloudflare Storage 模块统一导出入口
+export type { R2Config } from "./sdk";
+export {
+  createR2Client,
+  uploadBufferToR2,
+  generatePresignedPutUrl,
+  generatePresignedGetUrl,
+} from "./sdk";
 

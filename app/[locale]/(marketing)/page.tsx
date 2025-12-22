@@ -6,10 +6,18 @@ import HeroLanding from "@/components/sections/hero-landing";
 import QuickAccess from "@/components/sections/quick-access";
 // import PreviewLanding from "@/components/sections/preview-landing";
 import { env } from "@/env.mjs";
+import { Metadata } from "next";
+import { constructAlternates } from "@/lib/seo";
 
 type Props = {
   params: { locale: string };
 };
+
+export async function generateMetadata({ params: { locale } }: Props): Promise<Metadata> {
+  return {
+    alternates: constructAlternates({ locale, path: "/" }),
+  };
+}
 
 // 避免构建期预渲染命中数据库：强制动态渲染
 export const dynamic = 'force-dynamic';

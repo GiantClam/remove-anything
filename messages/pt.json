@@ -18,10 +18,10 @@
     }
   },
   "IndexPage": {
-    "intro": "Apresentando o Gerador de Imagens Flux AI",
-    "description": "Revolutionando o modelo avançado de texto para imagem de próxima geração, suporte para os modelos flux.1 pro/dev e flux.1 schnell. O processamento em lote garante que nenhuma imagem seja perdida, o armazenamento permanente protege seu trabalho.",
-    "title": "Gerador de Imagens Flux AI",
-    "subtitle": "Texto para Imagem Avançado",
+    "intro": "Apresentando o Removedor de Objetos AI",
+    "description": "Revolucione a remoção de objetos com nossa ferramenta avançada de IA. O processamento em lote garante que nenhuma imagem seja perdida, o armazenamento permanente protege seu trabalho.",
+    "title": "Removedor de Objetos AI",
+    "subtitle": "Remoção Avançada de Objetos",
     "social": {
       "todayRemoved": "Removidos hoje",
       "objects": "objetos",
@@ -30,7 +30,7 @@
     "seeOthers": "Ver resultados de outros",
     "examples": {
       "label": "Exemplo",
-      "title": "Exemplos de Imagens Flux AI",
+      "title": "Exemplos de Imagens AI",
       "subtitle": "Gerar imagens a partir de prompts de texto.",
       "cta": {
         "description": "Pronto para experimentar você mesmo? Faça upload da sua imagem e veja a mágica acontecer!",
@@ -39,33 +39,33 @@
     },
     "features": {
       "title": "Recursos",
-      "description": "O Gerador de Imagens Flux AI é uma ferramenta poderosa que permite gerar imagens a partir de prompts de texto. Ele usa modelos avançados de IA para criar imagens impressionantes que são perfeitas para qualquer projeto.",
+      "description": "O Removedor de Objetos AI é uma ferramenta poderosa que permite remover objetos indesejados. Ele usa modelos avançados de IA para criar resultados impressionantes perfeitos para qualquer projeto.",
       "action": {
-        "visit": "Gerar"
+        "visit": "Remover"
       },
       "item1": {
-        "title": "FLUX.1 [pro]",
-        "description": "O melhor do FLUX.1, oferecendo geração de imagens de desempenho de última geração com acompanhamento de prompts de primeira linha, qualidade visual, detalhes da imagem e diversidade de saída."
+        "title": "Alta Qualidade",
+        "description": "Oferece desempenho de remoção de objetos de última geração com alta fidelidade e detalhes."
       },
       "item2": {
-        "title": "FLUX.1 [dev]",
-        "description": "Destilado diretamente do FLUX.1 [pro], o FLUX.1 [dev] obtém qualidade semelhante e capacidades de aderência a prompts, sendo mais eficiente do que um modelo padrão do mesmo tamanho."
+        "title": "Eficiente",
+        "description": "Obtém a mesma qualidade e capacidades, sendo mais eficiente que ferramentas padrão."
       },
       "item3": {
-        "title": "FLUX.1 [schnell]",
-        "description": "O modelo de geração de imagens mais rápido, especialmente projetado para desenvolvimento local e uso pessoal."
+        "title": "Rápido",
+        "description": "Ferramenta de remoção rápida projetada para uso pessoal."
       },
       "item4": {
-        "title": "Rápido como um raio",
-        "description": "Flux AI gera imagens de alta qualidade em segundos, significativamente mais rápido que Stable Diffusion 3 e Midjourney. Com suas capacidades de geração de imagens ultrarrápidas, Flux AI garante resultados rápidos e eficientes, economizando tempo e recursos valiosos."
+        "title": "Ultrarrápido",
+        "description": "A IA processa imagens de alta qualidade em segundos. Com capacidades de processamento ultrarrápidas, a IA garante resultados rápidos e eficientes, economizando tempo e recursos valiosos."
       },
       "item5": {
         "title": "Personalizável",
-        "description": "O modelo avançado Flux.1 produz imagens mais detalhadas e coerentes do que os concorrentes. Com seus recursos personalizáveis e interface de usuário amigável, o Gerador de Imagens Flux AI é a ferramenta definitiva para gerar imagens deslumbrantes a partir de prompts de texto. Seja você um iniciante ou um profissional, Flux AI tem você coberto. Experimente o poder da IA e revolucione seu processo de geração de imagens hoje!"
+        "description": "O modelo avançado produz resultados mais detalhados e coerentes. Com seus recursos personalizáveis e interface de usuário amigável, o Removedor de Objetos AI é a ferramenta definitiva para editar imagens. Experimente o poder da IA hoje!"
       },
       "item6": {
-        "title": "Interface de Usuário Amigável",
-        "description": "Mais fácil de usar do que ComfyUI, perfeito para iniciantes e profissionais. O Gerador de Imagens Flux AI é a ferramenta definitiva para gerar imagens deslumbrantes a partir de prompts de texto. Com sua interface de usuário amigável e poderosos modelos de IA, Flux AI facilita a criação de incríveis visuais para iniciantes e profissionais."
+        "title": "Interface Amigável",
+        "description": "Fácil de usar, perfeito para iniciantes e profissionais. O Removedor de Objetos AI é a ferramenta definitiva para remover objetos indesejados. Com sua interface de usuário amigável e poderosos modelos de IA, facilita a criação de visuais incríveis."
       },
       "item7": {
         "title": "Processamento em Lote",
@@ -84,10 +84,10 @@
         "title": "Personalizável"
       }
     },
-    "schnell": {
-      "title": "Flux.1 [Schnell]",
-      "description": "Flux.1 [schnell] es una versión refinada del modelo base, que opera hasta 10 veces más rápido que el original. Con licencia Apache 2.0, está optimizado para velocidad y eficiencia, atendiendo a usuarios que demandan una generación rápida de imágenes sin comprometer la calidad. Este modelo es ideal para desarrollo local y uso personal, logrando el equilibrio perfecto entre rendimiento y accesibilidad. Ofrecemos a los usuarios 5 oportunidades gratuitas cada mes para experimentar la generación de imágenes ultrarrápida del modelo Flux.1 [schnell], permitiéndote presenciar su increíble velocidad de primera mano.",
-      "action": "Prueba Ahora"
+    "generator": {
+      "title": "Gerador de Imagens AI",
+      "description": "Nossa versão refinada do modelo de IA opera até 10 vezes mais rápido que o original. Otimizado para velocidade e eficiência, atende a usuários que demandam uma geração rápida de imagens sem comprometer a qualidade. Este modelo é ideal para uso pessoal, logrando o equilíbrio perfeito entre desempenho e acessibilidade. Oferecemos aos usuários 5 oportunidades gratuitas cada mês para experimentar a geração de imagens ultrarrápida, permitindo que você presencie sua incrível velocidade de primeira mão.",
+      "action": "Experimente Agora"
     },
     "action": {
       "pricing": "Comprar Créditos",
@@ -161,79 +161,84 @@
     }
   },
   "PricingPage": {
-    "title": "Escolha um plano para comprar créditos",
-    "description": "Sem recorrência",
-    "worth": "Crédito",
-    "label": "Preços",
-    "action": {
-      "signin": "Entrar",
-      "buy": "Pagamento único"
-    },
-    "contact": {
-      "title": "Contate-nos",
-      "description": "Se tiver alguma dúvida, sinta-se à vontade para entrar em contato conosco."
+    "title": "Preços Simples, Sem Compromisso",
+    "description": "Comece gratuitamente e pague conforme o uso. Sem taxas ocultas.",
+    "plan": {
+      "title": "Plano Gratuito",
+      "description": "Comece com o Plano Gratuito",
+      "price": "Grátis",
+      "button": "Começar Gratuitamente",
+      "feature1": "20 Créditos Diários Gratuitos",
+      "feature2": "Acesso a todos os recursos",
+      "feature3": "Histórico de 3 Dias",
+      "feature4": "Geração Rápida"
     },
     "faq": {
-      "label": "FAQ",
       "title": "Perguntas Frequentes",
-      "subtitle": "Explore nosso FAQ abrangente para encontrar respostas rápidas para perguntas comuns. Se precisar de mais assistência, não hesite em entrar em contato conosco para ajuda personalizada.",
       "item1": {
-        "question": "Como o Flux AI se compara ao Stable Diffusion 3?",
-        "answer": "Flux AI oferece tempos de geração mais rápidos, maior qualidade de imagem e uma interface de usuário mais amigável em comparação com o Stable Diffusion 3. O modelo Flux.1 incorpora os últimos avanços na pesquisa de IA."
+        "question": "O que é o Removedor de Objetos AI?",
+        "answer": "O Removedor de Objetos AI é uma ferramenta online de última geração que permite remover objetos e fundos indesejados."
       },
       "item2": {
-        "question": "O Flux AI está disponível no GitHub ou Hugging Face?",
-        "answer": "Sim, Flux AI é de código aberto e disponível tanto no GitHub quanto no Hugging Face."
+        "question": "É gratuito usar?",
+        "answer": "Sim, você recebe 20 créditos gratuitos diariamente."
       },
       "item3": {
-        "question": "O que faz o Flux AI diferente de outros geradores de imagens por IA?",
-        "answer": "Flux AI combina velocidade, qualidade e facilidade de uso. É mais rápido que Midjourney, mais amigável que ComfyUI, e produz imagens de maior qualidade do que muitos concorrentes."
+        "question": "Como posso comprar mais créditos?",
+        "answer": "Você pode comprar mais créditos clicando no botão \"Comprar Créditos\" no topo da página. Oferecemos pacotes de pagamento conforme o uso."
       },
       "item4": {
-        "question": "Como usar o Flux AI?",
-        "answer": "Para usar o Flux AI, simplesmente visite fluxaipro.art, insira seu prompt e testemunhe a criação de visuais deslumbrantes em questão de segundos."
+        "question": "Como este Removedor de Objetos AI se compara a outros?",
+        "answer": "Nosso Removedor de Objetos AI oferece tempos de processamento mais rápidos, maior qualidade e uma interface de usuário mais amigável. O modelo incorpora os últimos avanços na pesquisa de IA."
       },
       "item5": {
-        "question": "Quais planos de preços o Flux AI oferece?",
-        "answer": "Usamos pontos para usar nossos serviços, e você pode clicar na carta de preço para comprar pontos (apenas um pagamento é necessário)."
+        "question": "Posso usar as imagens para fins comerciais?",
+        "answer": "Sim, você pode usar as imagens geradas para fins comerciais."
       },
       "item6": {
-        "question": "Como posso obter suporte online?",
-        "answer": "Você pode entrar em contato conosco em support@fluxaipro.art."
+        "question": "Quais métodos de pagamento vocês aceitam?",
+        "answer": "Aceitamos cartões de crédito/débito e outros métodos de pagamento online populares através do Stripe."
+      },
+      "item7": {
+        "question": "Meus dados de pagamento estão seguros?",
+        "answer": "Sim, utilizamos o Stripe para processamento de pagamentos, que é certificado pelo Provedor de Serviços PCI nível 1. Seus dados de pagamento são criptografados e seguros."
+      },
+      "item8": {
+        "question": "Posso obter um reembolso?",
+        "answer": "Infelizmente, não podemos oferecer reembolsos devido aos custos elevados associados ao processamento de IA."
+      },
+      "item9": {
+        "question": "Como usar o Removedor de Objetos AI?",
+        "answer": "Basta enviar sua imagem, usar o pincel para marcar as áreas indesejadas e clicar em remover."
       }
-    },
-    "tip": {
-      "title": "💳 Dica de Pagamento: Se encontrar algum problema durante o processo de pagamento, sinta-se à vontade para entrar em contato conosco! 😉",
-      "subtitle": "Perguntas?",
-      "contact": "entre em contato conosco"
     }
   },
   "ExplorePage": {
     "layout": {
-      "title": "Explore o Gerador de Imagens Flux AI",
-      "description": "Descubra as últimas características e atualizações do Gerador de Imagens Flux AI.",
-      "keywords": "gerador de imagens flux ai, inteligência artificial flux, tecnologia ai, aprendizado de máquina flux, ferramentas flux ai, aplicações ai, soluções de inteligência artificial, análise de dados flux, inovação ai, análise preditiva flux, aprendizado de máquina flux, desenvolvimento ai, próxima geração ai"
+      "title": "Explore o Removedor de Imagens AI",
+      "description": "Descubra as últimas características e atualizações do Removedor de Imagens AI.",
+      "keywords": "removedor de imagens ai, inteligência artificial, tecnologia ai, aprendizado de máquina, ferramentas ai, aplicações ai, soluções de inteligência artificial, análise de dados, inovação ai, análise preditiva, desenvolvimento ai, próxima geração ai"
     },
-    "title": "Explore o Gerador de Imagens Flux AI",
-    "description": "Descubra as últimas características e atualizações do Gerador de Imagens Flux AI.",
-    "flux": {
+    "title": "Exemplos do Removedor de Objetos AI",
+    "description": "Descubra as últimas características e atualizações do Removedor de Imagens AI.",
+    "image": {
       "model": "Modelo",
       "lora": "Estilo",
       "prompt": "Prompt",
       "executePrompt": "Prompt Mágico",
       "resolution": "Resolução",
-      "createdAt": "Data criada"
+      "createdAt": "Criado em"
     }
   },
   "Playground": {
     "layout": {
-      "title": "Gerador de Imagens Gratuito Flux.1 {model}: Crie Imagens Impressionantes em Segundos",
-      "description": "Descubra o gerador de imagens gratuito Flux.1, sua ferramenta essencial para criar visuais deslumbrantes sem esforço. Gere imagens de alta qualidade facilmente e liberte sua criatividade sem custo algum. Perfeito para designers, artistas e qualquer pessoa que queira aprimorar seus projetos com imagens únicas.",
-      "keywords": "gerador de imagens flux.1, gerador de imagens modelo flux.1, gerador de imagens gratuito, gerador de imagens IA, ferramenta de geração de imagens, criar imagens com IA, gerar imagens online, software de criação de imagens, ferramenta de design de imagens, plataforma de geração de imagens"
+      "title": "Borrador Mágico {model} Gratuito: Remova Objetos em Segundos",
+      "description": "Descubra o borrador mágico gratuito, sua ferramenta essencial para remover objetos indesejados sem esforço. Edite imagens de alta qualidade facilmente e liberte sua criatividade sem custo algum. Perfeito para designers, artistas e qualquer pessoa que queira aprimorar seus projetos com imagens únicas.",
+      "keywords": "borrador mágico, remover objetos, ferramenta gratuita, IA, edição de fotos, tirar coisas, editor de imagens online, software de edição, ferramenta de design"
     },
     "page": {
-      "title": "Gerador de Imagens Gratuito Flux.1 {model}",
-      "subtitle": "Modelos de IA incríveis para gerar imagens a partir de descrições textuais."
+      "title": "Borrador Mágico {model} Gratuito",
+      "subtitle": "Modelos de IA incríveis para remover objetos a partir de descrições textuais."
     },
     "settings": {
       "display": "Exibição {mode}",
@@ -241,54 +246,25 @@
       "displayLabel": "O uso gratuito será público",
       "displayAction": "Ver Preços"
     },
-    "schnell_faq": {
-      "label": "FAQ",
-      "title": "Perguntas frequentes",
-      "subtitle": "Explore nosso FAQ abrangente para encontrar respostas rápidas às dúvidas comuns. Se precisar de mais assistência, não hesite em nos contactar para obter ajuda personalizada.",
-      "item1": {
-        "question": "O que é o Flux.1 Schnell?",
-        "answer": "Flux.1 Schnell é o modelo de geração de imagens mais rápido, adaptado para desenvolvimento local e uso pessoal."
-      },
-      "item2": {
-        "question": "Qual a importância da entrada inicial ao gerar imagens no Flux.1 Schnell?",
-        "answer": "A entrada inicial usada no Flux.1 Schnell é extremamente importante para a qualidade da imagem. Fornecer entradas detalhadas e de alta qualidade pode levar a resultados mais realistas e detalhados. Certifique-se de que os conceitos e elementos propostos estejam bem definidos para obter os melhores resultados."
-      },
-      "item3": {
-        "question": "Como posso melhorar a qualidade das imagens geradas pelo Flux.1 Schnell?",
-        "answer": "Para melhorar a qualidade da imagem, forneça descrições claras e detalhadas, experimente diferentes estilos artísticos e considere usar a variante pro para tarefas mais complexas."
-      },
-      "item4": {
-        "question": "Existem comunidades online ou fóruns que fornecem dicas para melhorar a qualidade das imagens do Flux.1 Schnell?",
-        "answer": "Sim, pode ser usado no site oficial em https://fluxaipro.art/flux-schnell. Os usuários só precisam inserir suas descrições no site e gerar imagens, o que pode ajudá-lo a melhorar a qualidade das suas imagens geradas."
-      },
-      "item5": {
-        "question": "Como posso usar o Flux.1 Schnell e existem opções gratuitas?",
-        "answer": "O Flux.1 Schnell pode ser usado no site oficial em https://fluxaipro.art/flux-schnell. Cada usuário recebe 5 usos gratuitos do modelo Flux.1 Schnell por mês do calendário, que são reiniciados no início de cada mês. Para usá-lo, basta inserir sua descrição no site e gerar imagens. Esse processo pode ajudá-lo a melhorar a qualidade das suas imagens geradas ao longo do tempo."
-      },
-      "item6": {
-        "question": "Como posso obter suporte online?",
-        "answer": "Você pode entrar em contato conosco em support@fluxaipro.art."
-      }
-    },
-    "title": "Gerador de Imagens Flux AI",
-    "description": "Modelos de IA incríveis para gerar imagens a partir de prompts de texto.",
+    "title": "Remove Anything - Remoção Gratuita de Objetos e Fundo",
+    "description": "Modelos de IA incríveis para processar imagens a partir de texto.",
     "empty": {
-      "title": "Erro do Gerador",
+      "title": "Erro de Processamento",
       "description": "Informações do Erro: {error}",
       "errorPlaceholder": "Ocorreu um erro"
     },
     "form": {
       "input": "Entrada",
       "result": "Resultado",
-      "placeholder": "Digite o prompt para gerar a imagem...",
+      "placeholder": "Digite uma descrição para remover objetos...",
       "model": "Modelo",
       "lora": "Lora",
       "loraTooltip": "Selecionar uma Lora",
       "loraLabel": "Nome da Lora",
-      "modelTooltip": "Escolha um modelo para gerar imagens.",
-      "submit": "Gerar",
+      "modelTooltip": "Escolha um modelo para remover objetos.",
+      "submit": "Remover",
       "aspectRatio": "Proporção de Aspecto",
-      "aspectRatioTooltip": "Proporção de aspecto para a imagem gerada.",
+      "aspectRatioTooltip": "Proporção de aspecto para a imagem processada.",
       "inputImage": "Imagem",
       "inputImageTooltip": "Imagem de entrada para o modo de imagem para imagem. A proporção de aspecto da sua saída corresponderá a esta imagem",
       "inputImagePlaceholder": "Carregar imagem de entrada"
@@ -298,12 +274,12 @@
       "limitInsufficient": "Você atingiu o limite de uso gratuito. Por favor, atualize para um plano pago para continuar usando nossos serviços."
     },
     "action": {
-      "copy": "Copiar prompt",
-      "copySuccess": "Prompt copiado para a área de transferência.",
+      "copy": "Copiar descrição",
+      "copySuccess": "Descrição copiada para a área de transferência.",
       "download": "Baixar Imagem",
       "downloadSuccess": "Imagem baixada.",
       "downloadLoading": "Baixando...",
-      "upgrade": "Elevate your artistry with Schnell's limited monthly free trials. For watermark-free, premium model experiences, click here to upgrade."
+      "upgrade": "Eleve sua arte com testes gratuitos mensais limitados. Para experiências de modelo premium sem marcas, clique aqui para atualizar."
     },
     "backgroundRemoval": {
       "failed": "A remoção do fundo falhou",
@@ -328,25 +304,25 @@
     }
   },
   "History": {
-    "title": "Histórico de Geração de Imagens",
-    "description": "Visualize seu histórico recente de geração de imagens.",
+    "title": "Histórico de Tarefas",
+    "description": "Visualize seu histórico recente de processamento de imagens.",
     "empty": {
       "title": "Ainda sem histórico.",
-      "description": "Gere uma imagem para vê-la aqui."
+      "description": "Inicie uma tarefa para vê-la aqui."
     },
     "action": {
-      "generate": "Gerar",
-      "copy": "Copiar prompt",
-      "copySuccess": "Prompt copiado para a área de transferência.",
+      "generate": "Iniciar",
+      "copy": "Copiar descrição",
+      "copySuccess": "Descrição copiada para a área de transferência.",
       "download": "Baixar Imagem",
       "downloadSuccess": "Imagem baixada.",
       "downloadLoading": "Baixando...",
-      "upgrade": "Eleve seu estilo com as testes gratuitos mensais limitados de Flux.1. Para experiências de modelo premium sem marca, clique aqui para atualizar."
+      "upgrade": "Eleve sua arte com testes gratuitos mensais limitados. Para experiências de modelo premium sem marcas, clique aqui para atualizar."
     }
   },
   "Billings": {
     "page": {
-      "title": "App – Gerador de Imagens Flux AI",
+      "title": "App – Remove Anything",
       "description": "Visualize Suas Previsões Recentes"
     },
     "title": "Previsões Recentes",
@@ -355,7 +331,7 @@
       "description": "Ainda não há registro."
     },
     "table": {
-      "fluxId": "ID da Tarefa",
+      "taskId": "ID da Tarefa",
       "status": "Status",
       "amount": "Crédito",
       "type": "Tipo",
@@ -474,7 +450,6 @@
     "removeWatermark": "Remoção de marca d'água",
     "sora2VideoWatermarkRemoval": "Remoção de marca d'água Sora2 Video",
     "explore": "Explorar",
-    "prompt": "Gerador de Prompts Remove Anything",
     "title": "Remove Anything - Removedor Gratuito de Objetos e Fundos com IA",
     "blog": "Blog",
     "dashboard": "Painel de Controle",

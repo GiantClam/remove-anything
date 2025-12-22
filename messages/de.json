@@ -18,10 +18,10 @@
     }
   },
   "IndexPage": {
-    "intro": "Einführung des Flux AI Image Generators",
-    "description": "Revolutionäres Next-Generation-Advanced-Text-to-Image-Open-Modell, unterstützt flux.1 pro/dev und flux.1 schnell Modelle. Die Stapelverarbeitung stellt sicher, dass kein Bild verloren geht, der permanente Speicher schützt Ihre Arbeit.",
-    "title": "Flux AI Image Generator",
-    "subtitle": "Advanced Text-to-Image",
+    "intro": "Einführung des KI-Bildradierers",
+    "description": "Revolutionäres KI-Modell der nächsten Generation zum Entfernen von Objekten aus Bildern. Die Stapelverarbeitung stellt sicher, dass kein Bild verloren geht, der permanente Speicher schützt Ihre Arbeit.",
+    "title": "KI-Bildradierer",
+    "subtitle": "Fortgeschrittene Objektentfernungs-KI",
     "social": {
       "todayRemoved": "Heute entfernt",
       "objects": "Objekte",
@@ -30,7 +30,7 @@
     "seeOthers": "Ergebnisse anderer ansehen",
     "examples": {
       "label": "Beispiel",
-      "title": "Flux AI Image Beispiele",
+      "title": "KI-Bildbeispiele",
       "subtitle": "Bilder aus Textprompts generieren.",
       "cta": {
         "description": "Bereit, es selbst zu versuchen? Laden Sie Ihr Bild hoch und erleben Sie die Magie!",
@@ -39,41 +39,41 @@
     },
     "features": {
       "title": "Funktionen",
-      "description": "Der Flux AI Image Generator ist ein leistungsstarkes Tool, mit dem Sie Bilder aus Textprompts generieren können. Es verwendet fortschrittliche KI-Modelle, um atemberaubende Bilder zu erstellen, die perfekt für jedes Projekt sind.",
+      "description": "Der KI-Bildradierer ist ein leistungsstarkes Tool, mit dem Sie Objekte aus Bildern entfernen können. Er verwendet fortschrittliche KI-Modelle, um atemberaubende Ergebnisse zu erzielen, die perfekt für jedes Projekt sind.",
       "action": {
-        "visit": "Generieren"
+        "visit": "Entfernen"
       },
       "item1": {
-        "title": "FLUX.1 [pro]",
-        "description": "Das Beste von FLUX.1, bietet state-of-the-art Leistung bei der Bildgenerierung mit Spitzenwerten in Prompt-Nachvollziehbarkeit, visueller Qualität, Bilddetails und Ausgabevielseitigkeit."
+        "title": "Hohe Qualität",
+        "description": "Bietet modernste Leistung bei der Bildbearbeitung mit Spitzenwerten in der Entfernung von Objekten, visueller Qualität und Bilddetails."
       },
       "item2": {
-        "title": "FLUX.1 [dev]",
-        "description": "Direkt aus FLUX.1 [pro] destilliert, erhält FLUX.1 [dev] ähnliche Qualität und Prompt-Nachvollziehbarkeitsfähigkeiten, während es effizienter ist als ein Standardmodell gleicher Größe."
+        "title": "Effizient",
+        "description": "Behält ähnliche Qualität bei, während es effizienter ist als Standardmodelle."
       },
       "item3": {
-        "title": "FLUX.1 [schnell]",
-        "description": "Das schnellste Bildgenerierungsmodell, speziell für lokale Entwicklung und persönliche Nutzung entwickelt."
+        "title": "Schnell",
+        "description": "Schnelles Bildverarbeitungsmodell, speziell für eine reibungslose Benutzererfahrung entwickelt."
       },
       "item4": {
         "title": "Blitzschnell",
-        "description": "Flux AI generiert qualitativ hochwertige Bilder in Sekundenschnelle, deutlich schneller als Stable Diffusion 3 und Midjourney. Mit seinen blitzschnellen Bildgenerierungsfähigkeiten stellt Flux AI schnelle und effiziente Ergebnisse sicher und spart Ihnen wertvolle Zeit und Ressourcen."
+        "description": "Unsere KI bearbeitet Bilder in Sekundenschnelle. Mit ihren blitzschnellen Bildbearbeitungsfähigkeiten stellt sie schnelle und effiziente Ergebnisse sicher und spart Ihnen wertvolle Zeit."
       },
       "item5": {
         "title": "Anpassbar",
-        "description": "Das fortschrittliche Flux.1-Modell erzeugt detailliertere und kohärentere Bilder als die Konkurrenz. Mit seinen anpassbaren Funktionen und benutzerfreundlicher Oberfläche ist der Flux AI Image Generator das ultimative Tool zur Erzeugung atemberaubender Bilder aus Textprompts. Egal, ob Anfänger oder Profi, Flux AI hat Sie abgedeckt. Erleben Sie die Macht der KI und revolutionieren Sie Ihren Bildgenerierungsprozess noch heute!"
+        "description": "Das fortschrittliche KI-Modell erzeugt detailliertere und kohärentere Ergebnisse. Mit seinen anpassbaren Funktionen und der benutzerfreundlichen Oberfläche ist der KI-Bildradierer das ultimative Tool zur Bearbeitung von Bildern."
       },
       "item6": {
         "title": "Benutzerfreundliche Oberfläche",
-        "description": "Einfacher zu bedienen als ComfyUI, perfekt für Anfänger und Profis gleichermaßen. Der Flux AI Image Generator ist das ultimative Tool zur Erzeugung atemberaubender Bilder aus Textprompts. Mit seiner benutzerfreundlichen Oberfläche und leistungsstarken KI-Modellen macht Flux AI es sowohl Anfängern als auch Profis leicht, erstaunliche visuelle Effekte zu erstellen."
+        "description": "Einfach zu bedienen, perfekt für Anfänger und Profis gleichermaßen. Der KI-Bildradierer ist das ultimative Tool zur Bearbeitung von Bildern."
       },
       "item7": {
         "title": "Stapelverarbeitung",
-        "description": "Verarbeiten Sie mehrere Bilder gleichzeitig, ohne ein einziges Bild zu verlieren. Sparen Sie Zeit und Mühe mit effizienten Stapeloperationen für Hintergrundentfernung, Wasserzeichenentfernung und Objektentfernung."
+        "description": "Verarbeiten Sie mehrere Bilder gleichzeitig, ohne ein einziges Bild zu verlieren. Sparen Sie Zeit und Mühe mit effizienten Stapeloperationen."
       },
       "item8": {
         "title": "Permanenter Speicher",
-        "description": "Alle verarbeiteten Bilder werden dauerhaft gespeichert und gehen niemals verloren. Greifen Sie jederzeit und überall auf Ihre Arbeit zu, mit sicherem Cloud-Speicher, der Ihre wertvollen Bearbeitungen schützt."
+        "description": "Alle verarbeiteten Bilder werden dauerhaft gespeichert und gehen niemals verloren. Greifen Sie jederzeit und überall auf Ihre Arbeit zu."
       }
     },
     "powered": {
@@ -84,9 +84,9 @@
         "title": "Anpassbar"
       }
     },
-    "schnell": {
-      "title": "Flux.1 [Schnell]",
-      "description": "Flux.1 [schnell] ist eine verfeinerte Version des Basismodells, die bis zu 10-mal schneller arbeitet als das Original. Unter Apache 2.0 lizenziert, ist es für Geschwindigkeit und Effizienz optimiert und richtet sich an Nutzer, die eine schnelle Bildgenerierung ohne Qualitätseinbußen benötigen. Dieses Modell ist ideal für lokale Entwicklung und persönlichen Gebrauch, da es die perfekte Balance zwischen Leistung und Zugänglichkeit bietet. Wir bieten Nutzern monatlich 5 kostenlose Gelegenheiten, die blitzschnelle Bildgenerierung des Flux.1 [schnell] Modells zu erleben, sodass Sie seine unglaubliche Geschwindigkeit aus erster Hand erfahren können.",
+    "generator": {
+      "title": "KI-Bildradierer",
+      "description": "Unser schneller KI-Radierer ist eine optimierte Version, die für Geschwindigkeit und Effizienz entwickelt wurde. Er ist ideal für Nutzer, die eine schnelle Objektentfernung ohne Qualitätseinbußen benötigen. Wir bieten Nutzern monatliche Möglichkeiten, die blitzschnelle Bildbearbeitung zu erleben.",
       "action": "Jetzt ausprobieren"
     },
     "action": {
@@ -178,28 +178,28 @@
       "title": "Häufig gestellte Fragen",
       "subtitle": "Entdecken Sie unsere umfassende FAQ, um schnelle Antworten auf häufig gestellte Fragen zu finden. Bei weiteren Fragen zögern Sie bitte nicht, uns für individuelle Hilfe zu kontaktieren.",
       "item1": {
-        "question": "Wie vergleicht sich Flux AI mit Stable Diffusion 3?",
-        "answer": "Flux AI bietet schnellere Generierungszeiten, höhere Bildqualität und eine benutzerfreundlichere Oberfläche im Vergleich zu Stable Diffusion 3. Das Flux.1-Modell integriert die neuesten Fortschritte in der KI-Forschung."
+        "question": "Wie unterscheidet sich dieser KI-Bildradierer von anderen?",
+        "answer": "Unser KI-Bildradierer bietet schnellere Verarbeitungszeiten, höhere Bildqualität und eine benutzerfreundlichere Oberfläche. Er integriert die neuesten Fortschritte in der KI-Forschung."
       },
       "item2": {
-        "question": "Ist Flux AI auf GitHub oder Hugging Face verfügbar?",
-        "answer": "Ja, Flux AI ist Open-Source und auf GitHub und Hugging Face verfügbar."
+        "question": "Sind die Bilder kommerziell nutzbar?",
+        "answer": "Ja, die generierten Bilder können für kommerzielle Zwecke verwendet werden. Bitte überprüfen Sie unsere Nutzungsbedingungen für weitere Details."
       },
       "item3": {
-        "question": "Was unterscheidet Flux AI von anderen KI-Bildgeneratoren?",
-        "answer": "Flux AI kombiniert Geschwindigkeit, Qualität und Benutzerfreundlichkeit. Es ist schneller als Midjourney, benutzerfreundlicher als ComfyUI und erzeugt qualitativ hochwertigere Bilder als viele Konkurrenten."
+        "question": "Was macht diesen Bildradierer einzigartig?",
+        "answer": "Er kombiniert Geschwindigkeit, Qualität und Benutzerfreundlichkeit. Er ist schneller als viele Wettbewerber und produziert Ergebnisse von erstaunlicher Qualität."
       },
       "item4": {
-        "question": "Wie verwende ich Flux AI?",
-        "answer": "Um Flux AI zu verwenden, besuchen Sie einfach fluxaipro.art, geben Sie Ihren Prompt ein und erleben Sie die Erstellung atemberaubender visueller Effekte in wenigen Sekunden."
+        "question": "Wie verwende ich den Bildradierer?",
+        "answer": "Um den Bildradierer zu verwenden, besuchen Sie einfach unsere Website, laden Sie Ihr Bild hoch und erleben Sie die Entfernung von Objekten in wenigen Sekunden."
       },
       "item5": {
-        "question": "Welche Preispläne bietet Flux AI an?",
+        "question": "Welche Preispläne werden angeboten?",
         "answer": "Wir verwenden Punkte zur Nutzung unserer Dienste, und Sie können auf die Preiskarte klicken, um Punkte zu kaufen (nur eine Zahlung ist erforderlich)."
       },
       "item6": {
-        "question": "Wie erhalte ich Support für Online?",
-        "answer": "Sie können uns unter support@fluxaipro.art erreichen."
+        "question": "Wie erhalte ich Support?",
+        "answer": "Sie können uns unter support@remove-anything.com erreichen."
       }
     },
     "tip": {
@@ -210,13 +210,13 @@
   },
   "ExplorePage": {
     "layout": {
-      "title": "Entdecken Sie den Flux AI Bildgenerator",
-      "description": "Entdecken Sie die neuesten Funktionen und Updates des Flux AI Bildgenerators.",
-      "keywords": "flux AI, AI flux, flux künstliche Intelligenz, KI-Technologie, maschinelles Lernen flux, flux AI Werkzeuge, KI-Anwendungen, Lösungen für künstliche Intelligenz, flux Datenanalyse, KI-Innovation, prädiktive Analytik flux, flux maschinelles Lernen, KI-Entwicklung, nächste Generation KI"
+      "title": "Entdecken Sie den KI-Bildradierer",
+      "description": "Entdecken Sie die neuesten Funktionen und Updates des KI-Bildradierers.",
+      "keywords": "künstliche Intelligenz, KI-Technologie, maschinelles Lernen, AI Werkzeuge, KI-Anwendungen, Lösungen für künstliche Intelligenz, Datenanalyse, KI-Innovation, prädiktive Analytik, maschinelles Lernen, KI-Entwicklung, nächste Generation KI"
     },
-    "title": "Entdecken Sie den Flux AI Bildgenerator",
-    "description": "Entdecken Sie die neuesten Funktionen und Updates des Flux AI Bildgenerators.",
-    "flux": {
+    "title": "Entdecken Sie den KI-Bildradierer",
+    "description": "Entdecken Sie die neuesten Funktionen und Updates des KI-Bildradierers.",
+    "image": {
       "model": "Modell",
       "lora": "Stil",
       "prompt": "Prompt",
@@ -227,13 +227,13 @@
   },
   "Playground": {
     "layout": {
-      "title": "Kostenloser Flux.1 {model} Bildgenerator: Erstellen Sie atemberaubende Bilder in Sekunden",
-      "description": "Entdecken Sie den kostenlosen Flux.1 Modell-Bildgenerator, Ihr Werkzeug zur mühelosen Erstellung beeindruckender Visuals. Generieren Sie hochwertige Bilder mit Leichtigkeit und entfesseln Sie Ihre Kreativität ohne Kosten. Perfekt für Designer, Künstler und jeden, der seine Projekte mit einzigartigen Bildern aufwerten möchte.",
-      "keywords": "Flux.1 Bildgenerator, Flux.1 Modell Bildgenerator, kostenloser Bildgenerator, KI-Bildgenerator, Bildgenerierungstool, Bilder mit KI erstellen, Bilder online generieren, Bilderstellungssoftware, Bilddesign-Tool, Bildgenerierungsplattform"
+      "title": "Kostenloser Magischer {model} Radierer: Objekte in Sekunden entfernen",
+      "description": "Entdecken Sie den kostenlosen magischen Radierer, Ihr Werkzeug zum mühelosen Entfernen unerwünschter Objekte. Bearbeiten Sie hochwertige Bilder mit Leichtigkeit und entfesseln Sie Ihre Kreativität ohne Kosten. Perfekt für Designer, Künstler und jeden, der seine Projekte mit einzigartigen Bildern aufwerten möchte.",
+      "keywords": "magischer radierer, objekte entfernen, kostenloses tool, KI, fotobearbeitung, dinge entfernen, online bildeditor, bearbeitungssoftware, designtool"
     },
     "page": {
-      "title": "Kostenloser Flux.1 {model} Bildgenerator",
-      "subtitle": "Erstaunliche KI-Modelle zur Generierung von Bildern aus Textaufforderungen."
+      "title": "Kostenloser Magischer {model} Radierer",
+      "subtitle": "Erstaunliche KI-Modelle zum Entfernen von Objekten aus Textbeschreibungen."
     },
     "settings": {
       "display": "{mode} anzeigen",
@@ -241,54 +241,25 @@
       "displayLabel": "Kostenlose Nutzung wird öffentlich sein",
       "displayAction": "Preise anzeigen"
     },
-    "schnell_faq": {
-      "label": "FAQ",
-      "title": "Häufig gestellte Fragen",
-      "subtitle": "Durchsuchen Sie unsere umfassende FAQ, um schnelle Antworten auf häufige Fragen zu finden. Wenn Sie weitere Hilfe benötigen, zögern Sie nicht, uns für personalisierte Unterstützung zu kontaktieren.",
-      "item1": {
-        "question": "Was ist Flux.1 Schnell?",
-        "answer": "Flux.1 Schnell ist das schnellste Bildgenerierungsmodell, das für lokale Entwicklung und persönlichen Gebrauch optimiert ist."
-      },
-      "item2": {
-        "question": "Wie wichtig ist die anfängliche Eingabe bei der Bildgenerierung mit Flux.1 Schnell?",
-        "answer": "Die anfängliche Eingabe in Flux.1 Schnell ist äußerst wichtig für die Bildqualität. Hochwertige und detaillierte Eingaben können zu realistischeren und detaillierteren Ausgaben führen. Stellen Sie sicher, dass die vorgeschlagenen Konzepte und Elemente für beste Ergebnisse gut definiert sind."
-      },
-      "item3": {
-        "question": "Wie kann ich die Qualität der von Flux.1 Schnell generierten Bilder verbessern?",
-        "answer": "Um die Bildqualität zu verbessern, geben Sie klare und detaillierte Anweisungen, experimentieren Sie mit verschiedenen künstlerischen Stilen und erwägen Sie die Verwendung der Pro-Variante für komplexere Aufgaben."
-      },
-      "item4": {
-        "question": "Gibt es Online-Communities oder Foren, die Tipps zur Verbesserung der Flux.1 Schnell Bildqualität geben?",
-        "answer": "Ja, es kann auf der offiziellen Website unter https://fluxaipro.art/flux-schnell verwendet werden. Benutzer müssen nur ihre Anweisungen auf der Website eingeben und Bilder generieren, was Ihnen helfen kann, die Qualität Ihrer generierten Bilder zu verbessern."
-      },
-      "item5": {
-        "question": "Wie kann ich Flux.1 Schnell nutzen und gibt es kostenlose Optionen?",
-        "answer": "Flux.1 Schnell kann auf der offiziellen Website unter https://fluxaipro.art/flux-schnell genutzt werden. Jeder Benutzer erhält 5 kostenlose Nutzungen des Flux.1 Schnell Modells pro Kalendermonat, die sich zu Beginn jedes Monats zurücksetzen. Zur Nutzung geben Sie einfach Ihre Anweisung auf der Website ein und generieren Bilder. Dieser Prozess kann Ihnen helfen, die Qualität Ihrer generierten Bilder im Laufe der Zeit zu verbessern."
-      },
-      "item6": {
-        "question": "Wie erhalte ich Online-Support?",
-        "answer": "Sie können uns unter support@fluxaipro.art erreichen."
-      }
-    },
-    "title": "Flux AI Image Generator",
-    "description": "Erstaunliche KI-Modelle zur Generierung von Bildern aus Textprompts.",
+    "title": "Remove Anything - Kostenlose Objekt- und Hintergrundentfernung",
+    "description": "Erstaunliche KI-Modelle zur Bildverarbeitung aus Text.",
     "empty": {
-      "title": "Generatorfehler",
+      "title": "Verarbeitungsfehler",
       "description": "Fehlerinfo: {error}",
       "errorPlaceholder": "Ein Fehler ist aufgetreten"
     },
     "form": {
       "input": "Eingabe",
       "result": "Ergebnis",
-      "placeholder": "Geben Sie einen Prompt ein, um ein Bild zu generieren...",
+      "placeholder": "Geben Sie einen Prompt ein, um Objekte zu entfernen...",
       "model": "Modell",
       "lora": "Lora",
       "loraTooltip": "Eine Lora auswählen",
       "loraLabel": "Lora Name",
-      "modelTooltip": "Wählen Sie ein Modell zur Bildgenerierung.",
-      "submit": "Generieren",
+      "modelTooltip": "Wählen Sie ein Modell zum Entfernen von Objekten.",
+      "submit": "Entfernen",
       "aspectRatio": "Seitenverhältnis",
-      "aspectRatioTooltip": "Seitenverhältnis für das generierte Bild.",
+      "aspectRatioTooltip": "Seitenverhältnis für das verarbeitete Bild.",
       "inputImage": "Bild",
       "inputImageTooltip": "Eingabebild für den Bild-zu-Bild-Modus. Das Seitenverhältnis Ihrer Ausgabe entspricht diesem Bild",
       "inputImagePlaceholder": "Eingabebild hochladen"
@@ -303,7 +274,7 @@
       "download": "Bild herunterladen",
       "downloadSuccess": "Bild heruntergeladen.",
       "downloadLoading": "Wird heruntergeladen...",
-      "upgrade": "Verbessern Sie Ihre Kunst mit den begrenzten monatlichen kostenlosen Tests von Schnell. Für markenfreie, premium-Modell-Erlebnisse klicken Sie hier, um zu upgraden."
+      "upgrade": "Verbessern Sie Ihre Kunst mit den begrenzten monatlichen kostenlosen Tests. Für markenfreie, premium-Modell-Erlebnisse klicken Sie hier, um zu upgraden."
     },
     "backgroundRemoval": {
       "failed": "Hintergrundentfernung fehlgeschlagen",
@@ -328,14 +299,14 @@
     }
   },
   "History": {
-    "title": "Bildgenerierungsgeschichte",
-    "description": "Zeigen Sie Ihre aktuelle Bildgenerierungsgeschichte an.",
+    "title": "Aufgabenverlauf",
+    "description": "Zeigen Sie Ihren aktuellen Bildverarbeitungsverlauf an.",
     "empty": {
       "title": "Noch keine Geschichte.",
-      "description": "Generieren Sie ein Bild, um es hier zu sehen."
+      "description": "Starten Sie eine Aufgabe, um sie hier zu sehen."
     },
     "action": {
-      "generate": "Generieren",
+      "generate": "Starten",
       "copy": "Prompt kopieren",
       "copySuccess": "Prompt in die Zwischenablage kopiert.",
       "download": "Bild herunterladen",
@@ -345,7 +316,7 @@
   },
   "Billings": {
     "page": {
-      "title": "App – Flux AI Image Generator",
+      "title": "App – Remove Anything",
       "description": "Zeigen Sie Ihre aktuellen Vorhersagen an"
     },
     "title": "Aktuelle Vorhersagen",
@@ -354,7 +325,7 @@
       "description": "Es gibt noch keinen Eintrag."
     },
     "table": {
-      "fluxId": "Aufgaben-ID",
+      "taskId": "Aufgaben-ID",
       "status": "Status",
       "amount": "Credit",
       "type": "Typ",

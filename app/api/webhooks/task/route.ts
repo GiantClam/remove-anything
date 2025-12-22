@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/db/prisma";
 import { getUserCredit } from "@/db/queries/account";
-import { BillingType, FluxTaskStatus } from "@/db/type";
+import { TaskStatus, BillingType } from "@/db/type";
 import { env } from "@/env.mjs";
 import { getErrorMessage } from "@/lib/handle-error";
 import { logsnag } from "@/lib/log-snag";
@@ -41,35 +41,36 @@ export async function POST(req: Request) {
     const { replicateId, taskStatus } = body;
     // Do something with the payload
     // For this guide, you simply log the payload to the console
-    const fluxData = await prisma.fluxData.findFirst({
+    const taskData = await prisma.taskData.findFirst({
       where: {
         replicateId,
       },
     });
-    if (!fluxData || !fluxData.id) {
+    if (!taskData || !taskData.id) {
       return NextResponse.json(
-        { error: "Flux data not found" },
+        { error: "Task data not found" },
         { status: 404 },
       );
     }
     if (
-      fluxData.taskStatus === FluxTaskStatus.Succeeded &&
-      taskStatus !== FluxTaskStatus.Succeeded
+      taskData.taskStatus === TaskStatus.Succeeded &&
+      taskStatus !== TaskStatus.Succeeded
     ) {
-      return new Response("", { status: 200 });
+      console.log(`⚠️ Webhook received for already succeeded task: ${replicateId}`);
+      return NextResponse.json({ success: true, message: "Task already succeeded" });
     }
-    if (!fluxData.userId) {
+    if (!taskData.userId) {
       console.log("⚠️ 任务没有关联用户，跳过积分处理");
       return new Response("", { status: 200 });
     }
     
-    const account = await getUserCredit(fluxData.userId);
+    const account = await getUserCredit(taskData.userId);
 
     const billingData = await prisma.userBilling.findFirst({
       where: {
         AND: [
           {
-            fluxId: fluxData.id,
+            taskId: taskData.id,
           },
           {
             type: BillingType.Refund,
@@ -87,7 +88,7 @@ export async function POST(req: Request) {
         where: {
           AND: [
             {
-              fluxId: fluxData.id,
+              taskId: taskData.id,
             },
             {
               type: BillingType.Withdraw,
@@ -106,7 +107,7 @@ export async function POST(req: Request) {
           state: "Done",
           amount: -billingAmount,
           type: BillingType.Refund,
-          fluxId: fluxData.id,
+          taskId: taskData.id,
           description: "Refund",
         },
       });
@@ -134,7 +135,7 @@ export async function POST(req: Request) {
     await logsnag.track({
       channel: "refund",
       event: "Refund points",
-      user_id: fluxData.userId,
+      user_id: taskData.userId,
       description: `用户绘画任务执行失败`,
       icon: "💰",
     });

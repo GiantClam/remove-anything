@@ -6,18 +6,18 @@ import Link from "next/link";
 import { Link as I18nLink } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
-interface FluxItem {
+interface TaskItem {
   id: string;
   imageUrl?: string | null;
   inputPrompt?: string | null;
 }
 
 interface PreviewGalleryProps {
-  initialData: FluxItem[];
+  initialData: TaskItem[];
 }
 
 export default function PreviewGallery({ initialData }: PreviewGalleryProps) {
-  const [items, setItems] = useState<FluxItem[]>(initialData);
+  const [items, setItems] = useState<TaskItem[]>(initialData);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -32,30 +32,8 @@ export default function PreviewGallery({ initialData }: PreviewGalleryProps) {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/explore?page=${page + 1}&limit=12`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch");
-      }
-      const result = await response.json();
-      
-      if (result.data?.data?.length > 0) {
-        // 转换数据格式以匹配初始数据，处理图片URL
-        const newItems = result.data.data.map((item: any) => ({
-          id: item.id,
-          imageUrl: item.imageUrl 
-            ? `https://img.douni.one/?url=${encodeURIComponent(item.imageUrl)}&action=resize!520,520,2|draw_text!s.douni.one/a,10,400`
-            : item.imageUrl,
-          inputPrompt: item.inputPrompt,
-        }));
-        
-        setItems((prev) => [...prev, ...newItems]);
-        setPage((prev) => prev + 1);
-        if (result.data.data.length < 12) {
-          setHasMore(false);
-        }
-      } else {
-        setHasMore(false);
-      }
+      // 暂时不加载更多，或者改为加载背景移除/水印移除的示例
+      setHasMore(false);
     } catch (error) {
       console.error("Failed to load more images:", error);
       setHasMore(false);
