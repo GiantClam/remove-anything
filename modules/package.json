@@ -40,7 +40,6 @@
   },
   "homepage": "https://github.com/GiantClam/aiwebmodules#readme",
   "dependencies": {
-    "aws-sdk": "^2.1692.0",
     "stripe": "^15.8.0"
   },
   "devDependencies": {
@@ -48,7 +47,9 @@
     "typescript": "^5.5.4"
   },
   "peerDependencies": {
-    "@prisma/client": "^6.12.0"
+    "@prisma/client": "^6.12.0",
+    "@aws-sdk/client-s3": "^3.848.0",
+    "@aws-sdk/s3-request-presigner": "^3.848.0"
   },
   "peerDependenciesMeta": {
     "@prisma/client": {

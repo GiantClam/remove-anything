@@ -5,5 +5,6 @@ export {
   uploadBufferToR2,
   generatePresignedPutUrl,
   generatePresignedGetUrl,
+  configureBucketCORS,
 } from "./sdk";
 
