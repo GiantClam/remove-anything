@@ -15,10 +15,6 @@ export const marketingConfig: MarketingConfig = {
       href: "/remove-watermark",
     },
     {
-      title: "sora2VideoWatermarkRemoval",
-      href: "/sora2-video-watermark-removal",
-    },
-    {
       title: "pricing",
       href: "/pricing",
     },
