@@ -3,7 +3,6 @@ import { NextRequest } from "next/server";
 import { ImageResponse } from "next/og";
 import { ogImageSchema } from "@/lib/validations/og";
 
-export const runtime = "edge"; // Vercel 推荐在 Edge 运行 next/og
 export const dynamic = "force-dynamic";
 
 // 画布尺寸

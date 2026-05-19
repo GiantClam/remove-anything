@@ -2,9 +2,9 @@ import { prisma } from "@/db/prisma";
 import { TASK_QUEUE_CONFIG } from "@/config/constants";
 import { taskProcessor } from "./task-processor";
 import { runninghubAPI } from "@/modules/runninghub";
-import AWS from 'aws-sdk';
 import { env } from "@/env.mjs";
 import { nanoid } from 'nanoid';
+import { createR2S3Service } from "@/lib/r2-s3";
 
 export interface TaskQueueItem {
   id: string;
@@ -423,23 +423,14 @@ class TaskQueueManager {
     const arrayBuffer = await resp.arrayBuffer();
     const contentType = resp.headers.get('content-type') || 'image/png';
 
-    const s3 = new AWS.S3({
-      endpoint: env.R2_ENDPOINT,
-      accessKeyId: env.R2_ACCESS_KEY,
-      secretAccessKey: env.R2_SECRET_KEY,
-      region: env.R2_REGION || 'auto',
-      s3ForcePathStyle: true,
+    const s3 = createR2S3Service();
+    const fileName = `${taskId}-${nanoid(8)}.png`;
+    const key = `background-removal/processed/${fileName}`;
+    await s3.putItemInBucket(fileName, Buffer.from(arrayBuffer), {
+      path: "background-removal/processed",
+      ContentType: contentType,
+      acl: "public-read",
     });
-
-    const key = `background-removal/processed/${taskId}-${nanoid(8)}.png`;
-    await s3
-      .upload({
-        Bucket: env.R2_BUCKET,
-        Key: key,
-        Body: Buffer.from(arrayBuffer),
-        ContentType: contentType,
-      })
-      .promise();
 
     return `${env.R2_URL_BASE}/${key}`;
   }

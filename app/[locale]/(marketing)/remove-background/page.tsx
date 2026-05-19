@@ -5,6 +5,7 @@ import MarketingRemoveBackground from "@/components/marketing/marketing-remove-b
 import { locales, defaultLocale } from "@/config";
 import { env } from "@/env.mjs";
 import { constructAlternates } from "@/lib/seo";
+import { getMetadataBase } from "@/lib/utils";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = 'force-dynamic';
@@ -37,6 +38,7 @@ export async function generateMetadata(
     : `${base}/og.png`;
 
   return {
+    metadataBase: getMetadataBase(),
     title,
     description,
     alternates: constructAlternates({ locale, path: "/remove-background" }),

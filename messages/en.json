@@ -171,7 +171,8 @@
     "label": "Pricing",
     "action": {
       "signin": "Sign in",
-      "buy": "One Time Payment"
+      "buy": "One Time Payment",
+      "buyPaypal": "Pay with PayPal"
     },
     "contact": {
       "title": "Contact us",
@@ -497,6 +498,19 @@
     "removeWatermark": "Remove Watermark",
     "sora2VideoWatermarkRemoval": "Sora2 Video Watermark Removal",
     "BatchBackgroundRemoval": "Batch Background Removal",
+    "tools": "Tools",
+    "backgroundTools": "Background tools",
+    "batchTools": "Batch tools",
+    "formatConverters": "Format converters",
+    "transparentPngMaker": "Transparent PNG Maker",
+    "whiteBackgroundMaker": "White Background Maker",
+    "changeBackgroundColor": "Change Background Color",
+    "batchImageCompressor": "Batch Image Compressor",
+    "batchImageResizer": "Batch Image Resizer",
+    "batchImageFormatConverter": "Batch Image Format Converter",
+    "pngToJpg": "PNG to JPG Converter",
+    "jpgToPng": "JPG to PNG Converter",
+    "webpToPng": "WebP to PNG Converter",
     "explore": "Examples",
     "title": "Remove Anything",
     "blog": "Blog",

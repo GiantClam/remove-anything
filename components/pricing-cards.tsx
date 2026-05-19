@@ -113,7 +113,7 @@ const PricingCard = ({
             ))} */}
         </ul>
         <SignedIn>
-          <BillingFormButton offer={offer} btnText={t("action.buy")} />
+          <BillingFormButton offer={offer} btnText={t("action.buy")} channel="Stripe" />
         </SignedIn>
 
         <SignedOut>
@@ -221,7 +221,7 @@ export function PricingCards({
     } else if (searchParams.get("success") === "false") {
       console.log("支付失败");
     }
-  }, [searchParams]);
+  }, [reward, searchParams]);
 
   const curatedProducts = useMemo(() => {
     const items = (chargeProduct ?? []).filter(
@@ -240,7 +240,7 @@ export function PricingCards({
       <section className="flex flex-col items-center text-center">
         <HeaderSection label={t("label")} title={t("title")} />
         <div className="mt-4">
-          <p className="mb-7 inline-flex items-center justify-between rounded-xl bg-blue-100 px-2 py-2 pe-4 text-sm text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 md:rounded-full md:px-1 md:py-1">
+          <p className="mb-7 inline-flex items-center justify-between rounded-xl bg-blue-100 p-2 pe-4 text-sm text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 md:rounded-full md:p-1">
             <span className="text-sm font-medium">
               {t("tip.title")}&nbsp;(
               {t("tip.subtitle")}&nbsp;
@@ -295,9 +295,9 @@ export function PricingCards({
           <br />
           <a
             className="font-medium text-primary hover:underline"
-                            href="mailto:support@remove-anything.com"
+            href="mailto:support@remove-anything.com"
           >
-                          support@remove-anything.com
+            support@remove-anything.com
           </a>{" "}
           {t("contact.description")}
           <br />
@@ -307,7 +307,7 @@ export function PricingCards({
         </p>
       </section>
       <div
-        className="pointer-events-none fixed bottom-10 left-[50%] translate-x-[-50%]"
+        className="pointer-events-none fixed bottom-10 left-1/2 -translate-x-1/2"
         id="order-success"
       />
     </MaxWidthWrapper>

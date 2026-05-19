@@ -4,9 +4,9 @@ import { runninghubAPI } from "@/modules/runninghub";
 import { findWatermarkRemovalTaskByRunningHubId, updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 import JSZip from "jszip";
-import AWS from "aws-sdk";
 import { nanoid } from "nanoid";
 import { env } from "@/env.mjs";
+import { createR2S3Service } from "@/lib/r2-s3";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = 'force-dynamic';
@@ -179,13 +179,7 @@ export async function GET(
         if (fileRes.ok) {
           const contentType = fileRes.headers.get('content-type') || '';
 
-          const s3 = new AWS.S3({
-            endpoint: env.R2_ENDPOINT,
-            accessKeyId: env.R2_ACCESS_KEY,
-            secretAccessKey: env.R2_SECRET_KEY,
-            region: env.R2_REGION || 'auto',
-            s3ForcePathStyle: true,
-          });
+          const s3 = createR2S3Service();
           const folderPrefix = `watermark-removal/processed/${taskId}-${nanoid(6)}`;
 
           const downloadedArrayBuffer = await fileRes.arrayBuffer();
@@ -203,13 +197,11 @@ export async function GET(
               const ext = entry.name.split('.').pop() || 'png';
               const key = `${folderPrefix}/image_${index + 1}.${ext}`;
 
-              await s3.upload({
-                Bucket: env.R2_BUCKET,
-                Key: key,
-                Body: buffer,
+              await s3.putItemInBucket(`image_${index + 1}.${ext}`, buffer, {
+                path: folderPrefix,
                 ContentType: `image/${ext}`,
-                ACL: 'public-read',
-              }).promise();
+                acl: "public-read",
+              });
 
               return `${env.R2_URL_BASE}/${key}`;
             }));
@@ -222,13 +214,11 @@ export async function GET(
             const ext = contentType.split('/')[1] || 'png';
             const key = `${folderPrefix}/image_1.${ext}`;
 
-            await s3.upload({
-              Bucket: env.R2_BUCKET,
-              Key: key,
-              Body: buffer,
+            await s3.putItemInBucket(`image_1.${ext}`, buffer, {
+              path: folderPrefix,
               ContentType: `image/${ext}`,
-              ACL: 'public-read',
-            }).promise();
+              acl: "public-read",
+            });
 
             outputImageUrls = [`${env.R2_URL_BASE}/${key}`];
             console.log("✅ 已转存单张图片到R2:", outputImageUrls[0]);
@@ -238,13 +228,11 @@ export async function GET(
             const buffer = Buffer.from(downloadedArrayBuffer);
             const key = `${folderPrefix}/image_1.${guessedExt}`;
 
-            await s3.upload({
-              Bucket: env.R2_BUCKET,
-              Key: key,
-              Body: buffer,
+            await s3.putItemInBucket(`image_1.${guessedExt}`, buffer, {
+              path: folderPrefix,
               ContentType: `image/${guessedExt}`,
-              ACL: 'public-read',
-            }).promise();
+              acl: "public-read",
+            });
 
             outputImageUrls = [`${env.R2_URL_BASE}/${key}`];
             console.log('⚠️ 输出声明为zip但魔数不匹配，已按单图处理');

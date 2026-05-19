@@ -1,6 +1,7 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { getChargeProduct } from "@/db/queries/charge-product";
 import BatchWatermarkRemoval from "@/components/batch-watermark-removal";
+import { getMetadataBase } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,7 @@ type Props = {
 export async function generateMetadata({ params: { locale } }: Props) {
   const t = await getTranslations({ locale, namespace: "BatchWatermarkRemoval" });
   return {
+    metadataBase: getMetadataBase(),
     title: t("title"),
     description: t("description"),
   };

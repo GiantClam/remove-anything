@@ -3,11 +3,13 @@ import Script from "next/script";
 
 import Examples from "@/components/sections/examples";
 import HeroLanding from "@/components/sections/hero-landing";
+import PopularImageTools from "@/components/sections/popular-image-tools";
 import QuickAccess from "@/components/sections/quick-access";
 // import PreviewLanding from "@/components/sections/preview-landing";
 import { env } from "@/env.mjs";
 import { Metadata } from "next";
 import { constructAlternates } from "@/lib/seo";
+import { getMetadataBase } from "@/lib/utils";
 
 type Props = {
   params: { locale: string };
@@ -15,6 +17,7 @@ type Props = {
 
 export async function generateMetadata({ params: { locale } }: Props): Promise<Metadata> {
   return {
+    metadataBase: getMetadataBase(),
     alternates: constructAlternates({ locale, path: "/" }),
   };
 }
@@ -233,6 +236,7 @@ export default function IndexPage({ params: { locale } }: Props) {
       {/* 精简首页：首屏价值主张 + 快速入口 + 案例展示 */}
       <HeroLanding />
       <QuickAccess />
+      <PopularImageTools locale={locale} />
       <Examples />
       {/* 瀑布流展示：暂时注释以避免服务端数据库查询导致的 RSC thenable 错误 */}
       {/* <section id="examples-gallery" className="scroll-mt-20">

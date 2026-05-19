@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, Bell, ArrowRight } from "lucide-react";
 import { Link } from "@/lib/navigation";
 import { constructAlternates } from "@/lib/seo";
+import { getMetadataBase } from "@/lib/utils";
 
 interface PageProps {
   params: { locale: string };
@@ -13,6 +14,7 @@ export async function generateMetadata({ params: { locale } }: PageProps): Promi
   const t = await getTranslations({ locale, namespace: "RemoveObjectsPage" });
 
   return {
+    metadataBase: getMetadataBase(),
     title: t("title"),
     description: t("description"),
     keywords: t("keywords"),
@@ -34,21 +36,21 @@ export default async function RemoveObjectsPage({
   return (
     <div className="container mx-auto max-w-6xl px-4 py-12">
       {/* Hero Section */}
-      <div className="text-center mb-16">
+      <div className="mb-16 text-center">
         <div className="mb-8">
-          <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Clock className="w-12 h-12 text-primary" />
+          <div className="mx-auto mb-6 flex size-24 items-center justify-center rounded-full bg-primary/10">
+            <Clock className="size-12 text-primary" />
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <h1 className="mb-6 text-4xl font-bold md:text-6xl">
             {t("hero.title")}
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+          <p className="mx-auto mb-8 max-w-3xl text-xl text-muted-foreground">
             {t("hero.description")}
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <Button size="lg" className="gap-2" disabled>
-            <Clock className="w-5 h-5" />
+            <Clock className="size-5" />
             {t("hero.startButton")}
           </Button>
           <Link href={`/${locale}/pricing`}>
@@ -61,31 +63,31 @@ export default async function RemoveObjectsPage({
 
       {/* Coming Soon Features Preview */}
       <div className="mb-16">
-        <h2 className="text-3xl font-bold text-center mb-12">What's Coming Soon</h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="text-center p-6 border rounded-lg bg-muted/30">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-8 h-8 text-primary" />
+        <h2 className="mb-12 text-center text-3xl font-bold">What's Coming Soon</h2>
+        <div className="grid gap-8 md:grid-cols-3">
+          <div className="rounded-lg border bg-muted/30 p-6 text-center">
+            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
+              <Clock className="size-8 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">Smart Recognition</h3>
+            <h3 className="mb-2 text-xl font-semibold">Smart Recognition</h3>
             <p className="text-muted-foreground">
               AI automatically identifies objects to remove without manual boundary selection
             </p>
           </div>
-          <div className="text-center p-6 border rounded-lg bg-muted/30">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-8 h-8 text-primary" />
+          <div className="rounded-lg border bg-muted/30 p-6 text-center">
+            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
+              <Clock className="size-8 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">Simple Operation</h3>
+            <h3 className="mb-2 text-xl font-semibold">Simple Operation</h3>
             <p className="text-muted-foreground">
               Just paint the area to remove, AI automatically completes the rest
             </p>
           </div>
-          <div className="text-center p-6 border rounded-lg bg-muted/30">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-8 h-8 text-primary" />
+          <div className="rounded-lg border bg-muted/30 p-6 text-center">
+            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
+              <Clock className="size-8 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">High Quality Output</h3>
+            <h3 className="mb-2 text-xl font-semibold">High Quality Output</h3>
             <p className="text-muted-foreground">
               Maintains original image quality with high-definition, watermark-free results
             </p>
@@ -95,52 +97,52 @@ export default async function RemoveObjectsPage({
 
       {/* Coming Soon Use Cases */}
       <div className="mb-16">
-        <h2 className="text-3xl font-bold text-center mb-12">Future Use Cases</h2>
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="p-6 border rounded-lg bg-muted/30">
-            <h3 className="text-xl font-semibold mb-3">Remove Tourists and Passersby</h3>
-            <p className="text-muted-foreground mb-4">
+        <h2 className="mb-12 text-center text-3xl font-bold">Future Use Cases</h2>
+        <div className="grid gap-8 md:grid-cols-2">
+          <div className="rounded-lg border bg-muted/30 p-6">
+            <h3 className="mb-3 text-xl font-semibold">Remove Tourists and Passersby</h3>
+            <p className="mb-4 text-muted-foreground">
               Easily remove background tourists from photos taken at tourist attractions, making your photos more perfect.
             </p>
             <div className="text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2 text-primary">
-                <Clock className="w-4 h-4" />
+                <Clock className="size-4" />
                 Coming Soon
               </span>
             </div>
           </div>
-          <div className="p-6 border rounded-lg bg-muted/30">
-            <h3 className="text-xl font-semibold mb-3">Remove Watermarks and Text</h3>
-            <p className="text-muted-foreground mb-4">
+          <div className="rounded-lg border bg-muted/30 p-6">
+            <h3 className="mb-3 text-xl font-semibold">Remove Watermarks and Text</h3>
+            <p className="mb-4 text-muted-foreground">
               Easily remove watermarks, text marks, or unwanted identifiers from images to protect your work.
             </p>
             <div className="text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2 text-primary">
-                <Clock className="w-4 h-4" />
+                <Clock className="size-4" />
                 Coming Soon
               </span>
             </div>
           </div>
-          <div className="p-6 border rounded-lg bg-muted/30">
-            <h3 className="text-xl font-semibold mb-3">Clean Product Photos</h3>
-            <p className="text-muted-foreground mb-4">
+          <div className="rounded-lg border bg-muted/30 p-6">
+            <h3 className="mb-3 text-xl font-semibold">Clean Product Photos</h3>
+            <p className="mb-4 text-muted-foreground">
               Create professional product photos for e-commerce platforms by removing background clutter and highlighting the main product.
             </p>
             <div className="text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2 text-primary">
-                <Clock className="w-4 h-4" />
+                <Clock className="size-4" />
                 Coming Soon
               </span>
             </div>
           </div>
-          <div className="p-6 border rounded-lg bg-muted/30">
-            <h3 className="text-xl font-semibold mb-3">Restore Old Photos</h3>
-            <p className="text-muted-foreground mb-4">
+          <div className="rounded-lg border bg-muted/30 p-6">
+            <h3 className="mb-3 text-xl font-semibold">Restore Old Photos</h3>
+            <p className="mb-4 text-muted-foreground">
               Repair creases, stains, or damaged areas in old photos, bringing precious memories back to life.
             </p>
             <div className="text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2 text-primary">
-                <Clock className="w-4 h-4" />
+                <Clock className="size-4" />
                 Coming Soon
               </span>
             </div>
@@ -149,13 +151,13 @@ export default async function RemoveObjectsPage({
       </div>
 
       {/* CTA Section */}
-      <div className="text-center p-8 bg-primary/5 rounded-lg">
-        <h2 className="text-2xl font-bold mb-4">{t("cta.title")}</h2>
-        <p className="text-muted-foreground mb-6">
+      <div className="rounded-lg bg-primary/5 p-8 text-center">
+        <h2 className="mb-4 text-2xl font-bold">{t("cta.title")}</h2>
+        <p className="mb-6 text-muted-foreground">
           {t("cta.description")}
         </p>
         <Button size="lg" className="gap-2" disabled>
-          <Bell className="w-5 h-5" />
+          <Bell className="size-5" />
           {t("cta.button")}
         </Button>
       </div>

@@ -3,6 +3,7 @@ import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { PricingCardsWrapper } from "@/components/pricing-cards-wrapper";
 import { PricingFaq } from "@/components/pricing-faq";
 import { getChargeProduct } from "@/db/queries/charge-product";
+import { getMetadataBase } from "@/lib/utils";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = 'force-dynamic';
@@ -14,6 +15,7 @@ type Props = {
 export async function generateMetadata({ params: { locale } }: Props) {
   const t = await getTranslations({ locale });
   return {
+    metadataBase: getMetadataBase(),
     title: `${t("PricingPage.title")} - ${t("LocaleLayout.title")}`,
     description: t("LocaleLayout.description"),
   };

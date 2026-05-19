@@ -68,20 +68,20 @@ const findMenu = (menus: MenuType[], path: string) => {
 
   return breadcrumbs; // 返回清理后的面包屑数组
 };
-export default function () {
+export default function AdminHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="flex h-[--header-height] min-w-0 flex-shrink-0 items-center gap-x-4 border-b border-gray-200 px-4 dark:border-gray-800">
+    <header className="flex h-[--header-height] min-w-0 shrink-0 items-center gap-x-4 border-b border-gray-200 px-4 dark:border-gray-800">
       <Button
         className="!sm:block !hidden"
         shape="circle"
         type="default"
         onClick={() => setOpen(true)}
       >
-        <span className="!flex h-full w-full items-center justify-center">
-          <PanelLeftIcon className="h-5 w-5" />
+        <span className="!flex size-full items-center justify-center">
+          <PanelLeftIcon className="size-5" />
           <span className="sr-only">Toggle Menu</span>
         </span>
       </Button>

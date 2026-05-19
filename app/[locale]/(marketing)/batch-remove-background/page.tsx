@@ -5,6 +5,7 @@ import BatchRemoveBackground from "@/components/batch-remove-background";
 import { locales, defaultLocale } from "@/config";
 import { env } from "@/env.mjs";
 import { constructAlternates } from "@/lib/seo";
+import { getMetadataBase } from "@/lib/utils";
 
 interface PageProps {
   params: { locale: string };
@@ -24,6 +25,7 @@ export async function generateMetadata(
     : `${base}/og.png`;
 
   return {
+    metadataBase: getMetadataBase(),
     title: t("title"),
     description: t("description"),
     keywords: t("keywords"),

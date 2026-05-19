@@ -22,7 +22,7 @@ export function SignInForm() {
       className="w-full" 
       size="lg"
     >
-      <GoogleIcon className="mr-2 h-4 w-4" />
+      <GoogleIcon className="mr-2 size-4" />
       使用 Google 登录
     </Button>
   );

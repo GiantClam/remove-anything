@@ -41,18 +41,18 @@ export default async function Examples() {
   const examples = await loadExamples();
 
   return (
-    <section className="py-16 bg-gradient-to-b from-background to-muted/20">
+    <section className="bg-gradient-to-b from-background to-muted/20 py-16">
       <div className="container mx-auto px-4">
         <HeaderSection
           title={t("examples.title")}
           subtitle={t("examples.subtitle")}
         />
 
-        <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto mt-12" id="examples-gallery">
+        <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-8" id="examples-gallery">
           {examples.map((example, index) => (
             <div key={example.id} className="group">
-              <div className="text-center mb-4">
-                <h3 className="text-xl font-semibold text-foreground mb-2">
+              <div className="mb-4 text-center">
+                <h3 className="mb-2 text-xl font-semibold text-foreground">
                   {example.title}
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -60,23 +60,23 @@ export default async function Examples() {
                 </p>
               </div>
               
-              <div className="relative bg-white dark:bg-gray-900 rounded-xl p-4 shadow-lg border border-border hover:shadow-xl transition-all duration-300">
+              <div className="relative rounded-xl border border-border bg-white p-4 shadow-lg transition-all duration-300 hover:shadow-xl dark:bg-gray-900">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="relative">
-                    <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-border">
+                    <div className="aspect-square overflow-hidden rounded-lg border border-border bg-gray-100 dark:bg-gray-800">
                       <Image
                         src={example.before}
                         alt={example.altBefore}
                         width={200}
                         height={200}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading={index === 0 ? "eager" : "lazy"}
                         decoding="async"
                         fetchPriority={index === 0 ? "high" : "low"}
                         sizes="(max-width: 768px) 100vw, 50vw"
                       />
-                      <div className="absolute top-2 left-2">
-                        <Badge variant="secondary" className="bg-black/80 text-white border-0">
+                      <div className="absolute left-2 top-2">
+                        <Badge variant="secondary" className="border-0 bg-black/80 text-white">
                           Before
                         </Badge>
                       </div>
@@ -84,10 +84,10 @@ export default async function Examples() {
                   </div>
                   
                   <div className="relative">
-                    <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-border">
+                    <div className="aspect-square overflow-hidden rounded-lg border border-border bg-gray-100 dark:bg-gray-800">
                       {example.videoMp4 || example.videoWebm ? (
                         <video
-                          className="w-full h-full object-cover"
+                          className="size-full object-cover"
                           poster={example.poster}
                           playsInline
                           muted
@@ -104,15 +104,15 @@ export default async function Examples() {
                           alt={example.altAfter}
                           width={200}
                           height={200}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                           loading={index === 0 ? "eager" : "lazy"}
                           decoding="async"
                           fetchPriority={index === 0 ? "high" : "low"}
                           sizes="(max-width: 768px) 100vw, 50vw"
                         />
                       )}
-                      <div className="absolute top-2 left-2">
-                        <Badge variant="default" className="bg-green-600 border-0">
+                      <div className="absolute left-2 top-2">
+                        <Badge variant="default" className="border-0 bg-green-600">
                           After
                         </Badge>
                       </div>
@@ -121,15 +121,15 @@ export default async function Examples() {
                 </div>
                 
                 <div className="mt-4 text-center">
-                  <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                    <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                    <span className="size-2 animate-pulse rounded-full bg-primary"></span>
                     AI Powered
                   </div>
                 </div>
                 
                 {/* 箭头指示 */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                  <div className="bg-primary text-white px-2 py-1 rounded-full text-xs font-bold">
+                <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                  <div className="rounded-full bg-primary px-2 py-1 text-xs font-bold text-white">
                     →
                   </div>
                 </div>
@@ -138,13 +138,13 @@ export default async function Examples() {
           ))}
         </div>
         
-        <div className="text-center mt-12">
-          <p className="text-muted-foreground mb-4">
+        <div className="mt-12 text-center">
+          <p className="mb-4 text-muted-foreground">
             {t("examples.cta.description")}
           </p>
           <a
             href="/remove-background"
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {t("examples.cta.button")}
             <span className="text-lg">→</span>

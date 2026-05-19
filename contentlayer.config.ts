@@ -121,6 +121,18 @@ export const Post = defineDocumentType(() => ({
         type: "string",
       },
     },
+    primaryToolHref: {
+      type: "string",
+      required: false,
+    },
+    primaryToolTitle: {
+      type: "string",
+      required: false,
+    },
+    primaryToolDescription: {
+      type: "string",
+      required: false,
+    },
   },
   computedFields: defaultComputedFields,
 }));

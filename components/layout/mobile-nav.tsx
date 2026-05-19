@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSelectedLayoutSegment } from "next/navigation";
+import dynamic from "next/dynamic";
 
 import { Menu, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -9,13 +10,20 @@ import { useTranslations } from "next-intl";
 import { Icons } from "@/components/shared/icons";
 import { dashboardConfig } from "@/config/dashboard";
 import { docsConfig } from "@/config/docs";
-import { marketingConfig } from "@/config/marketing";
+import { marketingConfig, marketingToolGroups } from "@/config/marketing";
 import { siteConfig } from "@/config/site";
 import { Link } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
-import { UserInfo } from "../user-info";
 import { ModeToggle } from "./mode-toggle";
+
+const UserInfo = dynamic(
+  () => import("../user-info").then((mod) => ({ default: mod.UserInfo })),
+  {
+    ssr: false,
+    loading: () => <div className="h-10 w-full rounded-md bg-muted/40" />,
+  },
+);
 
 export function NavMobile() {
   const t = useTranslations("Navigation");
@@ -23,9 +31,10 @@ export function NavMobile() {
   const selectedLayout = useSelectedLayoutSegment();
   const dashBoard = selectedLayout === "app";
   const documentation = selectedLayout === "docs";
+  const isMarketing = !documentation && !dashBoard;
   const links = documentation
     ? docsConfig.mainNav
-    : dashBoard
+      : dashBoard
       ? dashboardConfig.mainNav
       : marketingConfig.mainNav;
 
@@ -72,6 +81,35 @@ export function NavMobile() {
               </Link>
             </li>
           ))}
+
+          {isMarketing ? (
+            <li className="py-3">
+              <div className="space-y-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  {t("tools")}
+                </p>
+                {marketingToolGroups.map((group) => (
+                  <div key={group.title} className="space-y-2">
+                    <p className="text-sm font-medium text-foreground/70">
+                      {t(group.title)}
+                    </p>
+                    <div className="grid gap-2 pl-3">
+                      {group.items.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setOpen(false)}
+                          className="text-sm text-foreground/80"
+                        >
+                          {t(item.title)}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </li>
+          ) : null}
 
           <UserInfo />
         </ul>

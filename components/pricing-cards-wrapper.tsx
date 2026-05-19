@@ -16,7 +16,7 @@ function PricingCardsContent({ chargeProduct, userId, locale }: PricingCardsWrap
 
 export function PricingCardsWrapper({ chargeProduct, userId, locale }: PricingCardsWrapperProps) {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-40">Loading...</div>}>
+    <Suspense fallback={<div className="flex h-40 items-center justify-center">Loading...</div>}>
       <PricingCardsContent chargeProduct={chargeProduct} userId={userId} locale={locale} />
     </Suspense>
   );

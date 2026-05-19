@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, Image, Sparkles, Layers, X } from 'lucide-react';
+import { Palette, Image as ImageIcon, Sparkles, Layers, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface BackgroundSelectorProps {
@@ -79,19 +79,19 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
         <Tabs value={type} onValueChange={onTypeChange} className="w-full">
           <TabsList className="grid w-full grid-cols-4 gap-1">
             <TabsTrigger value="solid" className="flex items-center gap-1 text-xs">
-              <Palette className="w-3 h-3" />
+              <Palette className="size-3" />
               <span className="hidden lg:inline">{t('solid')}</span>
             </TabsTrigger>
             <TabsTrigger value="gradient" className="flex items-center gap-1 text-xs">
-              <Layers className="w-3 h-3" />
+              <Layers className="size-3" />
               <span className="hidden lg:inline">{t('gradient')}</span>
             </TabsTrigger>
             <TabsTrigger value="image" className="flex items-center gap-1 text-xs">
-              <Image className="w-3 h-3" />
+              <ImageIcon className="size-3" />
               <span className="hidden lg:inline">{t('image')}</span>
             </TabsTrigger>
             <TabsTrigger value="template" className="flex items-center gap-1 text-xs">
-              <Sparkles className="w-3 h-3" />
+              <Sparkles className="size-3" />
               <span className="hidden lg:inline">{t('template')}</span>
             </TabsTrigger>
           </TabsList>
@@ -101,18 +101,18 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
               {/* 去背景选项 */}
               <button
                 onClick={() => onSelect(null)}
-                className={`w-8 h-8 rounded border-2 flex items-center justify-center ${
-                  !selected ? 'border-primary ring-2 ring-primary/20 bg-gray-100' : 'border-gray-200 bg-gray-100'
+                className={`flex size-8 items-center justify-center rounded border-2 ${
+                  !selected ? 'border-primary bg-gray-100 ring-2 ring-primary/20' : 'border-gray-200 bg-gray-100'
                 }`}
                 title="Remove background"
               >
-                <X className="w-4 h-4 text-gray-600" />
+                <X className="size-4 text-gray-600" />
               </button>
               {solidColors.map((color, index) => (
                 <button
                   key={index}
                   onClick={() => onSelect({ type: 'solid', data: { color } })}
-                  className={`w-8 h-8 rounded border-2 ${
+                  className={`size-8 rounded border-2 ${
                     selected?.data?.color === color ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'
                   }`}
                   style={{ backgroundColor: color }}
@@ -127,12 +127,12 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
               {/* 去背景选项 */}
               <button
                 onClick={() => onSelect(null)}
-                className={`h-16 rounded border-2 flex items-center justify-center ${
-                  !selected ? 'border-primary ring-2 ring-primary/20 bg-gray-100' : 'border-gray-200 bg-gray-100'
+                className={`flex h-16 items-center justify-center rounded border-2 ${
+                  !selected ? 'border-primary bg-gray-100 ring-2 ring-primary/20' : 'border-gray-200 bg-gray-100'
                 }`}
                 title="Remove background"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="size-6 text-gray-600" />
               </button>
               {gradients.map((gradient, index) => (
                 <button
@@ -154,7 +154,7 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
 
           <TabsContent value="image" className="mt-4">
             <div className="space-y-4">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+              <div className="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center">
                 <input
                   type="file"
                   accept="image/*"
@@ -164,19 +164,20 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
                 />
                 <label
                   htmlFor="background-upload"
-                  className="cursor-pointer flex flex-col items-center gap-2"
+                  className="flex cursor-pointer flex-col items-center gap-2"
                 >
-                  <Image className="w-8 h-8 text-gray-400" />
+                  <ImageIcon className="size-8 text-gray-400" />
                   <span className="text-sm text-gray-600">{t('uploadImage')}</span>
                 </label>
               </div>
               
               {uploadedImage && (
-                <div className="border rounded-lg p-2">
+                <div className="rounded-lg border p-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={uploadedImage}
                     alt="User uploaded background image for AI composition"
-                    className="w-full h-24 object-cover rounded"
+                    className="h-24 w-full rounded object-cover"
                   />
                 </div>
               )}
@@ -188,12 +189,12 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
               {/* 去背景选项 */}
               <button
                 onClick={() => onSelect(null)}
-                className={`h-16 rounded border-2 flex items-center justify-center ${
-                  !selected ? 'border-primary ring-2 ring-primary/20 bg-gray-100' : 'border-gray-200 bg-gray-100'
+                className={`flex h-16 items-center justify-center rounded border-2 ${
+                  !selected ? 'border-primary bg-gray-100 ring-2 ring-primary/20' : 'border-gray-200 bg-gray-100'
                 }`}
                 title="Remove background"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="size-6 text-gray-600" />
               </button>
               {templates.map((template, index) => (
                 <button
@@ -204,7 +205,7 @@ export function BackgroundSelector({ type, onTypeChange, selected, onSelect }: B
                   }`}
                   title={template.name}
                 >
-                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded flex items-center justify-center">
+                  <div className="flex size-full items-center justify-center rounded bg-gradient-to-br from-gray-100 to-gray-200">
                     <span className="text-xs text-gray-600">{template.name}</span>
                   </div>
                 </button>

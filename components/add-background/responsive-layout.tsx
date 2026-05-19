@@ -35,7 +35,7 @@ function MobileLayout(props: ResponsiveLayoutWithBackgroundSelectorProps) {
   const [activeTab, setActiveTab] = useState<'preview' | 'backgrounds' | 'adjustments'>('preview');
   
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       <MenuBar />
       
       {/* 移动端标签切换 */}
@@ -82,7 +82,7 @@ function MenuBar() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-1 text-sm transition-colors ${
                 activeTab === item.id 
                   ? 'bg-primary text-primary-foreground' 
                   : 'text-muted-foreground hover:text-foreground'
@@ -101,12 +101,12 @@ function MenuBar() {
 // 移动端预览标签页
 function MobilePreviewTab(props: ResponsiveLayoutWithBackgroundSelectorProps) {
   return (
-    <div className="h-full flex flex-col p-4">
-      <div className="flex-1 flex items-center justify-center">
-        <div className="relative w-full max-w-sm aspect-square">
-          <div className="w-full h-full border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center">
+    <div className="flex h-full flex-col p-4">
+      <div className="flex flex-1 items-center justify-center">
+        <div className="relative aspect-square w-full max-w-sm">
+          <div className="flex size-full items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25">
             <div className="text-center text-muted-foreground">
-              <span className="text-4xl mb-2 block">🖼️</span>
+              <span className="mb-2 block text-4xl">🖼️</span>
               <p>选择背景后显示预览</p>
             </div>
           </div>
@@ -114,10 +114,10 @@ function MobilePreviewTab(props: ResponsiveLayoutWithBackgroundSelectorProps) {
       </div>
       
       <div className="mt-4 flex gap-2">
-        <button className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium">
+        <button className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
           添加背景
         </button>
-        <button className="px-4 py-2 border border-border rounded-md text-sm">
+        <button className="rounded-md border border-border px-4 py-2 text-sm">
           取消
         </button>
       </div>
@@ -130,7 +130,7 @@ function MobileBackgroundTab(props: ResponsiveLayoutWithBackgroundSelectorProps)
   const [backgroundType, setBackgroundType] = useState<'solid' | 'gradient' | 'image' | 'template'>('solid');
   
   return (
-    <div className="h-full flex flex-col p-4">
+    <div className="flex h-full flex-col p-4">
       <div className="mb-4">
         <Tabs value={backgroundType} onValueChange={(v) => setBackgroundType(v as any)}>
           <TabsList className="grid w-full grid-cols-4">
@@ -155,11 +155,11 @@ function MobileBackgroundTab(props: ResponsiveLayoutWithBackgroundSelectorProps)
 // 移动端调整标签页
 function MobileAdjustmentTab(props: ResponsiveLayoutWithBackgroundSelectorProps) {
   return (
-    <div className="h-full flex flex-col p-4">
+    <div className="flex h-full flex-col p-4">
       <div className="space-y-6">
         {/* 大小调整 */}
         <div>
-          <div className="flex justify-between items-center mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium">大小</span>
             <span className="text-xs text-muted-foreground">100%</span>
           </div>
@@ -168,13 +168,13 @@ function MobileAdjustmentTab(props: ResponsiveLayoutWithBackgroundSelectorProps)
             min="10"
             max="300"
             defaultValue="100"
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
           />
         </div>
         
         {/* 位置调整 */}
         <div>
-          <div className="flex justify-between items-center mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium">位置 X</span>
             <span className="text-xs text-muted-foreground">0px</span>
           </div>
@@ -183,12 +183,12 @@ function MobileAdjustmentTab(props: ResponsiveLayoutWithBackgroundSelectorProps)
             min="-200"
             max="200"
             defaultValue="0"
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
           />
         </div>
         
         <div>
-          <div className="flex justify-between items-center mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium">位置 Y</span>
             <span className="text-xs text-muted-foreground">0px</span>
           </div>
@@ -197,13 +197,13 @@ function MobileAdjustmentTab(props: ResponsiveLayoutWithBackgroundSelectorProps)
             min="-200"
             max="200"
             defaultValue="0"
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
           />
         </div>
         
         {/* 旋转调整 */}
         <div>
-          <div className="flex justify-between items-center mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium">旋转</span>
             <span className="text-xs text-muted-foreground">0°</span>
           </div>
@@ -212,16 +212,16 @@ function MobileAdjustmentTab(props: ResponsiveLayoutWithBackgroundSelectorProps)
             min="-180"
             max="180"
             defaultValue="0"
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
           />
         </div>
         
         {/* 快速操作按钮 */}
         <div className="grid grid-cols-2 gap-2 pt-4">
-          <button className="px-4 py-2 border border-border rounded-md text-sm">
+          <button className="rounded-md border border-border px-4 py-2 text-sm">
             重置
           </button>
-          <button className="px-4 py-2 border border-border rounded-md text-sm">
+          <button className="rounded-md border border-border px-4 py-2 text-sm">
             旋转90°
           </button>
         </div>
@@ -244,7 +244,7 @@ function MobileSolidColorGrid() {
       {colors.map((color) => (
         <button
           key={color}
-          className="w-12 h-12 rounded-lg border-2 border-border"
+          className="size-12 rounded-lg border-2 border-border"
           style={{ backgroundColor: color }}
           title={color}
         />
@@ -275,7 +275,7 @@ function MobileGradientGrid() {
       {gradients.map((gradient, index) => (
         <button
           key={index}
-          className="w-full h-16 rounded-lg border-2 border-border"
+          className="h-16 w-full rounded-lg border-2 border-border"
           style={{ background: gradient }}
         />
       ))}
@@ -287,9 +287,9 @@ function MobileGradientGrid() {
 function MobileImageUpload() {
   return (
     <div className="space-y-4">
-      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-        <span className="text-4xl mb-2 block">📷</span>
-        <p className="text-sm text-muted-foreground mb-2">上传背景图片</p>
+      <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+        <span className="mb-2 block text-4xl">📷</span>
+        <p className="mb-2 text-sm text-muted-foreground">上传背景图片</p>
         <input
           type="file"
           accept="image/*"
@@ -298,7 +298,7 @@ function MobileImageUpload() {
         />
         <button
           onClick={() => document.getElementById('mobile-background-upload')?.click()}
-          className="px-4 py-2 border border-border rounded-md text-sm"
+          className="rounded-md border border-border px-4 py-2 text-sm"
         >
           选择文件
         </button>
@@ -323,9 +323,9 @@ function MobileTemplateGrid() {
       {templates.map((template) => (
         <button
           key={template.id}
-          className="relative w-full h-20 rounded-lg border-2 border-border overflow-hidden bg-gray-100"
+          className="relative h-20 w-full overflow-hidden rounded-lg border-2 border-border bg-gray-100"
         >
-          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-2 text-center">
+          <div className="absolute inset-x-0 bottom-0 bg-black/50 p-2 text-center text-xs text-white">
             {template.name}
           </div>
         </button>

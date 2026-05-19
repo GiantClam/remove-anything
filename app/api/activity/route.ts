@@ -3,8 +3,6 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { kv, KVRateLimit } from '@/lib/kv'
 
-export const runtime = 'edge'
-
 export async function GET(req: NextRequest) {
   const ratelimit = new KVRateLimit(kv, {
     limit: 5,

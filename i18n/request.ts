@@ -1,7 +1,6 @@
-import { notFound } from "next/navigation";
 import { getRequestConfig } from "next-intl/server";
 
-import { locales } from "./config";
+import { locales } from "@/config";
 
 function deepMerge<T extends Record<string, any>>(base: T, override: Partial<T>): T {
   const result: Record<string, any> = { ...base };
@@ -25,16 +24,13 @@ function deepMerge<T extends Record<string, any>>(base: T, override: Partial<T>)
 }
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  // This typically corresponds to the `[locale]` segment
   let locale = await requestLocale;
 
-  // Ensure that a valid locale is used
   if (!locale || !locales.includes(locale as any)) {
-    locale = "en"; // fallback to default locale
+    locale = "en";
   }
 
-  // Always load English as the base for fallback
-  const enMessages = (await import("./messages/en.json")).default as Record<string, any>;
+  const enMessages = (await import("../messages/en.json")).default as Record<string, any>;
 
   if (locale === "en") {
     return {
@@ -43,8 +39,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     };
   }
 
-  // Load target locale and merge over English so missing keys fall back to en
-  const localeMessages = (await import(`./messages/${locale}.json`)).default as Record<string, any>;
+  const localeMessages = (await import(`../messages/${locale}.json`)).default as Record<string, any>;
   const merged = deepMerge(enMessages, localeMessages);
 
   return {

@@ -2,9 +2,15 @@
 
 import blog__ar__aiBackgroundRemovalGuideMdx from './blog__ar__ai-background-removal-guide.mdx.json' with { type: 'json' }
 import blog__en__aiBackgroundRemovalGuideMdx from './blog__en__ai-background-removal-guide.mdx.json' with { type: 'json' }
+import blog__en__batchImageCompressorGuideMdx from './blog__en__batch-image-compressor-guide.mdx.json' with { type: 'json' }
+import blog__en__batchImageFormatConverterGuideMdx from './blog__en__batch-image-format-converter-guide.mdx.json' with { type: 'json' }
 import blog__en__batchImageProcessingGuideMdx from './blog__en__batch-image-processing-guide.mdx.json' with { type: 'json' }
+import blog__en__batchImageResizerGuideMdx from './blog__en__batch-image-resizer-guide.mdx.json' with { type: 'json' }
 import blog__en__birefnetAiBackgroundRemovalRevolutionMdx from './blog__en__birefnet-ai-background-removal-revolution.mdx.json' with { type: 'json' }
+import blog__en__changeBackgroundColorGuideMdx from './blog__en__change-background-color-guide.mdx.json' with { type: 'json' }
 import blog__en__sora2VideoWatermarkRemovalGuideMdx from './blog__en__sora2-video-watermark-removal-guide.mdx.json' with { type: 'json' }
+import blog__en__transparentPngMakerGuideMdx from './blog__en__transparent-png-maker-guide.mdx.json' with { type: 'json' }
 import blog__en__watermarkRemovalGuideMdx from './blog__en__watermark-removal-guide.mdx.json' with { type: 'json' }
+import blog__en__whiteBackgroundMakerGuideMdx from './blog__en__white-background-maker-guide.mdx.json' with { type: 'json' }
 
-export const allPosts = [blog__ar__aiBackgroundRemovalGuideMdx, blog__en__aiBackgroundRemovalGuideMdx, blog__en__batchImageProcessingGuideMdx, blog__en__birefnetAiBackgroundRemovalRevolutionMdx, blog__en__sora2VideoWatermarkRemovalGuideMdx, blog__en__watermarkRemovalGuideMdx]
+export const allPosts = [blog__ar__aiBackgroundRemovalGuideMdx, blog__en__aiBackgroundRemovalGuideMdx, blog__en__batchImageCompressorGuideMdx, blog__en__batchImageFormatConverterGuideMdx, blog__en__batchImageProcessingGuideMdx, blog__en__batchImageResizerGuideMdx, blog__en__birefnetAiBackgroundRemovalRevolutionMdx, blog__en__changeBackgroundColorGuideMdx, blog__en__sora2VideoWatermarkRemovalGuideMdx, blog__en__transparentPngMakerGuideMdx, blog__en__watermarkRemovalGuideMdx, blog__en__whiteBackgroundMakerGuideMdx]

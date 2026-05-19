@@ -2,51 +2,57 @@
 
 import { useTransition } from "react";
 
-import { useAuth } from "@/hooks/use-auth";
-
-import { generateUserStripe } from "@/actions/generate-user-stripe";
 import { Icons } from "@/components/shared/icons";
 import { Button } from "@/components/ui/button";
 import type { ChargeProductSelectDto } from "@/db/type";
-import { url } from "@/lib";
-import { usePathname } from "@/lib/navigation";
-import { SubscriptionPlan, UserSubscriptionPlan } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface BillingFormButtonProps {
   offer: ChargeProductSelectDto;
   btnText?: string;
+  channel?: "Stripe";
+  variant?: "default" | "outline";
+  className?: string;
 }
 
 export function BillingFormButton({
   offer,
   btnText = "Buy Plan",
+  channel = "Stripe",
+  variant,
+  className,
 }: BillingFormButtonProps) {
   let [isPending, startTransition] = useTransition();
-  const { userId } = useAuth();
-  const pathname = usePathname();
 
-  const stripeSessionAction = () =>
+  const checkoutAction = () =>
     startTransition(async () => {
-      const data = await fetch(`/api/charge-order`, {
+      const response = await fetch(`/api/charge-order`, {
         method: "POST",
         body: JSON.stringify({
           amount: offer.amount,
-          channel: "Stripe",
+          channel,
           productId: offer.id,
-          url: url(pathname).href,
+          url: window.location.href,
           currency: offer.currency?.toUpperCase(),
         }),
-        credentials: 'include',
-      }).then((res) => res.json());
+        credentials: "include",
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || `Unable to start ${channel} checkout`);
+      }
+
       window.location.href = data.url;
     });
+
   const userOffer = offer.amount === 1990;
   return (
     <Button
-      variant={userOffer ? "default" : "outline"}
-      className="w-full"
+      variant={variant ?? (userOffer && channel === "Stripe" ? "default" : "outline")}
+      className={cn("w-full", className)}
       disabled={isPending}
-      onClick={stripeSessionAction}
+      onClick={checkoutAction}
     >
       {isPending ? (
         <>

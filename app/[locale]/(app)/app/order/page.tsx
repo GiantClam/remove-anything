@@ -1,6 +1,7 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 
 import { OrderInfo } from "@/components/order-info";
+import { getMetadataBase } from "@/lib/utils";
 
 interface PageProps {
   params: { locale: string };
@@ -14,6 +15,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "Orders" });
 
   return {
+    metadataBase: getMetadataBase(),
     title: t("title"),
     description: t("description"),
   };

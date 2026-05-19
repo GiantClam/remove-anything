@@ -91,7 +91,7 @@ export default function PreviewGallery({ initialData }: PreviewGalleryProps) {
       >
         {items?.map((item, index) => (
           <div
-            className="mt-6 relative group"
+            className="group relative mt-6"
             data-id={item.id}
             key={item.id}
             onMouseEnter={() => setHoveredIndex(index)}
@@ -99,20 +99,20 @@ export default function PreviewGallery({ initialData }: PreviewGalleryProps) {
             onTouchStart={() => handleTouchStart(index)}
             onTouchEnd={() => handleTouchEnd(index)}
           >
-            <div className="checkerboard relative flex items-start justify-center rounded-xl overflow-visible">
+            <div className="checkerboard relative flex items-start justify-center overflow-visible rounded-xl">
               <I18nLink
                 href={`/face/${item.id}`}
                 className={cn(
-                  "cursor-pointer block transition-transform duration-300 ease-out",
+                  "block cursor-pointer transition-transform duration-300 ease-out",
                   hoveredIndex === index 
-                    ? "scale-150 z-50 shadow-2xl relative" 
+                    ? "relative z-50 scale-150 shadow-2xl" 
                     : "scale-100 hover:scale-105"
                 )}
               >
                 {item.imageUrl && (
                   <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
                     <Image
-                      className="rounded-lg object-cover w-full h-full transition-transform duration-300"
+                      className="size-full rounded-lg object-cover transition-transform duration-300"
                       width={400}
                       height={400}
                       alt={`AI background removal example: ${item.inputPrompt || "processed image result"}`}
@@ -124,8 +124,8 @@ export default function PreviewGallery({ initialData }: PreviewGalleryProps) {
                   </div>
                 )}
               </I18nLink>
-              <div className="tags absolute bottom-0 left-0 flex w-full pointer-events-none">
-                <span className="apple-tag rounded-md px-2 py-1 text-white line-clamp-2 overflow-hidden text-ellipsis">
+              <div className="tags pointer-events-none absolute bottom-0 left-0 flex w-full">
+                <span className="apple-tag line-clamp-2 overflow-hidden text-ellipsis rounded-md px-2 py-1 text-white">
                   {item.inputPrompt}
                 </span>
               </div>
@@ -136,7 +136,7 @@ export default function PreviewGallery({ initialData }: PreviewGalleryProps) {
                   `${item.inputPrompt!} Generator by remove-anything.com`
                 )}&url=${encodeURIComponent(item.imageUrl!)}`}
               >
-                <span className="[&>svg]:h-7 [&>svg]:w-7 [&>svg]:fill-[#e60023]">
+                <span className="[&>svg]:size-7 [&>svg]:fill-[#e60023]">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 496 512"
@@ -152,7 +152,7 @@ export default function PreviewGallery({ initialData }: PreviewGalleryProps) {
 
       {/* 加载更多触发器 */}
       {hasMore && (
-        <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
+        <div ref={loadMoreRef} className="flex h-20 items-center justify-center">
           {loading && (
             <div className="text-muted-foreground">加载中...</div>
           )}

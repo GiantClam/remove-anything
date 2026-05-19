@@ -19,7 +19,7 @@ import { KVRateLimit } from "@/lib/kv";
 const CreateChargeOrderSchema = z.object({
   currency: z.enum(["CNY", "USD"]).default("USD"),
   productId: z.string(),
-  amount: z.number().min(100).max(1000000000),
+  amount: z.number().min(100).max(1000000000).optional(),
   channel: z.enum(["GiftCode", "Stripe"]).default("Stripe"),
   url: z.string().optional(),
 });
@@ -40,6 +40,15 @@ const getCurrentUser = async () => {
   };
 };
 
+function appendQueryParams(baseUrl: string, params: Record<string, string>) {
+  const nextUrl = new URL(baseUrl);
+  for (const [key, value] of Object.entries(params)) {
+    nextUrl.searchParams.set(key, value);
+  }
+
+  return nextUrl.toString();
+}
+
 export async function POST(req: NextRequest) {
   const auth = createProjectAuthProvider(getCurrentUser);
   const user = await auth.getCurrentUser();
@@ -59,9 +68,9 @@ export async function POST(req: NextRequest) {
 
   try {
     const data = await req.json();
-    const { currency, amount, channel, productId, url } =
+    const { currency, channel, productId, url } =
       CreateChargeOrderSchema.parse(data);
-    if (channel !== "Stripe") {
+    if (channel === "GiftCode") {
       return NextResponse.json(
         { error: "Not Support Channel" },
         { status: 400 },
@@ -89,30 +98,33 @@ export async function POST(req: NextRequest) {
         }),
         currency,
         credit: product.credit,
-        amount,
+        amount: product.amount,
         channel,
         phase: OrderPhase.Pending,
       },
     });
 
     const orderId = ChargeOrderHashids.encode(newChargeOrder.id);
-    const billingUrl = absoluteUrl(`/pricing?orderId=${orderId}`);
-    const nextUrl = url?.includes("?")
-      ? `${url}&orderId=${orderId}`
-      : `${url}?orderId=${orderId}`;
+    const fallbackBillingUrl = absoluteUrl(`/pricing?orderId=${orderId}`);
+    const originUrl = url || fallbackBillingUrl;
+    const pricingUrl = appendQueryParams(originUrl, { orderId });
+
     if (channel === "Stripe") {
       const stripeClient = createStripeClient();
       const session = await stripeClient.createCheckoutSession({
-        priceId: '', // 使用 price_data 自定义金额时可留空
+        priceId: "",
         quantity: 1,
-        successUrl: `${nextUrl ?? billingUrl}&success=true`,
-        cancelUrl: `${nextUrl ?? billingUrl}&success=false`,
+        successUrl: appendQueryParams(pricingUrl, { success: "true" }),
+        cancelUrl: appendQueryParams(pricingUrl, { success: "false" }),
         customerEmail: user.email || undefined,
         metadata: { orderId, userId: userId, chargeProductId: productId },
+        unitAmount: product.amount,
+        currency,
+        productName: product.title,
       });
-      // 回退：保留旧逻辑的自定义金额，直接用 url 跳转（session.url 已在适配器处理）
       return NextResponse.json({ orderId, url: session.url as string });
     }
+
     return NextResponse.json({
       orderId,
     });
