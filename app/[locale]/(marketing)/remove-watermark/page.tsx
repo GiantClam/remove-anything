@@ -5,6 +5,7 @@ import { getChargeProduct } from "@/db/queries/charge-product";
 import { locales, defaultLocale } from "@/config";
 import { env } from "@/env.mjs";
 import { constructAlternates } from "@/lib/seo";
+import { getMetadataBase } from "@/lib/utils";
 
 interface PageProps {
   params: { locale: string };
@@ -14,6 +15,7 @@ export async function generateMetadata({ params: { locale } }: PageProps): Promi
   const t = await getTranslations({ locale, namespace: "RemoveWatermarkPage" });
 
   return {
+    metadataBase: getMetadataBase(),
     title: t("title"),
     description: t("description"),
     keywords: t("keywords"),

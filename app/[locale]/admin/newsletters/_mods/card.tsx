@@ -55,7 +55,7 @@ export default function NewsLatterCard(props: {
       </Row>
 
       <Card bordered={false} className="!mt-6" classNames={{ body: '!p-0' }}>
-        <div className="flex justify-end mb-3 p-2">
+        <div className="mb-3 flex justify-end p-2">
           <Button type="primary" className='w-[160px]' href="newsletters/new">New</Button>
         </div>
         <Table dataSource={dataSource} columns={columns} />

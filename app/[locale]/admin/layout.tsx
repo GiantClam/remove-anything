@@ -1,19 +1,26 @@
 import { ReactNode, Suspense, useEffect } from "react";
 import { redirect } from "next/navigation";
+import { NextIntlClientProvider } from "next-intl";
 
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { getCurrentUser } from "@/lib/auth-utils";
 
 import Loading from "@/components/loading/index";
 import AntdThemeProvider from "@/components/theme/theme-provider";
+import {
+  ADMIN_MESSAGE_NAMESPACES,
+  getScopedMessages,
+} from "@/lib/i18n/scoped-messages";
 
 import Header from "./Header";
 import { Sidebar } from "./Sidebar";
 
 export default async function AdminLayout({
   children,
+  params,
 }: {
   children: ReactNode;
+  params: { locale: string };
 }) {
   // const { userId } = auth()
 
@@ -24,28 +31,34 @@ export default async function AdminLayout({
   if (!user) {
     redirect("/");
   }
+  const messages = await getScopedMessages(
+    params.locale,
+    ADMIN_MESSAGE_NAMESPACES,
+  );
 
   return (
-    <AntdRegistry>
-      <AntdThemeProvider>
-        <div className="fixed inset-0 flex overflow-hidden">
-          <Sidebar />
-          <section className="flex w-full min-w-0 flex-1">
-            <main className="relative flex w-full flex-1 flex-col items-stretch">
-              <Header />
-              <Suspense
-                fallback={
-                  <div className="flex h-full items-center justify-center p-6">
-                    <Loading />
-                  </div>
-                }
-              >
-                {children}
-              </Suspense>
-            </main>
-          </section>
-        </div>
-      </AntdThemeProvider>
-    </AntdRegistry>
+    <NextIntlClientProvider messages={messages}>
+      <AntdRegistry>
+        <AntdThemeProvider>
+          <div className="fixed inset-0 flex overflow-hidden">
+            <Sidebar />
+            <section className="flex w-full min-w-0 flex-1">
+              <main className="relative flex w-full flex-1 flex-col items-stretch">
+                <Header />
+                <Suspense
+                  fallback={
+                    <div className="flex h-full items-center justify-center p-6">
+                      <Loading />
+                    </div>
+                  }
+                >
+                  {children}
+                </Suspense>
+              </main>
+            </section>
+          </div>
+        </AntdThemeProvider>
+      </AntdRegistry>
+    </NextIntlClientProvider>
   );
 }

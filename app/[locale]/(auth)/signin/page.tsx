@@ -25,7 +25,7 @@ export default async function SignInPage({ params: { locale } }: Props) {
     <Container className="flex min-h-screen items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">欢迎回来</CardTitle>
+          <CardTitle className="text-center text-2xl font-bold">欢迎回来</CardTitle>
           <CardDescription className="text-center">
             使用 Google 账户登录继续使用服务
           </CardDescription>

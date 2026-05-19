@@ -1,4 +1,4 @@
-import { constructMetadata } from "@/lib/utils";
+import { constructMetadata, getMetadataBase } from "@/lib/utils";
 import { AreaChartStacked } from "@/components/charts/area-chart-stacked";
 import { BarChartMixed } from "@/components/charts/bar-chart-mixed";
 import { InteractiveBarChart } from "@/components/charts/interactive-bar-chart";
@@ -12,10 +12,13 @@ import { DashboardHeader } from "@/components/dashboard/header";
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = constructMetadata({
-  title: "Charts – Next Template",
-  description: "List of charts by shadcn-ui",
-});
+export const metadata = {
+  ...constructMetadata({
+    title: "Charts – Next Template",
+    description: "List of charts by shadcn-ui",
+  }),
+  metadataBase: getMetadataBase(),
+};
 
 
 export default function ChartsPage() {

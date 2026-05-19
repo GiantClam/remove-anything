@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -58,14 +58,7 @@ export function LayoutWithBackgroundSelector({
     downloaderRef.current = new ClientImageDownloader();
   }, []);
   
-  // 实时预览
-  useEffect(() => {
-    if (composerRef.current && selectedBackground) {
-      updatePreview();
-    }
-  }, [selectedBackground, composition]);
-  
-  const updatePreview = async () => {
+  const updatePreview = useCallback(async () => {
     if (!composerRef.current || !selectedBackground) return;
     
     try {
@@ -78,7 +71,14 @@ export function LayoutWithBackgroundSelector({
     } catch (error) {
       console.error('Preview update failed:', error);
     }
-  };
+  }, [composition, foregroundImageUrl, selectedBackground]);
+
+  // 实时预览
+  useEffect(() => {
+    if (composerRef.current && selectedBackground) {
+      void updatePreview();
+    }
+  }, [selectedBackground, updatePreview]);
   
   const handleAddBackground = async () => {
     if (!composerRef.current || !selectedBackground) return;
@@ -126,14 +126,14 @@ export function LayoutWithBackgroundSelector({
   };
   
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {/* 菜单栏 */}
       <MenuBar />
       
       {/* 主内容区域 */}
-      <div className="flex-1 flex gap-4 p-4 overflow-hidden">
+      <div className="flex flex-1 gap-4 overflow-hidden p-4">
         {/* 左侧：图片展示区域 */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex flex-1 flex-col">
           <ImageDisplayArea 
             foregroundImage={foregroundImageUrl}
             background={selectedBackground}
@@ -149,12 +149,12 @@ export function LayoutWithBackgroundSelector({
               disabled={isProcessing || !selectedBackground}
               className="flex-1"
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 size-4" />
               {isProcessing ? '处理中...' : '添加背景'}
             </Button>
             {resultImage && (
               <Button onClick={handleDownload} variant="outline">
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="mr-2 size-4" />
                 下载
               </Button>
             )}
@@ -165,7 +165,7 @@ export function LayoutWithBackgroundSelector({
         </div>
         
         {/* 右侧：背景选择区域 */}
-        <div className="w-80 flex flex-col gap-4">
+        <div className="flex w-80 flex-col gap-4">
           <BackgroundSelector 
             type={backgroundType}
             onTypeChange={(type: string) => setBackgroundType(type as "image" | "gradient" | "solid" | "template")}
@@ -256,24 +256,30 @@ function ImageDisplayArea({
       <CardHeader>
         <CardTitle className="text-lg">预览效果</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex items-center justify-center p-6">
-        <div className="relative w-full max-w-lg aspect-square">
+      <CardContent className="flex flex-1 items-center justify-center p-6">
+        <div className="relative aspect-square w-full max-w-lg">
           {resultImage ? (
-            <img 
-              src={resultImage} 
-              alt="合成结果"
-              className="w-full h-full object-contain rounded-lg border shadow-lg"
-            />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={resultImage}
+                alt="合成结果"
+                className="size-full rounded-lg border object-contain shadow-lg"
+              />
+            </>
           ) : previewUrl ? (
-            <img 
-              src={previewUrl} 
-              alt="合成预览"
-              className="w-full h-full object-contain rounded-lg border shadow-lg"
-            />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewUrl}
+                alt="合成预览"
+                className="size-full rounded-lg border object-contain shadow-lg"
+              />
+            </>
           ) : (
-            <div className="w-full h-full border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center">
+            <div className="flex size-full items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25">
               <div className="text-center text-muted-foreground">
-                <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <ImageIcon className="mx-auto mb-2 size-12 opacity-50" />
                 <p>选择背景后显示预览</p>
               </div>
             </div>
@@ -305,19 +311,19 @@ function BackgroundSelector({
         <Tabs value={type} onValueChange={onTypeChange}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="solid" className="flex items-center gap-1">
-              <Palette className="w-4 h-4" />
+              <Palette className="size-4" />
               纯色
             </TabsTrigger>
             <TabsTrigger value="gradient" className="flex items-center gap-1">
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="size-4" />
               渐变
             </TabsTrigger>
             <TabsTrigger value="image" className="flex items-center gap-1">
-              <ImageIcon className="w-4 h-4" />
+              <ImageIcon className="size-4" />
               图片
             </TabsTrigger>
             <TabsTrigger value="template" className="flex items-center gap-1">
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="size-4" />
               模板
             </TabsTrigger>
           </TabsList>
@@ -359,7 +365,7 @@ function SolidColorGrid({ onSelect, selected }: { onSelect: (background: Backgro
           key={color}
           onClick={() => onSelect({ type: 'solid', data: { color } })}
           className={cn(
-            "w-8 h-8 rounded border-2 transition-all hover:scale-110",
+            "size-8 rounded border-2 transition-all hover:scale-110",
             selected?.data?.color === color 
               ? "border-primary ring-2 ring-primary/20" 
               : "border-border hover:border-primary/50"
@@ -396,7 +402,7 @@ function GradientGrid({ onSelect, selected }: { onSelect: (background: Backgroun
           key={index}
           onClick={() => onSelect({ type: 'gradient', data: { gradient } })}
           className={cn(
-            "w-16 h-12 rounded border-2 transition-all hover:scale-105",
+            "h-12 w-16 rounded border-2 transition-all hover:scale-105",
             JSON.stringify(selected?.data?.gradient) === JSON.stringify(gradient)
               ? "border-primary ring-2 ring-primary/20" 
               : "border-border hover:border-primary/50"
@@ -437,9 +443,9 @@ function ImageUpload({ onSelect, selected }: { onSelect: (background: Background
   
   return (
     <div className="space-y-4">
-      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-        <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground mb-2">上传背景图片</p>
+      <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+        <Upload className="mx-auto mb-2 size-8 text-muted-foreground" />
+        <p className="mb-2 text-sm text-muted-foreground">上传背景图片</p>
         <input
           type="file"
           accept="image/*"
@@ -460,10 +466,11 @@ function ImageUpload({ onSelect, selected }: { onSelect: (background: Background
       
       {selected?.type === 'image' && selected.data.imageUrl && (
         <div className="relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={selected.data.imageUrl} 
             alt="上传的背景"
-            className="w-full h-24 object-cover rounded border"
+            className="h-24 w-full rounded border object-cover"
           />
         </div>
       )}
@@ -489,17 +496,17 @@ function TemplateGrid({ onSelect, selected }: { onSelect: (background: Backgroun
           key={template.id}
           onClick={() => onSelect({ type: 'template', data: { templateId: template.id, imageUrl: template.url } })}
           className={cn(
-            "relative w-full h-16 rounded border-2 transition-all hover:scale-105 overflow-hidden",
+            "relative h-16 w-full overflow-hidden rounded border-2 transition-all hover:scale-105",
             selected?.data?.templateId === template.id
               ? "border-primary ring-2 ring-primary/20" 
               : "border-border hover:border-primary/50"
           )}
         >
           <div 
-            className="w-full h-full bg-cover bg-center"
+            className="size-full bg-cover bg-center"
             style={{ backgroundImage: `url(${template.url})` }}
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 text-center">
+          <div className="absolute inset-x-0 bottom-0 bg-black/50 p-1 text-center text-xs text-white">
             {template.name}
           </div>
         </button>
@@ -519,18 +526,18 @@ function AdjustmentControls({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Move className="w-5 h-5" />
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Move className="size-5" />
           调整设置
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* 大小调整 */}
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <ZoomIn className="w-4 h-4" />
+          <div className="mb-2 flex items-center gap-2">
+            <ZoomIn className="size-4" />
             <span className="text-sm font-medium">大小</span>
-            <span className="text-xs text-muted-foreground ml-auto">
+            <span className="ml-auto text-xs text-muted-foreground">
               {Math.round(composition.scale * 100)}%
             </span>
           </div>
@@ -546,10 +553,10 @@ function AdjustmentControls({
         
         {/* 位置调整 */}
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Move className="w-4 h-4" />
+          <div className="mb-2 flex items-center gap-2">
+            <Move className="size-4" />
             <span className="text-sm font-medium">位置 X</span>
-            <span className="text-xs text-muted-foreground ml-auto">
+            <span className="ml-auto text-xs text-muted-foreground">
               {composition.position.x}px
             </span>
           </div>
@@ -567,10 +574,10 @@ function AdjustmentControls({
         </div>
         
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Move className="w-4 h-4" />
+          <div className="mb-2 flex items-center gap-2">
+            <Move className="size-4" />
             <span className="text-sm font-medium">位置 Y</span>
-            <span className="text-xs text-muted-foreground ml-auto">
+            <span className="ml-auto text-xs text-muted-foreground">
               {composition.position.y}px
             </span>
           </div>
@@ -589,10 +596,10 @@ function AdjustmentControls({
         
         {/* 旋转调整 */}
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <RotateCw className="w-4 h-4" />
+          <div className="mb-2 flex items-center gap-2">
+            <RotateCw className="size-4" />
             <span className="text-sm font-medium">旋转</span>
-            <span className="text-xs text-muted-foreground ml-auto">
+            <span className="ml-auto text-xs text-muted-foreground">
               {composition.rotation}°
             </span>
           </div>
@@ -619,7 +626,7 @@ function AdjustmentControls({
             })}
             className="flex-1"
           >
-            <RotateCcw className="w-4 h-4 mr-1" />
+            <RotateCcw className="mr-1 size-4" />
             重置
           </Button>
           <Button
@@ -631,7 +638,7 @@ function AdjustmentControls({
             })}
             className="flex-1"
           >
-            <RotateCw className="w-4 h-4 mr-1" />
+            <RotateCw className="mr-1 size-4" />
             旋转90°
           </Button>
         </div>

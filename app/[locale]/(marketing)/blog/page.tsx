@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Metadata } from "next";
 
 import { BlogPosts } from "@/components/content/blog-posts";
-import { getBlurDataURL } from "@/lib/utils";
+import { getBlurDataURL, getMetadataBase } from "@/lib/utils";
 import { locales, defaultLocale } from "@/config";
 import { env } from "@/env.mjs";
 import { constructAlternates } from "@/lib/seo";
@@ -16,6 +16,7 @@ export async function generateMetadata({ params: { locale } }: PageProps): Promi
   const t = await getTranslations({ locale });
   
   return {
+    metadataBase: getMetadataBase(),
     title: `${t("BlogPage.title")} - ${t("LocaleLayout.title")}`,
     description: t("BlogPage.description"),
     alternates: constructAlternates({ locale, path: "/blog" }),
@@ -41,7 +42,7 @@ export default async function BlogPage({ params: { locale } }: PageProps) {
   if (validPosts.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">No blog posts available</h1>
+        <h1 className="mb-4 text-2xl font-bold">No blog posts available</h1>
         <p>There are no blog posts available for this language.</p>
       </div>
     );

@@ -99,6 +99,14 @@ export function absoluteUrl(path: string) {
   return `${base}${normalizedPath}`;
 }
 
+export function getSiteOrigin() {
+  return (siteConfig.url || env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+}
+
+export function getMetadataBase() {
+  return new URL(getSiteOrigin());
+}
+
 // Utils from precedent.dev
 export const timeAgo = (timestamp: Date, timeOnly?: boolean): string => {
   if (!timestamp) return "never";

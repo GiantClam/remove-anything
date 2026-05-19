@@ -3,27 +3,12 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-} from "@/components/auth/auth-components";
+import { SignedIn, SignedOut, SignInButton } from "@/components/auth/auth-components";
 import { UserButton } from "@/components/auth/user-button";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  AnimatePresence,
-  motion,
-  useMotionTemplate,
-  useMotionValue,
-} from "framer-motion";
 import { useTranslations } from "next-intl";
 
-import {
-  GitHubBrandIcon,
-  GoogleBrandIcon,
-  MailIcon,
-  UserArrowLeftIcon,
-} from "@/assets";
+import { GoogleBrandIcon, UserArrowLeftIcon } from "@/assets";
 import ShimmerButton from "@/components/forms/shimmer-button";
 import {
   Tooltip,
@@ -31,11 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import { url } from "@/lib";
-import { clamp } from "@/lib/math";
 import { Link } from "@/lib/navigation";
-import { cn } from "@/lib/utils";
 
 import { LocaleSwitcher } from "./layout/locale-switcher";
 
@@ -48,13 +29,6 @@ export function UserInfo() {
   }, []);
 
   const pathname = usePathname();
-  const localeSegment = React.useMemo(() => {
-    if (!pathname) return "en";
-    const segments = pathname.split("/").filter(Boolean);
-    if (segments.length === 0) return "en";
-    const candidate = segments[0];
-    return candidate.length <= 5 ? candidate : "en";
-  }, [pathname]);
   const { user } = useAuth();
   const StrategyIcon = React.useMemo(() => {
     // Since we're using Google OAuth through NextAuth, always show Google icon
@@ -68,7 +42,7 @@ export function UserInfo() {
   if (!isClient) {
     return (
       <div>
-        <SignedIn key="user-info">
+        <SignedIn>
           <div className="flex items-center space-x-3">
             <LocaleSwitcher />
             <div className="pointer-events-auto relative flex h-10 items-center">
@@ -97,7 +71,7 @@ export function UserInfo() {
             )}
           </div>
         </SignedIn>
-        <SignedOut key="sign-in">
+        <SignedOut>
           <div className="flex items-center space-x-3">
             <LocaleSwitcher />
             <div className="pointer-events-auto">
@@ -121,16 +95,10 @@ export function UserInfo() {
 
   return (
     <div suppressHydrationWarning>
-      <AnimatePresence>
-        <SignedIn key="user-info">
-          <div className="flex items-center space-x-3">
+      <SignedIn>
+        <div className="flex items-center space-x-3">
           <LocaleSwitcher />
-          <motion.div
-            className="pointer-events-auto relative flex h-10 items-center"
-            initial={{ opacity: 0, x: 25 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 25 }}
-          >
+          <div className="pointer-events-auto relative flex h-10 items-center">
             <UserButton
               afterSignOutUrl={pathname}
               appearance={{
@@ -139,13 +107,13 @@ export function UserInfo() {
                 },
               }}
             />
-            {StrategyIcon && (
+            {StrategyIcon ? (
               <span className="pointer-events-none absolute -bottom-1 -right-1 flex size-4 select-none items-center justify-center rounded-full bg-white dark:bg-zinc-900">
                 <StrategyIcon className="size-3" />
               </span>
-            )}
-          </motion.div>
-          {!pathname?.includes("app") && (
+            ) : null}
+          </div>
+          {!pathname?.includes("app") ? (
             <Link href="/app" className="size-full">
               <ShimmerButton>
                 <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10">
@@ -153,18 +121,13 @@ export function UserInfo() {
                 </span>
               </ShimmerButton>
             </Link>
-          )}
+          ) : null}
         </div>
       </SignedIn>
-              <SignedOut key="sign-in">
+      <SignedOut>
         <div className="flex items-center space-x-3">
           <LocaleSwitcher />
-          <motion.div
-            className="pointer-events-auto"
-            initial={{ opacity: 0, x: 25 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 25 }}
-          >
+          <div className="pointer-events-auto">
             <TooltipProvider>
               <Tooltip>
                 <SignInButton
@@ -182,20 +145,13 @@ export function UserInfo() {
                 </SignInButton>
 
                 <TooltipContent>
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                  >
-                    {t("tooltip.login")}
-                  </motion.div>
+                  {t("tooltip.login")}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          </motion.div>
           </div>
-        </SignedOut>
-      </AnimatePresence>
+        </div>
+      </SignedOut>
     </div>
   );
 }

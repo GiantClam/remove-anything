@@ -8,6 +8,7 @@ import { stripe } from "@/lib/stripe";
 import { env } from "@/env.mjs";
 import { OrderPhase, PaymentChannelType } from "@/db/type";
 import { ChargeOrderHashids } from "@/db/dto/charge-order.dto";
+import { fulfillChargeOrderPayment } from "@/modules/payments/charge-order";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -115,53 +116,16 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       return;
     }
 
-    // 更新订单状态为已支付
     await prisma.$transaction(async (tx) => {
-      // 更新订单状态
-      await tx.chargeOrder.update({
-        where: { id: order.id },
-        data: {
-          phase: OrderPhase.Paid,
-          paymentAt: new Date(),
-        },
-      });
-
-      // 增加用户积分
-      const userCredit = await tx.userCredit.findFirst({
-        where: { userId: userId },
-      });
-
-      if (userCredit) {
-        await tx.userCredit.update({
-          where: { id: userCredit.id },
-          data: {
-            credit: {
-              increment: order.credit,
-            },
-          },
-        });
-      } else {
-        await tx.userCredit.create({
-          data: {
-            userId: userId,
-            credit: order.credit,
-          },
-        });
-      }
-
-      // 记录积分交易
-      const updatedCredit = await tx.userCredit.findFirst({
-        where: { userId: userId },
-      });
-
-      await tx.userCreditTransaction.create({
-        data: {
-          userId: userId,
-          credit: order.credit,
-          balance: updatedCredit?.credit || order.credit,
-          type: "Charge",
-          billingId: order.id,
-        },
+      await fulfillChargeOrderPayment(tx, {
+        chargeOrderId: order.id,
+        userId,
+        result: JSON.stringify({
+          provider: "stripe",
+          sessionId: session.id,
+          paymentStatus: session.payment_status,
+          rawCheckoutSession: session,
+        }),
       });
     });
 

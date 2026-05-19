@@ -6,6 +6,7 @@ import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { DashboardShell } from "@/components/dashboard/shell";
 import GiftCodeForm from "@/components/forms/gift-code-form";
+import { getMetadataBase } from "@/lib/utils";
 
 interface PageProps {
   params: { locale: string };
@@ -19,6 +20,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "GiftCode" });
 
   return {
+    metadataBase: getMetadataBase(),
     title: t("title"),
     description: t("text"),
   };

@@ -4,8 +4,6 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { kv, KVRateLimit } from '@/lib/kv'
 
-export const runtime = 'edge'
-
 function getKey(id: string) {
   return `reactions:${id}`
 }

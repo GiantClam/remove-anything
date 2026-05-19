@@ -58,7 +58,7 @@ export default async function UseCases() {
                     <useCase.icon className="size-6" />
                   </div>
 
-                  <h3 className="mt-6 text-lg font-semibold mb-2">
+                  <h3 className="mb-2 mt-6 text-lg font-semibold">
                     {useCase.title}
                   </h3>
 

@@ -2,9 +2,16 @@
 
 import React, { useEffect } from "react";
 import Script from "next/script";
+import { env } from "@/env.mjs";
 
 export default function ClaritySnippet() {
+  const clarityId = env.NEXT_PUBLIC_CLARITY_ID;
+
   useEffect(() => {
+    if (!clarityId) {
+      return;
+    }
+
     // 使用 requestIdleCallback 延迟加载 Clarity，避免阻塞首屏
     const loadClarity = () => {
       if ('requestIdleCallback' in window) {
@@ -15,7 +22,11 @@ export default function ClaritySnippet() {
     };
 
     loadClarity();
-  }, []);
+  }, [clarityId]);
+
+  if (!clarityId) {
+    return null;
+  }
 
   return (
     <Script
@@ -27,7 +38,7 @@ export default function ClaritySnippet() {
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "nq6otfv9kb");;
+    })(window, document, "clarity", "script", "${clarityId}");;
 `,
       }}
     />

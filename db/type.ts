@@ -16,6 +16,7 @@ export enum PaymentChannelType {
   Alipay = "Alipay",
   WeChat = "WeChat",
   Stripe = "Stripe",
+  PayPal = "PayPal",
   GiftCode = "GiftCode",
   InviteCode = "InviteCode",
   ActivityCredit = "Event Gift",

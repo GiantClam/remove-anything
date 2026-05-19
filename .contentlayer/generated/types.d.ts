@@ -68,6 +68,9 @@ export type Post = {
   authors: string[]
   categories: ('news' | 'education')[]
   related?: string[] | undefined
+  primaryToolHref?: string | undefined
+  primaryToolTitle?: string | undefined
+  primaryToolDescription?: string | undefined
   /** MDX file body */
   body: MDX
   slug: string

@@ -69,7 +69,7 @@ export default async function QuickAccess() {
                     <feature.icon className="size-6" />
                   </div>
 
-                  <h3 className="mt-6 text-lg font-semibold mb-2">
+                  <h3 className="mb-2 mt-6 text-lg font-semibold">
                     {feature.title}
                   </h3>
 
@@ -80,7 +80,7 @@ export default async function QuickAccess() {
                   <div className="-mb-5 flex gap-3 border-t border-muted py-4 md:-mb-7">
                     <Link
                       href={feature.href}
-                      className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                      className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
                     >
                       {t("useNow")} →
                     </Link>

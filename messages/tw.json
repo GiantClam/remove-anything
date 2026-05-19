@@ -167,7 +167,8 @@
     "label": "價格方案",
     "action": {
       "signin": "登錄",
-      "buy": "一次性付款"
+      "buy": "一次性付款",
+      "buyPaypal": "使用 PayPal 付款"
     },
     "contact": {
       "title": "聯絡我們",
@@ -489,6 +490,19 @@
     "removeObjects": "物體移除",
     "removeWatermark": "水印移除",
     "sora2VideoWatermarkRemoval": "Sora2 影片水印移除",
+    "tools": "工具",
+    "backgroundTools": "背景工具",
+    "batchTools": "批量工具",
+    "formatConverters": "格式轉換",
+    "transparentPngMaker": "透明 PNG 生成器",
+    "whiteBackgroundMaker": "白底圖生成器",
+    "changeBackgroundColor": "換背景顏色",
+    "batchImageCompressor": "批量圖片壓縮",
+    "batchImageResizer": "批量改尺寸",
+    "batchImageFormatConverter": "批量格式轉換",
+    "pngToJpg": "PNG 轉 JPG",
+    "jpgToPng": "JPG 轉 PNG",
+    "webpToPng": "WebP 轉 PNG",
     "explore": "探索",
     "title": "Remove Anything - 免費去除圖片任意物體",
     "prompt": "Remove Anything 提示詞產生器",

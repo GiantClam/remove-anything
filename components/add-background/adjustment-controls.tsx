@@ -61,24 +61,24 @@ export function AdjustmentControls({ params, onChange }: AdjustmentControlsProps
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between text-base">
           {t('title')}
           <div className="flex gap-1">
             <Button
               variant="outline"
               size="sm"
               onClick={resetParams}
-              className="h-8 w-8 p-0"
+              className="size-8 p-0"
             >
-              <RotateCcw className="w-3 h-3" />
+              <RotateCcw className="size-3" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={rotate90}
-              className="h-8 w-8 p-0"
+              className="size-8 p-0"
             >
-              <RotateCw className="w-3 h-3" />
+              <RotateCw className="size-3" />
             </Button>
           </div>
         </CardTitle>
@@ -87,9 +87,9 @@ export function AdjustmentControls({ params, onChange }: AdjustmentControlsProps
         {/* 大小调整 */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <ZoomIn className="w-4 h-4" />
+            <ZoomIn className="size-4" />
             <span className="text-sm font-medium">{t('size')}</span>
-            <span className="text-sm text-gray-500 ml-auto">{Math.round(params.scale * 100)}%</span>
+            <span className="ml-auto text-sm text-gray-500">{Math.round(params.scale * 100)}%</span>
           </div>
           <Slider
             value={[params.scale]}
@@ -104,13 +104,13 @@ export function AdjustmentControls({ params, onChange }: AdjustmentControlsProps
         {/* 位置调整 */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Move className="w-4 h-4" />
+            <Move className="size-4" />
             <span className="text-sm font-medium">{t('position')}</span>
           </div>
           
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 w-8">X</span>
+              <span className="w-8 text-xs text-gray-500">X</span>
               <Slider
                 value={[params.position.x]}
                 onValueChange={(value) => handlePositionChange('x', value[0])}
@@ -119,11 +119,11 @@ export function AdjustmentControls({ params, onChange }: AdjustmentControlsProps
                 step={1}
                 className="flex-1"
               />
-              <span className="text-xs text-gray-500 w-8">{params.position.x}</span>
+              <span className="w-8 text-xs text-gray-500">{params.position.x}</span>
             </div>
             
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 w-8">Y</span>
+              <span className="w-8 text-xs text-gray-500">Y</span>
               <Slider
                 value={[params.position.y]}
                 onValueChange={(value) => handlePositionChange('y', value[0])}
@@ -132,7 +132,7 @@ export function AdjustmentControls({ params, onChange }: AdjustmentControlsProps
                 step={1}
                 className="flex-1"
               />
-              <span className="text-xs text-gray-500 w-8">{params.position.y}</span>
+              <span className="w-8 text-xs text-gray-500">{params.position.y}</span>
             </div>
           </div>
         </div>
@@ -140,9 +140,9 @@ export function AdjustmentControls({ params, onChange }: AdjustmentControlsProps
         {/* 旋转调整 */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <RotateCw className="w-4 h-4" />
+            <RotateCw className="size-4" />
             <span className="text-sm font-medium">{t('rotation')}</span>
-            <span className="text-sm text-gray-500 ml-auto">{params.rotation}°</span>
+            <span className="ml-auto text-sm text-gray-500">{params.rotation}°</span>
           </div>
           <Slider
             value={[params.rotation]}
@@ -162,7 +162,7 @@ export function AdjustmentControls({ params, onChange }: AdjustmentControlsProps
             onClick={() => handleScaleChange([0.5])}
             className="flex items-center gap-1"
           >
-            <ZoomOut className="w-3 h-3" />
+            <ZoomOut className="size-3" />
             {t('zoomOut')}
           </Button>
           <Button
@@ -171,7 +171,7 @@ export function AdjustmentControls({ params, onChange }: AdjustmentControlsProps
             onClick={() => handleScaleChange([1.5])}
             className="flex items-center gap-1"
           >
-            <ZoomIn className="w-3 h-3" />
+            <ZoomIn className="size-3" />
             {t('zoomIn')}
           </Button>
         </div>

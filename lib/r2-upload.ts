@@ -1,12 +1,13 @@
-import AWS from 'aws-sdk';
 import { nanoid } from "nanoid";
 import { env } from "@/env.mjs";
+import { createR2S3Service } from "@/lib/r2-s3";
 
 /**
  * 上传文件到 Cloudflare R2 存储
  * 支持大文件上传，绕过 Vercel 限制
  */
 export async function uploadToR2(file: File): Promise<string> {
+  let uploadKey = "";
   try {
     console.log("📤 开始上传文件到 R2...");
     console.log("文件信息:", {
@@ -19,56 +20,35 @@ export async function uploadToR2(file: File): Promise<string> {
     const fileExtension = file.name.split('.').pop() || 'mp4';
     const filename = `${nanoid(12)}.${fileExtension}`;
     const key = `uploads/${filename}`;
+    uploadKey = key;
     
     // 转换文件为Buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    // 配置AWS S3客户端用于Cloudflare R2
-    const s3Client = new AWS.S3({
-      endpoint: env.R2_ENDPOINT,
-      accessKeyId: env.R2_ACCESS_KEY,
-      secretAccessKey: env.R2_SECRET_KEY,
-      signatureVersion: 'v4',
-      region: 'auto', // Cloudflare R2使用auto作为区域
-      s3ForcePathStyle: true, // 强制使用路径样式
+    const s3Client = createR2S3Service();
+    
+    console.log("R2 配置信息:", { key, bufferSize: buffer.length });
+    const result = await s3Client.putItemInBucket(filename, buffer, {
+      path: "uploads",
+      ContentType: file.type,
+      acl: "public-read",
     });
     
-    console.log("R2 配置信息:", {
-      endpoint: env.R2_ENDPOINT,
-      bucket: env.R2_BUCKET,
-      key: key,
-      bufferSize: buffer.length
-    });
-    
-    // 上传文件到R2
-    const uploadParams = {
-      Bucket: env.R2_BUCKET,
-      Key: key,
-      Body: buffer,
-      ContentType: file.type
-      // 注意：Cloudflare R2 可能不支持 ACL 设置
-    };
-    
-    const result = await s3Client.upload(uploadParams).promise();
-    
-    // 构建公共访问URL
-    const publicUrl = `${env.R2_URL_BASE}/${key}`;
+    const publicUrl = result.completedUrl;
     console.log("✅ 文件上传成功:", publicUrl);
     console.log("S3 上传结果:", result);
     
     return publicUrl;
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ 文件上传失败:", error);
     
     // 如果是认证错误，提供更详细的调试信息
-    if (error.code === 'SignatureDoesNotMatch') {
+    if (error?.code === 'SignatureDoesNotMatch') {
       console.error("🔍 R2 认证调试信息:");
-      console.error("- R2_ENDPOINT:", env.R2_ENDPOINT);
-      console.error("- R2_BUCKET:", env.R2_BUCKET);
       console.error("- R2_ACCESS_KEY 长度:", env.R2_ACCESS_KEY?.length);
       console.error("- R2_SECRET_KEY 长度:", env.R2_SECRET_KEY?.length);
-      console.error("- R2_URL_BASE:", env.R2_URL_BASE);
+      console.error("- 上传目标键:", uploadKey);
     }
     
     throw error;
@@ -105,20 +85,8 @@ export async function generateR2PresignedDownloadUrl(key: string): Promise<strin
   try {
     console.log("🔗 生成 R2 预签名下载 URL...");
     
-    const s3Client = new AWS.S3({
-      endpoint: env.R2_ENDPOINT,
-      accessKeyId: env.R2_ACCESS_KEY,
-      secretAccessKey: env.R2_SECRET_KEY,
-      signatureVersion: 'v4',
-      region: 'auto',
-      s3ForcePathStyle: true,
-    });
-    
-    const presignedUrl = s3Client.getSignedUrl('getObject', {
-      Bucket: env.R2_BUCKET,
-      Key: key,
-      Expires: 3600, // 1小时过期
-    });
+    const s3Client = createR2S3Service();
+    const presignedUrl = await s3Client.getSignedUrl(key, env.R2_BUCKET, 3600);
     
     console.log("✅ 预签名下载 URL 生成成功:", key);
     return presignedUrl;
@@ -134,25 +102,14 @@ export async function generateR2PresignedDownloadUrl(key: string): Promise<strin
 export async function generateR2PresignedUrl(filename: string, contentType: string): Promise<string> {
   try {
     console.log("🔗 生成 R2 预签名 URL...");
-    
-    const s3Client = new AWS.S3({
-      endpoint: env.R2_ENDPOINT,
-      accessKeyId: env.R2_ACCESS_KEY,
-      secretAccessKey: env.R2_SECRET_KEY,
-      signatureVersion: 'v4',
-      region: 'auto',
-      s3ForcePathStyle: true,
-    });
-    
     const key = `uploads/${filename}`;
     
-    const presignedUrl = s3Client.getSignedUrl('putObject', {
-      Bucket: env.R2_BUCKET,
-      Key: key,
+    const s3Client = createR2S3Service();
+    const { putUrl: presignedUrl } = await s3Client.getSts(filename, {
+      path: "uploads",
       ContentType: contentType,
-      Expires: 3600, // 1小时过期
-      // 注意：Cloudflare R2 可能不支持 ACL 设置
-    });
+      acl: "public-read",
+    }, env.R2_BUCKET);
     
     console.log("✅ 预签名 URL 生成成功:", key);
     return presignedUrl;

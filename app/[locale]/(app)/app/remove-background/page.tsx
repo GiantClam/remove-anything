@@ -2,6 +2,7 @@ import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 
 import Playground from "@/components/playground";
 import { getChargeProduct } from "@/db/queries/charge-product";
+import { getMetadataBase } from "@/lib/utils";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = 'force-dynamic';
@@ -14,6 +15,7 @@ export async function generateMetadata({ params: { locale } }: PageProps) {
   const t = await getTranslations({ locale, namespace: "RemoveBackgroundPage" });
 
   return {
+    metadataBase: getMetadataBase(),
     title: t("title"),
     description: t("description"),
   };

@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Eraser, ArrowLeft } from "lucide-react";
 import { Link } from "@/lib/navigation";
+import { getMetadataBase } from "@/lib/utils";
 
 interface PageProps {
   params: { locale: string };
@@ -10,6 +11,7 @@ interface PageProps {
 
 export async function generateMetadata({ params: { locale } }: PageProps): Promise<Metadata> {
   return {
+    metadataBase: getMetadataBase(),
     title: "手把手教你如何从集体照中P掉前男友/前女友 - Remove Anything",
     description: "学习如何使用AI工具轻松从照片中移除不需要的人物。本教程将教你如何从集体照、旅游照片中移除路人、前男友或前女友，让照片更加完美。",
     keywords: "如何从照片中移除人物, 移除前男友, 移除前女友, 移除路人, 集体照编辑, AI图片编辑, 在线P图工具",
@@ -26,17 +28,17 @@ export default async function HowToRemovePeoplePage({
       <div className="mb-8">
         <Link href={`/${locale}/blog`}>
           <Button variant="ghost" className="gap-2">
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="size-4" />
             返回博客
           </Button>
         </Link>
       </div>
 
       <header className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6">
+        <h1 className="mb-6 text-4xl font-bold md:text-5xl">
           手把手教你如何从集体照中P掉前男友/前女友
         </h1>
-        <p className="text-xl text-muted-foreground leading-relaxed">
+        <p className="text-xl leading-relaxed text-muted-foreground">
           你是否有一张完美的集体照，但里面有一个你不想看到的人？
           本教程将教你如何使用AI工具轻松从照片中移除不需要的人物，
           让珍贵的回忆更加完美。
@@ -91,14 +93,14 @@ export default async function HowToRemovePeoplePage({
         </p>
       </article>
 
-      <div className="mt-16 p-8 bg-primary/5 rounded-lg text-center">
-        <h2 className="text-2xl font-bold mb-4">准备好开始了吗？</h2>
-        <p className="text-muted-foreground mb-6">
+      <div className="mt-16 rounded-lg bg-primary/5 p-8 text-center">
+        <h2 className="mb-4 text-2xl font-bold">准备好开始了吗？</h2>
+        <p className="mb-6 text-muted-foreground">
           立即体验AI人物移除的强大功能，让您的照片更加完美
         </p>
         <Link href={`/remove-background`}>
           <Button size="lg" className="gap-2">
-            <Eraser className="w-5 h-5" />
+            <Eraser className="size-5" />
             免费开始使用
           </Button>
         </Link>

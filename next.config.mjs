@@ -10,7 +10,7 @@ import withPWA from 'next-pwa';
 
 import("./env.mjs");
 
-const withNextIntlConfig = withNextIntl();
+const withNextIntlConfig = withNextIntl("./i18n/request.ts");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -111,64 +111,7 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 
-  webpack: (config, { webpack, isServer }) => {
-    // 优化代码分割：第三方库单独打包（仅 JavaScript，不包括 CSS）
-    if (!isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // React相关库单独打包
-            react: {
-              name: 'react-vendor',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/](react|react-dom|react-dom-server)[\\/]/,
-              priority: 40,
-              enforce: true,
-              type: 'javascript/auto', // 仅打包 JavaScript
-            },
-            // Next.js相关（移除，避免打包 CSS）
-            // nextjs: {
-            //   name: 'nextjs-vendor',
-            //   chunks: 'all',
-            //   test: /[\\/]node_modules[\\/](next)[\\/]/,
-            //   priority: 30,
-            //   enforce: true,
-            // },
-            // UI库单独打包
-            ui: {
-              name: 'ui-vendor',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/](@radix-ui|@headlessui|framer-motion)[\\/]/,
-              priority: 25,
-              enforce: true,
-              type: 'javascript/auto', // 仅打包 JavaScript
-            },
-            // 工具库
-            utils: {
-              name: 'utils-vendor',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/](lodash|date-fns|zod)[\\/]/,
-              priority: 20,
-              enforce: true,
-              type: 'javascript/auto', // 仅打包 JavaScript
-            },
-            // 其他第三方库
-            vendor: {
-              name: 'vendor',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/]/,
-              priority: 10,
-              type: 'javascript/auto', // 仅打包 JavaScript
-            },
-          },
-        },
-      };
-    }
-
+  webpack: (config) => {
     config.experiments = {
       ...config.experiments,
       topLevelAwait: true,

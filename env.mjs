@@ -29,6 +29,9 @@ export const env = createEnv({
 
     STRIPE_API_KEY: z.string().min(1).default("sk_test_placeholder"),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).default("whsec_placeholder"),
+    PAYPAL_CLIENT_ID: z.string().min(1).default("paypal-client-id-placeholder"),
+    PAYPAL_CLIENT_SECRET: z.string().min(1).default("paypal-client-secret-placeholder"),
+    PAYPAL_ENV: z.enum(["sandbox", "live"]).default("sandbox"),
     WEBHOOK_SECRET: z.string().min(1).default("webhook-secret-placeholder"),
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
@@ -82,6 +85,7 @@ export const env = createEnv({
 
     NEXT_PUBLIC_UMAMI_DATA_ID: z.string().optional(),
     NEXT_PUBLIC_GA_ID: z.string().optional(),
+    NEXT_PUBLIC_CLARITY_ID: z.string().optional(),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL || "file:./dev.db",
@@ -114,6 +118,10 @@ export const env = createEnv({
 
     STRIPE_API_KEY: process.env.STRIPE_API_KEY || "sk_test_placeholder",
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || "whsec_placeholder",
+    PAYPAL_CLIENT_ID: process.env.PAYPAL_CLIENT_ID || "paypal-client-id-placeholder",
+    PAYPAL_CLIENT_SECRET:
+      process.env.PAYPAL_CLIENT_SECRET || "paypal-client-secret-placeholder",
+    PAYPAL_ENV: process.env.PAYPAL_ENV || "sandbox",
     NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID:
       process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID || "price_placeholder_monthly",
     NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID:
@@ -148,6 +156,7 @@ export const env = createEnv({
     GEMINI_MODEL: process.env.GEMINI_MODEL,
     NEXT_PUBLIC_UMAMI_DATA_ID: process.env.NEXT_PUBLIC_UMAMI_DATA_ID,
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+    NEXT_PUBLIC_CLARITY_ID: process.env.NEXT_PUBLIC_CLARITY_ID,
   },
   skipValidation: process.env.NODE_ENV === 'development' || process.env.SKIP_ENV_VALIDATION === 'true', // 在开发环境或设置SKIP_ENV_VALIDATION时跳过环境变量验证
   emptyStringAsUndefined: true,

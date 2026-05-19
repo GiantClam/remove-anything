@@ -2,11 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
 import { findWatermarkRemovalTaskByRunningHubId, updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";
 import { findSora2VideoWatermarkRemovalTaskByRunningHubId, updateSora2VideoWatermarkRemovalTask } from "@/db/queries/sora2-video-watermark-removal";
-import AWS from 'aws-sdk';
 import { nanoid } from "nanoid";
 import { env } from "@/env.mjs";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 import { taskQueueManager } from "@/lib/task-queue";
+import { createR2S3Service } from "@/lib/r2-s3";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = 'force-dynamic';
@@ -49,25 +49,17 @@ async function downloadAndSaveToR2(zipUrl: string, taskId: string): Promise<stri
       console.log(`🧩 已将非ZIP内容重新打包为ZIP，内含扩展名为 .${ext} 的文件`);
     }
     
-    // 配置AWS S3（用于R2）
-    const s3 = new AWS.S3({
-      endpoint: env.R2_ENDPOINT,
-      accessKeyId: env.R2_ACCESS_KEY,
-      secretAccessKey: env.R2_SECRET_KEY,
-      region: env.R2_REGION || 'auto',
-      s3ForcePathStyle: true,
-    });
+    const s3 = createR2S3Service();
     
     // 生成文件名
-    const fileName = `watermark-removal/processed/${taskId}-${nanoid(8)}.zip`;
-    
-    // 上传到R2
-    const uploadResult = await s3.upload({
-      Bucket: env.R2_BUCKET,
-      Key: fileName,
-      Body: finalZipBuffer,
-      ContentType: 'application/zip',
-    }).promise();
+    const storedFilename = `${taskId}-${nanoid(8)}.zip`;
+    const fileName = `watermark-removal/processed/${storedFilename}`;
+
+    await s3.putItemInBucket(storedFilename, finalZipBuffer, {
+      path: "watermark-removal/processed",
+      ContentType: "application/zip",
+      acl: "public-read",
+    });
     
     // 构建公共访问URL
     const r2PublicUrl = `${env.R2_URL_BASE}/${fileName}`;

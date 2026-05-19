@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 
 import { Container } from "@/components/layout/container";
 import { prisma } from "@/db/prisma";
+import { getMetadataBase } from "@/lib/utils";
 
 export async function generateStaticParams() {
   // 在standalone模式下，返回空数组，路由将在运行时动态处理
@@ -43,6 +44,7 @@ export async function generateMetadata({
   }
 
   return {
+    metadataBase: getMetadataBase(),
     title: newsletter.subject,
     description: newsletter.subject,
     openGraph: {

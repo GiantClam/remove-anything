@@ -4,7 +4,7 @@ import { unstable_setRequestLocale } from "next-intl/server";
 
 import { Container } from "@/components/layout/container";
 import { prisma } from "@/db/prisma";
-import { siteConfig } from "@/config/site";
+import { getMetadataBase } from "@/lib/utils";
 
 import { SubbedCelebration } from "./SubbedCelebration";
 
@@ -15,7 +15,7 @@ export async function generateStaticParams() {
 
 export const metadata = {
   title: "感谢你的订阅",
-  metadataBase: siteConfig.url,
+  metadataBase: getMetadataBase(),
 };
 
 export default async function ConfirmPage({

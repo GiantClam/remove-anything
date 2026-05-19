@@ -86,30 +86,34 @@ export function BeforeAfterSlider({
   return (
     <div 
       ref={containerRef}
-      className={cn("relative w-full select-none touch-none overscroll-none", className)}
+      className={cn("relative w-full touch-none select-none overscroll-none", className)}
     >
       <div className="relative overflow-hidden rounded-xl bg-muted">
-        <div className="relative h-full w-full">
+        <div className="relative size-full">
           {afterOverlay && (
             <div className="absolute inset-0">
               {afterOverlay}
             </div>
           )}
+          {/* Intentional raw img: comparison slider needs direct blob/data URL support and no Next/Image layout wrapper. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={afterSrc}
             alt={alt || "AI processed image comparison - before and after"}
-            className="h-full w-full object-contain max-h-[500px] max-w-[500px]"
+            className="size-full max-h-[500px] max-w-[500px] object-contain"
             draggable={false}
             decoding="async"
             loading="eager"
             style={afterTransform}
           />
         </div>
+        {/* Intentional raw img: comparison slider needs direct blob/data URL support and no Next/Image layout wrapper. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={beforeImgRef}
           src={beforeSrc}
           alt={alt || "Original image before AI processing"}
-          className="absolute inset-0 h-full w-full object-contain max-h-[500px] max-w-[500px]"
+          className="absolute inset-0 size-full max-h-[500px] max-w-[500px] object-contain"
           style={{ willChange: "clip-path" }}
           draggable={false}
           decoding="async"
@@ -117,11 +121,11 @@ export function BeforeAfterSlider({
         />
         <div
           ref={dividerRef}
-          className="pointer-events-none absolute inset-y-0 flex items-center transform-gpu"
+          className="pointer-events-none absolute inset-y-0 flex transform-gpu items-center"
           style={{ willChange: "transform", transform: `translateX(${position}%)` }}
         >
           <div className="relative h-full w-px bg-white/70">
-            <div className="absolute left-1/2 top-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/90 shadow-md">
+            <div className="absolute left-1/2 top-1/2 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/90 shadow-md">
               <span className="text-xs font-medium text-foreground">↔</span>
             </div>
           </div>
@@ -134,7 +138,7 @@ export function BeforeAfterSlider({
         max={100}
         value={position}
         onChange={handleChange}
-        className="absolute inset-0 z-10 h-full w-full cursor-ew-resize opacity-0"
+        className="absolute inset-0 z-10 size-full cursor-ew-resize opacity-0"
         aria-label="Adjust comparison"
       />
 

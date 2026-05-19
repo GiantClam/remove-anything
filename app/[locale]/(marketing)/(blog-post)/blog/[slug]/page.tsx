@@ -11,6 +11,7 @@ import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 import Author from "@/components/content/author";
+import { BlogToolCta } from "@/components/content/blog-tool-cta";
 import BlurImage from "@/components/shared/blur-image";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
 import { DashboardTableOfContents } from "@/components/shared/toc";
@@ -22,6 +23,7 @@ import {
   cn,
   constructMetadata,
   formatDate,
+  getMetadataBase,
   getBlurDataURL,
   placeholderBlurhash,
 } from "@/lib/utils";
@@ -70,6 +72,7 @@ export async function generateMetadata({
 
   return {
     ...metadata,
+    metadataBase: getMetadataBase(),
     alternates: constructAlternates({ locale: params.locale, path: `/blog/${params.slug}` }),
   };
 }
@@ -169,6 +172,14 @@ export default async function PostPage({ params }: PageProps) {
             />
             <div className="px-[.8rem] pb-10 md:px-8">
               <Mdx code={post.body.code} images={images} />
+              {post.primaryToolHref && post.primaryToolTitle ? (
+                <BlogToolCta
+                  href={post.primaryToolHref}
+                  title={post.primaryToolTitle}
+                  description={post.primaryToolDescription}
+                  locale={params.locale}
+                />
+              ) : null}
             </div>
           </div>
 

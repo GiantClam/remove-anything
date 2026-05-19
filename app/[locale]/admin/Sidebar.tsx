@@ -106,7 +106,7 @@ export const RenderMenu = (menu: MenuType) => {
         >
           <menu.icon
             className={cn(
-              "relative h-5 w-5 flex-shrink-0",
+              "relative size-5 shrink-0",
               isActive
                 ? "text-gray-900 dark:text-white"
                 : "text-gray-400 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-200",
@@ -115,7 +115,7 @@ export const RenderMenu = (menu: MenuType) => {
           <div className="relative truncate text-sm">{menu.name}</div>
           {menu.children?.length && (
             <div
-              className={`text-wedges-gray-400 ml-auto h-6 w-6 flex-shrink-0 transform transition-all ${
+              className={`text-wedges-gray-400 ml-auto size-6 shrink-0 transition-all${
                 !openPopover ? "rotate-180" : ""
               }`}
             >
@@ -163,12 +163,12 @@ const RenderMenus = (
             "relative mx-[9.5px] h-5 w-px",
             menus.length - 1 === index
               ? "bg-gray-200 dark:bg-gray-700"
-              : "bg-gray-200 after:absolute after:inset-x-0 after:z-[1] after:h-full after:w-px after:translate-y-full after:transform after:bg-gray-200 dark:bg-gray-700 after:dark:bg-gray-700",
+              : "bg-gray-200 after:absolute after:inset-x-0 after:z-[1] after:h-full after:w-px after:translate-y-full after:bg-gray-200 dark:bg-gray-700 after:dark:bg-gray-700",
           )}
         >
           <span
             className={cn(
-              "absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 transform rounded-full",
+              "absolute left-1/2 top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full",
               isCurrentActive
                 ? "bg-gray-900 dark:bg-white"
                 : "bg-gray-400 group-hover:bg-gray-700 dark:bg-gray-500 dark:group-hover:bg-gray-200",
@@ -191,19 +191,20 @@ const RenderMenus = (
 export function Sidebar() {
   return (
     <div
-      className="relative hidden w-full flex-shrink-0 flex-col items-stretch border-b border-gray-200 dark:border-gray-800 lg:flex lg:w-[--width] lg:border-b-0 lg:border-r"
+      className="relative hidden w-full shrink-0 flex-col items-stretch border-b border-gray-200 dark:border-gray-800 lg:flex lg:w-[--width] lg:border-b-0 lg:border-r"
       style={{ "--width": "250px" } as React.CSSProperties}
     >
-      <div className="flex h-[--header-height] min-w-0 flex-shrink-0 items-center gap-x-4 border-b border-gray-200 px-4 dark:border-gray-800">
+      <div className="flex h-[--header-height] min-w-0 shrink-0 items-center gap-x-4 border-b border-gray-200 px-4 dark:border-gray-800">
         <div className="flex min-w-0 flex-1 items-center justify-between gap-x-1.5">
           <Link href="/" className="flex min-w-0 flex-1 items-stretch gap-1.5">
-            <span className="relative inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px]">
+            <span className="relative inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[10px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={
                   "https://avatars.githubusercontent.com/u/23360933?s=200&v=4"
                 }
                 alt="logo"
-                className="h-5 w-5 rounded-full text-[10px]"
+                className="size-5 rounded-full text-[10px]"
               />
             </span>
 
@@ -214,19 +215,19 @@ export function Sidebar() {
         </div>
       </div>
       <div className="relative flex w-full flex-1 flex-col overflow-hidden">
-        <div className="flex min-h-0 flex-grow flex-col gap-y-2 py-2">
+        <div className="flex min-h-0 grow flex-col gap-y-2 py-2">
           <div className="flex w-full flex-col px-4">
             {/* <CommandDialogSearch> */}
             <Button
               type="button"
               aria-label="Search"
-              className="focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400 inline-flex h-8 flex-shrink-0 items-center gap-x-1.5 rounded-md bg-gray-50 px-2.5 py-1.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-100 focus:outline-none focus-visible:outline-0 focus-visible:ring-2 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:opacity-75 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-700 dark:hover:bg-gray-700/50 dark:disabled:bg-gray-800"
+              className="focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400 inline-flex h-8 shrink-0 items-center gap-x-1.5 rounded-md bg-gray-50 px-2.5 py-1.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-100 focus:outline-none focus-visible:outline-0 focus-visible:ring-2 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:opacity-75 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-700 dark:hover:bg-gray-700/50 dark:disabled:bg-gray-800"
             >
-              <SearchIcon className="h-5 w-5 flex-shrink-0" />
+              <SearchIcon className="size-5 shrink-0" />
               <span className="line-clamp-1 break-all text-left">
                 Search...
               </span>
-              <div className="-my-1 ml-auto hidden flex-shrink-0 items-center gap-0.5 lg:flex">
+              <div className="-my-1 ml-auto hidden shrink-0 items-center gap-0.5 lg:flex">
                 <kbd className="inline-flex h-5 min-w-[20px] items-center justify-center rounded bg-gray-100 px-1 font-sans text-[11px] font-medium text-gray-900 ring-1 ring-inset ring-gray-300 dark:bg-gray-800 dark:text-white dark:ring-gray-700">
                   ⌘
                 </kbd>
@@ -242,20 +243,20 @@ export function Sidebar() {
               {menus.map((menu) => RenderMenu(menu))}
             </ul>
           </nav>
-          <div className="flex flex-shrink-0 items-center justify-between gap-x-1.5 px-4">
+          <div className="flex shrink-0 items-center justify-between gap-x-1.5 px-4">
             <div className="relative inline-flex w-full text-left rtl:text-right">
               <Link
                 href="/"
                 className="flex items-center gap-x-4 px-6 py-3 text-sm font-semibold leading-6 text-gray-900 hover:bg-gray-50 dark:text-slate-50 dark:hover:bg-slate-800"
               >
-                <HomeIcon className="h-5 w-5" aria-hidden="true" />
+                <HomeIcon className="size-5" aria-hidden="true" />
                 返回前台
               </Link>
             </div>
           </div>
         </div>
       </div>
-      <div className="group absolute inset-y-0 -right-[5px] z-50 hidden h-full w-[9px] cursor-col-resize select-none bg-transparent md:block">
+      <div className="group absolute inset-y-0 right-[-5px] z-50 hidden h-full w-[9px] cursor-col-resize select-none bg-transparent md:block">
         <div className="absolute inset-x-0 mx-auto h-full w-px transition duration-200 group-hover:bg-gray-300 dark:group-hover:bg-gray-700" />
       </div>
     </div>

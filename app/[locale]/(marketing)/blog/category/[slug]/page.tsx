@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 
 import { BlogCard } from "@/components/content/blog-card";
 import { BLOG_CATEGORIES } from "@/config/blog";
-import { constructMetadata, getBlurDataURL } from "@/lib/utils";
+import { constructMetadata, getBlurDataURL, getMetadataBase } from "@/lib/utils";
 
 export async function generateStaticParams() {
   return BLOG_CATEGORIES.map((category) => ({
@@ -30,10 +30,13 @@ export async function generateMetadata({
 
   const { title, description } = category;
 
-  return constructMetadata({
-    title: `${title} Posts - ${t("LocaleLayout.title")}`,
-    description,
-  });
+  return {
+    ...constructMetadata({
+      title: `${title} Posts - ${t("LocaleLayout.title")}`,
+      description,
+    }),
+    metadataBase: getMetadataBase(),
+  };
 }
 
 export default async function BlogCategory({
@@ -70,7 +73,7 @@ export default async function BlogCategory({
   if (validPosts.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">No posts in this category</h1>
+        <h1 className="mb-4 text-2xl font-bold">No posts in this category</h1>
         <p>There are no blog posts available in this category for this language.</p>
       </div>
     );

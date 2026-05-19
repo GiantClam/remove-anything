@@ -2,6 +2,7 @@ import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { constructAlternates } from "@/lib/seo";
+import { getMetadataBase } from "@/lib/utils";
 
 const Sora2VideoWatermarkRemoval = dynamic(
   () => import("@/components/sora2-video-watermark-removal"),
@@ -17,6 +18,7 @@ export async function generateMetadata({ params: { locale } }: PageProps): Promi
   const t = await getTranslations({ locale, namespace: "Sora2VideoWatermarkRemovalPage" });
 
   return {
+    metadataBase: getMetadataBase(),
     title: t("title"),
     description: t("description"),
     keywords: t("keywords"),

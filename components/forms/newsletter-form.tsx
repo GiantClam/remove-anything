@@ -4,6 +4,7 @@ import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TiltedSendIcon } from "@/assets";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/gtag";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
@@ -42,12 +43,10 @@ export default function Newsletter({ subCount }: { subCount?: string }) {
         if (isSubmitting) return;
 
         // Track newsletter subscription with Google Analytics
-        if (typeof window !== "undefined" && (window as any).gtag) {
-          (window as any).gtag("event", "subscribe", {
-            event_category: "newsletter",
-            event_label: "Newsletter Subscribe",
-          });
-        }
+        trackEvent("subscribe", {
+          event_category: "newsletter",
+          event_label: "Newsletter Subscribe",
+        });
 
         const response = await fetch("/api/newsletter", {
           method: "POST",

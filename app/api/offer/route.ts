@@ -16,6 +16,10 @@ const ratelimit = new KVRateLimit(kv, {
   window: "5s"
 });
 const activityCode = "NEW_REGISTER_ACTIVITY";
+const eligibleChargeChannels = [
+  PaymentChannelType.Stripe,
+  PaymentChannelType.PayPal,
+] as const;
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -34,16 +38,18 @@ export async function GET() {
       userId,
     },
     select: {
-      id: true,
+      chargeOrderId: true,
     },
   });
-  const claimedIds = claimedOrderIds.map((row) => row.id);
+  const claimedIds = claimedOrderIds.map((row) => row.chargeOrderId);
 
   const charOrders = await prisma.chargeOrder.findMany({
     where: {
       phase: OrderPhase.Paid,
       userId,
-      channel: PaymentChannelType.Stripe,
+      channel: {
+        in: [...eligibleChargeChannels],
+      },
       paymentAt: {
         gte: targetDate,
         lte: oneMonthLater,
@@ -103,7 +109,9 @@ export async function POST(req: NextRequest) {
       where: {
         phase: OrderPhase.Paid,
         userId,
-        channel: PaymentChannelType.Stripe,
+        channel: {
+          in: [...eligibleChargeChannels],
+        },
         paymentAt: {
           gte: targetDate,
           lte: oneMonthLater,
