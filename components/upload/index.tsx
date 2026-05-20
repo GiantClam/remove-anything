@@ -60,6 +60,7 @@ interface FormUploadProps {
   accept?: Accept;
   maxSize?: number;
   maxFiles?: number;
+  storageMode?: "auto" | "local";
   defaultImg?: string;
   value?: UploadValue[];
   className?: string;
@@ -105,6 +106,7 @@ const FormUpload = (props: FormUploadProps) => {
     accept,
     maxSize = 10 * 1024 * 1024, // 10MB
     maxFiles = 10, // 默认最多10个文件
+    storageMode = "auto",
     multiple = false, // 默认单文件上传
     disabled,
     className,
@@ -151,8 +153,8 @@ const FormUpload = (props: FormUploadProps) => {
           onChange?.(newItems);
         }
 
-        // 如果用户已登录，使用STS上传到R2
-        if (isSignedIn) {
+        // auto 模式下，登录用户使用 STS 上传到 R2；local 模式始终只做本地处理
+        if (storageMode === "auto" && isSignedIn) {
           try {
             // 逐个文件获取 STS 并直传 PUT 到 R2
             const uploadResults = await Promise.all(
@@ -366,6 +368,7 @@ const FormUpload = (props: FormUploadProps) => {
           <BaseUpload
             className={className}
             onFileSelect={(file) => handleFileChange([file])}
+            onFilesSelect={handleFileChange}
             onFileRemove={() => {}}
             accept={convertAcceptToString(accept)}
             maxSize={maxSize}

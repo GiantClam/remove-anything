@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 interface BaseUploadProps {
   onFileSelect: (file: File) => void;
+  onFilesSelect?: (files: File[]) => void;
   onFileRemove: () => void;
   accept?: string;
   maxSize?: number;
@@ -22,6 +23,7 @@ interface BaseUploadProps {
 
 export function BaseUpload({
   onFileSelect,
+  onFilesSelect,
   onFileRemove,
   accept = "image/*",
   maxSize = 10 * 1024 * 1024, // 10MB
@@ -51,8 +53,24 @@ export function BaseUpload({
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       if (multiple) {
-        // 多文件模式：处理所有文件
-        Array.from(files).forEach(file => {
+        const validFiles = Array.from(files).filter((file) => {
+          if (file.size > maxSize) {
+            alert(t("fileSizeLimit", { size: maxSize / (1024 * 1024) }));
+            return false;
+          }
+          return true;
+        });
+
+        if (validFiles.length === 0) {
+          return;
+        }
+
+        if (onFilesSelect) {
+          onFilesSelect(validFiles);
+          return;
+        }
+
+        validFiles.forEach((file) => {
           handleFileSelect(file);
         });
       } else {
@@ -75,8 +93,24 @@ export function BaseUpload({
     const files = e.target.files;
     if (files && files.length > 0) {
       if (multiple) {
-        // 多文件模式：处理所有文件
-        Array.from(files).forEach(file => {
+        const validFiles = Array.from(files).filter((file) => {
+          if (file.size > maxSize) {
+            alert(t("fileSizeLimit", { size: maxSize / (1024 * 1024) }));
+            return false;
+          }
+          return true;
+        });
+
+        if (validFiles.length === 0) {
+          return;
+        }
+
+        if (onFilesSelect) {
+          onFilesSelect(validFiles);
+          return;
+        }
+
+        validFiles.forEach((file) => {
           handleFileSelect(file);
         });
       } else {

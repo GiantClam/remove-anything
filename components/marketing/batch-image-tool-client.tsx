@@ -62,6 +62,8 @@ type ProcessedImage = {
   outputHeight: number;
 };
 
+const BATCH_IMAGE_MAX_SIZE = 50 * 1024 * 1024;
+
 interface BatchImageToolClientProps {
   locale: string;
   variant: BatchImageToolVariant;
@@ -134,6 +136,21 @@ export default function BatchImageToolClient({
   }, []);
 
   const uploadedCount = uploadedImages.filter((image) => image.status === "uploaded").length;
+  const capabilityNotes = useMemo(
+    () =>
+      locale === "tw"
+        ? [
+            "最多 30 張圖片/次",
+            "直接在瀏覽器本地處理",
+            "不會先上傳到雲端儲存",
+          ]
+        : [
+            "Up to 30 images per run",
+            "Processed locally in your browser",
+            "No cloud storage upload before processing",
+          ],
+    [locale],
+  );
 
   const summary = useMemo(() => {
     const totalOriginal = processedImages.reduce(
@@ -313,7 +330,9 @@ export default function BatchImageToolClient({
           <CardContent className="space-y-4">
             <FormUpload
               multiple
+              maxSize={BATCH_IMAGE_MAX_SIZE}
               maxFiles={30}
+              storageMode="local"
               value={uploadedImages}
               onChange={setUploadedImages}
               placeholder={
@@ -330,9 +349,13 @@ export default function BatchImageToolClient({
                   {copy.processedCountLabel}: {uploadedCount}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Sparkles className="h-4 w-4" />
-                <span>{locale === "tw" ? "最多 30 张" : "Up to 30 images per run"}</span>
+              <div className="flex flex-wrap items-center justify-end gap-3 text-muted-foreground">
+                {capabilityNotes.map((note) => (
+                  <div className="flex items-center gap-2" key={note}>
+                    <Sparkles className="h-4 w-4" />
+                    <span>{note}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </CardContent>
