@@ -1,10 +1,12 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Eraser, Shield, Users, Image, Layers } from "lucide-react";
-import { Link } from "@/lib/navigation";
+import NextLink from "next/link";
 import { HeaderSection } from "@/components/shared/header-section";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
+import { buildLocalizedPath } from "@/lib/seo";
 
 export default async function QuickAccess() {
+  const locale = await getLocale();
   const t = await getTranslations({ namespace: "QuickAccess" });
 
   const features = [
@@ -78,12 +80,12 @@ export default async function QuickAccess() {
                   </p>
 
                   <div className="-mb-5 flex gap-3 border-t border-muted py-4 md:-mb-7">
-                    <Link
-                      href={feature.href}
+                    <NextLink
+                      href={buildLocalizedPath(locale, feature.href)}
                       className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
                     >
                       {t("useNow")} →
-                    </Link>
+                    </NextLink>
                   </div>
                 </div>
               </div>

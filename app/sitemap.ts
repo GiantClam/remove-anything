@@ -1,8 +1,8 @@
 import { MetadataRoute } from "next";
 import { allPosts } from "contentlayer/generated";
 
-import { defaultLocale, locales } from "@/config";
-import { env } from "@/env.mjs";
+import { locales } from "@/config";
+import { buildLocalizedUrl } from "@/lib/seo";
 
 type ChangeFrequency = "daily" | "weekly" | "monthly";
 
@@ -10,6 +10,7 @@ type StaticPage = {
   path: string;
   priority: number;
   changeFrequency: ChangeFrequency;
+  locales?: string[];
 };
 
 const staticMarketingPages: StaticPage[] = [
@@ -30,24 +31,44 @@ const staticMarketingPages: StaticPage[] = [
   { path: "/sora2-video-watermark-removal", priority: 0.7, changeFrequency: "weekly" },
   { path: "/pricing", priority: 0.7, changeFrequency: "weekly" },
   { path: "/blog", priority: 0.8, changeFrequency: "weekly" },
+  {
+    path: "/remove-bg-alternative",
+    priority: 0.72,
+    changeFrequency: "weekly",
+    locales: ["en"],
+  },
+  {
+    path: "/photoroom-alternative",
+    priority: 0.72,
+    changeFrequency: "weekly",
+    locales: ["en"],
+  },
+  {
+    path: "/pixelcut-alternative",
+    priority: 0.72,
+    changeFrequency: "weekly",
+    locales: ["en"],
+  },
+  {
+    path: "/remove-anything-vs-remove-bg",
+    priority: 0.74,
+    changeFrequency: "weekly",
+    locales: ["en"],
+  },
   { path: "/privacy-policy", priority: 0.3, changeFrequency: "monthly" },
   { path: "/terms-of-use", priority: 0.3, changeFrequency: "monthly" },
 ];
-
-function buildLocalizedUrl(locale: (typeof locales)[number], path: string) {
-  const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  const cleanPath = path === "/" ? "" : path;
-  return `${base}${locale === defaultLocale ? "" : `/${locale}`}${cleanPath}`;
-}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
   const now = new Date();
 
   for (const page of staticMarketingPages) {
-    for (const locale of locales) {
+    const pageLocales = page.locales ?? locales;
+
+    for (const locale of pageLocales) {
       entries.push({
-        url: buildLocalizedUrl(locale, page.path),
+        url: buildLocalizedUrl(locale as (typeof locales)[number], page.path),
         priority: page.priority,
         changeFrequency: page.changeFrequency,
         lastModified: now,
@@ -56,19 +77,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const blogPosts = allPosts
-    .filter((post) => post.published && post.language === defaultLocale && post.slug)
+    .filter((post) => post.published && post.slugAsParams)
     .sort((a, b) => b.date.localeCompare(a.date))
-    .map((post) => post.slug!.replace(`/${defaultLocale}`, ""));
+    .map((post) => {
+      const [locale, ...slugParts] = post.slugAsParams.split("/");
+      return {
+        locale,
+        path: `/blog/${slugParts.join("/")}`,
+      };
+    })
+    .filter(
+      (post): post is { locale: (typeof locales)[number]; path: string } =>
+        locales.includes(post.locale as (typeof locales)[number]) && post.path !== "/blog/",
+    );
 
-  for (const postPath of blogPosts) {
-    for (const locale of locales) {
-      entries.push({
-        url: buildLocalizedUrl(locale, postPath),
-        priority: 0.7,
-        changeFrequency: "monthly",
-        lastModified: now,
-      });
-    }
+  for (const post of blogPosts) {
+    entries.push({
+      url: buildLocalizedUrl(post.locale, post.path),
+      priority: 0.7,
+      changeFrequency: "monthly",
+      lastModified: now,
+    });
   }
 
   return entries;

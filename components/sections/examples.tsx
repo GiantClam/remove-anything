@@ -1,7 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { HeaderSection } from "@/components/shared/header-section";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { buildLocalizedPath } from "@/lib/seo";
 
 interface ExampleItem {
   id: string;
@@ -37,6 +38,7 @@ async function loadExamples(): Promise<ExampleItem[]> {
 }
 
 export default async function Examples() {
+  const locale = await getLocale();
   const t = await getTranslations({ namespace: "IndexPage" });
   const examples = await loadExamples();
 
@@ -143,7 +145,7 @@ export default async function Examples() {
             {t("examples.cta.description")}
           </p>
           <a
-            href="/remove-background"
+            href={buildLocalizedPath(locale, "/remove-background")}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {t("examples.cta.button")}

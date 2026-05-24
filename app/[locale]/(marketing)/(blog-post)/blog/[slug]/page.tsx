@@ -27,7 +27,11 @@ import {
   getBlurDataURL,
   placeholderBlurhash,
 } from "@/lib/utils";
-import { constructAlternates } from "@/lib/seo";
+import {
+  buildBreadcrumbListSchema,
+  buildLocalizedUrl,
+  constructAlternates,
+} from "@/lib/seo";
 
 export async function generateStaticParams() {
   return allPosts.map((post) => {
@@ -60,6 +64,16 @@ export async function generateMetadata({
   if (!post) {
     return;
   }
+  const availableLocales = Array.from(
+    new Set(
+      allPosts
+        .filter((candidate) => {
+          const [, ...slugParts] = candidate.slugAsParams.split("/");
+          return slugParts.join("/") === params.slug;
+        })
+        .map((candidate) => candidate.language || candidate.slugAsParams.split("/")[0]),
+    ),
+  );
   const t = await getTranslations({ locale: params.locale });
 
   const { title, description, image } = post;
@@ -73,7 +87,11 @@ export async function generateMetadata({
   return {
     ...metadata,
     metadataBase: getMetadataBase(),
-    alternates: constructAlternates({ locale: params.locale, path: `/blog/${params.slug}` }),
+    alternates: constructAlternates({
+      locale: params.locale,
+      path: `/blog/${params.slug}`,
+      availableLocales,
+    }),
   };
 }
 
@@ -103,6 +121,36 @@ export default async function PostPage({ params }: PageProps) {
     [];
 
   const toc = await getTableOfContents(post.body.raw);
+  const canonicalUrl = buildLocalizedUrl(params.locale, `/blog/${params.slug}`);
+  const breadcrumbSchema = buildBreadcrumbListSchema(params.locale, [
+    { name: params.locale === "tw" ? "首頁" : "Home", path: "/" },
+    { name: params.locale === "tw" ? "博客" : "Blog", path: "/blog" },
+    { name: post.title, path: `/blog/${params.slug}` },
+  ]);
+  const blogPostingSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    image: [post.image],
+    datePublished: post.date,
+    dateModified: post.date,
+    mainEntityOfPage: canonicalUrl,
+    url: canonicalUrl,
+    articleSection: category.title,
+    author: post.authors.map((author) => ({
+      "@type": "Person",
+      name: author,
+    })),
+    publisher: {
+      "@type": "Organization",
+      name: "Remove Anything",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://www.remove-anything.com/logo.png",
+      },
+    },
+  };
 
   const [thumbnailBlurhash, images] = await Promise.all([
     getBlurDataURL(post.image),
@@ -114,10 +162,18 @@ export default async function PostPage({ params }: PageProps) {
     ),
   ]);
 
-  console.log('post--->', post)
-
   return (
     <>
+      <script
+        id="blog-posting-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }}
+      />
+      <script
+        id="blog-breadcrumb-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <MaxWidthWrapper className="pt-6 md:pt-10">
         <div className="flex flex-col space-y-4">
           <div className="flex items-center space-x-4">

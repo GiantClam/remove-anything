@@ -22,6 +22,7 @@ import {
   shouldAutoOpenBackgroundPanel,
   type BackgroundToolVariant,
 } from '@/lib/background-tool-variants';
+import { buildLocalizedPath, buildLocalizedUrl } from '@/lib/seo';
 const SocialProofBar = dynamic(() => import('./social-proof-bar'), {
   ssr: false,
   loading: () => <div data-social-proof-placeholder></div>,
@@ -721,7 +722,7 @@ export default function MarketingRemoveBackground({
       if (currentTaskId) {
         sessionStorage.setItem('pendingDownloadTaskId', currentTaskId);
       }
-      window.location.href = `/${locale}/signin`;
+      window.location.href = buildLocalizedPath(locale, "/signin");
       return;
     }
 
@@ -948,7 +949,7 @@ export default function MarketingRemoveBackground({
       if (currentTaskId) params.set('id', currentTaskId);
       params.set('mode', mode);
 
-      const shareUrl = `${window.location.origin}/${locale}${toolCopy.path}?${params.toString()}`;
+      const shareUrl = `${buildLocalizedUrl(locale, toolCopy.path)}?${params.toString()}`;
       
       // 分享文案
       const shareText = `🎨 AI background removed in seconds — free.\n${shareUrl}`;
@@ -1024,7 +1025,7 @@ export default function MarketingRemoveBackground({
     params.set('after', processedImage);
     if (currentTaskId) params.set('id', currentTaskId);
     params.set('mode', mode);
-    const shareUrl = `${window.location.origin}/${locale}${toolCopy.path}?${params.toString()}`;
+    const shareUrl = `${buildLocalizedUrl(locale, toolCopy.path)}?${params.toString()}`;
     const shareText = `AI background removed in seconds — free.`;
 
     if (platform === 'instagram') {
@@ -1426,7 +1427,7 @@ export default function MarketingRemoveBackground({
                         params.set('after', processedImage);
                         if (currentTaskId) params.set('id', currentTaskId);
                         params.set('mode', mode);
-                        const shareUrl = `${window.location.origin}/${locale}${toolCopy.path}?${params.toString()}`;
+                        const shareUrl = `${buildLocalizedUrl(locale, toolCopy.path)}?${params.toString()}`;
                         navigator.clipboard.writeText(shareUrl);
                         toast.success('Share link copied');
                       } catch {

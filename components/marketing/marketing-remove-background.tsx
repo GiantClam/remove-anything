@@ -2,8 +2,12 @@ import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { AlertCircle, ArrowRight, CheckCircle, LogIn, Sparkles } from "lucide-react";
 
-import { env } from "@/env.mjs";
 import { Link } from "@/lib/navigation";
+import {
+  buildBreadcrumbListSchema,
+  buildLocalizedPath,
+  buildLocalizedUrl,
+} from "@/lib/seo";
 import {
   getBackgroundToolCopy,
   getRelatedBackgroundTools,
@@ -41,8 +45,7 @@ function MarketingRemoveBackgroundInteractiveSkeleton() {
 }
 
 function buildSchemas(locale: string, path: string, metadataTitle: string, metadataDescription: string, schemaCategory: string, faqItems: Array<{ question: string; answer: string }>) {
-  const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  const pageUrl = `${base}/${locale}${path}`;
+  const pageUrl = buildLocalizedUrl(locale, path);
   const [schemaName] = metadataTitle.split(" - ");
 
   return {
@@ -72,6 +75,10 @@ function buildSchemas(locale: string, path: string, metadataTitle: string, metad
         },
       })),
     },
+    breadcrumbSchema: buildBreadcrumbListSchema(locale, [
+      { name: locale === "tw" ? "首頁" : "Home", path: "/" },
+      { name: schemaName?.trim() || metadataTitle, path },
+    ]),
   };
 }
 
@@ -82,7 +89,7 @@ export default async function MarketingRemoveBackground({
   const tPage = await getTranslations({ locale, namespace: "RemoveBackgroundPage" });
   const toolCopy = getBackgroundToolCopy(locale, variant);
   const relatedTools = getRelatedBackgroundTools(locale, variant);
-  const { softwareSchema, faqSchema } = buildSchemas(
+  const { softwareSchema, faqSchema, breadcrumbSchema } = buildSchemas(
     locale,
     toolCopy.path,
     toolCopy.metadataTitle,
@@ -102,6 +109,11 @@ export default async function MarketingRemoveBackground({
         id={`${variant}-faq-structured-data`}
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        id={`${variant}-breadcrumb-structured-data`}
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
       <MarketingRemoveBackgroundClient locale={locale} variant={variant} />
@@ -252,14 +264,14 @@ export default async function MarketingRemoveBackground({
         <CardContent>
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Button asChild size="lg" className="flex items-center gap-2">
-              <Link href={`/${locale}/signin`}>
+              <Link href={buildLocalizedPath(locale, "/signin")}>
                 <LogIn className="size-4" />
                 {tPage("getStartedFree")}
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href={`/${locale}/pricing`}>
+              <Link href={buildLocalizedPath(locale, "/pricing")}>
                 {tPage("viewPricing")}
               </Link>
             </Button>

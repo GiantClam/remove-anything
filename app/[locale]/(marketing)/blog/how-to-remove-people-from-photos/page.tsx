@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Eraser, ArrowLeft } from "lucide-react";
 import { Link } from "@/lib/navigation";
 import { getMetadataBase } from "@/lib/utils";
+import { buildLocalizedPath } from "@/lib/seo";
 
 interface PageProps {
   params: { locale: string };
@@ -26,7 +27,7 @@ export default async function HowToRemovePeoplePage({
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12">
       <div className="mb-8">
-        <Link href={`/${locale}/blog`}>
+        <Link href={buildLocalizedPath(locale, "/blog")}>
           <Button variant="ghost" className="gap-2">
             <ArrowLeft className="size-4" />
             返回博客

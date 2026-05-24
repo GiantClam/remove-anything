@@ -56,6 +56,7 @@ const nextIntlMiddleware = createMiddleware({
   defaultLocale,
   locales,
   localePrefix,
+  alternateLinks: false,
 });
 
 export default withAuth(

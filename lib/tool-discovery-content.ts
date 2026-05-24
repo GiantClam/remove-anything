@@ -162,6 +162,15 @@ export function getToolDiscoveryContent(locale: string): ToolDiscoveryContent {
               { href: "/batch-image-format-converter", title: "Batch Image Format Converter" },
             ],
           },
+          {
+            title: "Compare tools",
+            links: [
+              { href: "/remove-bg-alternative", title: "remove.bg Alternative" },
+              { href: "/photoroom-alternative", title: "Photoroom Alternative" },
+              { href: "/pixelcut-alternative", title: "Pixelcut Alternative" },
+              { href: "/remove-anything-vs-remove-bg", title: "Remove Anything vs remove.bg" },
+            ],
+          },
         ],
       };
 }

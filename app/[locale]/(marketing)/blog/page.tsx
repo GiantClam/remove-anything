@@ -4,8 +4,6 @@ import { Metadata } from "next";
 
 import { BlogPosts } from "@/components/content/blog-posts";
 import { getBlurDataURL, getMetadataBase } from "@/lib/utils";
-import { locales, defaultLocale } from "@/config";
-import { env } from "@/env.mjs";
 import { constructAlternates } from "@/lib/seo";
 
 interface PageProps {

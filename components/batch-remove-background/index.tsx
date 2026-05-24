@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { buildLocalizedUrl } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -513,7 +514,7 @@ export default function BatchRemoveBackground({
                                       params.set('id', result.replicateId || result.id);
                                       params.set('mode', mode);
                                       if (result.originalImageUrl) params.set('before', result.originalImageUrl);
-                                      const url = `${window.location.origin}/${locale}/batch-remove-background?${params.toString()}`;
+                                      const url = `${buildLocalizedUrl(locale, "/batch-remove-background")}?${params.toString()}`;
                                       navigator.clipboard.writeText(url);
                                       toast.success('Share link copied');
                                     } catch {

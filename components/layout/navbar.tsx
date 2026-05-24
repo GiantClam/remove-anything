@@ -1,8 +1,9 @@
 "use client";
 import { useSelectedLayoutSegment } from "next/navigation";
 import dynamic from "next/dynamic";
+import NextLink from "next/link";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Icons } from "@/components/shared/icons";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
@@ -18,7 +19,8 @@ import { dashboardConfig } from "@/config/dashboard";
 import { docsConfig } from "@/config/docs";
 import { marketingConfig, marketingToolGroups } from "@/config/marketing";
 import { useScroll } from "@/hooks/use-scroll";
-import { Link, usePathname } from "@/lib/navigation";
+import { buildLocalizedPath } from "@/lib/seo";
+import { usePathname } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 const UserInfo = dynamic(
@@ -36,6 +38,7 @@ interface NavBarProps {
 
 export function NavbarLogo(props: { size?: "sm" | "md" | "lg" | "xl" }) {
   const t = useTranslations("Navigation");
+  const locale = useLocale();
   const { size = "xl" } = props;
   const textSizeClass =
     {
@@ -46,12 +49,12 @@ export function NavbarLogo(props: { size?: "sm" | "md" | "lg" | "xl" }) {
     }[size] ?? "md:text-xl";
 
   return (
-    <Link href="/" className="flex items-center space-x-2">
+    <NextLink href={buildLocalizedPath(locale, "/")} className="flex items-center space-x-2">
       <Icons.logo className="hidden size-6 md:block" />
       <span className={cn("font-urban text-xs font-bold", textSizeClass)}>
         {t("title")}
       </span>
-    </Link>
+    </NextLink>
   );
 }
 
@@ -66,6 +69,7 @@ export function NavbarUserInfo() {
 export function NavBar({ scroll = false }: NavBarProps) {
   const scrolled = useScroll(50);
   const t = useTranslations("Navigation");
+  const locale = useLocale();
   const selectedLayout = useSelectedLayoutSegment();
   const pathname = usePathname();
   const dashBoard = selectedLayout === "app";
@@ -81,6 +85,8 @@ export function NavBar({ scroll = false }: NavBarProps) {
     group.items.map((item) => item.href),
   );
   const toolsActive = toolHrefs.some((href) => pathname === href);
+  const localizeHref = (href: string) =>
+    href.startsWith("/") ? buildLocalizedPath(locale, href) : href;
 
   return (
     <header
@@ -98,9 +104,9 @@ export function NavBar({ scroll = false }: NavBarProps) {
           {links && links.length > 0 ? (
             <nav className="hidden gap-6 md:flex">
               {links.map((item, index) => (
-                <Link
+                <NextLink
                   key={index}
-                  href={item.disabled ? "#" : item.href}
+                  href={item.disabled ? "#" : localizeHref(item.href)}
                   prefetch={true}
                   className={cn(
                     "flex items-center text-lg font-medium transition-colors hover:text-foreground/80 sm:text-sm",
@@ -112,7 +118,7 @@ export function NavBar({ scroll = false }: NavBarProps) {
                   )}
                 >
                   {t(item.title)}
-                </Link>
+                </NextLink>
               ))}
               {isMarketing ? (
                 <NavigationMenu>
@@ -136,8 +142,8 @@ export function NavBar({ scroll = false }: NavBarProps) {
                               <div className="space-y-1">
                                 {group.items.map((item) => (
                                   <NavigationMenuLink key={item.href} asChild>
-                                    <Link
-                                      href={item.href}
+                                    <NextLink
+                                      href={localizeHref(item.href)}
                                       className={cn(
                                         "block rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
                                         pathname === item.href
@@ -146,7 +152,7 @@ export function NavBar({ scroll = false }: NavBarProps) {
                                       )}
                                     >
                                       {t(item.title)}
-                                    </Link>
+                                    </NextLink>
                                   </NavigationMenuLink>
                                 ))}
                               </div>

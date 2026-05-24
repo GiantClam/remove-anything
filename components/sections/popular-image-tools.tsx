@@ -1,9 +1,10 @@
 "use client";
 
-import { Link } from "@/lib/navigation";
+import NextLink from "next/link";
 import { HeaderSection } from "@/components/shared/header-section";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
 import { trackEvent } from "@/lib/gtag";
+import { buildLocalizedPath } from "@/lib/seo";
 import { getToolDiscoveryContent } from "@/lib/tool-discovery-content";
 
 interface PopularImageToolsProps {
@@ -26,9 +27,9 @@ export default function PopularImageTools({
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {content.featuredTools.map((tool) => (
-            <Link
+            <NextLink
               key={tool.href}
-              href={tool.href}
+              href={buildLocalizedPath(locale, tool.href)}
               className="group rounded-3xl border bg-background p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
               onClick={() =>
                 trackEvent("homepage_tool_card_clicked", {
@@ -47,7 +48,7 @@ export default function PopularImageTools({
               <div className="mt-5 text-sm font-medium text-primary transition-colors group-hover:text-primary/80">
                 {locale === "tw" ? "立即使用" : "Open tool"} →
               </div>
-            </Link>
+            </NextLink>
           ))}
         </div>
       </MaxWidthWrapper>

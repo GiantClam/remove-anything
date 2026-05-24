@@ -1,9 +1,10 @@
 import * as React from "react";
+import NextLink from "next/link";
 
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { ModeToggle } from "@/components/layout/mode-toggle";
-import { Link } from "@/lib/navigation";
+import { buildLocalizedPath } from "@/lib/seo";
 import { getToolDiscoveryContent } from "@/lib/tool-discovery-content";
 import { cn } from "@/lib/utils";
 
@@ -35,15 +36,15 @@ export async function SiteFooter({ className }: React.HTMLAttributes<HTMLElement
                 <p className="mb-2 text-sm font-medium">{group.title}</p>
                 <div className="flex flex-wrap items-center justify-center gap-4 md:justify-start">
                   {group.links.map((link) => (
-                    <Link
+                    <NextLink
                       key={link.href}
-                      href={link.href}
+                      href={buildLocalizedPath(locale, link.href)}
                       className="underline-offset-4 hover:underline"
                       prefetch={false}
                       title={link.title}
                     >
                       {link.title}
-                    </Link>
+                    </NextLink>
                   ))}
                 </div>
               </div>
@@ -51,60 +52,59 @@ export async function SiteFooter({ className }: React.HTMLAttributes<HTMLElement
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/remove-background"
+          <NextLink
+            href={buildLocalizedPath(locale, "/remove-background")}
             className="underline-offset-4 hover:underline"
             prefetch={false}
             title={quickAccess("backgroundRemoval.title")}
           >
             {quickAccess("backgroundRemoval.title")}
-          </Link>
-          <Link
-            href="/remove-objects"
+          </NextLink>
+          <NextLink
+            href={buildLocalizedPath(locale, "/remove-objects")}
             className="underline-offset-4 hover:underline"
             prefetch={false}
             title={quickAccess("objectRemoval.title")}
           >
             {quickAccess("objectRemoval.title")}
-          </Link>
-          <Link
-            href="/remove-watermark"
+          </NextLink>
+          <NextLink
+            href={buildLocalizedPath(locale, "/remove-watermark")}
             className="underline-offset-4 hover:underline"
             prefetch={false}
             title={quickAccess("watermarkRemoval.title")}
           >
             {quickAccess("watermarkRemoval.title")}
-          </Link>
-          <Link
-            href="/terms-of-use"
+          </NextLink>
+          <NextLink
+            href={buildLocalizedPath(locale, "/terms-of-use")}
             className="underline-offset-4 hover:underline"
             prefetch={false}
             title={t("footer.term")}
           >
             {t("footer.term")}
-          </Link>
-          <Link
-            href="/privacy-policy"
+          </NextLink>
+          <NextLink
+            href={buildLocalizedPath(locale, "/privacy-policy")}
             className="underline-offset-4 hover:underline"
             prefetch={false}
             title={t("footer.privacy")}
           >
             {t("footer.privacy")}
-          </Link>
-          <Link
+          </NextLink>
+          <a
             href="mailto:support@remove-anything.com"
             className="underline-offset-4 hover:underline"
-            prefetch={false}
             title={t("footer.contact")}
           >
             {t("footer.contact")}
-          </Link>
+          </a>
           <ModeToggle />
         </div>
       </div>
       <div className="mt-4 flex max-w-7xl flex-col items-center justify-between gap-4 text-sm md:flex-row">
         <div className="flex items-center gap-2">
-          <Icons.logo className="h-6 w-6" />
+          <Icons.logo className="size-6" />
                       <span className="font-medium">Remove Anything Inc.</span>
         </div>
       </div>

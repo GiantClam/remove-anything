@@ -9,6 +9,7 @@ import { debounce } from "lodash-es";
 import { Copy, Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { buildLocalizedUrl } from "@/lib/seo";
 
 import BlurFade from "@/components/magicui/blur-fade";
 import { PrivateSwitch } from "@/components/playground/private-switch";
@@ -420,7 +421,7 @@ export default function Playground({
                           params.set('after', taskData.imageUrl || '');
                           params.set('id', taskId || taskData.id || '');
                           params.set('mode', mode);
-                          const shareUrl = `${window.location.origin}/${locale}/remove-background?${params.toString()}`;
+                          const shareUrl = `${buildLocalizedUrl(locale, "/remove-background")}?${params.toString()}`;
                           navigator.clipboard.writeText(shareUrl);
                           toast.success('Share link copied');
                         } catch {

@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Clock, Bell, ArrowRight } from "lucide-react";
 import { Link } from "@/lib/navigation";
-import { constructAlternates } from "@/lib/seo";
+import { buildLocalizedPath, constructAlternates } from "@/lib/seo";
 import { getMetadataBase } from "@/lib/utils";
 
 interface PageProps {
@@ -53,7 +53,7 @@ export default async function RemoveObjectsPage({
             <Clock className="size-5" />
             {t("hero.startButton")}
           </Button>
-          <Link href={`/${locale}/pricing`}>
+          <Link href={buildLocalizedPath(locale, "/pricing")}>
             <Button variant="outline" size="lg">
               {t("hero.pricingButton")}
             </Button>

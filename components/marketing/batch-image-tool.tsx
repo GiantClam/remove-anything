@@ -2,12 +2,15 @@ import dynamic from "next/dynamic";
 
 import { Link } from "@/lib/navigation";
 import {
+  buildBreadcrumbListSchema,
+  buildLocalizedUrl,
+} from "@/lib/seo";
+import {
   BatchImageToolCopy,
   BatchImageToolVariant,
   getBatchImageToolCopy,
   getRelatedBatchImageTools,
 } from "@/lib/batch-image-tool-variants";
-import { env } from "@/env.mjs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,8 +73,7 @@ function BatchImageToolInteractiveSkeleton() {
 }
 
 function buildSchemas(copy: BatchImageToolCopy, locale: string) {
-  const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  const pageUrl = `${base}/${locale}${copy.path}`;
+  const pageUrl = buildLocalizedUrl(locale, copy.path);
   const [schemaName] = copy.metadataTitle.split(" - ");
   const softwareSchema = {
     "@context": "https://schema.org",
@@ -99,8 +101,12 @@ function buildSchemas(copy: BatchImageToolCopy, locale: string) {
       },
     })),
   };
+  const breadcrumbSchema = buildBreadcrumbListSchema(locale, [
+    { name: locale === "tw" ? "首頁" : "Home", path: "/" },
+    { name: schemaName?.trim() || copy.heroTitle, path: copy.path },
+  ]);
 
-  return { softwareSchema, faqSchema };
+  return { softwareSchema, faqSchema, breadcrumbSchema };
 }
 
 export default function BatchImageTool({
@@ -109,7 +115,7 @@ export default function BatchImageTool({
 }: BatchImageToolProps) {
   const copy = getBatchImageToolCopy(locale, variant);
   const relatedTools = getRelatedBatchImageTools(locale, variant);
-  const { softwareSchema, faqSchema } = buildSchemas(copy, locale);
+  const { softwareSchema, faqSchema, breadcrumbSchema } = buildSchemas(copy, locale);
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-10 md:px-6">
@@ -120,6 +126,10 @@ export default function BatchImageTool({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <div className="mx-auto max-w-3xl text-center">
         <Badge variant="secondary" className="mb-4">

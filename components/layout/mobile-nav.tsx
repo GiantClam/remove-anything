@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import { useSelectedLayoutSegment } from "next/navigation";
 import dynamic from "next/dynamic";
+import NextLink from "next/link";
 
 import { Menu, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Icons } from "@/components/shared/icons";
 import { dashboardConfig } from "@/config/dashboard";
 import { docsConfig } from "@/config/docs";
 import { marketingConfig, marketingToolGroups } from "@/config/marketing";
 import { siteConfig } from "@/config/site";
-import { Link } from "@/lib/navigation";
+import { buildLocalizedPath } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 import { ModeToggle } from "./mode-toggle";
@@ -27,6 +28,7 @@ const UserInfo = dynamic(
 
 export function NavMobile() {
   const t = useTranslations("Navigation");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const selectedLayout = useSelectedLayoutSegment();
   const dashBoard = selectedLayout === "app";
@@ -37,6 +39,8 @@ export function NavMobile() {
       : dashBoard
       ? dashboardConfig.mainNav
       : marketingConfig.mainNav;
+  const localizeHref = (href: string) =>
+    href.startsWith("/") ? buildLocalizedPath(locale, href) : href;
 
   // prevent body scroll when modal is open
   useEffect(() => {
@@ -72,13 +76,13 @@ export function NavMobile() {
         <ul className="grid divide-y divide-muted">
           {links.map(({ title, href }) => (
             <li key={href} className="py-3">
-              <Link
-                href={href}
+              <NextLink
+                href={localizeHref(href)}
                 onClick={() => setOpen(false)}
                 className="flex w-full font-medium capitalize"
               >
                 {t(title)}
-              </Link>
+              </NextLink>
             </li>
           ))}
 
@@ -95,14 +99,14 @@ export function NavMobile() {
                     </p>
                     <div className="grid gap-2 pl-3">
                       {group.items.map((item) => (
-                        <Link
+                        <NextLink
                           key={item.href}
-                          href={item.href}
+                          href={localizeHref(item.href)}
                           onClick={() => setOpen(false)}
                           className="text-sm text-foreground/80"
                         >
                           {t(item.title)}
-                        </Link>
+                        </NextLink>
                       ))}
                     </div>
                   </div>
@@ -115,10 +119,10 @@ export function NavMobile() {
         </ul>
 
         <div className="mt-5 flex items-center justify-end space-x-4">
-          <Link href={siteConfig.links.github} target="_blank" rel="noreferrer">
+          <NextLink href={siteConfig.links.github} target="_blank" rel="noreferrer">
             <Icons.gitHub className="size-6" />
             <span className="sr-only">GitHub</span>
-          </Link>
+          </NextLink>
           <ModeToggle />
         </div>
       </nav>
