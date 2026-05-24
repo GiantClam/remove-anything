@@ -4,7 +4,7 @@ import NextLink from "next/link";
 
 import { HeaderSection } from "@/components/shared/header-section";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
-import { alternativePages } from "@/lib/alternative-pages";
+import { getAlternativePage } from "@/lib/alternative-pages";
 import { buildLocalizedPath } from "@/lib/seo";
 
 const compareVariants = [
@@ -17,22 +17,32 @@ const compareVariants = [
 export default async function CompareTools() {
   const locale = await getLocale();
 
-  if (locale !== "en") {
+  if (locale !== "en" && locale !== "tw") {
     return null;
   }
+
+  const isTw = locale === "tw";
 
   return (
     <section className="py-6">
       <MaxWidthWrapper>
         <HeaderSection
-          label="Competitor comparisons"
-          title="See how Remove Anything stacks up against popular alternatives"
-          subtitle="These pages answer high-intent comparison queries and help buyers understand where Remove Anything fits best."
+          label={isTw ? "競品比較" : "Competitor comparisons"}
+          title={
+            isTw
+              ? "看看 Remove Anything 與熱門替代方案相比如何"
+              : "See how Remove Anything stacks up against popular alternatives"
+          }
+          subtitle={
+            isTw
+              ? "這些頁面聚焦高意圖 comparison 搜尋，幫助使用者快速判斷 Remove Anything 是否更適合自己的工作流。"
+              : "These pages answer high-intent comparison queries and help buyers understand where Remove Anything fits best."
+          }
         />
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {compareVariants.map((variant) => {
-            const page = alternativePages[variant];
+            const page = getAlternativePage(variant, locale);
 
             return (
               <NextLink
@@ -51,7 +61,7 @@ export default async function CompareTools() {
                   {page.metadataDescription}
                 </p>
                 <div className="mt-5 text-sm font-medium text-primary transition-colors group-hover:text-primary/80">
-                  Compare now →
+                  {isTw ? "立即比較 →" : "Compare now →"}
                 </div>
               </NextLink>
             );

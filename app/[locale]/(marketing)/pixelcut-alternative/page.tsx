@@ -4,7 +4,11 @@ import { unstable_setRequestLocale } from "next-intl/server";
 
 import AlternativeLanding from "@/components/marketing/alternative-landing";
 import { defaultLocale } from "@/config";
-import { getAlternativePage } from "@/lib/alternative-pages";
+import {
+  alternativePageLocales,
+  getAlternativePage,
+  type AlternativePageLocale,
+} from "@/lib/alternative-pages";
 import { constructAlternates } from "@/lib/seo";
 import { getMetadataBase } from "@/lib/utils";
 
@@ -15,7 +19,15 @@ interface PageProps {
 export async function generateMetadata({
   params: { locale },
 }: PageProps): Promise<Metadata> {
-  const page = getAlternativePage("pixelcut-alternative");
+  const resolvedLocale = alternativePageLocales.includes(
+    locale as AlternativePageLocale,
+  )
+    ? (locale as AlternativePageLocale)
+    : defaultLocale;
+  const page = getAlternativePage(
+    "pixelcut-alternative",
+    resolvedLocale,
+  );
 
   return {
     metadataBase: getMetadataBase(),
@@ -23,9 +35,9 @@ export async function generateMetadata({
     description: page.metadataDescription,
     keywords: page.metadataKeywords,
     alternates: constructAlternates({
-      locale: defaultLocale,
+      locale: resolvedLocale,
       path: page.path,
-      availableLocales: [defaultLocale],
+      availableLocales: [...alternativePageLocales],
     }),
     openGraph: {
       title: page.metadataTitle,
@@ -38,7 +50,7 @@ export async function generateMetadata({
 export default function PixelcutAlternativePage({
   params: { locale },
 }: PageProps) {
-  if (locale !== defaultLocale) {
+  if (!alternativePageLocales.includes(locale as AlternativePageLocale)) {
     notFound();
   }
 

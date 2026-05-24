@@ -134,6 +134,15 @@ export function getToolDiscoveryContent(locale: string): ToolDiscoveryContent {
               { href: "/batch-image-format-converter", title: "批量格式转换" },
             ],
           },
+          {
+            title: "比較工具",
+            links: [
+              { href: "/remove-bg-alternative", title: "remove.bg 替代方案" },
+              { href: "/photoroom-alternative", title: "Photoroom 替代方案" },
+              { href: "/pixelcut-alternative", title: "Pixelcut 替代方案" },
+              { href: "/remove-anything-vs-remove-bg", title: "Remove Anything vs remove.bg" },
+            ],
+          },
         ],
       }
     : {

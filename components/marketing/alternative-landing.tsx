@@ -1,6 +1,10 @@
 import { CheckCircle2, ArrowRight } from "lucide-react";
 
-import { getAlternativePage, type AlternativePageVariant } from "@/lib/alternative-pages";
+import {
+  getAlternativePage,
+  type AlternativePageLocale,
+  type AlternativePageVariant,
+} from "@/lib/alternative-pages";
 import {
   buildBreadcrumbListSchema,
   buildLocalizedPath,
@@ -26,7 +30,7 @@ interface AlternativeLandingProps {
 }
 
 function buildSchemas(locale: string, variant: AlternativePageVariant) {
-  const page = getAlternativePage(variant);
+  const page = getAlternativePage(variant, locale as AlternativePageLocale);
 
   return {
     faqSchema: {
@@ -59,7 +63,7 @@ export default function AlternativeLanding({
   locale,
   variant,
 }: AlternativeLandingProps) {
-  const page = getAlternativePage(variant);
+  const page = getAlternativePage(variant, locale as AlternativePageLocale);
   const { faqSchema, breadcrumbSchema, webPageSchema } = buildSchemas(
     locale,
     variant,
