@@ -46,7 +46,7 @@ export default function PopularImageTools({
                 {tool.description}
               </p>
               <div className="mt-5 text-sm font-medium text-primary transition-colors group-hover:text-primary/80">
-                {locale === "tw" ? "立即使用" : "Open tool"} →
+                {locale === "zh-tw" ? "立即使用" : "Open tool"} →
               </div>
             </NextLink>
           ))}

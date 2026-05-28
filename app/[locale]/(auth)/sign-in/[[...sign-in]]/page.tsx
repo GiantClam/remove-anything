@@ -17,7 +17,7 @@ export function generateStaticParams() {
     { locale: 'de' },
     { locale: 'pt' },
     { locale: 'ar' },
-    { locale: 'tw' },
+    { locale: 'zh-tw' },
   ];
 }
 

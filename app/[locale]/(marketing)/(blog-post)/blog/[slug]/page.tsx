@@ -35,7 +35,7 @@ import {
 
 export async function generateStaticParams() {
   return allPosts.map((post) => {
-    // post.slugAsParams is like "en/ai-background-removal-guide" or "tw/ai-background-removal-guide"
+    // post.slugAsParams is like "en/ai-background-removal-guide" or "zh-tw/ai-background-removal-guide"
     const parts = post.slugAsParams.split('/');
     if (parts.length === 2) {
       return {
@@ -123,8 +123,8 @@ export default async function PostPage({ params }: PageProps) {
   const toc = await getTableOfContents(post.body.raw);
   const canonicalUrl = buildLocalizedUrl(params.locale, `/blog/${params.slug}`);
   const breadcrumbSchema = buildBreadcrumbListSchema(params.locale, [
-    { name: params.locale === "tw" ? "首頁" : "Home", path: "/" },
-    { name: params.locale === "tw" ? "博客" : "Blog", path: "/blog" },
+    { name: params.locale === "zh-tw" ? "首頁" : "Home", path: "/" },
+    { name: params.locale === "zh-tw" ? "博客" : "Blog", path: "/blog" },
     { name: post.title, path: `/blog/${params.slug}` },
   ]);
   const blogPostingSchema = {

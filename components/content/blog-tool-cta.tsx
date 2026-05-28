@@ -26,7 +26,7 @@ export function BlogToolCta({
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-muted-foreground">
-            {locale === "tw" ? "相关工具" : "Recommended tool"}
+            {locale === "zh-tw" ? "相关工具" : "Recommended tool"}
           </p>
           <h3 className="mt-2 text-xl font-semibold">{title}</h3>
           {description ? (
@@ -44,7 +44,7 @@ export function BlogToolCta({
               })
             }
           >
-            {locale === "tw" ? "打开这个工具" : "Open this tool"}
+            {locale === "zh-tw" ? "打开这个工具" : "Open this tool"}
             <ArrowRight className="size-4" />
           </Link>
         </div>

@@ -19,11 +19,11 @@
   },
 
   "IndexPage": {
-    "intro": "🎉 All-in-One AI Image Eraser",
-    "description": "More than background removal - your all-in-one AI image eraser! AI-powered, just paint to precisely remove people, objects, text, and blemishes from images. Batch processing ensures no image is lost, permanent storage preserves your work. HD quality, no watermarks, completely free download.",
-    "title": "Free AI Eraser - Remove Anything from Photos in 3 Steps",
-    "subtitle": "Upload, Paint, Download - Three Steps to Remove Everything Unwanted from Photos",
-    "seeOthers": "See others' removal results",
+    "intro": "AI image eraser for cleanup workflows",
+    "description": "Remove unwanted objects, backgrounds, and watermarks from images with one AI workspace built for clean exports, transparent PNGs, and batch-ready follow-up tools.",
+    "title": "Remove Unwanted Elements from Photos with AI",
+    "subtitle": "Start with one image, clean it up fast, and export a result you can actually use.",
+    "seeOthers": "See before and after examples",
     "examples": {
       "label": "Example",
       "title": "Background Removal Examples",
@@ -37,6 +37,11 @@
       "todayRemoved": "Removed today",
       "objects": "objects",
       "marquee": "One‑click removal · Image in 3s · Completely free"
+    },
+    "trust": {
+      "firstTry": "No signup required for your first try",
+      "hdExport": "HD export and transparent PNG workflow",
+      "batchReady": "Batch tools available for follow-up cleanup"
     },
     "features": {
       "title": "Why Choose Our All-in-One Image Eraser?",
@@ -154,6 +159,8 @@
       }
     },
     "action": {
+      "uploadImage": "Upload an Image",
+      "tryDemo": "Try a Demo Image",
       "pricing": "Buy Credits",
       "login": "Login",
       "dashboard": "Dashboard",
@@ -375,8 +382,8 @@
     }
   },
   "RemoveBackgroundPage": {
-    "title": "AI Background Remover – Fast, Accurate, Free",
-    "description": "Remove image backgrounds in seconds with AI. Automatic subject detection, hair‑level edges, batch processing and professional quality — completely free with permanent storage.",
+    "title": "Free AI Background Remover for Transparent PNGs | Remove Anything",
+    "description": "Remove photo backgrounds with AI and export clean transparent PNGs. Ideal for product photos, portraits, and fast image cleanup workflows.",
     "processing": "Processing...",
     "chooseImage": "Choose Image",
     "dragDropText": "Drag and drop or click to upload",
@@ -469,13 +476,13 @@
     "getStartedText": "Upload images and click \"Remove Backgrounds\" to get started."
   },
   "LocaleLayout": {
-    "title": "Free AI Object & Background Remover | Remove Anything",
-    "description": "Remove unwanted objects, backgrounds, and watermarks from photos in 3 seconds using AI. Free online tool with batch processing and permanent storage. No signup required.",
-    "keywords": "AI background remover, free object removal, online photo editor, remove background, watermark removal, batch processing"
+    "title": "AI Tool to Remove Objects, Backgrounds, and Watermarks | Remove Anything",
+    "description": "Clean up product photos, portraits, and marketing images with AI-powered background removal, object cleanup, watermark removal, and export-ready image tools.",
+    "keywords": "AI image eraser, background remover, object remover, watermark remover, transparent PNG maker, batch image tools"
   },
   "LocaleSwitcher": {
     "label": "Change language",
-    "locale": "{locale, select, tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
+    "locale": "{locale, select, zh-tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
   },
   "Manifest": {
     "name": "Remove Anything - Object & Background Remover"
@@ -527,9 +534,11 @@
   "PageLayout": {
     "footer": {
       "title": "Remove Anything",
+      "about": "About",
       "term": "Terms",
       "privacy": "Privacy",
-      "contact": "Contact"
+      "contact": "Contact",
+      "support": "Support"
     },
     "links": {
       "docs": {
@@ -546,7 +555,15 @@
   },
   "BlogPage": {
     "title": "Blog",
-    "description": "The latest news and updates from Our"
+    "description": "Guides, comparisons, and workflow tips for AI image cleanup and background editing."
+  },
+  "AboutPage": {
+    "title": "About Remove Anything",
+    "description": "Learn what Remove Anything is built for, who it helps, and how the product fits modern image cleanup workflows."
+  },
+  "ContactPage": {
+    "title": "Contact Remove Anything",
+    "description": "Get in touch about support, billing questions, feedback, or partnership opportunities."
   },
   "RemoveObjectsPage": {
     "title": "Coming Soon - Smart Object Removal Tool - Remove Anything",
@@ -610,8 +627,8 @@
     }
   },
   "RemoveWatermarkPage": {
-    "title": "Professional Watermark Removal Tool - Remove Anything",
-    "description": "Use AI technology to intelligently identify and remove watermarks, text marks, and identifiers from images. Protect your work and make images more professional and beautiful.",
+    "title": "AI Watermark Remover for Owned or Licensed Images | Remove Anything",
+    "description": "Remove watermarks, text marks, and overlays from images you own or are authorized to edit. Built for legitimate cleanup and professional asset preparation.",
     "keywords": "watermark removal, text removal, image cleaning, watermark removal tool, text removal tool, image editing, AI image processing, online tool",
     "hero": {
       "title": "Professional Watermark Removal Tool",

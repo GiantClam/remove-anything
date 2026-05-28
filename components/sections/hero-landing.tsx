@@ -11,6 +11,8 @@ import AnimatedGradientText from "../magicui/animated-gradient-text";
 export default async function HeroLanding() {
   const locale = await getLocale();
   const t = await getTranslations({ namespace: "IndexPage" });
+  const uploadHref = buildLocalizedPath(locale, "/remove-background");
+  const demoHref = `${uploadHref}?sample=portrait`;
 
   return (
     <section className="space-y-6 py-12 sm:py-20 lg:py-20">
@@ -46,21 +48,7 @@ export default async function HeroLanding() {
           style={{ animationDelay: "0.4s", animationFillMode: "forwards" }}
         >
           <NextLink
-            href={buildLocalizedPath(locale, "/pricing")}
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                size: "lg",
-              }),
-              "min-w-34 rounded-full px-5",
-            )}
-          >
-            <p>{t("action.pricing")}</p>
-            <Icons.arrowRight className="ml-2 size-4" />
-          </NextLink>
-          {/* 添加"看看别人移除效果"按钮，锚点到瀑布流 */}
-          <a
-            href="#examples-gallery"
+            href={uploadHref}
             className={cn(
               buttonVariants({
                 variant: "default",
@@ -69,9 +57,33 @@ export default async function HeroLanding() {
               "min-w-34 rounded-full px-5",
             )}
           >
-            <p>{t("seeOthers")}</p>
+            <p>{t("action.uploadImage")}</p>
             <Icons.arrowRight className="ml-2 size-4" />
-          </a>
+          </NextLink>
+          <NextLink
+            href={demoHref}
+            className={cn(
+              buttonVariants({
+                variant: "outline",
+                size: "lg",
+              }),
+              "min-w-34 rounded-full px-5",
+            )}
+          >
+            <p>{t("action.tryDemo")}</p>
+            <Icons.arrowRight className="ml-2 size-4" />
+          </NextLink>
+        </div>
+
+        <div className="grid w-full max-w-3xl gap-3 pt-2 sm:grid-cols-3">
+          {(["firstTry", "hdExport", "batchReady"] as const).map((item) => (
+            <div
+              key={item}
+              className="rounded-2xl border bg-background/60 px-4 py-3 text-sm text-muted-foreground"
+            >
+              {t(`trust.${item}`)}
+            </div>
+          ))}
         </div>
       </div>
     </section>

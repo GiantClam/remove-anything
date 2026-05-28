@@ -3,9 +3,10 @@ import { env } from "@/env.mjs";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Free Background Remover - Remove Background from Image AI",
-    short_name: "Background Remover",
-    description: "Instantly remove the background from any image with our free AI-powered tool. High-quality, fast, and easy to use.",
+    name: "Remove Anything",
+    short_name: "Remove Anything",
+    description:
+      "AI image eraser for removing objects, backgrounds, and watermarks from photos with clean exports and batch-friendly workflows.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

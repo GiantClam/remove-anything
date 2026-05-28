@@ -390,6 +390,10 @@ export default function WatermarkRemoval({
         <p className="text-sm text-muted-foreground">or paste an image URL</p>
       </div>
 
+      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
+        Use this tool only for images you own or are authorized to edit. Please make sure watermark or overlay removal complies with the original asset license and platform rules.
+      </div>
+
       {/* 上传优先：置顶上传区 + URL + 主按钮 */}
       <div className="rounded-lg border bg-card p-6 mb-6">
         <div className="space-y-4">

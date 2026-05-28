@@ -18,11 +18,11 @@
     }
   },
   "IndexPage": {
-    "intro": "🎉 免費 AI 背景去除器",
-    "description": "使用我們的免費 AI 驅動工具立即去除任何圖片背景。批量處理確保不丟失任何圖片，永久存儲保護您的工作。高品質、快速且易於使用。上傳您的照片，幾秒鐘內即可獲得透明背景。",
-    "title": "AI 智能摳圖 - 3步去除照片中的任何內容",
-    "subtitle": "上傳、標記、下載 - 三步去除照片中不需要的內容",
-    "seeOthers": "看看別人的移除效果",
+    "intro": "AI 圖片清理工作流",
+    "description": "用同一套 AI 工具處理背景去除、雜物擦除、水印清理與後續圖片整理，快速輸出真正可用的成品。",
+    "title": "用 AI 去除照片裡不想要的元素",
+    "subtitle": "從單張圖片開始，快速清理、預覽並輸出可直接使用的結果。",
+    "seeOthers": "查看前後對比範例",
     "powered": {
       "title": "技術支援服務"
     },
@@ -44,6 +44,11 @@
       "todayRemoved": "今日已移除",
       "objects": "個物體",
       "marquee": "一鍵移除 · 3秒出圖 · 完全免費"
+    },
+    "trust": {
+      "firstTry": "首次試用無需註冊",
+      "hdExport": "支援高畫質輸出與透明 PNG",
+      "batchReady": "後續還有批量工具可接續處理"
     },
     "features": {
       "title": "為什麼選擇我們的背景去除器？",
@@ -90,6 +95,8 @@
       "action": "立即嘗試"
     },
     "action": {
+      "uploadImage": "上傳圖片",
+      "tryDemo": "試試樣例圖",
       "pricing": "購買積分",
       "login": "登錄",
       "dashboard": "去使用",
@@ -371,8 +378,8 @@
     }
   },
   "RemoveBackgroundPage": {
-    "title": "AI 背景去除器 - 快速、精準、免費",
-    "description": "使用 AI 在幾秒內去除圖片背景。自動主體檢測、發絲級邊緣、批次處理與專業品質，永久保存且完全免費。",
+    "title": "免費 AI 背景去除工具，快速輸出透明 PNG | Remove Anything",
+    "description": "用 AI 快速去除照片背景並匯出乾淨透明 PNG，適合商品圖、人像與日常圖片清理工作流。",
     "processing": "處理中...",
     "chooseImage": "選擇圖片",
     "dragDropText": "拖拽或點擊上傳",
@@ -465,13 +472,13 @@
     "getStartedText": "上傳圖片並點擊「批量去背景」開始使用。"
   },
   "LocaleLayout": {
-    "title": "免費AI摳圖工具 - 一鍵去除背景和物體 | Remove Anything",
-    "description": "免費AI摳圖工具，3秒自動去除背景、擦除物體和水印。無需PS技能，支持批量處理，永久保存。立即免費使用，無需註冊！",
-    "keywords": "AI摳圖, 去除背景, 免費摳圖, 線上摳圖, 物體擦除, 水印去除, 批量處理"
+    "title": "AI 去背景、物件擦除與水印清理工具 | Remove Anything",
+    "description": "使用 AI 清理商品圖、人像與行銷素材，完成背景去除、物件擦除、水印清理與可交付的圖片輸出。",
+    "keywords": "AI 圖片清理, 去背景, 物件擦除, 水印清理, 透明 PNG, 批量圖片工具"
   },
   "LocaleSwitcher": {
     "label": "更改語言",
-    "locale": "{locale, select, tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {未知}}"
+    "locale": "{locale, select, zh-tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {未知}}"
   },
   "Manifest": {
     "name": "Remove Anything - 去除圖片任意物體"
@@ -521,9 +528,11 @@
   "PageLayout": {
     "footer": {
       "title": "Remove Anything",
+      "about": "關於我們",
       "term": "使用條款",
       "privacy": "隱私政策",
-      "contact": "聯絡我們"
+      "contact": "聯絡我們",
+      "support": "支援"
     },
     "links": {
       "docs": {
@@ -540,7 +549,15 @@
   },
   "BlogPage": {
     "title": "博客",
-    "description": "我們的最新新聞和更新"
+    "description": "關於 AI 圖片清理、背景編輯與比較型內容的教學、指南與工作流文章。"
+  },
+  "AboutPage": {
+    "title": "關於 Remove Anything",
+    "description": "了解 Remove Anything 想解決什麼問題、適合哪些工作流，以及我們如何看待 AI 圖片清理。"
+  },
+  "ContactPage": {
+    "title": "聯絡 Remove Anything",
+    "description": "就支援、付款、回饋或合作洽詢與 Remove Anything 團隊聯絡。"
   },
   "RemoveObjectsPage": {
     "title": "敬請期待 - 智能物件移除工具 - Remove Anything",
@@ -604,8 +621,8 @@
     }
   },
   "RemoveWatermarkPage": {
-    "title": "專業浮水印移除工具 - Remove Anything",
-    "description": "使用AI技術智能識別並移除圖片中的浮水印、文字標記和標識。保護您的作品，讓圖片更加專業和美觀。",
+    "title": "適用於自有或授權素材的 AI 浮水印移除工具 | Remove Anything",
+    "description": "針對您擁有或已獲授權編輯的圖片，移除浮水印、文字標記與覆蓋物，適合合規的素材清理與交付前整理。",
     "keywords": "浮水印移除, 文字移除, 圖片清理, watermark removal, text removal, 圖片編輯, AI圖片處理, 線上工具",
     "hero": {
       "title": "專業浮水印移除工具",

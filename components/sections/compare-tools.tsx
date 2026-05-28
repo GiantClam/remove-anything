@@ -17,11 +17,11 @@ const compareVariants = [
 export default async function CompareTools() {
   const locale = await getLocale();
 
-  if (locale !== "en" && locale !== "tw") {
+  if (locale !== "en" && locale !== "zh-tw") {
     return null;
   }
 
-  const isTw = locale === "tw";
+  const isTw = locale === "zh-tw";
 
   return (
     <section className="py-6">

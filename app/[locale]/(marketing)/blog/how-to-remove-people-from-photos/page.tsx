@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Eraser, ArrowLeft } from "lucide-react";
 import { Link } from "@/lib/navigation";
 import { getMetadataBase } from "@/lib/utils";
-import { buildLocalizedPath } from "@/lib/seo";
+import { buildLocalizedPath, buildSeoMetadata } from "@/lib/seo";
 
 interface PageProps {
   params: { locale: string };
@@ -13,9 +13,16 @@ interface PageProps {
 export async function generateMetadata({ params: { locale } }: PageProps): Promise<Metadata> {
   return {
     metadataBase: getMetadataBase(),
-    title: "手把手教你如何从集体照中P掉前男友/前女友 - Remove Anything",
-    description: "学习如何使用AI工具轻松从照片中移除不需要的人物。本教程将教你如何从集体照、旅游照片中移除路人、前男友或前女友，让照片更加完美。",
-    keywords: "如何从照片中移除人物, 移除前男友, 移除前女友, 移除路人, 集体照编辑, AI图片编辑, 在线P图工具",
+    ...buildSeoMetadata({
+      locale,
+      path: "/blog/how-to-remove-people-from-photos",
+      title: "How to remove people from photos with AI | Remove Anything",
+      description:
+        "Legacy tutorial page kept for users, but excluded from search while the localized blog system is being consolidated.",
+      keywords:
+        "remove people from photos, AI photo cleanup, unwanted people removal, legacy tutorial",
+      noIndex: true,
+    }),
   };
 }
 
@@ -99,7 +106,7 @@ export default async function HowToRemovePeoplePage({
         <p className="mb-6 text-muted-foreground">
           立即体验AI人物移除的强大功能，让您的照片更加完美
         </p>
-        <Link href={`/remove-background`}>
+        <Link href={buildLocalizedPath(locale, "/remove-background")}>
           <Button size="lg" className="gap-2">
             <Eraser className="size-5" />
             免费开始使用

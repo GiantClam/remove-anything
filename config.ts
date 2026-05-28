@@ -3,7 +3,7 @@ import { LocalePrefix, Pathnames } from "next-intl/routing";
 export const defaultLocale = "en" as const;
 export const locales = [
   "en",
-  "tw",
+  "zh-tw",
   "fr",
   "ja",
   "ko",
@@ -14,6 +14,60 @@ export const locales = [
 ] as const;
 
 export type Locale = (typeof locales)[number];
+
+export const localeMetadata: Record<
+  Locale,
+  { htmlLang: string; hreflang: string; ogLocale: string }
+> = {
+  en: {
+    htmlLang: "en",
+    hreflang: "en",
+    ogLocale: "en_US",
+  },
+  "zh-tw": {
+    htmlLang: "zh-TW",
+    hreflang: "zh-TW",
+    ogLocale: "zh_TW",
+  },
+  fr: {
+    htmlLang: "fr",
+    hreflang: "fr",
+    ogLocale: "fr_FR",
+  },
+  ja: {
+    htmlLang: "ja",
+    hreflang: "ja",
+    ogLocale: "ja_JP",
+  },
+  ko: {
+    htmlLang: "ko",
+    hreflang: "ko",
+    ogLocale: "ko_KR",
+  },
+  de: {
+    htmlLang: "de",
+    hreflang: "de",
+    ogLocale: "de_DE",
+  },
+  pt: {
+    htmlLang: "pt",
+    hreflang: "pt",
+    ogLocale: "pt_BR",
+  },
+  es: {
+    htmlLang: "es",
+    hreflang: "es",
+    ogLocale: "es_ES",
+  },
+  ar: {
+    htmlLang: "ar",
+    hreflang: "ar",
+    ogLocale: "ar_AE",
+  },
+};
+
+export const legacyLocaleRedirects = ["tw", "zh"] as const;
+export type LegacyLocale = (typeof legacyLocaleRedirects)[number];
 
 export const pathnames: Pathnames<typeof locales> = {
   "/": "/",
@@ -40,6 +94,8 @@ export const pathnames: Pathnames<typeof locales> = {
   "/photoroom-alternative": "/photoroom-alternative",
   "/pixelcut-alternative": "/pixelcut-alternative",
   "/remove-anything-vs-remove-bg": "/remove-anything-vs-remove-bg",
+  "/about": "/about",
+  "/contact": "/contact",
   "/privacy-policy": "/privacy-policy",
   "/terms-of-use": "/terms-of-use",
   "/signin": "/signin",

@@ -9,7 +9,7 @@ export const supportedLocales = [
   'de',
   'pt',
   'ar',
-  'tw',
+  'zh-tw',
 ];
 
 // 生成语言参数

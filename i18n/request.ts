@@ -1,6 +1,7 @@
 import { getRequestConfig } from "next-intl/server";
 
-import { locales } from "@/config";
+import { defaultLocale, locales } from "@/config";
+import { normalizeRouteLocale } from "@/lib/seo";
 
 function deepMerge<T extends Record<string, any>>(base: T, override: Partial<T>): T {
   const result: Record<string, any> = { ...base };
@@ -26,8 +27,10 @@ function deepMerge<T extends Record<string, any>>(base: T, override: Partial<T>)
 export default getRequestConfig(async ({ requestLocale }) => {
   let locale = await requestLocale;
 
+  locale = normalizeRouteLocale(locale || defaultLocale);
+
   if (!locale || !locales.includes(locale as any)) {
-    locale = "en";
+    locale = defaultLocale;
   }
 
   const enMessages = (await import("../messages/en.json")).default as Record<string, any>;

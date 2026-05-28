@@ -6,7 +6,8 @@ import { getTranslations } from "next-intl/server";
 
 import { BlogCard } from "@/components/content/blog-card";
 import { BLOG_CATEGORIES } from "@/config/blog";
-import { constructMetadata, getBlurDataURL, getMetadataBase } from "@/lib/utils";
+import { buildSeoMetadata } from "@/lib/seo";
+import { getBlurDataURL, getMetadataBase } from "@/lib/utils";
 
 export async function generateStaticParams() {
   return BLOG_CATEGORIES.map((category) => ({
@@ -27,15 +28,36 @@ export async function generateMetadata({
     return;
   }
   const t = await getTranslations({ locale: params.locale });
-
-  const { title, description } = category;
+  const hasPosts = allPosts.some(
+    (post) =>
+      post.published &&
+      post.language === params.locale &&
+      Array.isArray(post.categories) &&
+      post.categories.includes(category.slug),
+  );
+  const availableLocales = Array.from(
+    new Set(
+      allPosts
+        .filter(
+          (post) =>
+            post.published &&
+            Array.isArray(post.categories) &&
+            post.categories.includes(category.slug),
+        )
+        .map((post) => post.language),
+    ),
+  );
 
   return {
-    ...constructMetadata({
-      title: `${title} Posts - ${t("LocaleLayout.title")}`,
-      description,
-    }),
     metadataBase: getMetadataBase(),
+    ...buildSeoMetadata({
+      locale: params.locale,
+      path: `/blog/category/${category.slug}`,
+      title: `${category.title} Posts | Remove Anything`,
+      description: category.description,
+      availableLocales,
+      noIndex: !hasPosts,
+    }),
   };
 }
 

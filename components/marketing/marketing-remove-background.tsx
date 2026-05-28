@@ -76,7 +76,7 @@ function buildSchemas(locale: string, path: string, metadataTitle: string, metad
       })),
     },
     breadcrumbSchema: buildBreadcrumbListSchema(locale, [
-      { name: locale === "tw" ? "首頁" : "Home", path: "/" },
+      { name: locale === "zh-tw" ? "首頁" : "Home", path: "/" },
       { name: schemaName?.trim() || metadataTitle, path },
     ]),
   };
@@ -149,6 +149,27 @@ export default async function MarketingRemoveBackground({
           </CardContent>
         </Card>
       </div>
+
+      <section className="mb-8 grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{locale === "zh-tw" ? "最適合這些情境" : "Best for"}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>{locale === "zh-tw" ? "商品圖、人像、社群素材與需要透明 PNG 的圖片。" : "Product photos, portraits, marketing assets, and transparent PNG exports."}</p>
+            <p>{locale === "zh-tw" ? "想快速完成主體分離、白底圖與後續批量整理的工作流。" : "Fast subject isolation, white background preparation, and follow-up batch cleanup workflows."}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>{locale === "zh-tw" ? "不一定理想的情況" : "Not ideal for"}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>{locale === "zh-tw" ? "極端透明材質、重度遮擋、強烈反光或原圖主體邊緣已模糊的素材。" : "Highly transparent materials, heavy occlusion, strong reflections, or images with already-blurred subject edges."}</p>
+            <p>{locale === "zh-tw" ? "這類圖片通常需要手動微調或更換更乾淨的原圖。" : "These cases may still need manual touch-up or a cleaner source image."}</p>
+          </CardContent>
+        </Card>
+      </section>
 
       <Card className="mb-8">
         <CardHeader className="text-center">
@@ -250,7 +271,7 @@ export default async function MarketingRemoveBackground({
             href={toolCopy.primaryBlogHref}
             className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
           >
-            {locale === "tw" ? "閱讀詳細教學" : "Read the detailed guide"}
+            {locale === "zh-tw" ? "閱讀詳細教學" : "Read the detailed guide"}
             <ArrowRight className="size-4" />
           </Link>
         </CardContent>

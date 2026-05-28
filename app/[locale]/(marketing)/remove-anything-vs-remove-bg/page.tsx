@@ -9,7 +9,7 @@ import {
   getAlternativePage,
   type AlternativePageLocale,
 } from "@/lib/alternative-pages";
-import { constructAlternates } from "@/lib/seo";
+import { buildSeoMetadata } from "@/lib/seo";
 import { getMetadataBase } from "@/lib/utils";
 
 interface PageProps {
@@ -31,19 +31,14 @@ export async function generateMetadata({
 
   return {
     metadataBase: getMetadataBase(),
-    title: page.metadataTitle,
-    description: page.metadataDescription,
-    keywords: page.metadataKeywords,
-    alternates: constructAlternates({
+    ...buildSeoMetadata({
       locale: resolvedLocale,
       path: page.path,
-      availableLocales: [...alternativePageLocales],
-    }),
-    openGraph: {
       title: page.metadataTitle,
       description: page.metadataDescription,
-      type: "website",
-    },
+      keywords: page.metadataKeywords,
+      availableLocales: [...alternativePageLocales],
+    }),
   };
 }
 

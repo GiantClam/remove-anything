@@ -80,7 +80,7 @@ type BatchToolPageLocalization = Partial<
 >;
 
 function isChineseLocale(locale: string) {
-  return locale === "tw";
+  return locale === "zh-tw";
 }
 
 const batchToolSeoLocalizations: Partial<

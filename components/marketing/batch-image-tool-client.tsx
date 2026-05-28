@@ -138,7 +138,7 @@ export default function BatchImageToolClient({
   const uploadedCount = uploadedImages.filter((image) => image.status === "uploaded").length;
   const capabilityNotes = useMemo(
     () =>
-      locale === "tw"
+      locale === "zh-tw"
         ? [
             "最多 30 張圖片/次",
             "直接在瀏覽器本地處理",
@@ -182,7 +182,7 @@ export default function BatchImageToolClient({
 
     if (!imagesToProcess.length) {
       toast.error(
-        locale === "tw"
+        locale === "zh-tw"
           ? "请先上传至少一张图片"
           : "Please upload at least one image first",
       );
@@ -200,7 +200,7 @@ export default function BatchImageToolClient({
         nextMaxHeight <= 0)
     ) {
       toast.error(
-        locale === "tw"
+        locale === "zh-tw"
           ? "请输入有效的宽度和高度"
           : "Please enter valid width and height values",
       );
@@ -263,7 +263,7 @@ export default function BatchImageToolClient({
       }
 
       toast.success(
-        locale === "tw"
+        locale === "zh-tw"
           ? `已处理 ${nextResults.length} 张图片`
           : `Processed ${nextResults.length} image${nextResults.length > 1 ? "s" : ""}`,
       );
@@ -281,7 +281,7 @@ export default function BatchImageToolClient({
         tool_variant: variant,
       });
       toast.error(
-        locale === "tw"
+        locale === "zh-tw"
           ? "处理图片时发生错误，请重试"
           : "Something went wrong while processing images",
       );
@@ -312,7 +312,7 @@ export default function BatchImageToolClient({
     } catch (error) {
       console.error(error);
       toast.error(
-        locale === "tw" ? "打包下载失败，请重试" : "Failed to build ZIP download",
+        locale === "zh-tw" ? "打包下载失败，请重试" : "Failed to build ZIP download",
       );
     }
   };
@@ -525,7 +525,7 @@ export default function BatchImageToolClient({
               <div className="rounded-xl border p-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <ScanSearch className="h-4 w-4" />
-                  <span>{locale === "tw" ? "平均压缩率" : "Avg. reduction"}</span>
+                  <span>{locale === "zh-tw" ? "平均压缩率" : "Avg. reduction"}</span>
                 </div>
                 <p className="mt-2 text-2xl font-semibold">
                   {summary.averageReduction}%

@@ -102,7 +102,7 @@ function buildSchemas(copy: BatchImageToolCopy, locale: string) {
     })),
   };
   const breadcrumbSchema = buildBreadcrumbListSchema(locale, [
-    { name: locale === "tw" ? "首頁" : "Home", path: "/" },
+    { name: locale === "zh-tw" ? "首頁" : "Home", path: "/" },
     { name: schemaName?.trim() || copy.heroTitle, path: copy.path },
   ]);
 

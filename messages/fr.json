@@ -420,7 +420,7 @@
   },
   "LocaleSwitcher": {
     "label": "Changer de langue",
-    "locale": "{locale, select, tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Inconnu}}"
+    "locale": "{locale, select, zh-tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Inconnu}}"
   },
   "Manifest": {
     "name": "Remove Anything - Suppresseur d'Objets et d'Arrière-plans"

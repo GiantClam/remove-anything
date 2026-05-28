@@ -53,6 +53,14 @@ export async function SiteFooter({ className }: React.HTMLAttributes<HTMLElement
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <NextLink
+            href={buildLocalizedPath(locale, "/about")}
+            className="underline-offset-4 hover:underline"
+            prefetch={false}
+            title={t("footer.about")}
+          >
+            {t("footer.about")}
+          </NextLink>
+          <NextLink
             href={buildLocalizedPath(locale, "/remove-background")}
             className="underline-offset-4 hover:underline"
             prefetch={false}
@@ -95,17 +103,25 @@ export async function SiteFooter({ className }: React.HTMLAttributes<HTMLElement
           <a
             href="mailto:support@remove-anything.com"
             className="underline-offset-4 hover:underline"
+            title={t("footer.support")}
+          >
+            {t("footer.support")}
+          </a>
+          <NextLink
+            href={buildLocalizedPath(locale, "/contact")}
+            className="underline-offset-4 hover:underline"
+            prefetch={false}
             title={t("footer.contact")}
           >
             {t("footer.contact")}
-          </a>
+          </NextLink>
           <ModeToggle />
         </div>
       </div>
       <div className="mt-4 flex max-w-7xl flex-col items-center justify-between gap-4 text-sm md:flex-row">
         <div className="flex items-center gap-2">
           <Icons.logo className="size-6" />
-                      <span className="font-medium">Remove Anything Inc.</span>
+          <span className="font-medium">Remove Anything</span>
         </div>
       </div>
       <div className="mt-4 flex max-w-7xl flex-col items-center justify-center gap-4 text-sm md:flex-row">

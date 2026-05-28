@@ -23,7 +23,7 @@ type ToolDiscoveryContent = {
 };
 
 function isChineseLocale(locale: string) {
-  return locale === "tw";
+  return locale === "zh-tw";
 }
 
 export function getToolDiscoveryContent(locale: string): ToolDiscoveryContent {

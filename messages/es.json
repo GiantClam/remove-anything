@@ -425,7 +425,7 @@
   },
   "LocaleSwitcher": {
     "label": "Cambiar idioma",
-    "locale": "{locale, select, zh {🇨🇳 简体中文} tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} de {🇩🇪 Deutsch} es {🇪🇸 Español} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
+    "locale": "{locale, select, zh {🇨🇳 简体中文} zh-tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} de {🇩🇪 Deutsch} es {🇪🇸 Español} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
   },
   "Manifest": {
     "name": "Remove Anything - Eliminador de Objetos y Fondos"

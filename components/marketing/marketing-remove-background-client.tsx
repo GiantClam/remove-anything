@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,7 @@ export default function MarketingRemoveBackground({
 }: MarketingRemoveBackgroundProps) {
   // 所有hooks必须在组件顶层调用，不能在任何条件语句中
   const tPage = useTranslations('RemoveBackgroundPage');
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const toolCopy = useMemo(() => getBackgroundToolCopy(locale, variant), [locale, variant]);
   const defaultSelectedBackground = useMemo(
@@ -76,6 +78,23 @@ export default function MarketingRemoveBackground({
     blendMode: 'normal' as const
   });
   const [composedImage, setComposedImage] = useState<string | null>(null);
+  const sampleImageMap = useMemo(
+    () => ({
+      portrait: {
+        before: "https://s.remove-anything.com/examples/portrait_before.webp",
+        after: "https://s.remove-anything.com/examples/portrait_after.webp",
+      },
+      product: {
+        before: "https://s.remove-anything.com/examples/product_before.webp",
+        after: "https://s.remove-anything.com/examples/product_after.webp",
+      },
+      object: {
+        before: "https://s.remove-anything.com/examples/object_before.webp",
+        after: "https://s.remove-anything.com/examples/object_after.webp",
+      },
+    }),
+    [],
+  );
   
   // 移除图片合成逻辑，使用CSS层叠实现预览
   
@@ -92,6 +111,25 @@ export default function MarketingRemoveBackground({
     setBackgroundType(defaultBackgroundType);
     setShowAddBackground(shouldAutoOpenBackgroundPanel(variant));
   }, [defaultBackgroundType, defaultSelectedBackground, variant]);
+
+  useEffect(() => {
+    const sample = searchParams.get("sample");
+    if (!sample || uploadedFile || isProcessing || originalImage) {
+      return;
+    }
+
+    const selectedSample =
+      sampleImageMap[sample as keyof typeof sampleImageMap];
+
+    if (!selectedSample) {
+      return;
+    }
+
+    setOriginalImage(selectedSample.before);
+    setProcessedImage(selectedSample.after);
+    setHasError(false);
+    setCurrentTaskId(null);
+  }, [isProcessing, originalImage, sampleImageMap, searchParams, uploadedFile]);
   
 
   // 下载合成后的图片
@@ -1067,7 +1105,7 @@ export default function MarketingRemoveBackground({
   useEffect(() => {
     if (processedImage && currentTaskId) {
       // 更新title
-      const title = locale === 'zh' || locale === 'tw'
+      const title = locale === 'zh' || locale === 'zh-tw'
         ? `移除完成！前后对比 #${currentTaskId.slice(-4)} | Remove Anything`
         : `Removed! Before & After #${currentTaskId.slice(-4)} | Remove Anything`;
       document.title = title;
@@ -1080,7 +1118,7 @@ export default function MarketingRemoveBackground({
         document.head.appendChild(metaDescription);
       }
       metaDescription.setAttribute('content', 
-        locale === 'zh' || locale === 'tw'
+        locale === 'zh' || locale === 'zh-tw'
           ? `AI成功移除图片背景！查看前后对比效果 #${currentTaskId.slice(-4)}`
           : `AI successfully removed background! See before & after comparison #${currentTaskId.slice(-4)}`
       );
@@ -1102,7 +1140,7 @@ export default function MarketingRemoveBackground({
         document.head.appendChild(ogDescription);
       }
       ogDescription.setAttribute('content', 
-        locale === 'zh' || locale === 'tw'
+        locale === 'zh' || locale === 'zh-tw'
           ? `AI成功移除图片背景！查看前后对比效果 #${currentTaskId.slice(-4)}`
           : `AI successfully removed background! See before & after comparison #${currentTaskId.slice(-4)}`
       );

@@ -39,7 +39,7 @@ const ComfortingMessages: React.FC<ComfortingMessagesProps> = ({
       "Essayant de battre son propre record...",
       "Déroulant un peu de code spaghetti virtuel...",
     ],
-    tw: [
+    "zh-tw": [
       "AI 正在練肌肉，等會兒要讓你驚豔",
       "機器人邊跳月球舞一邊算數，真是忙碌又充實",
       "我這邊正跟無限大較勁，馬上回來報告好消息！",

@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Clock, Bell, ArrowRight } from "lucide-react";
 import { Link } from "@/lib/navigation";
-import { buildLocalizedPath, constructAlternates } from "@/lib/seo";
+import { buildLocalizedPath, buildSeoMetadata } from "@/lib/seo";
 import { getMetadataBase } from "@/lib/utils";
 
 interface PageProps {
@@ -15,15 +15,14 @@ export async function generateMetadata({ params: { locale } }: PageProps): Promi
 
   return {
     metadataBase: getMetadataBase(),
-    title: t("title"),
-    description: t("description"),
-    keywords: t("keywords"),
-    alternates: constructAlternates({ locale, path: "/remove-objects" }),
-    openGraph: {
+    ...buildSeoMetadata({
+      locale,
+      path: "/remove-objects",
       title: t("title"),
       description: t("description"),
-      type: "website",
-    },
+      keywords: t("keywords"),
+      noIndex: true,
+    }),
   };
 }
 

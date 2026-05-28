@@ -15,7 +15,7 @@ import { defaultLocale, localePrefix, locales } from "./config";
 export const config = {
   matcher: [
     "/",
-    "/(zh|tw|en|fr|ja|ko|de|pt|es|ar)/:path*",
+    "/(zh-tw|zh|tw|en|fr|ja|ko|de|pt|es|ar)/:path*",
     "/((?!static|.*\\..*|_next).*)",
   ], // Run middleware on API routes],
 };
@@ -133,11 +133,11 @@ export default withAuth(
     }
 
     // 处理 /zh 到 /tw 的重定向（因为配置中没有 zh，只有 tw）
-    if (nextUrl.pathname.startsWith('/zh')) {
-      const newPath = nextUrl.pathname.replace(/^\/zh/, '/tw');
+    if (/^\/(zh|tw)(\/|$)/.test(nextUrl.pathname)) {
+      const newPath = nextUrl.pathname.replace(/^\/(zh|tw)/, '/zh-tw');
       const newUrl = new URL(newPath, nextUrl.origin);
       newUrl.search = nextUrl.search;
-      return NextResponse.redirect(newUrl);
+      return NextResponse.redirect(newUrl, 301);
     }
 
     return nextIntlMiddleware(req);
@@ -147,9 +147,9 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const pathname = req.nextUrl.pathname;
         // 显式放行 Sora2 视频去水印页面（含本地化前缀）
-        const allowSora2 = /^\/(zh|en)\/app\/sora2-video-watermark-removal$/.test(pathname) ||
+        const allowSora2 = /^\/(zh-tw|zh|tw|en)\/app\/sora2-video-watermark-removal$/.test(pathname) ||
           /^\/app\/sora2-video-watermark-removal$/.test(pathname) ||
-          /^\/(zh|en)\/sora2-video-watermark-removal$/.test(pathname) ||
+          /^\/(zh-tw|zh|tw|en)\/sora2-video-watermark-removal$/.test(pathname) ||
           /^\/sora2-video-watermark-removal$/.test(pathname);
         if (allowSora2) {
           return true;

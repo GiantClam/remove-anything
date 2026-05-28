@@ -2,9 +2,7 @@ import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { Metadata } from "next";
 import WatermarkRemoval from "@/components/watermark-removal";
 import { getChargeProduct } from "@/db/queries/charge-product";
-import { locales, defaultLocale } from "@/config";
-import { env } from "@/env.mjs";
-import { constructAlternates } from "@/lib/seo";
+import { buildSeoMetadata } from "@/lib/seo";
 import { getMetadataBase } from "@/lib/utils";
 
 interface PageProps {
@@ -16,15 +14,13 @@ export async function generateMetadata({ params: { locale } }: PageProps): Promi
 
   return {
     metadataBase: getMetadataBase(),
-    title: t("title"),
-    description: t("description"),
-    keywords: t("keywords"),
-    alternates: constructAlternates({ locale, path: "/remove-watermark" }),
-    openGraph: {
+    ...buildSeoMetadata({
+      locale,
+      path: "/remove-watermark",
       title: t("title"),
       description: t("description"),
-      type: "website",
-    },
+      keywords: t("keywords"),
+    }),
   };
 }
 

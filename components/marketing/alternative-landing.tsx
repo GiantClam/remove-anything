@@ -46,7 +46,7 @@ function buildSchemas(locale: string, variant: AlternativePageVariant) {
       })),
     },
     breadcrumbSchema: buildBreadcrumbListSchema(locale, [
-      { name: locale === "tw" ? "首頁" : "Home", path: "/" },
+      { name: locale === "zh-tw" ? "首頁" : "Home", path: "/" },
       { name: page.heroTitle, path: page.path },
     ]),
     webPageSchema: {

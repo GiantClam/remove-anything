@@ -3,8 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { Metadata } from "next";
 
 import { BlogPosts } from "@/components/content/blog-posts";
+import { buildSeoMetadata } from "@/lib/seo";
 import { getBlurDataURL, getMetadataBase } from "@/lib/utils";
-import { constructAlternates } from "@/lib/seo";
 
 interface PageProps {
   params: { locale: string };
@@ -12,12 +12,21 @@ interface PageProps {
 
 export async function generateMetadata({ params: { locale } }: PageProps): Promise<Metadata> {
   const t = await getTranslations({ locale });
+  const hasPosts = allPosts.some((post) => post.published && post.language === locale);
+  const availableLocales = Array.from(
+    new Set(allPosts.filter((post) => post.published).map((post) => post.language)),
+  );
   
   return {
     metadataBase: getMetadataBase(),
-    title: `${t("BlogPage.title")} - ${t("LocaleLayout.title")}`,
-    description: t("BlogPage.description"),
-    alternates: constructAlternates({ locale, path: "/blog" }),
+    ...buildSeoMetadata({
+      locale,
+      path: "/blog",
+      title: `${t("BlogPage.title")} | Remove Anything`,
+      description: t("BlogPage.description"),
+      availableLocales,
+      noIndex: !hasPosts,
+    }),
   };
 }
 

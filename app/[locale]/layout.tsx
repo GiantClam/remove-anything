@@ -17,9 +17,9 @@ import ClaritySnippet from "@/components/ClaritySnippet";
 
 import { TailwindIndicator } from "@/components/tailwind-indicator";
 import { locales } from "@/config";
-import { siteConfig } from "@/config/site";
 import { env } from "@/env.mjs";
-import { cn } from "@/lib/utils";
+import { buildLocalizedPath, getHtmlLang, getOpenGraphLocale } from "@/lib/seo";
+import { cn, getMetadataBase } from "@/lib/utils";
 
 import RegisterSW from "@/components/providers/register-sw";
 
@@ -32,33 +32,12 @@ export async function generateMetadata({
   params: { locale },
 }: Omit<RootLayoutProps, "children">) {
   const t = await getTranslations({ locale, namespace: "LocaleLayout" });
-
-  // 根据locale生成独特的title和description
-  const uniqueTitle = locale === "zh" || locale === "tw"
-    ? "Remove Anything | 3秒 AI 消除照片中任何物体 - 免费背景移除工具"
-    : locale === "ja"
-    ? "Remove Anything | 3秒でAI写真から物体を削除 - 無料背景除去ツール"
-    : locale === "ko"
-    ? "Remove Anything | 3초 AI로 사진에서 물체 제거 - 무료 배경 제거 도구"
-    : "Remove Anything | 3 Second AI Remove Anything from Photos - Free Background Remover";
-  
-  const uniqueDescription = locale === "zh" || locale === "tw"
-    ? "免费AI抠图工具，3秒快速去除照片背景、人物、物体。支持高清图片，无需PS技能，一键下载透明背景图片。每天限50次免费，立即试用！"
-    : locale === "ja"
-    ? "無料AI背景除去ツール。3秒で写真から背景・人物・物体を削除。高画質対応、PS不要、ワンクリックで透明背景画像をダウンロード。1日50回まで無料、今すぐ試す！"
-    : locale === "ko"
-    ? "무료 AI 배경 제거 도구. 3초 만에 사진에서 배경, 인물, 물체를 제거합니다. 고화질 지원, PS 불필요, 원클릭으로 투명 배경 이미지를 다운로드. 하루 50회 무료, 지금 바로 시도하세요!"
-    : "Free AI background remover tool. Remove anything from photos in 3 seconds - people, objects, text. High-quality results, no PS skills needed. Free download, 50 free uses daily. Try now!";
-
-  const base = (siteConfig.url || env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
-  const ogImage = siteConfig.ogImage && siteConfig.ogImage.startsWith("http")
-    ? siteConfig.ogImage
-    : `${base}/og.png`;
+  const ogImage = `${(env.NEXT_PUBLIC_SITE_URL || "https://www.remove-anything.com").replace(/\/$/, "")}/og.png`;
 
   return {
-    title: uniqueTitle,
-    description: uniqueDescription,
-    metadataBase: new URL(base),
+    title: t("title"),
+    description: t("description"),
+    metadataBase: getMetadataBase(),
     robots: {
       index: true,
       follow: true,
@@ -72,28 +51,29 @@ export async function generateMetadata({
     },
     openGraph: {
       type: "website",
-      url: `/${locale === "en" ? "" : locale}`,
-      title: uniqueTitle,
-      description: uniqueDescription,
-      images: ogImage,
-      locale: locale === "en" ? "en_US" : locale === "tw" ? "zh_TW" : locale,
+      url: buildLocalizedPath(locale, "/"),
+      title: t("title"),
+      description: t("description"),
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: t("title"),
+        },
+      ],
+      locale: getOpenGraphLocale(locale),
       siteName: "Remove Anything",
     },
     twitter: {
       card: "summary_large_image",
-      title: uniqueTitle,
-      description: uniqueDescription,
+      title: t("title"),
+      description: t("description"),
       images: [ogImage],
       creator: "@removeanything",
       site: "@removeanything",
     },
-    keywords: locale === "zh" || locale === "tw"
-      ? "AI抠图,背景移除,图片处理,免费抠图工具,AI图片编辑,去除背景"
-      : locale === "ja"
-      ? "AI背景除去,画像処理,無料背景除去ツール,AI画像編集"
-      : locale === "ko"
-      ? "AI 배경 제거, 이미지 처리, 무료 배경 제거 도구, AI 이미지 편집"
-      : "AI background remover, image processing, free photo editor, remove background, AI photo editing",
+    keywords: t("keywords"),
   };
 }
 
@@ -110,7 +90,7 @@ export default async function RootLayout({
   unstable_setRequestLocale(locale);
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={getHtmlLang(locale)} suppressHydrationWarning>
       <head />
       <body
         className={cn(
@@ -143,9 +123,9 @@ export default async function RootLayout({
         )}
         <footer className="mt-10 border-t">
           <div className="container mx-auto flex items-center justify-center gap-4 px-4 py-6 text-sm text-muted-foreground">
-            <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:text-foreground hover:underline">Privacy</a>
+            <a href={buildLocalizedPath(locale, "/privacy-policy")} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:text-foreground hover:underline">Privacy</a>
             <span>·</span>
-            <a href="/terms-of-use" target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:text-foreground hover:underline">Terms</a>
+            <a href={buildLocalizedPath(locale, "/terms-of-use")} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:text-foreground hover:underline">Terms</a>
           </div>
         </footer>
         <RegisterSW />

@@ -4,7 +4,7 @@ export type AlternativePageVariant =
   | "pixelcut-alternative"
   | "remove-anything-vs-remove-bg";
 
-export const alternativePageLocales = ["en", "tw"] as const;
+export const alternativePageLocales = ["en", "zh-tw"] as const;
 export type AlternativePageLocale = (typeof alternativePageLocales)[number];
 
 type VerdictSection = {
@@ -145,7 +145,7 @@ export const alternativePages: Record<AlternativePageVariant, AlternativePageCon
   "remove-bg-alternative": {
     variant: "remove-bg-alternative",
     path: "/remove-bg-alternative",
-    metadataTitle: "Best remove.bg Alternative for Batch Image Workflows",
+    metadataTitle: "Best remove.bg Alternative for Batch Background Removal | Remove Anything",
     metadataDescription:
       "Looking for a remove.bg alternative? Compare Remove Anything vs remove.bg for background removal, batch utilities, one-time pricing, and workflow flexibility.",
     metadataKeywords:
@@ -248,7 +248,7 @@ export const alternativePages: Record<AlternativePageVariant, AlternativePageCon
   "photoroom-alternative": {
     variant: "photoroom-alternative",
     path: "/photoroom-alternative",
-    metadataTitle: "Photoroom Alternative for Faster Image Cleanup Workflows",
+    metadataTitle: "Photoroom Alternative for Product Image Cleanup | Remove Anything",
     metadataDescription:
       "Need a Photoroom alternative? Compare Remove Anything for background removal, white backgrounds, batch image utilities, and one-time pricing.",
     metadataKeywords:
@@ -352,7 +352,7 @@ export const alternativePages: Record<AlternativePageVariant, AlternativePageCon
   "pixelcut-alternative": {
     variant: "pixelcut-alternative",
     path: "/pixelcut-alternative",
-    metadataTitle: "Pixelcut Alternative for Product Image and Batch Utility Workflows",
+    metadataTitle: "Pixelcut Alternative for Product Image Workflows | Remove Anything",
     metadataDescription:
       "Compare Remove Anything as a Pixelcut alternative for background removal, white backgrounds, batch image cleanup, and flexible credit-based pricing.",
     metadataKeywords:
@@ -456,7 +456,7 @@ export const alternativePages: Record<AlternativePageVariant, AlternativePageCon
   "remove-anything-vs-remove-bg": {
     variant: "remove-anything-vs-remove-bg",
     path: "/remove-anything-vs-remove-bg",
-    metadataTitle: "Remove Anything vs remove.bg: Which Tool Fits Your Workflow?",
+    metadataTitle: "Remove Anything vs remove.bg for Background Cleanup Workflows",
     metadataDescription:
       "Compare Remove Anything vs remove.bg across background removal, batch tools, transparent PNG workflows, one-time pricing, and ecommerce image prep.",
     metadataKeywords:
@@ -566,9 +566,9 @@ export const alternativePages: Record<AlternativePageVariant, AlternativePageCon
 const alternativePageLocalizations: Partial<
   Record<AlternativePageLocale, Record<AlternativePageVariant, AlternativePageLocalization>>
 > = {
-  tw: {
+  "zh-tw": {
     "remove-bg-alternative": {
-      metadataTitle: "remove.bg 替代方案：更適合批量圖片工作流的選擇",
+      metadataTitle: "remove.bg 替代方案：更適合批量去背流程 | Remove Anything",
       metadataDescription:
         "想找 remove.bg alternative？比較 Remove Anything 與 remove.bg 在去背景、批量圖片工具、一次性點數與電商工作流上的差異。",
       metadataKeywords:
@@ -671,7 +671,7 @@ const alternativePageLocalizations: Partial<
       relatedTools: RELATED_TOOLS_TW,
     },
     "photoroom-alternative": {
-      metadataTitle: "Photoroom 替代方案：更輕量的商品圖整理工作流",
+      metadataTitle: "Photoroom 替代方案：更適合商品圖整理 | Remove Anything",
       metadataDescription:
         "想找 Photoroom alternative？比較 Remove Anything 在去背景、白底圖、批量圖片工具與一次性點數上的差異。",
       metadataKeywords:
@@ -774,7 +774,7 @@ const alternativePageLocalizations: Partial<
       relatedTools: RELATED_TOOLS_TW,
     },
     "pixelcut-alternative": {
-      metadataTitle: "Pixelcut 替代方案：更適合批量導出的瀏覽器路徑",
+      metadataTitle: "Pixelcut 替代方案：更適合商品圖工作流 | Remove Anything",
       metadataDescription:
         "想找 Pixelcut alternative？比較 Remove Anything 在去背景、批量圖片整理、一次性點數與電商輸出上的差異。",
       metadataKeywords:
@@ -877,7 +877,7 @@ const alternativePageLocalizations: Partial<
       relatedTools: RELATED_TOOLS_TW,
     },
     "remove-anything-vs-remove-bg": {
-      metadataTitle: "Remove Anything vs remove.bg：哪個更適合你的圖片工作流？",
+      metadataTitle: "Remove Anything vs remove.bg：哪個更適合背景清理工作流？",
       metadataDescription:
         "比較 Remove Anything 與 remove.bg 在去背景、批量工具、透明 PNG、一次性點數與電商圖片整理上的差異。",
       metadataKeywords:
