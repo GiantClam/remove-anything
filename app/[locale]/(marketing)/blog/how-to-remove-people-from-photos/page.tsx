@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Eraser, ArrowLeft } from "lucide-react";
 import { Link } from "@/lib/navigation";
 import { getMetadataBase } from "@/lib/utils";
-import { buildLocalizedPath, buildSeoMetadata } from "@/lib/seo";
+import { buildSeoMetadata } from "@/lib/seo";
 
 interface PageProps {
   params: { locale: string };
@@ -34,7 +34,7 @@ export default async function HowToRemovePeoplePage({
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12">
       <div className="mb-8">
-        <Link href={buildLocalizedPath(locale, "/blog")}>
+        <Link href="/blog">
           <Button variant="ghost" className="gap-2">
             <ArrowLeft className="size-4" />
             返回博客
@@ -106,7 +106,7 @@ export default async function HowToRemovePeoplePage({
         <p className="mb-6 text-muted-foreground">
           立即体验AI人物移除的强大功能，让您的照片更加完美
         </p>
-        <Link href={buildLocalizedPath(locale, "/remove-background")}>
+        <Link href="/remove-background">
           <Button size="lg" className="gap-2">
             <Eraser className="size-5" />
             免费开始使用

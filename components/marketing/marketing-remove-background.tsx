@@ -5,7 +5,6 @@ import { AlertCircle, ArrowRight, CheckCircle, LogIn, Sparkles } from "lucide-re
 import { Link } from "@/lib/navigation";
 import {
   buildBreadcrumbListSchema,
-  buildLocalizedPath,
   buildLocalizedUrl,
 } from "@/lib/seo";
 import {
@@ -285,14 +284,14 @@ export default async function MarketingRemoveBackground({
         <CardContent>
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Button asChild size="lg" className="flex items-center gap-2">
-              <Link href={buildLocalizedPath(locale, "/signin")}>
+              <Link href="/signin">
                 <LogIn className="size-4" />
                 {tPage("getStartedFree")}
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href={buildLocalizedPath(locale, "/pricing")}>
+              <Link href="/pricing">
                 {tPage("viewPricing")}
               </Link>
             </Button>

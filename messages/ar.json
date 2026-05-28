@@ -437,7 +437,7 @@
   },
   "LocaleSwitcher": {
     "label": "تغيير اللغة",
-    "locale": "{locale, select, zh {🇨🇳 简体中文} zh-tw {🇭🇰 繁體中文} en {🇺🇸 English} fr {🇫🇷 Français} ja {🇯🇵 日本語} ko {🇰🇷 한국어} es {🇪🇸 Español} de {🇩🇪 Deutsch} pt {🇧🇷 Português} ar {🇦🇪 العربية} other {Unknown}}"
+    "locale": "خيار اللغة"
   },
   "Manifest": {
     "name": "Remove Anything - مزيل الكائنات والخلفيات"

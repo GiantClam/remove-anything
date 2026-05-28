@@ -4,7 +4,6 @@ import * as React from "react";
 import { useParams } from "next/navigation";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 
 import { Icons } from "@/components/shared/icons";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,18 @@ import {
 import { Locale, locales } from "@/config";
 import { usePathname, useRouter } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+
+const LOCALE_LABELS: Record<Locale, string> = {
+  en: "🇺🇸 English",
+  "zh-tw": "🇭🇰 繁體中文",
+  fr: "🇫🇷 Français",
+  ja: "🇯🇵 日本語",
+  ko: "🇰🇷 한국어",
+  de: "🇩🇪 Deutsch",
+  pt: "🇧🇷 Português",
+  es: "🇪🇸 Español",
+  ar: "🇦🇪 العربية",
+};
 
 export function LocaleSwitcher() {
   const t = useTranslations("LocaleSwitcher");
@@ -77,7 +88,7 @@ export function LocaleSwitcher() {
               key={cur}
               onClick={() => changeLocale(cur)}
             >
-              <span>{t("locale", { locale: cur })}</span>
+              <span>{LOCALE_LABELS[cur]}</span>
               {locale === cur && (
                 <Icons.CheckIcon
                   className={cn("ml-auto h-4 w-4 opacity-100")}

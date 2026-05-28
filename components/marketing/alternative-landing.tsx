@@ -5,11 +5,7 @@ import {
   type AlternativePageLocale,
   type AlternativePageVariant,
 } from "@/lib/alternative-pages";
-import {
-  buildBreadcrumbListSchema,
-  buildLocalizedPath,
-  buildLocalizedUrl,
-} from "@/lib/seo";
+import { buildBreadcrumbListSchema, buildLocalizedUrl } from "@/lib/seo";
 import { Link } from "@/lib/navigation";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
@@ -96,13 +92,13 @@ export default function AlternativeLanding({
         </p>
         <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
           <Button asChild size="lg">
-            <Link href={buildLocalizedPath(locale, page.primaryCtaHref)}>
+            <Link href={page.primaryCtaHref}>
               {page.primaryCtaLabel}
               <ArrowRight className="ml-2 size-4" />
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href={buildLocalizedPath(locale, page.secondaryCtaHref)}>
+            <Link href={page.secondaryCtaHref}>
               {page.secondaryCtaLabel}
             </Link>
           </Button>
