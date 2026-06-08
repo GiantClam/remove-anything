@@ -89,7 +89,9 @@ export function Table({
           position: ["bottomRight"],
           pageSizeOptions: [10, 20, 30, 40, 50],
           onChange(page, pageSize) {
-            const newSearchParams = new URLSearchParams(searchParams);
+            const newSearchParams = new URLSearchParams(
+              searchParams?.toString(),
+            );
             newSearchParams.set("page", page + "");
             newSearchParams.set("pageSize", pageSize + "");
             router.push(`${pathname}?${newSearchParams.toString()}`, {
@@ -97,7 +99,9 @@ export function Table({
             });
           },
           onShowSizeChange(current, size) {
-            const newSearchParams = new URLSearchParams(searchParams);
+            const newSearchParams = new URLSearchParams(
+              searchParams?.toString(),
+            );
             newSearchParams.set("page", "1");
             newSearchParams.set("pageSize", size + "");
             router.push(`${pathname}?${newSearchParams.toString()}`, {

@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
       'r2.dev',
       'cloudflare',
       'remove-anything.com',
+      'xiaoyaoyou.com',
       'pub-.*\\.r2\\.dev', // R2 public bucket pattern
     ];
     

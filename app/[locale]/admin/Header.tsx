@@ -94,7 +94,7 @@ export default function AdminHeader() {
       </Drawer>
       <Breadcrumb
         className="!sm:hidden"
-        items={findMenu(menus, pathname)?.map((item, index) => {
+        items={findMenu(menus, pathname ?? "/")?.map((item, index) => {
           return {
             title: item.href ? (
               <Link href={item.href}>{item.name}</Link>

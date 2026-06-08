@@ -3,6 +3,7 @@ import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { PricingCardsWrapper } from "@/components/pricing-cards-wrapper";
 import { PricingFaq } from "@/components/pricing-faq";
 import { getChargeProduct } from "@/db/queries/charge-product";
+import { pricingFaqItems } from "@/lib/pricing-faq";
 import { getMetadataBase } from "@/lib/utils";
 import { buildBreadcrumbListSchema, buildSeoMetadata } from "@/lib/seo";
 
@@ -44,6 +45,18 @@ export default async function PricingPage({ params: { locale } }: Props) {
     { name: locale === "zh-tw" ? "首頁" : "Home", path: "/" },
     { name: t("label"), path: "/pricing" },
   ]);
+  const pricingFaqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: pricingFaqItems.map((faqItem) => ({
+      "@type": "Question",
+      name: t(`faq.${faqItem.questionKey}`),
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: t(`faq.${faqItem.answerKey}`),
+      },
+    })),
+  };
 
   return (
     <div className="flex w-full flex-col gap-16 py-8 md:py-8">
@@ -51,6 +64,11 @@ export default async function PricingPage({ params: { locale } }: Props) {
         id="pricing-breadcrumb-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        id="pricing-faq-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingFaqSchema) }}
       />
       <section className="container text-center">
         <h1 className="text-balance text-4xl font-semibold tracking-tight md:text-5xl">

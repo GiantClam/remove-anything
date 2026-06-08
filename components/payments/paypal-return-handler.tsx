@@ -21,8 +21,8 @@ export function PayPalReturnHandler() {
     let isMounted = true;
 
     async function capturePayment() {
-      const token = searchParams.get("token");
-      const orderId = searchParams.get("orderId");
+      const token = searchParams?.get("token");
+      const orderId = searchParams?.get("orderId");
 
       if (!token || !orderId) {
         window.location.replace(

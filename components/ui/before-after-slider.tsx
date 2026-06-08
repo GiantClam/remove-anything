@@ -41,6 +41,7 @@ export function BeforeAfterSlider({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const posRef = useRef<number>(50);
+  const dragPointerIdRef = useRef<number | null>(null);
 
   const applyVisuals = useCallback((pos: number) => {
     const beforeEl = beforeImgRef.current;
@@ -49,23 +50,82 @@ export function BeforeAfterSlider({
     if (dividerEl) dividerEl.style.transform = `translateX(${pos}%)`;
   }, []);
 
+  const updatePosition = useCallback(
+    (next: number) => {
+      const clamped = Math.max(0, Math.min(100, next));
+      posRef.current = clamped;
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+      }
+      frameRef.current = requestAnimationFrame(() => applyVisuals(clamped));
+      setPosition(clamped);
+    },
+    [applyVisuals],
+  );
+
   useEffect(() => {
     // initial paint
     applyVisuals(posRef.current);
   }, [applyVisuals]);
 
+  useEffect(() => {
+    return () => {
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    };
+  }, []);
+
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const next = Number(event.target.value);
-      posRef.current = next;
-      // schedule visual update in RAF to avoid main-thread thrash
-      if (frameRef.current) cancelAnimationFrame(frameRef.current);
-      frameRef.current = requestAnimationFrame(() => applyVisuals(next));
-      // keep state in sync for labels/aria (not used for visual updates)
-      setPosition(next);
+      updatePosition(Number(event.target.value));
     },
-    [applyVisuals],
+    [updatePosition],
   );
+
+  const updateFromClientX = useCallback(
+    (clientX: number) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect || rect.width <= 0) {
+        return;
+      }
+
+      const next = ((clientX - rect.left) / rect.width) * 100;
+      updatePosition(next);
+    },
+    [updatePosition],
+  );
+
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      dragPointerIdRef.current = event.pointerId;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      updateFromClientX(event.clientX);
+    },
+    [updateFromClientX],
+  );
+
+  const handlePointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (dragPointerIdRef.current !== event.pointerId) {
+        return;
+      }
+
+      updateFromClientX(event.clientX);
+    },
+    [updateFromClientX],
+  );
+
+  const finishPointerDrag = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (dragPointerIdRef.current !== event.pointerId) {
+      return;
+    }
+
+    dragPointerIdRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
 
   // Attach wheel listener with passive:false to allow preventDefault
   useEffect(() => {
@@ -130,6 +190,14 @@ export function BeforeAfterSlider({
             </div>
           </div>
         </div>
+
+        <div
+          className="absolute inset-0 z-10 cursor-ew-resize touch-none"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={finishPointerDrag}
+          onPointerCancel={finishPointerDrag}
+        />
       </div>
 
       <input
@@ -138,7 +206,7 @@ export function BeforeAfterSlider({
         max={100}
         value={position}
         onChange={handleChange}
-        className="absolute inset-0 z-10 size-full cursor-ew-resize opacity-0"
+        className="sr-only"
         aria-label="Adjust comparison"
       />
 

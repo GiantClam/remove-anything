@@ -113,7 +113,7 @@ export default function MarketingRemoveBackground({
   }, [defaultBackgroundType, defaultSelectedBackground, variant]);
 
   useEffect(() => {
-    const sample = searchParams.get("sample");
+    const sample = searchParams?.get("sample");
     if (!sample || uploadedFile || isProcessing || originalImage) {
       return;
     }

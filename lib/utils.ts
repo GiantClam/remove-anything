@@ -27,12 +27,18 @@ export function constructMetadata({
   image = siteConfig.ogImage,
   icons = "/favicon.ico",
   noIndex = false,
+  url = siteConfig.url,
+  openGraphType = "website",
+  locale = "en_US",
 }: {
   title?: string;
   description?: string;
   image?: string;
   icons?: string;
   noIndex?: boolean;
+  url?: string;
+  openGraphType?: "website" | "article";
+  locale?: string;
 } = {}): Metadata {
   return {
     title,
@@ -52,9 +58,9 @@ export function constructMetadata({
     ],
     creator: "Remove Anything",
     openGraph: {
-      type: "website",
-      locale: "en_US",
-      url: siteConfig.url,
+      type: openGraphType,
+      locale,
+      url,
       title,
       description,
       siteName: "Remove Anything",

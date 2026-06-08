@@ -211,14 +211,18 @@ export function PricingCards({
   });
 
   useEffect(() => {
-    if (!searchParams.size) {
+    if (!searchParams?.size) {
       return;
     }
-    if (searchParams.get("success") === "true") {
+    const currentSearchParams = searchParams;
+    if (!currentSearchParams) {
+      return;
+    }
+    if (currentSearchParams.get("success") === "true") {
       setTimeout(() => {
         reward();
       }, 1000);
-    } else if (searchParams.get("success") === "false") {
+    } else if (currentSearchParams.get("success") === "false") {
       console.log("支付失败");
     }
   }, [reward, searchParams]);

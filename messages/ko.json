@@ -503,7 +503,34 @@
       "title": "스마트 객체 제거 도구",
       "description": "고급 AI 기술을 사용하여 사진에서 원하지 않는 객체, 사람 또는 흠을 쉽게 제거합니다. 전문 기술이 필요하지 않으며, 그리기만 하면 완료됩니다.",
       "startButton": "객체 제거 시작",
-      "pricingButton": "가격 보기"
+      "pricingButton": "가격 보기",
+      "trust": "Usually around 40 seconds, sometimes a bit longer depending on image size and object complexity."
+    },
+    "toolbar": {
+      "brushObject": "Brush Object",
+      "aiSelect": "AI Select",
+      "reset": "Reset",
+      "box": "Box",
+      "brush": "Brush",
+      "erase": "Erase",
+      "brushSize": "Brush Size",
+      "undo": "Undo",
+      "redo": "Redo"
+    },
+    "aiSelectPanel": {
+      "title": "Describe what to remove",
+      "placeholder": "person, car, logo, text, watermark...",
+      "submit": "Detect Object",
+      "helper": "AI will suggest a mask. You can still brush or erase before removal.",
+      "error": "AI couldn't find a reliable object. Try a simpler phrase or brush it manually."
+    },
+    "result": {
+      "submit": "Remove Object",
+      "processingTitle": "Removing the object",
+      "processingHint": "Usually around 40 seconds, sometimes a bit longer.",
+      "retry": "Try Again",
+      "download": "Download Result",
+      "editAgain": "Edit Again"
     },
     "features": {
       "smartRecognition": {

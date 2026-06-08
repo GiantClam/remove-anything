@@ -21,7 +21,7 @@ export function PayPalCancelHandler() {
     let isMounted = true;
 
     async function cancelPayment() {
-      const orderId = searchParams.get("orderId");
+      const orderId = searchParams?.get("orderId");
 
       if (!orderId) {
         window.location.replace(buildPricingRedirect(window.location.pathname, ""));

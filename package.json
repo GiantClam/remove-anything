@@ -30,6 +30,7 @@
     "email": "email dev --dir emails --port 3333",
     "prettier": "prettier --write **/*.{js,ts,tsx}",
     "check-config": "node scripts/check-cloudflare-config.js",
+    "check:remove-objects-env": "node scripts/check-remove-objects-env.mjs",
     "setup-local": "node scripts/setup-local-dev.js",
     "dev:wrangler": "npx wrangler dev",
     "deploy": "npm run build:cloudflare && npx wrangler deploy",

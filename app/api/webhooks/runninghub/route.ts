@@ -1,12 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getErrorMessage } from "@/lib/handle-error";
-import { findWatermarkRemovalTaskByRunningHubId, updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";
+import { findObjectRemovalTaskByRunningHubId, updateObjectRemovalTask } from "@/db/queries/object-removal";
 import { findSora2VideoWatermarkRemovalTaskByRunningHubId, updateSora2VideoWatermarkRemovalTask } from "@/db/queries/sora2-video-watermark-removal";
+import { getErrorMessage } from "@/lib/handle-error";
+import { saveObjectRemovalImageToR2 } from "@/lib/remove-objects/output-image";
+import { getRunningHubOutputFileUrl } from "@/lib/remove-objects/runninghub";
+import { createR2S3Service } from "@/lib/r2-s3";
+import { taskQueueManager } from "@/lib/task-queue";
+import { findWatermarkRemovalTaskByRunningHubId, updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";
 import { nanoid } from "nanoid";
 import { env } from "@/env.mjs";
-import { shouldSkipDatabaseQuery } from "@/lib/build-check";
-import { taskQueueManager } from "@/lib/task-queue";
-import { createR2S3Service } from "@/lib/r2-s3";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = 'force-dynamic';
@@ -110,8 +112,9 @@ export async function POST(req: NextRequest) {
       // 即使API返回错误，我们也需要更新任务状态
     }
 
-    // 查找对应的任务记录（先查找图片去水印，再查找Sora2视频去水印）
+    // 查找对应的任务记录（先查找图片去水印，再查找删物，再查找Sora2视频去水印）
     let watermarkTaskRecord = await findWatermarkRemovalTaskByRunningHubId(taskId);
+    let objectRemovalTaskRecord: any = null;
     let sora2TaskRecord: any = null;
     let taskType = 'watermark-removal';
     let taskRecord: any = null;
@@ -120,10 +123,16 @@ export async function POST(req: NextRequest) {
       taskRecord = watermarkTaskRecord;
       taskType = 'watermark-removal';
     } else {
-      sora2TaskRecord = await findSora2VideoWatermarkRemovalTaskByRunningHubId(taskId);
-      if (sora2TaskRecord) {
-        taskRecord = sora2TaskRecord;
-        taskType = 'sora2-video-watermark-removal';
+      objectRemovalTaskRecord = await findObjectRemovalTaskByRunningHubId(taskId);
+      if (objectRemovalTaskRecord) {
+        taskRecord = objectRemovalTaskRecord;
+        taskType = 'object-removal';
+      } else {
+        sora2TaskRecord = await findSora2VideoWatermarkRemovalTaskByRunningHubId(taskId);
+        if (sora2TaskRecord) {
+          taskRecord = sora2TaskRecord;
+          taskType = 'sora2-video-watermark-removal';
+        }
       }
     }
     
@@ -143,39 +152,79 @@ export async function POST(req: NextRequest) {
       // 任务成功
       if (data && Array.isArray(data) && data.length > 0) {
         try {
-          const outputFile = data[0];
+          const outputFileUrl = getRunningHubOutputFileUrl(data);
           
           if (taskType === 'watermark-removal') {
             // 图片去水印：下载ZIP文件并保存到R2
-            const r2ZipUrl = await downloadAndSaveToR2(outputFile.fileUrl, taskRecord.id.toString());
+            const r2ZipUrl = await downloadAndSaveToR2(outputFileUrl!, taskRecord.id.toString());
             updateData = {
               taskStatus: "succeeded",
               outputZipUrl: r2ZipUrl,
               executeEndTime: BigInt(Date.now())
             };
             console.log(`✅ 图片去水印任务成功完成: ${taskId}，输出URL: ${r2ZipUrl}`);
+          } else if (taskType === 'object-removal') {
+            if (outputFileUrl) {
+              let persistedOutputUrl = outputFileUrl;
+              try {
+                persistedOutputUrl = await saveObjectRemovalImageToR2(
+                  outputFileUrl,
+                  taskId,
+                );
+                console.log(`✅ 删物结果已转存到R2: ${persistedOutputUrl}`);
+              } catch (r2Error) {
+                console.error(`❌ 删物结果转存R2失败，回退原始URL:`, r2Error);
+              }
+
+              updateData = {
+                taskStatus: "succeeded",
+                outputImageUrl: persistedOutputUrl,
+                executeEndTime: BigInt(Date.now())
+              };
+              console.log(`✅ 删物任务成功完成: ${taskId}，输出URL: ${persistedOutputUrl}`);
+            } else {
+              updateData = {
+                taskStatus: "failed",
+                errorMsg: "Object removal completed without an output image",
+                executeEndTime: BigInt(Date.now())
+              };
+              console.log(`❌ 删物任务完成但缺少输出图: ${taskId}`);
+            }
           } else if (taskType === 'sora2-video-watermark-removal') {
             // Sora2视频去水印：直接保存视频URL
             updateData = {
               taskStatus: "succeeded",
-              imageUrl: outputFile.fileUrl, // 使用imageUrl字段存储视频URL
+              imageUrl: outputFileUrl, // 使用imageUrl字段存储视频URL
               executeEndTime: BigInt(Date.now())
             };
-            console.log(`✅ Sora2视频去水印任务成功完成: ${taskId}，视频URL: ${outputFile.fileUrl}`);
+            console.log(`✅ Sora2视频去水印任务成功完成: ${taskId}，视频URL: ${outputFileUrl}`);
           }
         } catch (downloadError) {
           console.error("❌ 处理输出文件失败:", downloadError);
-          // 即使处理失败，也记录任务成功
-          updateData = {
-            taskStatus: "succeeded",
-            executeEndTime: BigInt(Date.now())
-          };
+          updateData =
+            taskType === "object-removal"
+              ? {
+                  taskStatus: "failed",
+                  errorMsg: getErrorMessage(downloadError),
+                  executeEndTime: BigInt(Date.now())
+                }
+              : {
+                  taskStatus: "succeeded",
+                  executeEndTime: BigInt(Date.now())
+                };
         }
       } else {
-        updateData = {
-          taskStatus: "succeeded",
-          executeEndTime: BigInt(Date.now())
-        };
+        updateData =
+          taskType === "object-removal"
+            ? {
+                taskStatus: "failed",
+                errorMsg: "Object removal completed without an output image",
+                executeEndTime: BigInt(Date.now())
+              }
+            : {
+                taskStatus: "succeeded",
+                executeEndTime: BigInt(Date.now())
+              };
         console.log(`✅ 任务成功完成: ${taskId}，但无输出文件`);
       }
     } else {
@@ -193,6 +242,9 @@ export async function POST(req: NextRequest) {
       if (taskType === 'watermark-removal') {
         await updateWatermarkRemovalTask(taskRecord.id, updateData);
         console.log(`🔄 已更新 WatermarkRemovalTask 记录: ${taskRecord.id}，状态: ${updateData.taskStatus}`);
+      } else if (taskType === 'object-removal') {
+        await updateObjectRemovalTask(taskRecord.id, updateData);
+        console.log(`🔄 已更新 ObjectRemovalTask 记录: ${taskRecord.id}，状态: ${updateData.taskStatus}`);
       } else if (taskType === 'sora2-video-watermark-removal') {
         await updateSora2VideoWatermarkRemovalTask(taskRecord.id, updateData);
         console.log(`🔄 已更新 Sora2VideoWatermarkRemovalTask 记录: ${taskRecord.id}，状态: ${updateData.taskStatus}`);
@@ -210,7 +262,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    console.log(`✅ RunningHub webhook 处理完成: ${taskId}，状态: ${status}`);
+    console.log(`✅ RunningHub webhook 处理完成: ${taskId}，状态: ${updateData.taskStatus}`);
 
     // 进入终态后停止 watcher
     try {

@@ -3,6 +3,7 @@ import { Metadata } from "next";
 
 import MarketingRemoveBackground from "@/components/marketing/marketing-remove-background";
 import { env } from "@/env.mjs";
+import { getBackgroundToolCopy } from "@/lib/background-tool-variants";
 import { buildSeoMetadata } from "@/lib/seo";
 import { getMetadataBase } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ export async function generateMetadata(
   { params: { locale }, searchParams }: PageProps & { searchParams?: { task?: string; before?: string; after?: string; id?: string; mode?: 'light' | 'dark' } }
 ): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: "RemoveBackgroundPage" });
+  const toolCopy = getBackgroundToolCopy(locale, "remove-background");
 
   const base = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
   const hasPair = !!(searchParams?.before && searchParams?.after);
@@ -31,7 +33,7 @@ export async function generateMetadata(
       path: "/remove-background",
       title: t("title"),
       description: t("description"),
-      keywords: t("keywords"),
+      keywords: toolCopy.metadataKeywords,
       ogImage,
       openGraphType: hasPair ? "article" : "website",
     }),

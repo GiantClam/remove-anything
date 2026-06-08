@@ -81,7 +81,7 @@ export const RenderMenu = (menu: MenuType) => {
   }, [pathname, menu]);
   const isActive = useMemo(() => {
     if (menu.isActive) {
-      return menu.isActive(pathname);
+      return menu.isActive(pathname ?? "/");
     }
     return menu.href === pathname;
   }, [menu, pathname]);
@@ -126,7 +126,7 @@ export const RenderMenu = (menu: MenuType) => {
         {menu.children && (
           <div className={openPopover ? "block h-auto" : "hidden h-0"}>
             <div className="relative !min-h-[auto] !min-w-[auto]">
-              {RenderMenus(menu.children, pathname, openPopover)}
+              {RenderMenus(menu.children, pathname ?? undefined, openPopover)}
             </div>
           </div>
         )}

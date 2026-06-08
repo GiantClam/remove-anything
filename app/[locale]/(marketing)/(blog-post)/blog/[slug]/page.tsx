@@ -82,6 +82,8 @@ export async function generateMetadata({
     title: `${title} - ${t("LocaleLayout.title")}`,
     description: description,
     image,
+    url: buildLocalizedUrl(params.locale, `/blog/${params.slug}`),
+    openGraphType: "article",
   });
 
   return {

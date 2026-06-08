@@ -560,64 +560,38 @@
     "description": "就支援、付款、回饋或合作洽詢與 Remove Anything 團隊聯絡。"
   },
   "RemoveObjectsPage": {
-    "title": "敬請期待 - 智能物件移除工具 - Remove Anything",
-    "description": "先進的AI物件移除工具即將推出。敬請期待最智能的方式來移除照片中不需要的物件、人物和瑕疵。",
-    "keywords": "敬請期待, 物件移除, 圖像橡皮擦, 線上照片編輯, 照片物件移除, 人物移除, 浮水印移除, 文字移除, AI圖像編輯, 線上圖像處理工具",
+    "title": "以框選與 SAM3.1 移除照片中的物件 | Remove Anything",
+    "description": "先用方框圈住目標，再讓 SAM3.1 精修選區，輕鬆移除照片中的路人、標誌、文字與雜物。",
+    "keywords": "物件移除, 移除照片人物, AI 物件移除, 移除圖片文字, 移除圖片標誌",
     "hero": {
-      "title": "敬請期待 - 智能物件移除工具",
-      "description": "我們的先進AI物件移除工具正在開發中。準備好體驗最智能的方式來移除照片中不需要的物件、人物和瑕疵。無需專業技能，塗抹即可完成。",
-      "startButton": "敬請期待",
-      "pricingButton": "查看定價"
+      "title": "先框出要移除的區域",
+      "description": "先用單一方框圈住目標，再讓 SAM3.1 協助精修選區，輕鬆移除不想要的物件並自然融合背景。",
+      "trust": "通常約 40 秒完成，會依圖片尺寸與物件複雜度略有浮動。"
     },
-    "features": {
-      "smartRecognition": {
-        "title": "智能識別",
-        "description": "AI自動識別要移除的物件，無需手動選擇邊界"
-      },
-      "simpleOperation": {
-        "title": "簡單操作",
-        "description": "只需塗抹要移除的區域，AI自動完成剩餘工作"
-      },
-      "highQuality": {
-        "title": "高清輸出",
-        "description": "保持原始圖片品質，輸出高清無浮水印結果"
-      }
+    "toolbar": {
+      "brushObject": "框選物件",
+      "reset": "重設",
+      "box": "方框",
+      "brush": "筆刷",
+      "erase": "擦除",
+      "brushSize": "筆刷大小",
+      "undo": "復原",
+      "redo": "重做"
     },
-    "useCases": {
-      "title": "應用場景",
-      "touristRemoval": {
-        "title": "移除遊客和路人",
-        "description": "在旅遊景點拍攝的照片中，輕鬆移除背景中的遊客，讓您的照片更加完美。",
-        "benefit1": "自動識別人物輪廓",
-        "benefit2": "智能填充背景",
-        "benefit3": "保持自然效果"
-      },
-      "watermarkRemoval": {
-        "title": "移除浮水印和文字",
-        "description": "輕鬆移除圖片中的浮水印、文字標記或不需要的標識，保護您的作品。",
-        "benefit1": "精確識別文字區域",
-        "benefit2": "智能背景重建",
-        "benefit3": "無痕跡移除"
-      },
-      "productPhoto": {
-        "title": "清理產品照片",
-        "description": "為電商平台創建專業的產品照片，移除背景雜物，突出產品主體。",
-        "benefit1": "專業級摳圖效果",
-        "benefit2": "批次處理支援",
-        "benefit3": "電商專用優化"
-      },
-      "photoRestoration": {
-        "title": "修復舊照片",
-        "description": "修復老照片中的折痕、污點或損壞區域，讓珍貴的回憶重現光彩。",
-        "benefit1": "智能污點識別",
-        "benefit2": "自然修復效果",
-        "benefit3": "保持歷史感"
-      }
+    "aiSelectPanel": {
+      "title": "描述要移除的目標",
+      "placeholder": "人物、汽車、logo、文字、浮水印...",
+      "submit": "偵測物件",
+      "helper": "AI 會先提供建議遮罩，你仍可在移除前繼續刷選或擦除微調。",
+      "error": "AI 沒有找到可靠的目標。請改用更簡單的描述，或直接手動畫出區域。"
     },
-    "cta": {
-      "title": "敬請期待！",
-      "description": "我們的AI物件移除工具正在開發中。註冊以獲取更新，成為第一個知道它推出的人！",
-      "button": "當可用時通知我"
+    "result": {
+      "submit": "移除物件",
+      "processingTitle": "正在移除物件",
+      "processingHint": "通常約 40 秒完成，偶爾會再久一點。",
+      "retry": "再試一次",
+      "download": "下載結果",
+      "editAgain": "重新編輯"
     }
   },
   "RemoveWatermarkPage": {

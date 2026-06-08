@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { AlertCircle, ArrowRight, CheckCircle, LogIn, Sparkles } from "lucide-react";
 
@@ -15,32 +14,11 @@ import {
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-const MarketingRemoveBackgroundClient = dynamic(
-  () => import("./marketing-remove-background-client"),
-  {
-    ssr: false,
-    loading: () => <MarketingRemoveBackgroundInteractiveSkeleton />,
-  },
-);
+import MarketingRemoveBackgroundClient from "./marketing-remove-background-client";
 
 interface MarketingRemoveBackgroundProps {
   locale: string;
   variant?: BackgroundToolVariant;
-}
-
-function MarketingRemoveBackgroundInteractiveSkeleton() {
-  return (
-    <Card className="mb-8">
-      <CardHeader>
-        <div className="h-6 w-40 rounded bg-muted/60" />
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="mx-auto h-64 max-w-2xl rounded-2xl border border-dashed bg-muted/20" />
-        <div className="mx-auto h-[520px] max-w-[520px] rounded-2xl border bg-muted/20" />
-      </CardContent>
-    </Card>
-  );
 }
 
 function buildSchemas(locale: string, path: string, metadataTitle: string, metadataDescription: string, schemaCategory: string, faqItems: Array<{ question: string; answer: string }>) {

@@ -47,7 +47,7 @@ export function UserInfo() {
             <LocaleSwitcher />
             <div className="pointer-events-auto relative flex h-10 items-center">
               <UserButton
-                afterSignOutUrl={pathname}
+                afterSignOutUrl={pathname ?? "/"}
                 appearance={{
                   elements: {
                     avatarBox: "w-9 h-9 ring-2 ring-white/20",
@@ -77,7 +77,7 @@ export function UserInfo() {
             <div className="pointer-events-auto">
               <SignInButton
                 mode="modal"
-                forceRedirectUrl={pathname}
+                forceRedirectUrl={pathname ?? "/"}
               >
                 <button
                   type="button"
@@ -100,7 +100,7 @@ export function UserInfo() {
           <LocaleSwitcher />
           <div className="pointer-events-auto relative flex h-10 items-center">
             <UserButton
-              afterSignOutUrl={pathname}
+              afterSignOutUrl={pathname ?? "/"}
               appearance={{
                 elements: {
                   avatarBox: "w-9 h-9 ring-2 ring-white/20",
@@ -132,7 +132,7 @@ export function UserInfo() {
               <Tooltip>
                 <SignInButton
                   mode="modal"
-                  forceRedirectUrl={pathname}
+                  forceRedirectUrl={pathname ?? "/"}
                 >
                   <TooltipTrigger asChild>
                     <button

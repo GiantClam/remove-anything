@@ -566,64 +566,38 @@
     "description": "Get in touch about support, billing questions, feedback, or partnership opportunities."
   },
   "RemoveObjectsPage": {
-    "title": "Coming Soon - Smart Object Removal Tool - Remove Anything",
-    "description": "Advanced AI object removal tool is coming soon. Stay tuned for the most intelligent way to remove unwanted objects, people, and blemishes from photos.",
-    "keywords": "coming soon, object removal, image eraser, online photo editing, photo object remover, remove people, remove watermark, remove text, AI image editing, online image processing tool",
+    "title": "Remove Objects from Photos with Box Select + SAM3.1 | Remove Anything",
+    "description": "Draw a box around unwanted objects, let SAM3.1 refine the target mask, and remove distractions from photos with a natural-looking result.",
+    "keywords": "remove objects from photos, remove person from image, ai object remover, remove text from image, remove logo from photo",
     "hero": {
-      "title": "Coming Soon - Smart Object Removal Tool",
-      "description": "Our advanced AI object removal tool is under development. Get ready for the most intelligent way to remove unwanted objects, people, and blemishes from photos. No professional skills required, just paint to complete.",
-      "startButton": "Coming Soon",
-      "pricingButton": "View Pricing"
+      "title": "Draw a box around what you want removed",
+      "description": "Start with a single box, let SAM3.1 refine the selection, then remove unwanted objects with a natural blend.",
+      "trust": "Usually around 40 seconds, sometimes a bit longer depending on image size and object complexity."
     },
-    "features": {
-      "smartRecognition": {
-        "title": "Smart Recognition",
-        "description": "AI automatically identifies objects to remove without manual boundary selection"
-      },
-      "simpleOperation": {
-        "title": "Simple Operation",
-        "description": "Just paint the area to remove, AI automatically completes the rest"
-      },
-      "highQuality": {
-        "title": "High Quality Output",
-        "description": "Maintains original image quality with high-definition, watermark-free results"
-      }
+    "toolbar": {
+      "brushObject": "Box Select",
+      "reset": "Reset",
+      "box": "Box",
+      "brush": "Brush",
+      "erase": "Erase",
+      "brushSize": "Brush Size",
+      "undo": "Undo",
+      "redo": "Redo"
     },
-    "useCases": {
-      "title": "Use Cases",
-      "touristRemoval": {
-        "title": "Remove Tourists and Passersby",
-        "description": "Easily remove background tourists from photos taken at tourist attractions, making your photos more perfect.",
-        "benefit1": "Automatic person contour recognition",
-        "benefit2": "Intelligent background filling",
-        "benefit3": "Maintains natural effects"
-      },
-      "watermarkRemoval": {
-        "title": "Remove Watermarks and Text",
-        "description": "Easily remove watermarks, text marks, or unwanted identifiers from images to protect your work.",
-        "benefit1": "Precise text area recognition",
-        "benefit2": "Intelligent background reconstruction",
-        "benefit3": "Seamless removal"
-      },
-      "productPhoto": {
-        "title": "Clean Product Photos",
-        "description": "Create professional product photos for e-commerce platforms by removing background clutter and highlighting the main product.",
-        "benefit1": "Professional-level cutout effects",
-        "benefit2": "Batch processing support",
-        "benefit3": "E-commerce optimized"
-      },
-      "photoRestoration": {
-        "title": "Restore Old Photos",
-        "description": "Repair creases, stains, or damaged areas in old photos, bringing precious memories back to life.",
-        "benefit1": "Intelligent stain recognition",
-        "benefit2": "Natural restoration effects",
-        "benefit3": "Preserves historical feel"
-      }
+    "aiSelectPanel": {
+      "title": "Describe what to remove",
+      "placeholder": "person, car, logo, text, watermark...",
+      "submit": "Detect Object",
+      "helper": "AI will suggest a mask. You can still brush or erase before removal.",
+      "error": "AI couldn't find a reliable object. Try a simpler phrase or brush it manually."
     },
-    "cta": {
-      "title": "Coming Soon!",
-      "description": "Our AI object removal tool is under development. Sign up for updates and be the first to know when it launches!",
-      "button": "Notify Me When Available"
+    "result": {
+      "submit": "Remove Object",
+      "processingTitle": "Removing the object",
+      "processingHint": "Usually around 40 seconds, sometimes a bit longer.",
+      "retry": "Try Again",
+      "download": "Download Result",
+      "editAgain": "Edit Again"
     }
   },
   "RemoveWatermarkPage": {

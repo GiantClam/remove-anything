@@ -498,7 +498,34 @@
       "title": "Bientôt disponible - Outil de suppression d'objets intelligent",
       "description": "Notre outil de suppression d'objets IA avancé est en cours de développement. Préparez-vous à expérimenter la façon la plus intelligente de supprimer les objets, personnes et défauts indésirables des photos. Aucune compétence professionnelle requise, il suffit de dessiner pour terminer.",
       "startButton": "Bientôt disponible",
-      "pricingButton": "Voir les tarifs"
+      "pricingButton": "Voir les tarifs",
+      "trust": "Usually around 40 seconds, sometimes a bit longer depending on image size and object complexity."
+    },
+    "toolbar": {
+      "brushObject": "Brush Object",
+      "aiSelect": "AI Select",
+      "reset": "Reset",
+      "box": "Box",
+      "brush": "Brush",
+      "erase": "Erase",
+      "brushSize": "Brush Size",
+      "undo": "Undo",
+      "redo": "Redo"
+    },
+    "aiSelectPanel": {
+      "title": "Describe what to remove",
+      "placeholder": "person, car, logo, text, watermark...",
+      "submit": "Detect Object",
+      "helper": "AI will suggest a mask. You can still brush or erase before removal.",
+      "error": "AI couldn't find a reliable object. Try a simpler phrase or brush it manually."
+    },
+    "result": {
+      "submit": "Remove Object",
+      "processingTitle": "Removing the object",
+      "processingHint": "Usually around 40 seconds, sometimes a bit longer.",
+      "retry": "Try Again",
+      "download": "Download Result",
+      "editAgain": "Edit Again"
     },
     "features": {
       "smartRecognition": {

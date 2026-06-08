@@ -521,7 +521,34 @@
       "title": "Intelligentes Objekt-Entfernungstool",
       "description": "Verwenden Sie fortschrittliche KI-Technologie, um unerwünschte Objekte, Personen oder Mängel aus Fotos einfach zu entfernen. Keine professionellen Fähigkeiten erforderlich, zeichnen Sie einfach, um abzuschließen.",
       "startButton": "Objekte entfernen starten",
-      "pricingButton": "Preise anzeigen"
+      "pricingButton": "Preise anzeigen",
+      "trust": "Usually around 40 seconds, sometimes a bit longer depending on image size and object complexity."
+    },
+    "toolbar": {
+      "brushObject": "Brush Object",
+      "aiSelect": "AI Select",
+      "reset": "Reset",
+      "box": "Box",
+      "brush": "Brush",
+      "erase": "Erase",
+      "brushSize": "Brush Size",
+      "undo": "Undo",
+      "redo": "Redo"
+    },
+    "aiSelectPanel": {
+      "title": "Describe what to remove",
+      "placeholder": "person, car, logo, text, watermark...",
+      "submit": "Detect Object",
+      "helper": "AI will suggest a mask. You can still brush or erase before removal.",
+      "error": "AI couldn't find a reliable object. Try a simpler phrase or brush it manually."
+    },
+    "result": {
+      "submit": "Remove Object",
+      "processingTitle": "Removing the object",
+      "processingHint": "Usually around 40 seconds, sometimes a bit longer.",
+      "retry": "Try Again",
+      "download": "Download Result",
+      "editAgain": "Edit Again"
     },
     "features": {
       "smartRecognition": {

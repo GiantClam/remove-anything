@@ -40,6 +40,20 @@ export interface RunningHubAPIConfig {
   defaultWorkflowId?: string;
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableCreateTaskError(message: string) {
+  return (
+    message.includes("TASK_QUEUE_MAXED") ||
+    message.includes("status=504") ||
+    message.includes("status=503") ||
+    message.includes("status=502") ||
+    message.includes("fetch failed")
+  );
+}
+
 export class RunningHubAPI {
   private baseUrl: string;
   private apiKey: string;
@@ -91,11 +105,27 @@ export class RunningHubAPI {
     const { workflowId, nodeInfoList, taskRecordId } = options;
     const webhookUrl = taskRecordId ? `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/webhooks/runninghub` : undefined;
     const payload = { apiKey: this.apiKey, workflowId, nodeInfoList, ...(webhookUrl && { webhookUrl }) };
-    const response = await fetch(`${this.baseUrl}/task/openapi/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    if (!response.ok) { let bodyText: string | undefined; try { bodyText = await response.text(); } catch {}; throw new Error(`Create task failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`); }
-    const result = await response.json() as RunningHubCreateTaskResponse;
-    if (result.code !== 0) throw new Error(`Create task failed (api): ${result.msg}`);
-    return result.data.taskId;
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      try {
+        const response = await fetch(`${this.baseUrl}/task/openapi/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!response.ok) { let bodyText: string | undefined; try { bodyText = await response.text(); } catch {}; throw new Error(`Create task failed: status=${response.status} ${response.statusText} body=${bodyText || ''}`); }
+        const result = await response.json() as RunningHubCreateTaskResponse;
+        if (result.code !== 0) throw new Error(`Create task failed (api): ${result.msg}`);
+        return result.data.taskId;
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : typeof error === "string" ? error : "Create task failed";
+
+        if (!isRetryableCreateTaskError(message) || attempt === 7) {
+          throw error;
+        }
+
+        await sleep(Math.min(1500 * (attempt + 1), 6000));
+      }
+    }
+
+    throw new Error("Create task failed after retries");
   }
 
   async cancelTask(taskId: string): Promise<boolean> {
@@ -116,6 +146,34 @@ export class RunningHubAPI {
     const uploadNodeId = options?.uploadNodeId || '205';
     const uploadFieldName = options?.uploadFieldName || 'video';
     return this.createTaskGeneric({ workflowId, nodeInfoList: [{ nodeId: uploadNodeId, fieldName: uploadFieldName, fieldValue: filename }], taskRecordId });
+  }
+
+  async createObjectDetectTask(nodeInfoList: RunningHubNodeInput[]): Promise<string> {
+    const workflowId = process.env.RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID;
+    if (!workflowId || workflowId === "placeholder") {
+      throw new Error("RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID is not configured");
+    }
+
+    return this.createTaskGeneric({ workflowId, nodeInfoList });
+  }
+
+  async createObjectSegmentTask(nodeInfoList: RunningHubNodeInput[]): Promise<string> {
+    const workflowId =
+      process.env.RUNNINGHUB_OBJECT_SEGMENT_WORKFLOW_ID ||
+      "2062736566451269633";
+
+    return this.createTaskGeneric({ workflowId, nodeInfoList });
+  }
+
+  async createObjectRemoveTask(nodeInfoList: RunningHubNodeInput[], taskRecordId?: number): Promise<string> {
+    const workflowId =
+      process.env.RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID ||
+      "2063827026330607618";
+    if (!workflowId || workflowId === "placeholder") {
+      throw new Error("RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID is not configured");
+    }
+
+    return this.createTaskGeneric({ workflowId, nodeInfoList, taskRecordId });
   }
 
   async getTaskStatus(taskId: string): Promise<RunningHubTaskStatus> {
@@ -143,4 +201,3 @@ export class RunningHubAPI {
 }
 
 export const runninghubAPI = new RunningHubAPI();
-

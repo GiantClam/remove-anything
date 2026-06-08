@@ -1,5 +1,4 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
-import Script from "next/script";
 
 import Examples from "@/components/sections/examples";
 import CompareTools from "@/components/sections/compare-tools";
@@ -103,28 +102,28 @@ export default function IndexPage({ params: { locale } }: Props) {
 
   return (
     <>
-      <Script
+      <script
         id="structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(softwareApplicationSchema)
         }}
       />
-      <Script
+      <script
         id="organization-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(organizationSchema),
         }}
       />
-      <Script
+      <script
         id="website-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(webSiteSchema),
         }}
       />
-      <Script
+      <script
         id="homepage-breadcrumb-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
