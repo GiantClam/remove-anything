@@ -34,6 +34,7 @@
     "prettier": "prettier --write **/*.{js,ts,tsx}",
     "check-config": "node scripts/check-cloudflare-config.js",
     "check:remove-objects-env": "node scripts/check-remove-objects-env.mjs",
+    "preflight:production": "node scripts/production-preflight.mjs",
     "setup-local": "node scripts/setup-local-dev.js",
     "dev:wrangler": "npx wrangler dev",
     "deploy": "npm run build:cloudflare && npx wrangler deploy",
