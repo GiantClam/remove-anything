@@ -235,6 +235,31 @@ export async function resolve(specifier, context, nextResolve) {
   }
   if (
     new Set([
+      path.join(root, "app/api/background-composition/route.ts"),
+      path.join(root, "app/api/background-images/route.ts"),
+    ]).has(parentPath)
+  ) {
+    if (specifier === "next/server")
+      return nextResolve("next/server.js", context);
+    if (
+      new Set([
+        "@/lib/auth-utils",
+        "@/db/prisma",
+        "@/lib/upload",
+        "@/lib/handle-error",
+      ]).has(specifier)
+    ) {
+      const stub = parentPath.endsWith("background-composition/route.ts")
+        ? "background-composition-route-stubs.ts"
+        : "background-images-route-stubs.ts";
+      return {
+        url: pathToFileURL(path.join(root, "tests/support", stub)).href,
+        shortCircuit: true,
+      };
+    }
+  }
+  if (
+    new Set([
       path.join(root, "app/api/upload/route.ts"),
       path.join(root, "app/api/remove-objects/assets/route.ts"),
     ]).has(parentPath)

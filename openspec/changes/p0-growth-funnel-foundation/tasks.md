@@ -35,6 +35,7 @@ Earlier account evidence records GA4 account `29849090`, property `559043519`, s
 - [x] Verify subject, state, expiry, private headers, allowed output types, and bounded reads on the core background/object/watermark download paths.
 - [x] Decode image inputs and verify MIME, 10MB bytes, 40MP safety limits, trusted HTTPS source origins, and matching PNG-mask dimensions in the main image creation/upload routes.
 - [x] Return authorized preview addresses from background status GET/SSE and keep preview requests out of download counts; sign private R2 downloads on the server.
+- [x] Require an authenticated owner for composition creation/update and constrain the final update to that owner; require database-backed administrator permission for background-library creation and nonpublic listing, with denial before side effects.
 - [ ] Enforce anonymous low-resolution output on the server and implement approved paid/full-output entitlements.
 - [ ] Enforce declared processing timeout, queue/concurrency limits, retry behavior, and input safety consistently in remaining detection/segmentation/composition flows.
 - [ ] Close background composition authorization and historical public storage/URL bypasses; verify actual provider source approvals and private bucket policy.
@@ -67,7 +68,8 @@ The worker is implemented in dry-run mode. As of 2026-10-15, execution is delibe
 - [x] Implement and test a read-only environment/schema preflight with column/index definitions and independently reviewed migration-receipt checks; a passing result does not close the full-spec release gates.
 - [x] Trace the unapplied historical `flux_*` mapping change and record the scoped baseline compatibility plan preserving existing task IDs and billing references.
 - [x] Rehearse scoped baseline repair and P0 patches on the isolated PostgreSQL 17 branch; verify mapped columns, sequence/table identity, indexes, repeated patches, and new-table RLS/ACL.
-- [ ] Verify synthetic historical data and exact-binary rollback, complete the remaining baseline, and isolate Preview resources. Schema-only results remain separate from full integration acceptance.
+- [x] Verify synthetic historical task IDs, billing links, download/view relationships, scalar types and ownership predicates in a staging-only SQL transaction; independently confirm rollback cleanup and unchanged sequence state.
+- [ ] Verify exact Prisma/application binary compatibility and rollback, complete the remaining baseline, and isolate Preview resources. SQL-only results remain separate from full integration acceptance.
 - [x] Add unit and in-process route tests for registry/cost gates, quota, reservations, states, refunds, analytics IDs, callbacks, secure downloads, retention, and Stripe fulfillment.
 - [x] Render all six canonical pages in English and the existing `zh-tw` locale in a browser and inspect H1, contracts, metadata, Schema, related links, and locale URLs.
 - [x] Complete a mocked watermark queued/success/ZIP-download/expired-error browser flow, with the mock and development-auth boundaries recorded.
@@ -77,4 +79,4 @@ The worker is implemented in dry-run mode. As of 2026-10-15, execution is delibe
 - [ ] Start the 28-day baseline only after every release gate passes.
 - [ ] Expand to P1 pages only after the three-page impressions, stable funnel, and attributable signal gates pass.
 
-Local command results and browser evidence are recorded in `implementation-evidence.md`. The 2026-10-15 local SEO/HTTP smoke passed with GA loader scheduling, and browser hydration confirmed the configured GA ID only with external requests blocked. See `staging-migration-evidence.md` for the separate database rehearsal and `environment-setup.md` for remaining environment setup. A passing local suite does not close external-service, output entitlement, physical retention, or production measurement gates.
+Local command results and browser evidence are recorded in `implementation-evidence.md`. The 2026-10-15 local SEO/HTTP smoke passed with GA loader scheduling, and browser hydration confirmed the configured GA ID only with external requests blocked. See `staging-migration-evidence.md` for the schema rehearsal, `staging-compatibility-evidence.md` for SQL-only historical fixtures, and `environment-setup.md` for remaining environment setup. A passing local suite does not close external-service, output entitlement, physical retention, or production measurement gates.
