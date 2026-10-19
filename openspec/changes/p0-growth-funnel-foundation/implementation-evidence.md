@@ -1,6 +1,6 @@
 # P0 implementation evidence
 
-Reviewed: 2026-10-15 (Asia/Shanghai). Change status: **in progress**. This working tree has not been deployed, the schema migrations have not been applied to a real database in this implementation pass, and the 28-day baseline has not started.
+Reviewed: 2026-10-19 (Asia/Shanghai). Change status: **in progress**. The application branch has a Vercel Preview; production still runs `36d7e86460f837f7369f0caab6b0d62b65a8ce2c`. Isolated database rehearsal is documented separately below; production migrations and the 28-day baseline have not started. Dated local evidence below describes its original verification scope.
 
 ## Implemented behavior
 
@@ -42,7 +42,7 @@ Build/browser checks use `SKIP_DB_BUILD=1` to avoid build-time database reads. T
 1. Implement server-generated anonymous low-resolution output and protected approved full-output/upgrade entitlements. Resolution metadata alone is not enforcement.
 2. Complete input safety for composition and enforce declared processing timeout/concurrency rules across all core tools. Detect/segment input checks are locally covered, but still need production rollout evidence.
 3. Verify provider-source allowlists, callback-secret delivery, composition authorization and private storage policy; reconcile historical public URLs, then validate the six complete real upload/result/error/retry/download flows.
-4. Apply/rehearse `0002_task_lifecycle.sql`, `0003_authorization_audit.sql`, and `0004_task_retention.sql`; validate real serializable reservations, callbacks, credit/payment reconciliation and rollback.
+4. Complete the scoped legacy-baseline reconciliation and rehearse `0002_task_lifecycle.sql`, `0003_authorization_audit.sql`, and `0004_task_retention.sql`; validate synthetic historical references, real serializable reservations, callbacks, credit/payment reconciliation and exact-binary rollback. The isolated schema-only rehearsal is tracked in `staging-migration-evidence.md` and does not authorize production migration.
 5. Fulfill physical source/result deletion and 90-day minimal audit retention for all storage/provider/task paths. Review dry-run blockers before enabling bounded execution; see `retention-runbook.md`.
 6. Complete the behavioral event chain, durable server delivery and weekly slices/reliability reporting; attach production GA4 DebugView/realtime, GSC, deployed SEO, purchase and audit evidence.
 7. Start the 28-day baseline only after those gates pass. Require three pages with real GSC impressions, stable completion/download baselines, and an attributable registration/purchase/lead before P1 expansion.
@@ -51,3 +51,19 @@ Build/browser checks use `SKIP_DB_BUILD=1` to avoid build-time database reads. T
 ## Reviewable source documents
 
 `requirements.md`, `owners.md`, and `weekly-funnel-review.md` preserve the previously ignored `docs/` documents inside this change so reviewers can read the approved requirements, operating roles, and report contract. The research documents referenced by `proposal.md` remain dated research inputs, not proof of current traffic or revenue.
+
+## Release environment audit, 2026-10-19
+
+The current Vercel production deployment is `dpl_FrcLQaaH2Wu2YYPbjuRvTeeAui76`, `READY`, Git SHA `36d7e86460f837f7369f0caab6b0d62b65a8ce2c`. The earlier branch Preview (`b7106ff`) was `READY`; a protected read-only `vercel curl /remove-objects` returned HTTP 200 and included JSON-LD. That proves Preview page output only. Preview inherited the production database and R2 settings without branch overrides; no task, provider, cron, or migration acceptance may use that deployment.
+
+Production database reads found 253 legacy `flux_data` tasks and 65 non-null `user_billing.flux_id` references with zero orphans. `background_removal_tasks` and `object_removal_tasks` exist; `task_data`, watermark, batch, composition, and queue baselines were not present. Historical commit `cd6cca7` changed physical mappings in code and historical SQL without an `ALTER RENAME` migration. Whole-schema `prisma db push` would also reach unrelated projects in this shared database. The current production/rollback binary already expects the newer `task_*` names, so the scoped repair must preserve old IDs and billing references while aligning that binary. See `baseline-compatibility-plan.md`.
+
+The separate Supabase branch `remove-anything-p0-staging` (`pqrfvwgldarfbcfdxave`) was verified healthy and data-less before rehearsal. It uses PostgreSQL 17.11. See `staging-migration-evidence.md` and the adjacent review-only SQL for the exact mutations, schema checks, and remaining data/application/privilege gates. It must not be merged wholesale into the shared production database.
+
+The strengthened production preflight performs read-only database connections and checks column definitions, timestamp precision, index validity/readiness/definitions, unfinished migration rows, and a manually reviewed receipt bound to target identity and the three current patch checksums. It rejects ambiguous database URL overrides, shared-pooler target collisions, impossible/future timestamps, and invalid/missing receipts. It never creates a receipt or applies SQL, and its output scope explicitly excludes full-spec readiness.
+
+Fresh production environment inspection still lacks the detection workflow, approved RunningHub output prefixes, generic task-callback key, and Stripe signing secret. Segment/remove IDs have code defaults; provider acceptance is still unverified. Cloudflare Worker deployment credentials are absent and are separate from Vercel runtime. Existing R2 credentials returned HTTP 403 on `ListBuckets`; no isolated staging bucket or bucket-scoped credential was established. `environment-setup.md` records the smallest setup needed and the distinct optional Worker CI permissions.
+
+Production has not been modified or promoted during this audit. Release acceptance remains blocked by isolated application resources, complete baseline/rollback checks, provider/storage behavior, entitlements, composition authorization, retention, analytics, and the other unchecked tasks.
+
+Fresh local verification after the preflight fixes: `pnpm test` **222/222 passed**, exit 0; focused preflight suite **16/16 passed**; `pnpm exec tsc --noEmit --pretty false --incremental false` exit 0. The full-suite output is retained locally at `/tmp/remove-anything-p0-final-tests-20261019.log`. A fresh read-only run against the production environment returned database connection `ok`, **31 schema blockers**, the four missing runtime settings listed above, and no migration receipt; release preflight remains blocked as intended.

@@ -5,7 +5,7 @@
  *
  * The command intentionally reports environment variable names and status only;
  * it never prints variable values, connection strings, row data, or secrets.
- * Database checks use information_schema/pg_indexes and migration metadata reads.
+ * Database checks use information_schema/pg_catalog and migration metadata reads.
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -31,18 +31,21 @@ export const REQUIRED_ENV = [
   "RUNNINGHUB_API_BASE_URL",
   "RUNNINGHUB_API_KEY",
   "RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID",
-  "RUNNINGHUB_OBJECT_SEGMENT_WORKFLOW_ID",
-  "RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID",
   "RUNNINGHUB_OUTPUT_URL_PREFIXES",
-  "RUNNINGHUB_WEBHOOK_SECRET",
   "CRON_SECRET",
   "TASK_HEADER_KEY",
   "WEBHOOK_SECRET",
   "STRIPE_API_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "CLOUDFLARE_AI_GATEWAY_URL",
-  "CLOUDFLARE_AI_GATEWAY_TOKEN",
   "REPLICATE_API_TOKEN",
+];
+
+// The RunningHub SDK falls back only when these overrides are absent or empty.
+// Explicit placeholders remain blockers because they override the SDK defaults.
+const DEFAULTED_ENV = [
+  "RUNNINGHUB_OBJECT_SEGMENT_WORKFLOW_ID",
+  "RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID",
 ];
 
 // These values are only needed by the GitHub/Cloudflare deployment workflow.
@@ -55,6 +58,9 @@ export const REQUIRED_TABLE_COLUMNS = {
   task_data: [
     "id",
     "user_id",
+    "principal_id",
+    "created_at",
+    "updated_at",
     "task_status",
     "expires_at",
     "retry_count",
@@ -65,6 +71,9 @@ export const REQUIRED_TABLE_COLUMNS = {
   background_removal_tasks: [
     "id",
     "user_id",
+    "principal_id",
+    "created_at",
+    "updated_at",
     "task_status",
     "expires_at",
     "retry_count",
@@ -75,6 +84,9 @@ export const REQUIRED_TABLE_COLUMNS = {
   watermark_removal_tasks: [
     "id",
     "user_id",
+    "principal_id",
+    "created_at",
+    "updated_at",
     "task_status",
     "expires_at",
     "retry_count",
@@ -90,6 +102,9 @@ export const REQUIRED_TABLE_COLUMNS = {
   object_removal_tasks: [
     "id",
     "user_id",
+    "principal_id",
+    "created_at",
+    "updated_at",
     "task_status",
     "expires_at",
     "retry_count",
@@ -134,6 +149,77 @@ export const REQUIRED_INDEXES = {
   ],
 };
 
+const INDEX_COLUMNS = {
+  task_data_retention_idx: [
+    "retention_cleaned_at",
+    "retention_checked_at",
+    "expires_at",
+  ],
+  background_removal_tasks_principal_created_idx: [
+    "principal_id",
+    "created_at",
+  ],
+  background_removal_tasks_user_created_idx: ["user_id", "created_at"],
+  background_removal_tasks_idempotency_idx: ["idempotency_key"],
+  background_removal_tasks_retention_idx: [
+    "retention_cleaned_at",
+    "retention_checked_at",
+    "expires_at",
+  ],
+  watermark_removal_tasks_idempotency_idx: ["idempotency_key"],
+  watermark_removal_tasks_retention_idx: [
+    "retention_cleaned_at",
+    "retention_checked_at",
+    "expires_at",
+  ],
+  watermark_removal_tasks_audit_expires_at_idx: ["audit_expires_at"],
+  object_removal_tasks_idempotency_idx: ["idempotency_key"],
+  object_removal_tasks_retention_idx: [
+    "retention_cleaned_at",
+    "retention_checked_at",
+    "expires_at",
+  ],
+  object_removal_tasks_audit_expires_at_idx: ["audit_expires_at"],
+};
+
+const P0_COLUMN_RULES = {
+  principal_id: { type: "text", nullable: true },
+  expires_at: {
+    type: "timestamp without time zone",
+    nullable: true,
+    precision: 3,
+  },
+  retry_count: { type: "integer", nullable: false, default: "0" },
+  idempotency_key: { type: "text", nullable: true },
+  retention_checked_at: {
+    type: "timestamp without time zone",
+    nullable: true,
+    precision: 3,
+  },
+  retention_cleaned_at: {
+    type: "timestamp without time zone",
+    nullable: true,
+    precision: 3,
+  },
+  authorization_confirmed: {
+    type: "boolean",
+    nullable: false,
+    default: "false",
+  },
+  authorization_policy_version: { type: "text", nullable: true },
+  authorization_subject: { type: "text", nullable: true },
+  authorization_confirmed_at: {
+    type: "timestamp without time zone",
+    nullable: true,
+    precision: 3,
+  },
+  audit_expires_at: {
+    type: "timestamp without time zone",
+    nullable: true,
+    precision: 3,
+  },
+};
+
 export const EXPECTED_MIGRATIONS = [
   "0002_task_lifecycle.sql",
   "0003_authorization_audit.sql",
@@ -153,19 +239,68 @@ export function classifyEnvValue(value) {
 }
 
 export function inspectEnvironment(environment = process.env) {
-  const entries = REQUIRED_ENV.map((name) => ({
-    name,
-    status: classifyEnvValue(environment[name]),
-  }));
+  const entries = [
+    ...REQUIRED_ENV.map((name) => ({
+      name,
+      status: classifyEnvValue(environment[name]),
+    })),
+    ...DEFAULTED_ENV.map((name) => ({
+      name,
+      status: !environment[name]
+        ? "default"
+        : classifyEnvValue(environment[name]),
+    })),
+  ];
+  const blockers = entries
+    .filter((entry) => !["set", "default"].includes(entry.status))
+    .map((entry) => `environment variable ${entry.name} is ${entry.status}`);
+  for (const name of [
+    "NEXT_PUBLIC_SITE_URL",
+    "NEXTAUTH_URL",
+    "R2_ENDPOINT",
+    "R2_URL_BASE",
+    "RUNNINGHUB_API_BASE_URL",
+    "CLOUDFLARE_AI_GATEWAY_URL",
+  ]) {
+    if (classifyEnvValue(environment[name]) !== "set") continue;
+    try {
+      const url = new URL(environment[name]);
+      if (url.protocol !== "https:" || url.username || url.password)
+        throw new Error();
+    } catch {
+      blockers.push(
+        `environment variable ${name} must be a credential-free HTTPS URL`,
+      );
+    }
+  }
+  const callbackConfigured = !isUnset(environment.RUNNINGHUB_WEBHOOK_SECRET);
+  if (
+    callbackConfigured &&
+    String(environment.RUNNINGHUB_WEBHOOK_SECRET).length < 32
+  ) {
+    blockers.push(
+      "RUNNINGHUB_WEBHOOK_SECRET must contain at least 32 characters when callbacks are configured",
+    );
+  }
   return {
     entries,
     deploymentEntries: DEPLOYMENT_ENV.map((name) => ({
       name,
       status: classifyEnvValue(environment[name]),
     })),
-    blockers: entries
-      .filter((entry) => entry.status !== "set")
-      .map((entry) => `environment variable ${entry.name} is ${entry.status}`),
+    info: [
+      ...entries
+        .filter((entry) => entry.status === "default")
+        .map(
+          ({ name }) =>
+            `${name} uses the SDK built-in workflow default; provider access still requires verification`,
+        ),
+      "CLOUDFLARE_AI_GATEWAY_TOKEN is optional and unused by the current AI Gateway runtime; no token needs to be requested for this preflight",
+      callbackConfigured
+        ? "RunningHub callbacks configured; provider delivery still requires verification"
+        : "RunningHub callbacks not configured; polling-only mode is supported",
+    ],
+    blockers,
   };
 }
 
@@ -188,13 +323,21 @@ export function inspectMigrationFiles() {
 }
 
 function safeErrorKind(error) {
-  if (!error || typeof error !== "object") return "unknown";
-  if (typeof error.code === "string" && /^[A-Z0-9_]+$/.test(error.code)) {
-    return error.code;
-  }
-  if (error.name === "Error" || typeof error.name === "string")
-    return error.name;
-  return "unknown";
+  const code = error?.code;
+  if (["28P01", "28000"].includes(code)) return "authentication";
+  if (code === "42501") return "permission";
+  if (
+    [
+      "ECONNREFUSED",
+      "ENOTFOUND",
+      "ECONNRESET",
+      "ETIMEDOUT",
+      "CONNECT_TIMEOUT",
+    ].includes(code)
+  )
+    return "connection";
+  if (code === "57014") return "timeout";
+  return "database";
 }
 
 async function loadPostgres() {
@@ -206,8 +349,8 @@ async function loadPostgres() {
   }
 }
 
-async function queryDatabase(databaseUrl) {
-  const postgres = await loadPostgres();
+export async function queryDatabase(databaseUrl, factory) {
+  const postgres = factory || (await loadPostgres());
   if (!postgres) {
     return {
       status: "error",
@@ -217,30 +360,52 @@ async function queryDatabase(databaseUrl) {
 
   let sql;
   try {
+    targetFingerprint(databaseUrl);
     sql = postgres(databaseUrl, {
       max: 1,
       connect_timeout: 5,
       idle_timeout: 5,
       prepare: false,
+      connection: {
+        statement_timeout: "10000",
+        default_transaction_read_only: true,
+      },
+      onnotice: () => {},
     });
 
     const tables = {};
     const indexes = {};
     for (const table of Object.keys(REQUIRED_TABLE_COLUMNS)) {
       const rows = await sql`
-        SELECT column_name
+        SELECT column_name, data_type, is_nullable, column_default, datetime_precision
         FROM information_schema.columns
         WHERE table_schema = 'public' AND table_name = ${table}
       `;
-      tables[table] = rows.map((row) => String(row.column_name));
+      tables[table] = rows.map((row) => ({
+        name: row.column_name,
+        type: row.data_type,
+        nullable: row.is_nullable === "YES",
+        default: row.column_default,
+        precision: row.datetime_precision,
+      }));
 
       if (REQUIRED_INDEXES[table]) {
         const indexRows = await sql`
-          SELECT indexname
-          FROM pg_indexes
-          WHERE schemaname = 'public' AND tablename = ${table}
+          SELECT c.relname AS name, i.indisvalid AS valid, i.indisready AS ready,
+            i.indisunique AS is_unique, am.amname AS method,
+            i.indpred IS NOT NULL AS is_partial,
+            i.indexprs IS NOT NULL AS has_expressions,
+            ARRAY(SELECT pg_get_indexdef(i.indexrelid, n, true)
+              FROM generate_series(1, i.indnkeyatts) n ORDER BY n) AS columns,
+            i.indnatts - i.indnkeyatts AS included_columns
+          FROM pg_index i
+          JOIN pg_class c ON c.oid = i.indexrelid
+          JOIN pg_class t ON t.oid = i.indrelid
+          JOIN pg_namespace ns ON ns.oid = t.relnamespace
+          JOIN pg_am am ON am.oid = c.relam
+          WHERE ns.nspname = 'public' AND t.relname = ${table}
         `;
-        indexes[table] = indexRows.map((row) => String(row.indexname));
+        indexes[table] = indexRows;
       }
     }
 
@@ -302,55 +467,210 @@ export function compareDatabaseSchema(database) {
     REQUIRED_TABLE_COLUMNS,
   )) {
     const columns = database.tables[table] || [];
-    const actual = new Set(columns);
+    const actual = new Map(columns.map((column) => [column.name, column]));
     if (!columns.length) {
       blockers.push(`database table ${table} is missing`);
       continue;
     }
     for (const column of requiredColumns) {
-      if (!actual.has(column))
+      if (!actual.has(column)) {
         blockers.push(`database column ${table}.${column} is missing`);
+        continue;
+      }
+      const expected = P0_COLUMN_RULES[column];
+      if (!expected) continue;
+      const metadata = actual.get(column);
+      const differences = [];
+      if (metadata.type !== expected.type) differences.push("type");
+      if (metadata.nullable !== expected.nullable)
+        differences.push("nullability");
+      if (
+        expected.precision !== undefined &&
+        Number(metadata.precision) !== expected.precision
+      )
+        differences.push("timestamp precision");
+      const defaultValue =
+        metadata.default === null || metadata.default === undefined
+          ? null
+          : String(metadata.default)
+              .replace(/::(?:integer|boolean)$/, "")
+              .replace(/^'|'$/g, "")
+              .trim();
+      if (defaultValue !== (expected.default ?? null))
+        differences.push("default");
+      if (differences.length)
+        blockers.push(
+          `database column ${table}.${column} has incompatible ${differences.join(", ")}`,
+        );
     }
   }
 
   for (const [table, requiredIndexes] of Object.entries(REQUIRED_INDEXES)) {
-    const actual = new Set(database.indexes[table] || []);
+    const actual = new Map(
+      (database.indexes[table] || []).map((index) => [index.name, index]),
+    );
     for (const index of requiredIndexes) {
-      if (!actual.has(index))
+      if (!actual.has(index)) {
         blockers.push(`database index ${index} is missing`);
+        continue;
+      }
+      const metadata = actual.get(index);
+      if (!metadata.valid || !metadata.ready)
+        blockers.push(`database index ${index} is not valid and ready`);
+      if (
+        metadata.method !== "btree" ||
+        metadata.is_unique ||
+        metadata.is_partial ||
+        metadata.has_expressions ||
+        Number(metadata.included_columns) !== 0 ||
+        JSON.stringify(metadata.columns) !==
+          JSON.stringify(INDEX_COLUMNS[index])
+      ) {
+        blockers.push(
+          `database index ${index} has an incompatible definition or column order`,
+        );
+      }
     }
   }
   return blockers;
 }
 
-export function compareMigrationState(database, migrationFiles) {
+export function targetFingerprint(databaseUrl) {
+  const url = new URL(databaseUrl);
+  // postgres.js forwards unknown query parameters into the startup message,
+  // where they can override the account/database or the read-only safeguards.
+  const unsafeParameters = new Set([
+    "user",
+    "database",
+    "options",
+    "role",
+    "session_authorization",
+    "default_transaction_read_only",
+    "statement_timeout",
+  ]);
+  if (
+    !["postgres:", "postgresql:"].includes(url.protocol) ||
+    !url.hostname ||
+    !url.username ||
+    url.pathname.length < 2 ||
+    [...url.searchParams.keys()].some((name) =>
+      unsafeParameters.has(name.toLowerCase()),
+    )
+  )
+    throw new Error("invalid database target");
+  const target = JSON.stringify({
+    host: url.hostname.toLowerCase(),
+    port: url.port || "5432",
+    // Match postgres.js, which sends the URL path without percent-decoding it.
+    database: url.pathname.slice(1),
+    // Shared poolers can route projects by username while sharing host/db.
+    // Decode URL escaping, preserving case because role names can differ by case.
+    account: decodeURIComponent(url.username),
+  });
+  return crypto.createHash("sha256").update(target).digest("hex");
+}
+
+function readReceipt(receiptPath) {
+  if (!receiptPath) return { status: "missing" };
+  try {
+    if (fs.statSync(receiptPath).size > 65_536) return { status: "invalid" };
+    return {
+      status: "loaded",
+      value: JSON.parse(fs.readFileSync(receiptPath, "utf8")),
+    };
+  } catch {
+    return { status: "invalid" };
+  }
+}
+
+function parseUtcInstant(value) {
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value)
+  )
+    return NaN;
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) return NaN;
+  const normalized = value.replace(
+    /(?:\.(\d{1,3}))?Z$/,
+    (_, fraction) => `.${(fraction || "").padEnd(3, "0")}Z`,
+  );
+  // Date.parse normalizes impossible calendar dates and 24:00; reject them.
+  return new Date(parsed).toISOString() === normalized ? parsed : NaN;
+}
+
+export function validateReceipt(
+  receipt,
+  fingerprint,
+  migrationFiles,
+  now = Date.now(),
+) {
+  if (
+    !receipt ||
+    receipt.version !== 1 ||
+    receipt.targetFingerprint !== fingerprint ||
+    !/^[a-f0-9]{64}$/.test(fingerprint || "")
+  )
+    return [
+      "manual migration receipt is missing, invalid, or targets a different database",
+    ];
+  if (
+    !Array.isArray(receipt.patches) ||
+    receipt.patches.length !== EXPECTED_MIGRATIONS.length
+  )
+    return [
+      "manual migration receipt must contain exactly the three P0 patches",
+    ];
+  const blockers = [];
+  const names = new Set();
+  for (const expected of migrationFiles) {
+    const matches = receipt.patches.filter(
+      (patch) => patch?.name === expected.name,
+    );
+    const patch = matches[0];
+    if (matches.length !== 1 || names.has(expected.name)) {
+      blockers.push(
+        `manual migration receipt is missing or duplicates ${expected.name}`,
+      );
+      continue;
+    }
+    names.add(expected.name);
+    if (
+      expected.status !== "present" ||
+      patch.checksum !== expected.checksum ||
+      !/^[a-f0-9]{64}$/.test(patch.checksum || "")
+    )
+      blockers.push(
+        `manual migration receipt checksum does not match ${expected.name}`,
+      );
+    const appliedAt = parseUtcInstant(patch.appliedAt);
+    if (!Number.isFinite(appliedAt) || appliedAt > now)
+      blockers.push(
+        `manual migration receipt has invalid appliedAt for ${expected.name}`,
+      );
+  }
+  return blockers;
+}
+
+export function compareMigrationState(
+  database,
+  migrationFiles,
+  receipt,
+  fingerprint,
+) {
   const blockers = migrationFiles
     .filter((entry) => entry.status !== "present")
     .map((entry) => `migration file ${entry.name} is ${entry.status}`);
   if (database.status !== "ok") return blockers;
 
   const prismaRows = database.migrationRows?._prisma_migrations || [];
-  if (!database.migrationTrackingTables.length) {
-    blockers.push("database migration tracking table is unavailable");
-    return blockers;
-  }
-
   // These SQL patches live under db/migrations rather than Prisma's migration
   // directory. A Prisma row therefore cannot prove that a manual patch ran.
   // Keep the state explicitly blocked until the release ledger/integration
   // evidence records the three statements and their checksums.
-  const manualPatchNames = migrationFiles
-    .filter((entry) => entry.status === "present")
-    .map((entry) => entry.name);
-  if (manualPatchNames.length) {
-    blockers.push(
-      `manual migration state is unverified for ${manualPatchNames.join(", ")}; record applied checksums in the release ledger`,
-    );
-  }
-  if (prismaRows.some((row) => !row.finished || row.rolledBack)) {
-    blockers.push(
-      "database migration ledger contains unfinished or rolled-back entries",
-    );
+  blockers.push(...validateReceipt(receipt, fingerprint, migrationFiles));
+  if (prismaRows.some((row) => !row.finished && !row.rolledBack)) {
+    blockers.push("database migration ledger contains pending entries");
   }
   return blockers;
 }
@@ -358,9 +678,18 @@ export function compareMigrationState(database, migrationFiles) {
 export async function runPreflight({
   environment = process.env,
   skipDatabase = false,
+  receiptPath,
+  databaseReader = queryDatabase,
 } = {}) {
   const env = inspectEnvironment(environment);
   const migrations = inspectMigrationFiles();
+  const receipt = readReceipt(receiptPath);
+  let fingerprint;
+  try {
+    fingerprint = targetFingerprint(environment.DATABASE_URL);
+  } catch {
+    /* Report a fixed error below. */
+  }
   let database = {
     status: "skipped",
     blockers: skipDatabase
@@ -369,13 +698,15 @@ export async function runPreflight({
   };
 
   const databaseUrlStatus = classifyEnvValue(environment.DATABASE_URL);
-  if (!skipDatabase && databaseUrlStatus === "set") {
-    database = await queryDatabase(environment.DATABASE_URL);
+  if (!skipDatabase && databaseUrlStatus === "set" && fingerprint) {
+    database = await databaseReader(environment.DATABASE_URL);
   } else if (!skipDatabase) {
     database = {
       status: "skipped",
       blockers: [
-        "database check skipped because DATABASE_URL is not configured",
+        databaseUrlStatus === "set"
+          ? "database check skipped because DATABASE_URL has an invalid or ambiguous target"
+          : "database check skipped because DATABASE_URL is not configured",
       ],
     };
   }
@@ -383,16 +714,41 @@ export async function runPreflight({
   const blockers = [...env.blockers];
   if (database.status === "ok") {
     blockers.push(...compareDatabaseSchema(database));
-    blockers.push(...compareMigrationState(database, migrations));
+    blockers.push(
+      ...compareMigrationState(
+        database,
+        migrations,
+        receipt.value,
+        fingerprint,
+      ),
+    );
   } else {
     blockers.push(...database.blockers);
   }
 
+  // Never return raw metadata defaults, migration row names, or error payloads.
+  const summary = {
+    status: database.status,
+    blockers: database.blockers,
+    migrationTrackingTables: database.migrationTrackingTables,
+    schemaBlockers:
+      database.status === "ok" ? compareDatabaseSchema(database) : [],
+  };
   return {
     ok: blockers.length === 0,
     environment: env,
     migrations,
-    database,
+    database: summary,
+    targetFingerprint: fingerprint,
+    receiptStatus:
+      receipt.status === "loaded" &&
+      !validateReceipt(receipt.value, fingerprint, migrations).length
+        ? "verified"
+        : receipt.status === "missing"
+          ? "missing"
+          : "invalid",
+    scope:
+      "This read-only environment/schema preflight does not establish full-spec release readiness.",
     blockers,
   };
 }
@@ -403,17 +759,7 @@ function statusLabel(status) {
 
 export function formatReport(result, { json = false } = {}) {
   if (json) {
-    return `${JSON.stringify(
-      {
-        ok: result.ok,
-        environment: result.environment,
-        migrations: result.migrations,
-        database: result.database,
-        blockers: result.blockers,
-      },
-      null,
-      2,
-    )}\n`;
+    return `${JSON.stringify(result, null, 2)}\n`;
   }
 
   const lines = [
@@ -424,6 +770,7 @@ export function formatReport(result, { json = false } = {}) {
   for (const entry of result.environment.entries) {
     lines.push(`- ${entry.name}: ${statusLabel(entry.status)}`);
   }
+  for (const info of result.environment.info) lines.push(`- INFO: ${info}`);
   lines.push(
     "",
     "Deployment workflow variables (informational; not Vercel runtime requirements):",
@@ -439,33 +786,25 @@ export function formatReport(result, { json = false } = {}) {
   }
   lines.push("", `Database: ${result.database.status.toUpperCase()}`);
   if (result.database.status === "ok") {
-    for (const table of Object.keys(REQUIRED_TABLE_COLUMNS)) {
-      const columns = new Set(result.database.tables[table] || []);
-      const missing = REQUIRED_TABLE_COLUMNS[table].filter(
-        (column) => !columns.has(column),
-      );
-      lines.push(
-        `- ${table}: ${missing.length ? `MISSING ${missing.join(", ")}` : "OK"}`,
-      );
-    }
-    for (const [table, requiredIndexes] of Object.entries(REQUIRED_INDEXES)) {
-      const indexes = new Set(result.database.indexes[table] || []);
-      const missing = requiredIndexes.filter((index) => !indexes.has(index));
-      lines.push(
-        `- indexes ${table}: ${missing.length ? `MISSING ${missing.join(", ")}` : "OK"}`,
-      );
-    }
+    lines.push(
+      `- schema definitions: ${result.database.schemaBlockers.length ? "BLOCKED" : "OK"}`,
+    );
     lines.push(
       `- migration tracking: ${result.database.migrationTrackingTables.join(", ") || "unavailable"}`,
     );
   } else if (result.database.blockers?.length) {
     for (const blocker of result.database.blockers) lines.push(`- ${blocker}`);
   }
+  lines.push(
+    `- target fingerprint: ${result.targetFingerprint || "unavailable"}`,
+    `- manual migration receipt: ${result.receiptStatus}`,
+  );
 
   lines.push("", result.ok ? "Preflight passed." : "Preflight blocked:");
   if (!result.ok) {
     for (const blocker of result.blockers) lines.push(`- ${blocker}`);
   }
+  lines.push("", result.scope);
   return `${lines.join("\n")}\n`;
 }
 
@@ -476,7 +815,20 @@ export async function main(
   const json = argv.includes("--json");
   const skipDatabase =
     argv.includes("--skip-db") || environment.PREFLIGHT_SKIP_DB === "1";
-  const result = await runPreflight({ environment, skipDatabase });
+  if (argv.includes("--target-fingerprint")) {
+    try {
+      process.stdout.write(`${targetFingerprint(environment.DATABASE_URL)}\n`);
+      return 0;
+    } catch {
+      process.stdout.write(
+        "Cannot fingerprint database target: invalid DATABASE_URL\n",
+      );
+      return 1;
+    }
+  }
+  const receiptIndex = argv.indexOf("--migration-receipt");
+  const receiptPath = receiptIndex >= 0 ? argv[receiptIndex + 1] : undefined;
+  const result = await runPreflight({ environment, skipDatabase, receiptPath });
   process.stdout.write(formatReport(result, { json }));
   return result.ok ? 0 : 1;
 }

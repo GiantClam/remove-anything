@@ -1,6 +1,6 @@
 # Implementation Tasks
 
-Status reviewed on 2026-10-15. This change is in progress and must not be archived or used to start the 28-day baseline. See `implementation-evidence.md` for verification scope and remaining release gates.
+Status reviewed on 2026-10-19. This change is in progress and must not be archived or used to start the 28-day baseline. See `implementation-evidence.md` for verification scope and remaining release gates.
 
 ## Account and release prerequisites
 
@@ -63,6 +63,11 @@ The worker is implemented in dry-run mode. As of 2026-10-15, execution is delibe
 
 ## Verification and rollout
 
+- [x] Verify the exact Vercel production/rollback SHA and detect Preview's shared production database/storage configuration through read-only checks.
+- [x] Implement and test a read-only environment/schema preflight with column/index definitions and independently reviewed migration-receipt checks; a passing result does not close the full-spec release gates.
+- [x] Trace the unapplied historical `flux_*` mapping change and record the scoped baseline compatibility plan preserving existing task IDs and billing references.
+- [x] Rehearse scoped baseline repair and P0 patches on the isolated PostgreSQL 17 branch; verify mapped columns, sequence/table identity, indexes, repeated patches, and new-table RLS/ACL.
+- [ ] Verify synthetic historical data and exact-binary rollback, complete the remaining baseline, and isolate Preview resources. Schema-only results remain separate from full integration acceptance.
 - [x] Add unit and in-process route tests for registry/cost gates, quota, reservations, states, refunds, analytics IDs, callbacks, secure downloads, retention, and Stripe fulfillment.
 - [x] Render all six canonical pages in English and the existing `zh-tw` locale in a browser and inspect H1, contracts, metadata, Schema, related links, and locale URLs.
 - [x] Complete a mocked watermark queued/success/ZIP-download/expired-error browser flow, with the mock and development-auth boundaries recorded.
@@ -72,4 +77,4 @@ The worker is implemented in dry-run mode. As of 2026-10-15, execution is delibe
 - [ ] Start the 28-day baseline only after every release gate passes.
 - [ ] Expand to P1 pages only after the three-page impressions, stable funnel, and attributable signal gates pass.
 
-Local command results and browser evidence are recorded in `implementation-evidence.md`. The final local suite is 203/203, local SEO/HTTP smoke passes with GA loader scheduling, and browser hydration confirms the configured GA ID only with external requests blocked. A passing local suite does not close external-service, output entitlement, physical retention, or production measurement gates.
+Local command results and browser evidence are recorded in `implementation-evidence.md`. The 2026-10-15 local SEO/HTTP smoke passed with GA loader scheduling, and browser hydration confirmed the configured GA ID only with external requests blocked. See `staging-migration-evidence.md` for the separate database rehearsal and `environment-setup.md` for remaining environment setup. A passing local suite does not close external-service, output entitlement, physical retention, or production measurement gates.
