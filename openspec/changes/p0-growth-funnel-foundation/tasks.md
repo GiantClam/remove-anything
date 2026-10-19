@@ -69,7 +69,8 @@ The worker is implemented in dry-run mode. As of 2026-10-15, execution is delibe
 - [x] Trace the unapplied historical `flux_*` mapping change and record the scoped baseline compatibility plan preserving existing task IDs and billing references.
 - [x] Rehearse scoped baseline repair and P0 patches on the isolated PostgreSQL 17 branch; verify mapped columns, sequence/table identity, indexes, repeated patches, and new-table RLS/ACL.
 - [x] Verify synthetic historical task IDs, billing links, download/view relationships, scalar types and ownership predicates in a staging-only SQL transaction; independently confirm rollback cleanup and unchanged sequence state.
-- [ ] Verify exact Prisma/application binary compatibility and rollback, complete the remaining baseline, and isolate Preview resources. SQL-only results remain separate from full integration acceptance.
+- [x] Rehearse the remaining queue/image/composition schema on isolated staging, verify 45 mapped columns, indexes/FKs/RLS/ACL, and roll back explicit-ID synthetic fixtures without sequence changes.
+- [ ] Verify exact Prisma/application binary compatibility and rollback, accept the scoped baseline through real application paths, and isolate Preview resources. SQL-only results remain separate from full integration acceptance.
 - [x] Add unit and in-process route tests for registry/cost gates, quota, reservations, states, refunds, analytics IDs, callbacks, secure downloads, retention, and Stripe fulfillment.
 - [x] Render all six canonical pages in English and the existing `zh-tw` locale in a browser and inspect H1, contracts, metadata, Schema, related links, and locale URLs.
 - [x] Complete a mocked watermark queued/success/ZIP-download/expired-error browser flow, with the mock and development-auth boundaries recorded.

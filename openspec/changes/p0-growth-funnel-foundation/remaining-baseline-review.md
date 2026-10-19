@@ -2,6 +2,8 @@
 
 Reviewed: 2026-10-19. Scope: repository source, the exact rollback commit `36d7e86460f837f7369f0caab6b0d62b65a8ce2c`, and existing local metadata. This review made no database connection, production query, production change, Git index change, or application-code edit. The SQL below is a review proposal, not an applied migration.
 
+Follow-up: the scoped proposal was subsequently rehearsed on isolated staging; see `staging-remaining-baseline-evidence.md` and its actual-applied SQL. The inventory and source findings below retain the review snapshot. Composition/library route permissions were also repaired separately, with regression evidence in `implementation-evidence.md`; exact Prisma/application acceptance, queue dispatch and production rollout remain open.
+
 ## Evidence and limits
 
 - Current schema: `prisma/schema.prisma`, SHA-256 `1f90a3e585b3d93227d1559f96dde47befba5f947148aa1e7cfee64d0d932762` at review time.
