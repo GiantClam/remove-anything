@@ -34,6 +34,7 @@ export const MARKETING_MESSAGE_NAMESPACES = [
   "IndexPage",
   "RemoveBackgroundPage",
   "RemoveObjectsPage",
+  "History",
   "Upload",
   "BatchRemoveBackground",
   "BatchWatermarkRemoval",

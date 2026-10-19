@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Image from "next/image";
 
-import { useAuth } from "@/hooks/use-auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import copy from "copy-to-clipboard";
 import { debounce } from "lodash-es";
@@ -15,30 +20,31 @@ import BlurFade from "@/components/magicui/blur-fade";
 import { PrivateSwitch } from "@/components/playground/private-switch";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Locale } from "@/config";
-import { Credits, model, ModelName } from "@/config/constants";
-import {
-  ChargeProductSelectDto,
-  TaskSelectDto,
-  TaskStatus,
-  UserCreditSelectDto,
-} from "@/db/type";
+import { ChargeProductSelectDto, TaskSelectDto, TaskStatus } from "@/db/type";
+import { Link } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 import { DownloadAction } from "../history/download-action";
+import { WebhookHandler } from "../marketing/webhook-handler";
 import { PricingCardDialog } from "../pricing-cards";
 import { EmptyPlaceholder } from "../shared/empty-placeholder";
 import { Icons } from "../shared/icons";
 import Upload from "../upload";
-import { WebhookHandler } from "../marketing/webhook-handler";
 import ComfortingMessages from "./comforting";
 import Loading from "./loading/index";
 
@@ -47,10 +53,15 @@ const useCreateWatermarkRemovalMutation = (config?: {
 }) => {
   return useMutation({
     mutationFn: async (values: any) => {
+      const { idempotencyKey, ...body } = values;
       const res = await fetch("/api/watermark-removal", {
-        body: JSON.stringify(values),
+        body: JSON.stringify(body),
         method: "POST",
-        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+          ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
+        },
+        credentials: "include",
       });
 
       if (!res.ok && res.status >= 500) {
@@ -72,6 +83,8 @@ export enum WatermarkRemovalTaskStatus {
   Canceled = "canceled",
   Pending = "pending",
   Starting = "starting",
+  Queued = "queued",
+  Expired = "expired",
 }
 
 // 轻量 SVG shimmer 作为 blurDataURL
@@ -90,9 +103,9 @@ const shimmer = (w: number, h: number) => `
   </svg>`;
 
 const toBase64 = (str: string) =>
-  (typeof window === 'undefined'
-    ? Buffer.from(str).toString('base64')
-    : window.btoa(str));
+  typeof window === "undefined"
+    ? Buffer.from(str).toString("base64")
+    : window.btoa(str);
 
 export default function WatermarkRemoval({
   locale,
@@ -102,7 +115,15 @@ export default function WatermarkRemoval({
   chargeProduct?: ChargeProductSelectDto[];
 }) {
   // 轻量懒加载图片组件，避免白屏闪烁
-  function LazyImage({ src, alt, priority = false }: { src: string; alt: string; priority?: boolean }) {
+  function LazyImage({
+    src,
+    alt,
+    priority = false,
+  }: {
+    src: string;
+    alt: string;
+    priority?: boolean;
+  }) {
     const [isLoaded, setIsLoaded] = React.useState(false);
     const [isInView, setIsInView] = React.useState(false);
     const containerRef = React.useRef<HTMLDivElement | null>(null);
@@ -117,14 +138,14 @@ export default function WatermarkRemoval({
             io.disconnect();
           }
         },
-        { rootMargin: "200px" }
+        { rootMargin: "200px" },
       );
       io.observe(el);
       return () => io.disconnect();
     }, []);
 
     return (
-      <div ref={containerRef} className="relative w-full h-full">
+      <div ref={containerRef} className="relative h-full w-full">
         {!isLoaded && (
           <div className="absolute inset-0 animate-pulse rounded-lg bg-muted" />
         )}
@@ -139,7 +160,7 @@ export default function WatermarkRemoval({
             onLoadingComplete={() => setIsLoaded(true)}
             className={cn(
               "object-cover transition-opacity duration-300",
-              isLoaded ? "opacity-100" : "opacity-0"
+              isLoaded ? "opacity-100" : "opacity-0",
             )}
             placeholder="blur"
             blurDataURL={`data:image/svg+xml;base64,${toBase64(shimmer(32, 32))}`}
@@ -158,11 +179,14 @@ export default function WatermarkRemoval({
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const [urlError, setUrlError] = useState<string | null>(null);
-  
+  const [authorizationConfirmed, setAuthorizationConfirmed] = useState(false);
+  const idempotencyKeyRef = useRef<string | null>(null);
+
   // 处理文件上传状态变化
   const handleFileChange = useCallback((files: any[]) => {
     console.log("📁 handleFileChange 被调用:", files);
     setUploadedFiles(files);
+    idempotencyKeyRef.current = null;
   }, []);
   // const t = useTranslations("WatermarkRemoval"); // 暂时注释掉，因为组件中没有使用国际化
   const queryClient = useQueryClient();
@@ -177,9 +201,12 @@ export default function WatermarkRemoval({
     refetchInterval: (query) => {
       // 统一使用轮询模式，因为去水印使用不同的webhook
       const data = query.state.data as any;
-      if (data?.taskStatus === WatermarkRemovalTaskStatus.Processing || 
-          data?.taskStatus === "pending" || 
-          data?.taskStatus === "starting") {
+      if (
+        data?.taskStatus === WatermarkRemovalTaskStatus.Processing ||
+        data?.taskStatus === "pending" ||
+        data?.taskStatus === "starting" ||
+        data?.taskStatus === "queued"
+      ) {
         return 3000; // 3秒轮询一次
       }
       return false;
@@ -187,33 +214,22 @@ export default function WatermarkRemoval({
     queryFn: async () => {
       console.log("🔍 开始查询任务状态，taskId:", taskId);
       const res = await fetch(`/api/watermark-removal/${taskId}`, {
-        credentials: 'include',
+        credentials: "include",
       });
       console.log("📡 API响应状态:", res.status, res.statusText);
-      
+
       if (!res.ok) {
         console.error("❌ API请求失败:", res.status, res.statusText);
         const errorText = await res.text();
         console.error("❌ 错误详情:", errorText);
-        throw new Error(`Failed to fetch task: ${res.status} ${res.statusText}`);
+        throw new Error(
+          `Failed to fetch task: ${res.status} ${res.statusText}`,
+        );
       }
-      
+
       const data = await res.json();
       console.log("✅ 获取到任务数据:", data);
       return data;
-    }
-  });
-
-  const { data: userCredit } = useQuery<UserCreditSelectDto>({
-    queryKey: ["userCredit"],
-    queryFn: async () => {
-      const res = await fetch("/api/account", {
-        credentials: 'include',
-      });
-      if (!res.ok) {
-        throw new Error("Failed to fetch user credit");
-      }
-      return res.json();
     },
   });
 
@@ -223,10 +239,23 @@ export default function WatermarkRemoval({
       if (queryTask.data.taskStatus === WatermarkRemovalTaskStatus.Succeeded) {
         setLoading(false);
         toast.success("Watermark removal completed!");
-      } else if (queryTask.data.taskStatus === WatermarkRemovalTaskStatus.Failed) {
+      } else if (
+        queryTask.data.taskStatus === WatermarkRemovalTaskStatus.Expired
+      ) {
+        setLoading(false);
+        toast.error(
+          "This result has expired. Upload an image to start a new task.",
+        );
+      } else if (
+        queryTask.data.taskStatus === WatermarkRemovalTaskStatus.Failed
+      ) {
         setLoading(false);
         toast.error("Watermark removal failed. Please try again.");
-      } else if (['pending', 'starting', 'processing'].includes(queryTask.data.taskStatus)) {
+      } else if (
+        ["queued", "pending", "starting", "processing"].includes(
+          queryTask.data.taskStatus,
+        )
+      ) {
         setLoading(true);
       }
     }
@@ -235,6 +264,7 @@ export default function WatermarkRemoval({
   // 监听查询错误
   useEffect(() => {
     if (queryTask.error) {
+      setLoading(false);
       console.error("❌ 查询任务失败:", queryTask.error);
       toast.error("Failed to fetch task status. Please try again.");
     }
@@ -258,45 +288,75 @@ export default function WatermarkRemoval({
     console.log("🔄 uploadedFiles 状态变化:", uploadedFiles);
   }, [uploadedFiles]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (imageUrlOverride?: string) => {
     console.log("🚀 handleSubmit 开始执行");
     console.log("📁 uploadedFiles:", uploadedFiles);
     console.log("🔗 inputImageUrl:", inputImageUrl);
-    
+
     // 获取图片：优先使用上传的文件，其次使用手动输入的URL
     const hasUploadedFiles = uploadedFiles.length > 0;
-    const imageUrl = inputImageUrl.trim();
-    
-    console.log("🔍 检查结果:", { hasUploadedFiles, imageUrl, hasImageUrl: !!imageUrl });
-    
+    const imageUrl = (imageUrlOverride ?? inputImageUrl).trim();
+
+    console.log("🔍 检查结果:", {
+      hasUploadedFiles,
+      imageUrl,
+      hasImageUrl: !!imageUrl,
+    });
+
     if (!hasUploadedFiles && !imageUrl) {
       toast.error("Please upload images or provide an image URL");
       return;
     }
+
+    if (uploadedFiles.length > 1) {
+      toast.error("Free processing supports one image at a time.");
+      return;
+    }
+
+    if (!authorizationConfirmed) {
+      toast.error(
+        "Please confirm that you own or are authorized to edit these images.",
+      );
+      return;
+    }
+
+    const idempotencyKey =
+      idempotencyKeyRef.current ||
+      (typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`);
+    idempotencyKeyRef.current = idempotencyKey;
 
     setLoading(true);
     setTaskData(undefined);
 
     try {
       let result;
-      
+
       // 如果有上传的文件且包含originFile（本地文件），发送FormData
       if (hasUploadedFiles && uploadedFiles[0]?.originFile) {
         console.log("🔧 使用本地文件模式发送FormData");
-        
+
         const formData = new FormData();
         uploadedFiles.forEach((file) => {
           if (file.originFile) {
-            formData.append('images', file.originFile);
+            formData.append("images", file.originFile);
           }
         });
-        formData.append('isPrivate', isPublic ? '0' : '1');
-        formData.append('locale', locale);
-        
+        formData.append("isPrivate", isPublic ? "0" : "1");
+        formData.append("locale", locale);
+        formData.append("authorizationConfirmed", "true");
+        formData.append("authorizationPolicyVersion", "removal-auth-v1");
+        formData.append(
+          "authorizationSubject",
+          "image-owner-or-authorized-editor",
+        );
+
         const res = await fetch("/api/watermark-removal", {
           method: "POST",
           body: formData,
-          credentials: 'include',
+          headers: { "Idempotency-Key": idempotencyKey },
+          credentials: "include",
         });
 
         if (!res.ok && res.status >= 500) {
@@ -306,9 +366,11 @@ export default function WatermarkRemoval({
         result = await res.json();
       } else {
         // 使用URL模式（R2上传或手动输入的URL）
-        const finalImageUrl = hasUploadedFiles ? uploadedFiles[0].url : imageUrl;
+        const finalImageUrl = hasUploadedFiles
+          ? uploadedFiles[0].url
+          : imageUrl;
         console.log("🔧 使用URL模式:", finalImageUrl);
-        
+
         // 对于URL模式，我们需要先上传到R2，然后调用去水印API
         const uploadRes = await fetch("/api/upload", {
           method: "POST",
@@ -318,7 +380,7 @@ export default function WatermarkRemoval({
           body: JSON.stringify({
             imageUrl: finalImageUrl,
           }),
-          credentials: 'include',
+          credentials: "include",
         });
 
         if (!uploadRes.ok) {
@@ -326,11 +388,15 @@ export default function WatermarkRemoval({
         }
 
         const uploadResult = await uploadRes.json();
-        
+
         result = await useCreateTask.mutateAsync({
           imageUrls: [uploadResult.url],
           isPrivate: isPublic ? 0 : 1,
           locale,
+          authorizationConfirmed: true,
+          authorizationPolicyVersion: "removal-auth-v1",
+          authorizationSubject: "image-owner-or-authorized-editor",
+          idempotencyKey,
         });
       }
 
@@ -361,7 +427,7 @@ export default function WatermarkRemoval({
     }
     setInputImageUrl(url);
     setShowUrlDialog(false);
-    await handleSubmit();
+    await handleSubmit(url);
   };
 
   const copyPrompt = (prompt: string) => {
@@ -369,48 +435,72 @@ export default function WatermarkRemoval({
     toast.success("Copied to clipboard!");
   };
 
-  const needCredit = Credits[model.watermarkRemoval] || 1; // 默认1积分
-  const hasEnoughCredit = userCredit && userCredit.credit >= needCredit;
-  
-  // 调试信息
-  console.log("🔍 WatermarkRemoval 组件状态:", {
-    uploadedFiles: uploadedFiles.length,
-    inputImageUrl: inputImageUrl,
-    loading,
-    hasEnoughCredit,
-    userCredit: userCredit?.credit,
-    buttonDisabled: loading || (!hasEnoughCredit) || (uploadedFiles.length === 0 && !inputImageUrl.trim())
-  });
-
   return (
     <div className="container mx-auto max-w-4xl p-6">
       {/* 顶部：极简标题与说明 */}
       <div className="mb-6 text-center">
-        <h1 className="mb-3 text-3xl font-bold">Upload an image to remove the watermark</h1>
+        <h1 className="mb-3 text-3xl font-bold">
+          Upload an image to remove the watermark
+        </h1>
         <p className="text-sm text-muted-foreground">or paste an image URL</p>
       </div>
 
       <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
-        Use this tool only for images you own or are authorized to edit. Please make sure watermark or overlay removal complies with the original asset license and platform rules.
+        Use this tool only for images you own or are authorized to edit. Please
+        make sure watermark or overlay removal complies with the original asset
+        license and platform rules.
+        <label className="mt-3 flex items-start gap-2 font-medium">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 accent-amber-700"
+            checked={authorizationConfirmed}
+            onChange={(event) =>
+              setAuthorizationConfirmed(event.target.checked)
+            }
+          />
+          <span>
+            I confirm that I own or am authorized to edit these images.
+          </span>
+        </label>
+        <p className="mt-2 text-xs font-normal">
+          Policy v1 ·{" "}
+          <Link className="underline" href="/contact">
+            Report abuse
+          </Link>{" "}
+          ·{" "}
+          <Link
+            className="underline"
+            href="/privacy-policy#delete-your-personal-data"
+          >
+            Request deletion
+          </Link>
+        </p>
       </div>
 
       {/* 上传优先：置顶上传区 + URL + 主按钮 */}
-      <div className="rounded-lg border bg-card p-6 mb-6">
+      <div className="mb-6 rounded-lg border bg-card p-6">
         <div className="space-y-4">
           <Upload
             value={uploadedFiles}
             onChange={handleFileChange}
             accept={{ "image/*": [".jpg", ".jpeg", ".png", ".webp"] }}
             maxSize={10 * 1024 * 1024}
-            maxFiles={10}
-            multiple={true}
+            maxFiles={1}
+            multiple={false}
             placeholder={
               <div className="flex flex-col items-center justify-center p-6 text-center">
-                <Icons.media className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-lg font-medium mb-2">Upload Image</p>
-                <p className="text-sm text-muted-foreground mb-4">or drop a file, paste image or URL</p>
-                    <Button size="sm">Choose Image</Button>
-                    <button className="mt-2 text-xs underline" onClick={() => setShowUrlDialog(true)}>Use URL</button>
+                <Icons.media className="mb-4 h-12 w-12 text-muted-foreground" />
+                <p className="mb-2 text-lg font-medium">Upload Image</p>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  or drop a file, paste image or URL
+                </p>
+                <Button size="sm">Choose Image</Button>
+                <button
+                  className="mt-2 text-xs underline"
+                  onClick={() => setShowUrlDialog(true)}
+                >
+                  Use URL
+                </button>
               </div>
             }
             className="min-h-[220px]"
@@ -422,12 +512,19 @@ export default function WatermarkRemoval({
               type="url"
               placeholder="https://example.com/image.jpg"
               value={inputImageUrl}
-              onChange={(e) => setInputImageUrl(e.target.value)}
+              onChange={(e) => {
+                setInputImageUrl(e.target.value);
+                idempotencyKeyRef.current = null;
+              }}
               className="w-full"
             />
             <Button
-              onClick={handleSubmit}
-              disabled={loading || !hasEnoughCredit || (uploadedFiles.length === 0 && !inputImageUrl.trim())}
+              onClick={() => void handleSubmit()}
+              disabled={
+                loading ||
+                !authorizationConfirmed ||
+                (uploadedFiles.length === 0 && !inputImageUrl.trim())
+              }
               className="shrink-0"
               size="lg"
             >
@@ -445,17 +542,10 @@ export default function WatermarkRemoval({
             </Button>
           </div>
 
-          {!hasEnoughCredit && (
-            <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
-              <div className="flex items-center gap-2">
-                <Icons.warning className="h-4 w-4 text-orange-600" />
-                <p className="text-sm font-medium text-orange-800 dark:text-orange-200">Insufficient credits</p>
-              </div>
-              <p className="mt-1 text-sm text-orange-700 dark:text-orange-300">
-                You need {needCredit} credits. <button onClick={() => setPricingCardOpen(true)} className="ml-1 underline hover:no-underline">Buy credits</button>
-              </p>
-            </div>
-          )}
+          <p className="text-xs text-muted-foreground">
+            JPG, PNG, or WEBP · one image up to 10 MB · ZIP download · result
+            access expires after 24 hours · free server allowance applies
+          </p>
         </div>
       </div>
 
@@ -467,54 +557,119 @@ export default function WatermarkRemoval({
           <div className="rounded-lg border bg-card p-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold">Result</h3>
-              <div className="text-xs text-muted-foreground">{taskData.taskStatus}</div>
+              <div className="text-xs text-muted-foreground">
+                {taskData.taskStatus}
+              </div>
             </div>
 
-            {taskData.taskStatus === WatermarkRemovalTaskStatus.Succeeded && taskData.outputImageUrls?.length > 0 && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  {taskData.outputImageUrls.map((url: string, idx: number) => (
-                    <div key={idx} className="relative w-full overflow-hidden rounded-lg border bg-muted max-h-[500px] max-w-[500px] mx-auto">
-                      <LazyImage src={url} alt={`AI watermark removal result ${idx + 1} - processed image`} priority={idx === 0} />
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <DownloadAction id={taskData.runninghubTaskId} showText={true} taskType="watermark-removal" />
-                </div>
-              </div>
-            )}
-
-            {taskData.taskStatus === WatermarkRemovalTaskStatus.Succeeded && !taskData.outputImageUrls?.length && taskData.outputZipUrl && (
-              <div className="space-y-4">
-                <div className="relative w-full overflow-hidden rounded-lg border bg-muted max-h-[500px] max-w-[500px] mx-auto">
-                  <div className="absolute inset-0 animate-pulse rounded-lg bg-muted" />
-                  <div className="relative flex h-full w-full items-center justify-center">
-                    <div className="text-center">
-                      <Icons.check className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">Watermark removal completed!</p>
-                      <p className="text-xs text-muted-foreground">Download the ZIP file to get your processed images</p>
-                    </div>
+            {taskData.taskStatus === WatermarkRemovalTaskStatus.Succeeded &&
+              taskData.outputImageUrls?.length > 0 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {taskData.outputImageUrls.map(
+                      (url: string, idx: number) => (
+                        <div
+                          key={idx}
+                          className="relative mx-auto max-h-[500px] w-full max-w-[500px] overflow-hidden rounded-lg border bg-muted"
+                        >
+                          <LazyImage
+                            src={url}
+                            alt={`AI watermark removal result ${idx + 1} - processed image`}
+                            priority={idx === 0}
+                          />
+                        </div>
+                      ),
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <DownloadAction
+                      id={taskData.runninghubTaskId}
+                      showText={true}
+                      taskType="watermark-removal"
+                    />
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <DownloadAction id={taskData.runninghubTaskId} showText={true} taskType="watermark-removal" />
-                  <Button variant="outline" size="sm" onClick={() => copyPrompt(taskData.outputZipUrl || "")}> 
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copy URL
-                  </Button>
+              )}
+
+            {taskData.taskStatus === WatermarkRemovalTaskStatus.Succeeded &&
+              !taskData.outputImageUrls?.length &&
+              taskData.outputZipUrl && (
+                <div className="space-y-4">
+                  <div className="relative mx-auto max-h-[500px] w-full max-w-[500px] overflow-hidden rounded-lg border bg-muted">
+                    <div className="absolute inset-0 animate-pulse rounded-lg bg-muted" />
+                    <div className="relative flex h-full w-full items-center justify-center">
+                      <div className="text-center">
+                        <Icons.check className="mx-auto mb-2 h-12 w-12 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Watermark removal completed!
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Download the ZIP file to get your processed images
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <DownloadAction
+                      id={taskData.runninghubTaskId}
+                      showText={true}
+                      taskType="watermark-removal"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyPrompt(taskData.outputZipUrl || "")}
+                    >
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy URL
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {taskData.taskStatus === WatermarkRemovalTaskStatus.Failed && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
                 <div className="flex items-center gap-2">
                   <Icons.close className="h-4 w-4 text-red-600" />
-                  <p className="text-sm font-medium text-red-800 dark:text-red-200">Watermark removal failed</p>
+                  <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                    Watermark removal failed
+                  </p>
                 </div>
-                <p className="mt-1 text-sm text-red-700 dark:text-red-300">{taskData.errorMsg || "Please try again with a different image."}</p>
+                <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                  {taskData.errorMsg ||
+                    "Please try again with a different image."}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => {
+                    void handleSubmit();
+                  }}
+                  disabled={loading}
+                >
+                  Try again
+                </Button>
               </div>
+            )}
+
+            {taskData.taskStatus === WatermarkRemovalTaskStatus.Expired && (
+              <p role="status" className="rounded-lg border p-4 text-sm">
+                This result has expired. Select an image above to start a new
+                task.{" "}
+                <Link className="underline" href="/contact">
+                  Contact support
+                </Link>{" "}
+                or{" "}
+                <Link
+                  className="underline"
+                  href="/privacy-policy#delete-your-personal-data"
+                >
+                  request deletion
+                </Link>
+                .
+              </p>
             )}
           </div>
         )}
@@ -536,7 +691,11 @@ export default function WatermarkRemoval({
       </div>
 
       {/* 定价卡片对话框 */}
-      <PricingCardDialog isOpen={pricingCardOpen} onClose={setPricingCardOpen} chargeProduct={chargeProduct} />
+      <PricingCardDialog
+        isOpen={pricingCardOpen}
+        onClose={setPricingCardOpen}
+        chargeProduct={chargeProduct}
+      />
 
       {/* URL 输入对话框 */}
       <Dialog open={showUrlDialog} onOpenChange={setShowUrlDialog}>
@@ -557,7 +716,13 @@ export default function WatermarkRemoval({
               className="w-full"
               autoFocus
             />
-            <Button onClick={handleStartWithUrl} disabled={!urlInput.trim() || loading} className="shrink-0">Start</Button>
+            <Button
+              onClick={handleStartWithUrl}
+              disabled={!urlInput.trim() || loading}
+              className="shrink-0"
+            >
+              Start
+            </Button>
           </div>
           {urlError && <p className="mt-2 text-xs text-red-600">{urlError}</p>}
           <DialogFooter />

@@ -27,6 +27,7 @@ export interface TaskQueue {
 
 export interface RunningHubClient {
   createTaskGeneric(opts: { workflowId: string; nodeInfoList: Array<{ nodeId: string; fieldName: string; fieldValue: string }>; taskRecordId?: number }): Promise<string>;
+  cancelTask?(taskId: string): Promise<boolean>;
   getTaskStatus(taskId: string): Promise<any>;
   getTaskResult(taskId: string): Promise<any>;
 }

@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { z } from "zod";
 
 import { getErrorMessage } from "@/lib/handle-error";
+import { ImageInputError, readTrustedRemoteImage } from "@/lib/image-input";
 import {
   buildDetectNodeInfoList,
   getRunningHubOutputFileUrl,
   normalizeRunningHubStatus,
 } from "@/lib/remove-objects/runninghub";
+import { getToolRegistryEntry } from "@/lib/tool-registry";
 import { runninghubAPI } from "@/modules/runninghub";
 
 const DetectSchema = z.object({
@@ -22,7 +25,11 @@ function sleep(ms: number) {
 
 function isTransientRunningHubError(error: unknown) {
   const message =
-    error instanceof Error ? error.message : typeof error === "string" ? error : "";
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
 
   return (
     message.includes("status=504") ||
@@ -36,12 +43,24 @@ function isTransientRunningHubError(error: unknown) {
 export async function POST(req: NextRequest) {
   try {
     const body = DetectSchema.parse(await req.json());
+    const tool = getToolRegistryEntry("remove-objects");
+    if (!tool) {
+      return NextResponse.json(
+        { error: "Tool configuration unavailable", code: "TOOL_UNAVAILABLE" },
+        { status: 503 },
+      );
+    }
+    await readTrustedRemoteImage(body.imageUrl, {
+      maxBytes: tool.limits.maxFileSizeMb * 1024 * 1024,
+      allowedMimeTypes: tool.inputFormats,
+      maxPixels: tool.limits.maxPixels,
+    });
     const taskId = await runninghubAPI.createObjectDetectTask(
       buildDetectNodeInfoList(body.imageUrl, body.prompt),
     );
 
     const startedAt = Date.now();
-    while (Date.now() - startedAt < 20_000) {
+    while (Date.now() - startedAt < tool.limits.timeoutSeconds * 1000) {
       let statusResult;
       try {
         statusResult = await runninghubAPI.getTaskStatus(taskId);
@@ -58,7 +77,10 @@ export async function POST(req: NextRequest) {
 
       if (normalizedStatus === "failed") {
         return NextResponse.json(
-          { error: statusResult.data?.error || "AI could not find a reliable object" },
+          {
+            error:
+              statusResult.data?.error || "AI could not find a reliable object",
+          },
           { status: 422 },
         );
       }
@@ -107,9 +129,22 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message || "Invalid request" }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0]?.message || "Invalid request" },
+        { status: 400 },
+      );
     }
 
-    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+    if (error instanceof ImageInputError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
+
+    return NextResponse.json(
+      { error: getErrorMessage(error) },
+      { status: 500 },
+    );
   }
 }

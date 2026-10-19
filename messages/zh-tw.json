@@ -392,7 +392,7 @@
     "demoProcessing": "演示處理中...",
     "noProcessedImage": "暫無處理結果",
     "uploadFile": "請上傳圖片檔案",
-    "fileSizeLimit": "圖片大小應小於 5MB",
+    "fileSizeLimit": "圖片大小不得超過 10MB",
     "foundProcessedImage": "找到您的處理結果！現在可以下載了。",
     "backgroundRemoved": "背景去除成功！",
     "taskCreated": "背景去除任務已創建！正在後台處理...",

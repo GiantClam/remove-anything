@@ -1,0 +1,19 @@
+# RunningHub callback configuration and validation
+
+Callbacks are optional. Task creation sends a callback address only when `RUNNINGHUB_WEBHOOK_SECRET` has at least 32 characters and `NEXTAUTH_URL` is an HTTPS URL without credentials. Otherwise the existing task polling path remains available. This change did not create or replay a paid provider job.
+
+The callback route fails closed: a missing/short configured secret returns 503, and a missing/wrong bearer returns 401 before reading the body, querying a task, or fetching a result. The SDK puts the dedicated secret in the callback URL's `key` query parameter. Operators may instead provide `remove-anything-webhook-key` when manually delivering a callback. This is shared bearer authentication, not proof of a provider-native signature. Do not log callback URLs, request bodies, query strings, or provider errors. Configure ingress/access-log query redaction before enabling delivery. Rotate the secret if exposed; callbacks created with an older secret must use polling after rotation.
+
+`RUNNINGHUB_OUTPUT_URL_PREFIXES` must contain a comma-separated list of independently verified provider HTTPS origin/path prefixes, for example `https://verified-provider.example/approved-output-path/`. This is syntax only; no provider source has been approved by the local tests. Non-root paths are required. Matching uses exact origin and path boundaries; credentials, IP literals, localhost/local names, traversal, encoded separators, nonstandard ports, HTTP, and redirects are rejected. Restrict approved domains to provider-controlled storage and prevent private-network DNS resolution at the deployment network boundary. There is no permissive default or fallback origin.
+
+Authenticated image callbacks stream at most 10 MiB with a 30-second fetch timeout and no redirects. Image signatures must identify PNG, JPEG, or WebP; watermark output also accepts ZIP signatures and wraps a single image into a ZIP. This does not prove image quality or the contents of a provider ZIP. R2 writes use `private` ACL and content-based task keys. The bucket/custom-domain policy still needs independent verification; an ACL flag does not prove a previously public bucket is now private.
+
+An output migration error leaves the task unchanged and returns a retryable response. Callers should poll the original task rather than create another provider job. Completed/failed/expired tasks and elapsed 24-hour deadlines cannot be overwritten by a late callback. State and original output compare-and-swap guards prevent competing callbacks/polls from overwriting a newer result. A losing migration with different bytes can leave an unreferenced content-key object; an asset manifest/reconciliation policy remains required before claiming complete 24-hour retention. The legacy disabled video path keeps its metadata-only behavior behind the same authentication, source approval, and state guard.
+
+Before enabling callbacks in production:
+
+1. Configure a random server-only secret of at least 32 characters and HTTPS `NEXTAUTH_URL`, redact query secrets in logs, and verify only the expected provider receives the callback URL.
+2. Verify the actual provider output domains and paths using an existing task receipt/output. Add only those prefixes. Do not guess domains or create a new paid job just to discover them.
+3. Confirm a missing/wrong key performs no task/output work. Verify the provider preserves callback query parameters with an approved existing task or an explicitly approved test job.
+4. Confirm authorized downloads can read the private R2 output through short-lived server-side signed URLs. Check bucket policy and historical public URLs separately.
+5. Verify a real authenticated callback and a task poll agree on one persisted terminal result. Local tests prove handler boundaries and concurrency behavior; they do not prove real provider delivery, production storage policy, or durable analytics delivery.

@@ -3,10 +3,16 @@ import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 export interface CreateObjectRemovalTaskData {
   userId?: string;
+  principalId?: string;
   runninghubTaskId: string;
   inputImageUrl: string;
   inputMaskUrl: string;
   detectPrompt?: string;
+  idempotencyKey?: string;
+  authorizationConfirmed?: boolean;
+  authorizationPolicyVersion?: string;
+  authorizationSubject?: string;
+  authorizationConfirmedAt?: Date;
 }
 
 export interface UpdateObjectRemovalTaskData {
@@ -27,11 +33,21 @@ export async function createObjectRemovalTask(data: CreateObjectRemovalTaskData)
   return prisma.objectRemovalTask.create({
     data: {
       userId: data.userId || null,
+      principalId: data.principalId || null,
       runninghubTaskId: data.runninghubTaskId,
       inputImageUrl: data.inputImageUrl,
       inputMaskUrl: data.inputMaskUrl,
       detectPrompt: data.detectPrompt || null,
       taskStatus: "pending",
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      idempotencyKey: data.idempotencyKey || null,
+      authorizationConfirmed: Boolean(data.authorizationConfirmed),
+      authorizationPolicyVersion: data.authorizationPolicyVersion || null,
+      authorizationSubject: data.authorizationSubject || null,
+      authorizationConfirmedAt: data.authorizationConfirmedAt || null,
+      auditExpiresAt: data.authorizationConfirmed
+        ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+        : null,
     },
   });
 }

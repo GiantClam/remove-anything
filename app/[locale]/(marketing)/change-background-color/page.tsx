@@ -2,6 +2,7 @@ import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { Metadata } from "next";
 
 import MarketingRemoveBackground from "@/components/marketing/marketing-remove-background";
+import { ToolViewTracker } from "@/components/analytics/tool-view-tracker";
 import { defaultLocale } from "@/config";
 import { env } from "@/env.mjs";
 import { constructAlternates } from "@/lib/seo";
@@ -61,5 +62,10 @@ export default async function ChangeBackgroundColorPage({
 }: PageProps) {
   unstable_setRequestLocale(locale);
 
-  return <MarketingRemoveBackground locale={locale} variant="change-background-color" />;
+  return (
+    <>
+      <ToolViewTracker toolSlug="change-background-color" locale={locale} />
+      <MarketingRemoveBackground locale={locale} variant="change-background-color" />
+    </>
+  );
 }

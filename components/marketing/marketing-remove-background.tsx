@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import type { Locale } from "@/config";
 import { AlertCircle, ArrowRight, CheckCircle, LogIn, Sparkles } from "lucide-react";
 
 import { Link } from "@/lib/navigation";
@@ -15,6 +16,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import MarketingRemoveBackgroundClient from "./marketing-remove-background-client";
+import { ToolContractCard } from "./tool-contract-details";
 
 interface MarketingRemoveBackgroundProps {
   locale: string;
@@ -66,6 +68,13 @@ export default async function MarketingRemoveBackground({
   const tPage = await getTranslations({ locale, namespace: "RemoveBackgroundPage" });
   const toolCopy = getBackgroundToolCopy(locale, variant);
   const relatedTools = getRelatedBackgroundTools(locale, variant);
+  const registrySlug = variant === "transparent-png"
+    ? "transparent-png-maker"
+    : variant === "white-background"
+      ? "white-background-maker"
+      : variant === "change-background-color"
+        ? "change-background-color"
+        : "remove-background";
   const { softwareSchema, faqSchema, breadcrumbSchema } = buildSchemas(
     locale,
     toolCopy.path,
@@ -94,6 +103,8 @@ export default async function MarketingRemoveBackground({
       />
 
       <MarketingRemoveBackgroundClient locale={locale} variant={variant} />
+
+      <ToolContractCard locale={locale as Locale} toolSlug={registrySlug} />
 
       <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
         <Card>

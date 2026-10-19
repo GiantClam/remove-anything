@@ -3,10 +3,12 @@ import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 export interface CreateBackgroundRemovalTaskData {
   userId?: string;
+  principalId?: string;
   replicateId: string;
   inputImageUrl: string;
   resolution?: string;
   model?: string;
+  idempotencyKey?: string;
 }
 
 export interface UpdateBackgroundRemovalTaskData {
@@ -15,6 +17,8 @@ export interface UpdateBackgroundRemovalTaskData {
   errorMsg?: string;
   executeStartTime?: bigint;
   executeEndTime?: bigint;
+  expiresAt?: Date;
+  retryCount?: number;
 }
 
 /**
@@ -33,7 +37,10 @@ export async function createBackgroundRemovalTask(data: CreateBackgroundRemovalT
       resolution: data.resolution || "1024x1024",
       model: data.model || "men1scus/birefnet",
       taskStatus: "pending",
-      userId: data.userId || null // 显式设置为null而不是undefined
+      userId: data.userId || null, // 显式设置为null而不是undefined
+      principalId: data.principalId || null,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      idempotencyKey: data.idempotencyKey || null,
     };
 
     const task = await prisma.backgroundRemovalTask.create({

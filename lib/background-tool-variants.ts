@@ -1567,7 +1567,7 @@ export function getBackgroundToolCopy(
           heroDescription:
             "3 秒自动抠图，快速生成透明 PNG。适合商品图、人像、logo 和社交媒体图片。",
           uploadPrimaryText: "3 秒 AI 去背景",
-          uploadSecondaryText: "每天 50 次免费使用 → 立即试试",
+          uploadSecondaryText: "匿名每 24 小時 1 次；登入每月 5 次",
           resultTitle: "去背景结果",
           afterLabelDefault: "背景已移除",
           addBackgroundLabel: "编辑背景",
@@ -1638,7 +1638,7 @@ export function getBackgroundToolCopy(
           heroDescription:
             "Create clean transparent PNGs in seconds for products, portraits, logos, and social graphics.",
           uploadPrimaryText: "One-click removal, image in 3s",
-          uploadSecondaryText: "50 free uses daily → Try now",
+          uploadSecondaryText: "1 anonymous task per 24h; 5/month when signed in",
           resultTitle: "Background Removal Result",
           afterLabelDefault: "Background Removed",
           addBackgroundLabel: "Edit Background",

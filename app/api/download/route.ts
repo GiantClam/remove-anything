@@ -1,20 +1,37 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { createProjectAuthProvider } from "@/modules/auth/adapter";
-import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { z } from "zod";
 
-import { Hashids } from '@/lib/hashid'
-
-const TaskHashids = Hashids('Task')
 import { prisma } from "@/db/prisma";
+import { env } from "@/env.mjs";
+import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { getErrorMessage } from "@/lib/handle-error";
+import { Hashids } from "@/lib/hashid";
 import { kv, KVRateLimit } from "@/lib/kv";
-import { createBindingsFromRequest, isCloudflareRequest } from "../_cloudflare-adapter";
+import {
+  readLimitedResponse,
+  ResultSizeLimitError,
+} from "@/lib/limited-response";
+import { getR2ObjectKey } from "@/lib/r2-object-key";
+import { createR2S3Service } from "@/lib/r2-s3";
+import {
+  assertTaskDownloadAccess,
+  getTaskPrincipalFromRequest,
+  TaskLifecycleError,
+} from "@/lib/task-lifecycle";
+import { getToolRegistryEntry } from "@/lib/tool-registry";
+import { createProjectAuthProvider } from "@/modules/auth/adapter";
+
+import {
+  createBindingsFromRequest,
+  isCloudflareRequest,
+} from "../_cloudflare-adapter";
+
+const TaskHashids = Hashids("Task");
 
 const ratelimit = new KVRateLimit(kv, {
   limit: 10,
-  window: "5s"
+  window: "5s",
 });
 
 function getKey(id: string) {
@@ -39,10 +56,15 @@ const getCurrentUser = async () => {
 export async function GET(req: NextRequest) {
   const auth = createProjectAuthProvider(getCurrentUser);
   const user = await auth.getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-  const userId = user.userId!;
+  const { userId, principalId } = getTaskPrincipalFromRequest(
+    req,
+    user?.userId,
+  );
+  if (!userId && !principalId)
+    return NextResponse.json(
+      { error: "Not authenticated", code: "ANONYMOUS_PRINCIPAL_REQUIRED" },
+      { status: 401 },
+    );
 
   // 使用 Cloudflare 绑定或回退到环境变量
   let rateLimiter = ratelimit;
@@ -50,13 +72,13 @@ export async function GET(req: NextRequest) {
     const { kv: cfKV } = createBindingsFromRequest(req);
     rateLimiter = new KVRateLimit(cfKV, {
       limit: 10,
-      window: "5s"
+      window: "5s",
     });
-    console.log('🌐 API Route: 使用Cloudflare KV绑定进行速率限制');
+    console.log("🌐 API Route: 使用Cloudflare KV绑定进行速率限制");
   }
 
   const { success } = await rateLimiter.limit(
-    getKey(userId) + `_${req.ip ?? ""}`,
+    getKey(userId || principalId || "anonymous") + `_${req.ip ?? ""}`,
   );
   if (!success) {
     return new Response("Too Many Requests", {
@@ -68,7 +90,7 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const taskId = url.searchParams.get("taskId");
     const type = url.searchParams.get("type");
-    
+
     // 处理去水印任务下载
     if (type === "watermark-removal" && taskId) {
       const watermarkTask = await prisma.watermarkRemovalTask.findUnique({
@@ -81,30 +103,88 @@ export async function GET(req: NextRequest) {
         return new Response("Not found", { status: 404 });
       }
 
-      // Check if user owns this task or if it's public
-      if (watermarkTask.userId !== userId && watermarkTask.isPublic === false) {
-        return new Response("Forbidden", { status: 403 });
+      try {
+        assertTaskDownloadAccess(watermarkTask, { userId, principalId });
+      } catch (error) {
+        if (error instanceof TaskLifecycleError)
+          return NextResponse.json(
+            { error: error.message, code: error.code },
+            { status: error.status },
+          );
+        throw error;
       }
 
       // Fetch the file from the URL (may be zip or image)
-      const fileResponse = await fetch(watermarkTask.outputZipUrl);
+      const r2Key = getR2ObjectKey(watermarkTask.outputZipUrl, env.R2_URL_BASE);
+      if (!r2Key) {
+        return NextResponse.json(
+          {
+            error:
+              "Result is awaiting secure storage. Refresh the task to retry.",
+            code: "RESULT_MIGRATION_REQUIRED",
+          },
+          { status: 409 },
+        );
+      }
+      const sourceUrl = await createR2S3Service().getSignedUrl(
+        r2Key,
+        env.R2_BUCKET,
+        60,
+      );
+      const fileResponse = await fetch(sourceUrl, {
+        redirect: "error",
+        cache: "no-store",
+        signal: AbortSignal.timeout(30_000),
+      });
       if (!fileResponse.ok) {
         return new Response("File not found", { status: 404 });
       }
 
-      const contentType = fileResponse.headers.get("content-type") || "";
+      const contentType =
+        fileResponse.headers
+          .get("content-type")
+          ?.split(";", 1)[0]
+          .trim()
+          .toLowerCase() || "";
+      if (
+        ![
+          "application/zip",
+          "application/x-zip-compressed",
+          "image/png",
+          "image/jpeg",
+          "image/webp",
+        ].includes(contentType)
+      ) {
+        return NextResponse.json(
+          { error: "Result is not a supported ZIP or image" },
+          { status: 502 },
+        );
+      }
+      const maxOutputBytes =
+        getToolRegistryEntry("remove-watermark")!.limits.maxOutputSizeMb *
+        1024 *
+        1024;
+      const uint8 = await readLimitedResponse(fileResponse, maxOutputBytes);
+      const isZipMagic =
+        uint8.length >= 4 &&
+        uint8[0] === 0x50 &&
+        uint8[1] === 0x4b &&
+        ((uint8[2] === 0x03 && uint8[3] === 0x04) ||
+          (uint8[2] === 0x05 && uint8[3] === 0x06));
 
-      const downloadedArrayBuffer = await fileResponse.arrayBuffer();
-      const uint8 = new Uint8Array(downloadedArrayBuffer);
-      const isZipMagic = uint8.length >= 2 && uint8[0] === 0x50 && uint8[1] === 0x4b;
-
-      if (contentType.includes("zip") && isZipMagic) {
-        return new Response(downloadedArrayBuffer, {
+      if (contentType.includes("zip")) {
+        if (!isZipMagic)
+          return NextResponse.json(
+            { error: "Result is not a valid ZIP archive" },
+            { status: 502 },
+          );
+        return new Response(uint8, {
           headers: {
             "Content-Type": "application/zip",
-            "Content-Disposition": `attachment; filename="watermark-removed-${taskId}.zip"`,
-            "Cache-Control": "public, max-age=3600",
+            "Content-Disposition": `attachment; filename="watermark-removed-${taskId.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip"`,
+            "Cache-Control": "private, no-store, max-age=0",
             "X-Content-Type-Options": "nosniff",
+            Vary: "Cookie, Authorization",
           },
         });
       }
@@ -115,22 +195,27 @@ export async function GET(req: NextRequest) {
       // Guess extension from content-type or URL
       const fromContentType = contentType.split("/")[1] || "";
       const guessedExt = fromContentType ? fromContentType.split(";")[0] : "";
-      const urlExtMatch = watermarkTask.outputZipUrl.match(/\.([a-zA-Z0-9]+)(?:\?|#|$)/);
+      const urlExtMatch = watermarkTask.outputZipUrl.match(
+        /\.([a-zA-Z0-9]+)(?:\?|#|$)/,
+      );
       const urlExt = urlExtMatch?.[1];
       const ext = (guessedExt || urlExt || "png").toLowerCase();
-      zip.file(`image_1.${ext}`, downloadedArrayBuffer);
+      zip.file(`image_1.${ext}`, uint8);
       const zipped = await zip.generateAsync({ type: "arraybuffer" });
+      if (zipped.byteLength > maxOutputBytes)
+        throw new ResultSizeLimitError(maxOutputBytes);
 
       return new Response(zipped, {
         headers: {
           "Content-Type": "application/zip",
-          "Content-Disposition": `attachment; filename="watermark-removed-${taskId}.zip"`,
-          "Cache-Control": "public, max-age=3600",
+          "Content-Disposition": `attachment; filename="watermark-removed-${taskId.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip"`,
+          "Cache-Control": "private, no-store, max-age=0",
           "X-Content-Type-Options": "nosniff",
+          Vary: "Cookie, Authorization",
         },
       });
     }
-    
+
     // 处理 Sora2 视频去水印任务下载
     if (type === "sora2-video-watermark-removal" && taskId) {
       const sora2Task = await prisma.taskData.findFirst({
@@ -144,9 +229,15 @@ export async function GET(req: NextRequest) {
         return new Response("Not found", { status: 404 });
       }
 
-      // Check if user owns this task or if it's public
-      if (sora2Task.userId !== userId && sora2Task.isPrivate) {
-        return new Response("Forbidden", { status: 403 });
+      try {
+        assertTaskDownloadAccess(sora2Task, { userId, principalId });
+      } catch (error) {
+        if (error instanceof TaskLifecycleError)
+          return NextResponse.json(
+            { error: error.message, code: error.code },
+            { status: error.status },
+          );
+        throw error;
       }
 
       // Fetch the video from the URL
@@ -156,22 +247,27 @@ export async function GET(req: NextRequest) {
       }
 
       const videoBuffer = await videoResponse.arrayBuffer();
-      const contentType = videoResponse.headers.get("content-type") || "video/mp4";
-      
+      const contentType =
+        videoResponse.headers.get("content-type") || "video/mp4";
+
       // Return the video with appropriate headers
       return new Response(videoBuffer, {
         headers: {
           "Content-Type": contentType,
           "Content-Disposition": `attachment; filename="sora2-video-watermark-removed-${taskId}.mp4"`,
-          "Cache-Control": "public, max-age=3600",
+          "Cache-Control": "private, no-store, max-age=0",
           "X-Content-Type-Options": "nosniff",
+          Vary: "Cookie, Authorization",
         },
       });
     }
-    
+
     // 处理任务下载（原有逻辑，保持对旧任务的兼容）
     if (!taskId) {
-      return NextResponse.json({ error: "Missing taskId parameter" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing taskId parameter" },
+        { status: 400 },
+      );
     }
 
     const [id] = TaskHashids.decode(taskId);
@@ -189,9 +285,15 @@ export async function GET(req: NextRequest) {
       return new Response("Not found", { status: 404 });
     }
 
-    // Check if user owns this task or if it's public
-    if (taskData.userId !== userId && taskData.isPrivate) {
-      return new Response("Forbidden", { status: 403 });
+    try {
+      assertTaskDownloadAccess(taskData, { userId, principalId });
+    } catch (error) {
+      if (error instanceof TaskLifecycleError)
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: error.status },
+        );
+      throw error;
     }
 
     // Fetch the image from the URL
@@ -201,8 +303,9 @@ export async function GET(req: NextRequest) {
     }
 
     const imageBuffer = await imageResponse.arrayBuffer();
-    const contentType = imageResponse.headers.get("content-type") || "image/png";
-    
+    const contentType =
+      imageResponse.headers.get("content-type") || "image/png";
+
     // Guess extension from content-type or URL
     const fromContentType = contentType.split("/")[1] || "";
     const guessedExt = fromContentType ? fromContentType.split(";")[0] : "";
@@ -215,15 +318,22 @@ export async function GET(req: NextRequest) {
       headers: {
         "Content-Type": contentType,
         "Content-Disposition": `attachment; filename="image-${taskId}.${ext}"`,
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "private, no-store, max-age=0",
         "X-Content-Type-Options": "nosniff",
+        Vary: "Cookie, Authorization",
       },
     });
   } catch (error) {
+    if (error instanceof ResultSizeLimitError) {
+      return NextResponse.json(
+        { error: error.message, code: "RESULT_TOO_LARGE" },
+        { status: 413 },
+      );
+    }
     console.log("Download error:", error);
     return NextResponse.json(
       { error: getErrorMessage(error) },
       { status: 400 },
     );
   }
-} 
+}

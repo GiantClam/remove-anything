@@ -5,6 +5,10 @@
   - RUNNINGHUB_API_KEY
   - RUNNINGHUB_WORKFLOW_ID（可选）
   - NEXTAUTH_URL（可选，用于 webhook 回调 URL）
+  - RUNNINGHUB_WEBHOOK_SECRET（可选，至少 32 字符；未配置时仅使用轮询，不发送无鉴权回调地址）
+  - RUNNINGHUB_OUTPUT_URL_PREFIXES（已核实的输出 HTTPS origin/path 前缀列表，逗号分隔；无默认源）
+
+回调配置和发布门槛见 [callback runbook](../../openspec/changes/p0-growth-funnel-foundation/callback-security-runbook.md)。
 
 - 使用方式（统一从 @/modules/runninghub 导入）
 

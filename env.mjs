@@ -55,6 +55,8 @@ export const env = createEnv({
     // RunningHub API Configuration
     RUNNINGHUB_API_BASE_URL: z.string().url().default("https://www.runninghub.cn"),
     RUNNINGHUB_API_KEY: z.string().min(1).default("placeholder"),
+    RUNNINGHUB_WEBHOOK_SECRET: z.string().min(32).optional(),
+    RUNNINGHUB_OUTPUT_URL_PREFIXES: z.string().optional(),
     RUNNINGHUB_WORKFLOW_ID: z.string().min(1).default("placeholder"),
     RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID: z.string().min(1).default("placeholder"),
     RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID: z.string().min(1).default("2063827026330607618"),
@@ -160,6 +162,8 @@ export const env = createEnv({
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     RUNNINGHUB_API_BASE_URL: process.env.RUNNINGHUB_API_BASE_URL,
     RUNNINGHUB_API_KEY: process.env.RUNNINGHUB_API_KEY,
+    RUNNINGHUB_WEBHOOK_SECRET: process.env.RUNNINGHUB_WEBHOOK_SECRET || undefined,
+    RUNNINGHUB_OUTPUT_URL_PREFIXES: process.env.RUNNINGHUB_OUTPUT_URL_PREFIXES,
     RUNNINGHUB_WORKFLOW_ID: process.env.RUNNINGHUB_WORKFLOW_ID,
     RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID: process.env.RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID,
     RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID: process.env.RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID,

@@ -1,9 +1,12 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { Metadata } from "next";
+import type { Locale } from "@/config";
 import WatermarkRemoval from "@/components/watermark-removal";
+import { ToolViewTracker } from "@/components/analytics/tool-view-tracker";
 import { getChargeProduct } from "@/db/queries/charge-product";
 import { buildSeoMetadata } from "@/lib/seo";
 import { getMetadataBase } from "@/lib/utils";
+import ToolContractDetails from "@/components/marketing/tool-contract-details";
 
 interface PageProps {
   params: { locale: string };
@@ -31,8 +34,12 @@ export default async function RemoveWatermarkPage({
   const { data: chargeProduct } = await getChargeProduct(locale);
 
   return (
-    <div>
+    <>
+      <ToolViewTracker toolSlug="remove-watermark" locale={locale} />
       <WatermarkRemoval locale={locale} chargeProduct={chargeProduct} />
-    </div>
+      <div className="container mx-auto max-w-4xl px-4 pb-8">
+        <ToolContractDetails locale={locale as Locale} toolSlug="remove-watermark" />
+      </div>
+    </>
   );
 }

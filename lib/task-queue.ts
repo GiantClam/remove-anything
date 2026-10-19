@@ -1,10 +1,19 @@
-import { prisma } from "@/db/prisma";
 import { TASK_QUEUE_CONFIG } from "@/config/constants";
-import { taskProcessor } from "./task-processor";
+import { prisma } from "@/db/prisma";
+import {
+  getBackgroundTaskStatus,
+  getRunningHubLifecycleStatus,
+  refreshBackgroundTaskStatus,
+} from "@/lib/background-task-status";
+import {
+  canRetryAutomatically,
+  isTaskExpired,
+  normalizeTaskStatus,
+  refundFailedTaskCredit,
+} from "@/lib/task-lifecycle";
 import { runninghubAPI } from "@/modules/runninghub";
-import { env } from "@/env.mjs";
-import { nanoid } from 'nanoid';
-import { createR2S3Service } from "@/lib/r2-s3";
+
+import { taskProcessor } from "./task-processor";
 
 export interface TaskQueueItem {
   id: string;
@@ -12,7 +21,7 @@ export interface TaskQueueItem {
   taskType: string;
   priority: number;
   createdAt: Date;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'waiting';
+  status: "pending" | "running" | "completed" | "failed" | "waiting";
   metadata?: any;
   retryCount?: number;
   runninghubTaskId?: string; // RunningHub 任务 ID
@@ -25,7 +34,10 @@ class TaskQueueManager {
   private queue: TaskQueueItem[] = [];
   private waitingTasks: Map<string, TaskQueueItem> = new Map(); // 等待重试的任务
   private isProcessing = false;
-  private statusWatchers: Map<string, NodeJS.Timeout> = new Map(); // key: runninghubTaskId
+  private statusWatchers = new Map<
+    string,
+    { timer: NodeJS.Timeout | null; stopped: boolean }
+  >();
   private watcherConfig = {
     intervalMs: 2000, // 2秒轮询一次，更频繁
     maxMinutes: 15,
@@ -47,31 +59,37 @@ class TaskQueueManager {
   /**
    * 添加任务到队列
    */
-  public async addTask(task: Omit<TaskQueueItem, 'id' | 'createdAt' | 'status'>): Promise<{ taskId: string; queuePosition: number }> {
+  public async addTask(
+    task: Omit<TaskQueueItem, "id" | "createdAt" | "status">,
+  ): Promise<{ taskId: string; queuePosition: number }> {
     const taskId = `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const queueItem: TaskQueueItem = {
       ...task,
       id: taskId,
       createdAt: new Date(),
-      status: 'pending',
+      status: "pending",
     };
 
     // 如果并发已满且队列长度超过阈值，抛出错误给前端快速失败
-    const availableSlots = TASK_QUEUE_CONFIG.MAX_CONCURRENT_TASKS - this.runningTasks.size;
-    const tooBusy = availableSlots <= 0 && this.queue.length >= TASK_QUEUE_CONFIG.MAX_CONCURRENT_TASKS;
+    const availableSlots =
+      TASK_QUEUE_CONFIG.MAX_CONCURRENT_TASKS - this.runningTasks.size;
+    const tooBusy =
+      availableSlots <= 0 &&
+      this.queue.length >= TASK_QUEUE_CONFIG.MAX_CONCURRENT_TASKS;
     if (tooBusy) {
-      const error: any = new Error('TASK_QUEUE_MAXED');
-      (error.code as string) = 'TASK_QUEUE_MAXED';
+      const error: any = new Error("TASK_QUEUE_MAXED");
+      (error.code as string) = "TASK_QUEUE_MAXED";
       throw error;
     }
 
     // 添加到队列
     this.queue.push(queueItem);
-    
+
     // 按优先级排序 (数字越小优先级越高)
     this.queue.sort((a, b) => a.priority - b.priority);
 
-    const queuePosition = this.queue.findIndex(item => item.id === taskId) + 1;
+    const queuePosition =
+      this.queue.findIndex((item) => item.id === taskId) + 1;
 
     console.log(`📝 任务 ${taskId} 已添加到队列，位置: ${queuePosition}`);
 
@@ -93,18 +111,19 @@ class TaskQueueManager {
 
     try {
       // 检查是否有空闲槽位
-      const availableSlots = TASK_QUEUE_CONFIG.MAX_CONCURRENT_TASKS - this.runningTasks.size;
-      
+      const availableSlots =
+        TASK_QUEUE_CONFIG.MAX_CONCURRENT_TASKS - this.runningTasks.size;
+
       if (availableSlots > 0 && this.queue.length > 0) {
         // 启动新任务
         const tasksToStart = this.queue.splice(0, availableSlots);
-        
+
         for (const task of tasksToStart) {
           await this.startTask(task);
         }
       }
     } catch (error) {
-      console.error('❌ 处理队列时出错:', error);
+      console.error("❌ 处理队列时出错:", error);
     } finally {
       this.isProcessing = false;
     }
@@ -115,24 +134,30 @@ class TaskQueueManager {
    */
   private async processWaitingTasks() {
     const waitingTaskIds = Array.from(this.waitingTasks.keys());
-    
+
     for (const taskId of waitingTaskIds) {
       const task = this.waitingTasks.get(taskId);
       if (!task) continue;
 
       // 检查是否有空闲槽位
-      const availableSlots = TASK_QUEUE_CONFIG.MAX_CONCURRENT_TASKS - this.runningTasks.size;
+      const availableSlots =
+        TASK_QUEUE_CONFIG.MAX_CONCURRENT_TASKS - this.runningTasks.size;
       if (availableSlots <= 0) break;
 
       // 尝试重新启动任务
       try {
-        console.log(`🔄 重试任务 ${taskId} (第 ${(task.retryCount || 0) + 1} 次)`);
+        console.log(
+          `🔄 重试任务 ${taskId} (第 ${(task.retryCount || 0) + 1} 次)`,
+        );
         await this.startTask(task);
         this.waitingTasks.delete(taskId);
       } catch (error) {
         console.error(`❌ 重试任务 ${taskId} 失败:`, error);
         // 如果重试失败，检查是否是因为队列满或机器不足
-        if (this.isRetryableError(error)) {
+        if (
+          this.isRetryableError(error) &&
+          canRetryAutomatically(task.retryCount)
+        ) {
           // 继续等待重试
           task.retryCount = (task.retryCount || 0) + 1;
           this.scheduleRetry(task);
@@ -149,11 +174,13 @@ class TaskQueueManager {
    * 检查错误是否可重试
    */
   private isRetryableError(error: any): boolean {
-    const errorMessage = error?.message || '';
-    return errorMessage.includes('TASK_QUEUE_MAXED') || 
-           errorMessage.includes('TASK_INSTANCE_MAXED') ||
-           errorMessage.includes('421') ||
-           errorMessage.includes('415');
+    const errorMessage = error?.message || "";
+    return (
+      errorMessage.includes("TASK_QUEUE_MAXED") ||
+      errorMessage.includes("TASK_INSTANCE_MAXED") ||
+      errorMessage.includes("421") ||
+      errorMessage.includes("415")
+    );
   }
 
   /**
@@ -176,280 +203,215 @@ class TaskQueueManager {
   /**
    * 启动 RunningHub 状态监控（后端托管，无需前端）
    */
-  public startStatusWatcher(taskRecordId: number, runninghubTaskId: string, taskType: string = 'image') {
-    console.log(`🚀 启动状态监控: ${runninghubTaskId} (类型: ${taskType}, 记录ID: ${taskRecordId})`);
-    
-    // 已有 watcher 则先清理
-    const existing = this.statusWatchers.get(runninghubTaskId);
-    if (existing) {
-      console.log(`🔄 清理现有监控: ${runninghubTaskId}`);
-      clearInterval(existing);
-    }
-
+  public startStatusWatcher(
+    taskRecordId: number,
+    runninghubTaskId: string,
+    taskType: string = "image",
+  ) {
+    // Register before the first async read. Starting an already-watched task
+    // must not create a competing poll or reset its elapsed processing time.
+    if (this.statusWatchers.has(runninghubTaskId)) return;
+    const watcher = { timer: null as NodeJS.Timeout | null, stopped: false };
+    this.statusWatchers.set(runninghubTaskId, watcher);
     const startedAt = Date.now();
-    
-    // 立即执行一次状态检查，不等待间隔
-    console.log(`⚡ 立即执行状态检查: ${runninghubTaskId}`);
-    this.checkTaskStatus(taskRecordId, runninghubTaskId, taskType, startedAt).catch(error => {
-      console.error(`❌ 初始状态检查异常: ${runninghubTaskId}`, error);
-    });
-    
-    const interval = setInterval(async () => {
+    const isActive = () =>
+      !watcher.stopped && this.statusWatchers.get(runninghubTaskId) === watcher;
+    const poll = async () => {
+      if (!isActive()) return;
       try {
-        await this.checkTaskStatus(taskRecordId, runninghubTaskId, taskType, startedAt);
-      } catch (error) {
-        console.error(`❌ 状态检查异常: ${runninghubTaskId}`, error);
-        // 如果连续出错，停止监控
-        this.stopStatusWatcher(runninghubTaskId);
+        const done = await this.checkTaskStatus(
+          taskRecordId,
+          runninghubTaskId,
+          taskType,
+          startedAt,
+          isActive,
+        );
+        if (done && isActive()) this.stopStatusWatcher(runninghubTaskId);
+      } catch {
+        // Provider/database/storage errors are recoverable on the same task.
+        // Avoid logging output URLs, provider bodies, or signed query tokens.
+        console.warn(
+          "Task status refresh failed; the original task will be polled again",
+        );
       }
-    }, this.watcherConfig.intervalMs);
-
-    this.statusWatchers.set(runninghubTaskId, interval);
-    console.log(`✅ 状态监控已设置: ${runninghubTaskId}, 间隔: ${this.watcherConfig.intervalMs}ms`);
-    console.log(`📊 当前活跃监控数量: ${this.statusWatchers.size}`);
+      if (isActive()) {
+        // Schedule only after this poll settles; async work never overlaps.
+        watcher.timer = setTimeout(() => {
+          void poll();
+        }, this.watcherConfig.intervalMs);
+      }
+    };
+    void poll();
   }
 
-  /**
-   * 检查任务状态的核心逻辑
-   */
-  private async checkTaskStatus(taskRecordId: number, runninghubTaskId: string, taskType: string, startedAt: number) {
-    try {
-      console.log(`🔍 开始检查任务状态: ${runninghubTaskId} (类型: ${taskType}, 记录ID: ${taskRecordId})`);
-        // 超时保护
-        if (Date.now() - startedAt > this.watcherConfig.maxMinutes * 60 * 1000) {
-          if (taskType === 'background-removal') {
-            await prisma.backgroundRemovalTask.update({
-              where: { replicateId: runninghubTaskId },
-              data: {
-                taskStatus: 'failed',
-                errorMsg: 'Watch timeout',
-                executeEndTime: BigInt(Date.now()),
-              }
-            });
-          } else {
-              await prisma.taskData.update({
-                where: { id: taskRecordId },
-                data: {
-                  taskStatus: 'failed',
-                  errorMsg: 'Watch timeout',
-                  executeEndTime: BigInt(Date.now()),
-                }
-              });
-            }
-          this.stopStatusWatcher(runninghubTaskId);
-          return;
-        }
-
-        // 查询任务状态
-        const statusResp = await runninghubAPI.getTaskStatus(runninghubTaskId);
-        let status: string | undefined;
-        
-        console.log(`🔍 RunningHub状态响应:`, JSON.stringify(statusResp, null, 2));
-        
-        // 改进状态解析逻辑
-        if (statusResp && typeof statusResp === 'object') {
-          if (statusResp.code === 0 && statusResp.data) {
-            if (typeof statusResp.data === 'string') {
-              status = statusResp.data;
-            } else if (statusResp.data && typeof statusResp.data.status === 'string') {
-              status = statusResp.data.status;
-            } else if (statusResp.data && typeof statusResp.data === 'object') {
-              status = statusResp.data.status;
-            }
-          } else if (statusResp.code !== 0) {
-            console.log(`⚠️ RunningHub API返回错误: code=${statusResp.code}, msg=${statusResp.msg}`);
-            // API错误，继续轮询
-            return;
-          }
-        }
-
-        console.log(`📊 解析的任务状态: ${status} (原始响应: ${JSON.stringify(statusResp)})`);
-
-        if (!status) {
-          console.log(`⚠️ 无法解析任务状态，继续轮询`);
-          return; // 未知状态，继续轮询
-        }
-
-        if (status === 'RUNNING' || status === 'running' || status === 'Processing' || status === 'processing' || status === 'queued' || status === 'starting') {
-          // 更新数据库状态为processing（如果当前不是processing状态）
-          try {
-            if (taskType === 'background-removal') {
-              await prisma.backgroundRemovalTask.update({
-                where: { replicateId: runninghubTaskId },
-                data: {
-                  taskStatus: 'processing',
-                  executeStartTime: BigInt(Date.now()),
-                }
-              });
-            } else {
-              await prisma.taskData.update({
-                where: { id: taskRecordId },
-                data: {
-                  taskStatus: 'processing',
-                  executeStartTime: BigInt(Date.now()),
-                }
-              });
-            }
-            console.log(`🔄 任务状态更新为processing`);
-          } catch (updateError) {
-            console.error("❌ 更新任务状态为processing失败:", updateError);
-          }
-          return; // 继续轮询
-        }
-
-        if (status === 'SUCCESS' || status === 'succeeded') {
-          // 拉取结果
-          try {
-            console.log(`🎯 任务状态为SUCCESS，开始获取结果: ${runninghubTaskId}`);
-            const result = await runninghubAPI.getTaskResult(runninghubTaskId);
-            console.log(`📦 结果响应:`, JSON.stringify(result, null, 2));
-            
-            let outputUrl: string | null = null;
-            
-            // 检查是否是 APIKEY_TASK_IS_RUNNING 响应
-            if (result.code === 804 && result.msg === 'APIKEY_TASK_IS_RUNNING') {
-              console.log(`ℹ️ 任务状态为SUCCESS但结果API仍返回运行中，保持当前状态等待下次轮询`);
-              return; // 继续轮询
-            } else if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
-              const remoteUrl = result.data[0]?.fileUrl || null;
-              console.log(`✅ 获取到远端输出URL: ${remoteUrl}`);
-              // 将远端图片转存到 R2
-              try {
-                outputUrl = await this.saveImageToR2(remoteUrl, runninghubTaskId);
-                console.log(`📤 已转存到R2: ${outputUrl}`);
-              } catch (uploadErr) {
-                console.error("❌ 转存到R2失败，回退使用远端URL:", uploadErr);
-                outputUrl = remoteUrl;
-              }
-            } else {
-              console.log(`⚠️ 结果数据格式异常:`, result);
-            }
-
-            if (taskType === 'background-removal') {
-              await prisma.backgroundRemovalTask.update({
-                where: { replicateId: runninghubTaskId },
-                data: {
-                  taskStatus: 'succeeded',
-                  outputImageUrl: outputUrl,
-                  executeEndTime: BigInt(Date.now()),
-                }
-              });
-            } else {
-              await prisma.taskData.update({
-                where: { id: taskRecordId },
-                data: {
-                  taskStatus: 'succeeded',
-                  imageUrl: outputUrl,
-                  executeEndTime: BigInt(Date.now()),
-                }
-              });
-            }
-            console.log(`✅ 任务成功完成，输出URL: ${outputUrl}`);
-          } catch (e) {
-            console.error("❌ 获取任务结果失败:", e);
-            if (taskType === 'background-removal') {
-              await prisma.backgroundRemovalTask.update({
-                where: { replicateId: runninghubTaskId },
-                data: {
-                  taskStatus: 'succeeded',
-                  executeEndTime: BigInt(Date.now()),
-                }
-              });
-            } else {
-              await prisma.taskData.update({
-                where: { id: taskRecordId },
-                data: {
-                  taskStatus: 'succeeded',
-                  executeEndTime: BigInt(Date.now()),
-                }
-              });
-            }
-          } finally {
-            this.stopStatusWatcher(runninghubTaskId);
-          }
-          return;
-        }
-
-        if (status === 'FAILED' || status === 'failed') {
-          if (taskType === 'background-removal') {
-            await prisma.backgroundRemovalTask.update({
-              where: { replicateId: runninghubTaskId },
-              data: {
-                taskStatus: 'failed',
-                executeEndTime: BigInt(Date.now()),
-              }
-            });
-          } else {
-            await prisma.taskData.update({
-              where: { id: taskRecordId },
-              data: {
-                taskStatus: 'failed',
-                executeEndTime: BigInt(Date.now()),
-              }
-            });
-          }
-          this.stopStatusWatcher(runninghubTaskId);
-          return;
-        }
-    } catch (error) {
-      console.error("❌ 状态监控错误:", error);
-      // 继续轮询，不因单次错误停止
+  private async checkTaskStatus(
+    taskRecordId: number,
+    runninghubTaskId: string,
+    taskType: string,
+    startedAt: number,
+    isActive: () => boolean,
+  ): Promise<boolean> {
+    if (taskType === "background-removal") {
+      const task = await prisma.backgroundRemovalTask.findFirst({
+        where: { id: taskRecordId, replicateId: runninghubTaskId },
+      });
+      if (!task || !isActive()) return true;
+      const status = getBackgroundTaskStatus(task);
+      if (["succeeded", "failed", "expired"].includes(status)) {
+        if (status === "failed")
+          await refundFailedTaskCredit(
+            task.userId,
+            task.id,
+            "background-removal",
+          );
+        return true;
+      }
+      if (isTaskExpired(task)) {
+        const result = await prisma.backgroundRemovalTask.updateMany({
+          where: {
+            id: task.id,
+            taskStatus: task.taskStatus,
+            outputImageUrl: task.outputImageUrl,
+            expiresAt: task.expiresAt,
+          },
+          data: {
+            taskStatus: "expired",
+            errorMsg: "Task has expired",
+            executeEndTime: BigInt(Date.now()),
+          },
+        });
+        return result.count > 0;
+      }
+      // The shared refresher owns the registry deadline, private migration,
+      // and state/output/expiry compare-and-swap used by GET and SSE too.
+      const persisted = await refreshBackgroundTaskStatus(task, isActive);
+      if (!isActive()) return true;
+      const nextStatus = getBackgroundTaskStatus(persisted);
+      if (nextStatus === "failed")
+        await refundFailedTaskCredit(
+          persisted.userId,
+          persisted.id,
+          "background-removal",
+        );
+      return ["succeeded", "failed", "expired"].includes(nextStatus);
     }
-  }
 
-  /**
-   * 将远端图片下载并上传到 Cloudflare R2，返回公共访问URL
-   */
-  private async saveImageToR2(remoteUrl: string | null, taskId: string): Promise<string | null> {
-    if (!remoteUrl) return null;
-    
-    // 设置超时保护 - 15秒
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('R2 upload timeout')), 15000);
+    // Keep the legacy generic/video path metadata-only. Every transition uses
+    // the original row as a guard, and success always requires an output URL.
+    const task = await prisma.taskData.findFirst({
+      where: { id: taskRecordId, replicateId: runninghubTaskId },
     });
-    
-    try {
-      const uploadPromise = this.performR2Upload(remoteUrl, taskId);
-      return await Promise.race([uploadPromise, timeoutPromise]);
-    } catch (e) {
-      console.error('saveImageToR2 error:', e);
-      return null;
+    if (!task || !isActive()) return true;
+    const currentStatus = normalizeTaskStatus(task.taskStatus);
+    if (
+      ["failed", "expired"].includes(currentStatus) ||
+      (currentStatus === "succeeded" && task.imageUrl)
+    ) {
+      if (currentStatus === "failed")
+        await refundFailedTaskCredit(task.userId, task.id, "image");
+      return true;
     }
-  }
-
-  private async performR2Upload(remoteUrl: string, taskId: string): Promise<string | null> {
-    const resp = await fetch(remoteUrl);
-    if (!resp.ok) throw new Error(`fetch image failed: ${resp.status}`);
-    const arrayBuffer = await resp.arrayBuffer();
-    const contentType = resp.headers.get('content-type') || 'image/png';
-
-    const s3 = createR2S3Service();
-    const fileName = `${taskId}-${nanoid(8)}.png`;
-    const key = `background-removal/processed/${fileName}`;
-    await s3.putItemInBucket(fileName, Buffer.from(arrayBuffer), {
-      path: "background-removal/processed",
-      ContentType: contentType,
-      acl: "public-read",
+    const processingDeadline =
+      Math.min(startedAt, task.createdAt.getTime()) +
+      this.watcherConfig.maxMinutes * 60 * 1000;
+    const retentionDeadline =
+      task.expiresAt?.getTime() ??
+      task.createdAt.getTime() + 24 * 60 * 60 * 1000;
+    const timedOut = () =>
+      Date.now() >= Math.min(processingDeadline, retentionDeadline);
+    const data: {
+      taskStatus: string;
+      imageUrl?: string;
+      executeStartTime?: bigint;
+      executeEndTime?: bigint;
+      errorMsg?: string | null;
+    } = { taskStatus: "processing" };
+    if (!timedOut()) {
+      const response = await runninghubAPI.getTaskStatus(runninghubTaskId);
+      if (!isActive()) return true;
+      if (response.code !== 0)
+        throw new Error("Provider task status is unavailable");
+      const status = getRunningHubLifecycleStatus(
+        typeof response.data === "string"
+          ? response.data
+          : response.data?.status,
+      );
+      data.taskStatus =
+        status === "queued" && currentStatus === "processing"
+          ? "processing"
+          : status;
+      if (status === "succeeded" && !timedOut()) {
+        const result = await runninghubAPI.getTaskResult(runninghubTaskId);
+        if (!isActive()) return true;
+        const output =
+          result.code === 0 && Array.isArray(result.data)
+            ? result.data
+                .find(
+                  (file) =>
+                    typeof file?.fileUrl === "string" && file.fileUrl.trim(),
+                )
+                ?.fileUrl.trim()
+            : null;
+        if (output) {
+          data.imageUrl = output;
+          data.errorMsg = null;
+          data.executeEndTime = BigInt(Date.now());
+        } else {
+          data.taskStatus = "processing";
+          data.errorMsg =
+            "The provider result is not ready. Please retry shortly.";
+        }
+      } else if (status === "failed" || status === "expired") {
+        data.errorMsg = "Task failed on provider";
+        data.executeEndTime = BigInt(Date.now());
+      } else if (!task.executeStartTime && status === "processing") {
+        data.executeStartTime = BigInt(Date.now());
+      }
+    }
+    if (timedOut()) {
+      delete data.imageUrl;
+      data.taskStatus = "failed";
+      data.errorMsg = "Processing timed out. Please retry.";
+      data.executeEndTime = BigInt(Date.now());
+    }
+    if (!isActive()) return true;
+    await prisma.taskData.updateMany({
+      where: {
+        id: task.id,
+        replicateId: runninghubTaskId,
+        taskStatus: task.taskStatus,
+        imageUrl: task.imageUrl,
+        expiresAt: task.expiresAt,
+      },
+      data,
     });
-
-    return `${env.R2_URL_BASE}/${key}`;
+    const persisted = await prisma.taskData.findFirst({
+      where: { id: task.id, replicateId: runninghubTaskId },
+    });
+    if (!persisted) return true;
+    const nextStatus = normalizeTaskStatus(persisted.taskStatus);
+    if (nextStatus === "failed")
+      await refundFailedTaskCredit(persisted.userId, persisted.id, "image");
+    return (
+      ["failed", "expired"].includes(nextStatus) ||
+      (nextStatus === "succeeded" && Boolean(persisted.imageUrl))
+    );
   }
 
-  /** 停止状态监控 */
+  /** Stop future polls and prevent in-flight reads from writing afterward. */
   public stopStatusWatcher(runninghubTaskId: string) {
-    const h = this.statusWatchers.get(runninghubTaskId);
-    if (h) {
-      clearInterval(h);
-      this.statusWatchers.delete(runninghubTaskId);
-      console.log(`🛑 已停止状态监控: runninghubTaskId=${runninghubTaskId}`);
-    }
+    const watcher = this.statusWatchers.get(runninghubTaskId);
+    if (!watcher) return;
+    watcher.stopped = true;
+    if (watcher.timer) clearTimeout(watcher.timer);
+    this.statusWatchers.delete(runninghubTaskId);
   }
 
   /** 获取当前活跃监控状态 */
   public getActiveWatchers() {
     return {
       count: this.statusWatchers.size,
-      taskIds: Array.from(this.statusWatchers.keys())
+      taskIds: Array.from(this.statusWatchers.keys()),
     };
   }
 
@@ -458,7 +420,7 @@ class TaskQueueManager {
    */
   private async startTask(task: TaskQueueItem) {
     try {
-      task.status = 'running';
+      task.status = "running";
       this.runningTasks.set(task.id, task);
 
       console.log(`🚀 启动任务 ${task.id} (${task.taskType})`);
@@ -468,14 +430,16 @@ class TaskQueueManager {
 
       // 注意：这里不调用 completeTask，因为任务可能还在RunningHub中处理
       // 任务完成会通过webhook或状态轮询来处理
-
     } catch (error) {
       console.error(`❌ 启动任务 ${task.id} 失败:`, error);
-      
+
       // 检查是否是可重试的错误
-      if (this.isRetryableError(error)) {
+      if (
+        this.isRetryableError(error) &&
+        canRetryAutomatically(task.retryCount)
+      ) {
         console.log(`⏳ 任务 ${task.id} 因队列满或机器不足，进入等待重试状态`);
-        task.status = 'waiting';
+        task.status = "waiting";
         this.runningTasks.delete(task.id);
         this.waitingTasks.set(task.id, task);
         this.scheduleRetry(task);
@@ -492,10 +456,10 @@ class TaskQueueManager {
   public async completeTask(taskId: string) {
     const task = this.runningTasks.get(taskId);
     if (task) {
-      task.status = 'completed';
+      task.status = "completed";
       this.runningTasks.delete(taskId);
       console.log(`✅ 任务 ${taskId} 已完成`);
-      
+
       // 继续处理队列
       this.processQueue();
     }
@@ -507,10 +471,10 @@ class TaskQueueManager {
   public async failTask(taskId: string, error: any) {
     const task = this.runningTasks.get(taskId);
     if (task) {
-      task.status = 'failed';
+      task.status = "failed";
       this.runningTasks.delete(taskId);
       console.log(`❌ 任务 ${taskId} 失败:`, error);
-      
+
       // 继续处理队列
       this.processQueue();
     }
@@ -534,7 +498,7 @@ class TaskQueueManager {
         priority: task.priority,
         status: task.status,
       })),
-      waitingTasks: Array.from(this.waitingTasks.values()).map(task => ({
+      waitingTasks: Array.from(this.waitingTasks.values()).map((task) => ({
         id: task.id,
         taskType: task.taskType,
         userId: task.userId,
@@ -550,16 +514,16 @@ class TaskQueueManager {
    * 获取特定任务的队列位置
    */
   public getTaskPosition(taskId: string): number | null {
-    const queueIndex = this.queue.findIndex(task => task.id === taskId);
+    const queueIndex = this.queue.findIndex((task) => task.id === taskId);
     if (queueIndex !== -1) {
       return queueIndex + 1;
     }
-    
+
     // 检查是否正在运行
     if (this.runningTasks.has(taskId)) {
       return 0; // 0 表示正在运行
     }
-    
+
     return null; // 任务不存在
   }
 
@@ -575,7 +539,7 @@ class TaskQueueManager {
    */
   public async cancelTask(taskId: string): Promise<boolean> {
     // 从队列中移除
-    const queueIndex = this.queue.findIndex(task => task.id === taskId);
+    const queueIndex = this.queue.findIndex((task) => task.id === taskId);
     if (queueIndex !== -1) {
       this.queue.splice(queueIndex, 1);
       console.log(`🚫 任务 ${taskId} 已从队列中取消`);
@@ -600,16 +564,18 @@ class TaskQueueManager {
       // 如果 RunningHub 任务已经创建，尝试取消它
       if (runningTask.runninghubTaskId) {
         try {
-          const { runninghubAPI } = await import('@/modules/runninghub');
+          const { runninghubAPI } = await import("@/modules/runninghub");
           await runninghubAPI.cancelTask(runningTask.runninghubTaskId);
-          console.log(`🚫 RunningHub 任务 ${runningTask.runninghubTaskId} 已取消`);
+          console.log(
+            `🚫 RunningHub 任务 ${runningTask.runninghubTaskId} 已取消`,
+          );
         } catch (error) {
           console.error(`❌ 取消 RunningHub 任务失败:`, error);
         }
       }
-      
+
       // 标记任务为失败
-      await this.failTask(taskId, new Error('Task cancelled by user'));
+      await this.failTask(taskId, new Error("Task cancelled by user"));
       return true;
     }
 

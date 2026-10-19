@@ -396,7 +396,7 @@
     "demoProcessing": "Demo processing...",
     "noProcessedImage": "No processed image",
     "uploadFile": "Please upload an image file",
-    "fileSizeLimit": "Image size should be less than 5MB",
+    "fileSizeLimit": "Image size must be 10MB or smaller",
     "foundProcessedImage": "Found your processed image! You can now download it.",
     "backgroundRemoved": "Background removed successfully!",
     "taskCreated": "Background removal task created! Processing in the background...",

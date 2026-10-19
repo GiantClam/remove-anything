@@ -1,0 +1,78 @@
+import { NextRequest, NextResponse } from "next/server";
+
+import { prisma } from "@/db/prisma";
+import { createR2S3Service } from "@/lib/r2-s3";
+import { RETENTION_EXECUTE_ENV, runTaskRetention } from "@/lib/task-retention";
+
+export const dynamic = "force-dynamic";
+
+function configuredBatchSize() {
+  const value = Number(process.env.TASK_RETENTION_BATCH_SIZE || 100);
+  return Number.isFinite(value) ? value : 100;
+}
+
+function hasValidCronSecret() {
+  return (
+    typeof process.env.CRON_SECRET === "string" &&
+    process.env.CRON_SECRET.trim().length > 0
+  );
+}
+
+function isAuthorized(req: NextRequest) {
+  if (!hasValidCronSecret()) return false;
+  return (
+    req.headers.get("authorization") === `Bearer ${process.env.CRON_SECRET}`
+  );
+}
+
+export async function GET(req: NextRequest) {
+  if (!hasValidCronSecret()) {
+    return NextResponse.json(
+      { error: "cron secret is not configured" },
+      { status: 503 },
+    );
+  }
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const execute = process.env[RETENTION_EXECUTE_ENV] === "true";
+  // A reference can be created after the worker's shared-object check. Keep
+  // deletion unreachable until cleanup claims coordinate with every writer;
+  // an environment flag alone cannot establish that concurrency guarantee.
+  if (execute) {
+    return NextResponse.json(
+      {
+        error:
+          "retention execution requires coordinated cleanup claims and reference writes",
+        code: "RETENTION_EXECUTION_BLOCKED",
+        executionEnabled: false,
+      },
+      { status: 503 },
+    );
+  }
+  const configuredR2Url = process.env.R2_URL_BASE;
+  if (!configuredR2Url) {
+    return NextResponse.json(
+      { error: "R2_URL_BASE is not configured" },
+      { status: 503 },
+    );
+  }
+
+  try {
+    const report = await runTaskRetention({
+      db: prisma as any,
+      storage: createR2S3Service(),
+      configuredR2Url,
+      dryRun: !execute,
+      batchSize: configuredBatchSize(),
+    });
+    return NextResponse.json({ ...report, executionEnabled: execute });
+  } catch (error) {
+    console.error("Task retention cleanup failed", error);
+    return NextResponse.json(
+      { error: "retention cleanup failed" },
+      { status: 500 },
+    );
+  }
+}

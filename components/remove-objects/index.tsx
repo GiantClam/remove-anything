@@ -7,22 +7,22 @@ import { Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { BaseUpload } from "@/components/upload/base-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { FrameEditorBox } from "@/lib/remove-objects/runninghub";
+import { BaseUpload } from "@/components/upload/base-upload";
 import {
   createInitialMaskHistory,
   deriveEditorState,
   type RemoveObjectViewState,
 } from "@/lib/remove-objects/mask-state";
+import type { FrameEditorBox } from "@/lib/remove-objects/runninghub";
 
 import { EditorCanvas } from "./editor-canvas";
 import { RemoveObjectsResultPanel } from "./result-panel";
 
 type TaskApiResponse = {
   success: boolean;
-  taskStatus: "pending" | "starting" | "processing" | "succeeded" | "failed";
+  taskStatus: "queued" | "processing" | "succeeded" | "failed" | "expired";
   outputImageUrl?: string;
   errorMsg?: string;
 };
@@ -35,6 +35,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
   const [history, setHistory] = useState(createInitialMaskHistory());
   const [taskId, setTaskId] = useState("");
   const [outputImageUrl, setOutputImageUrl] = useState("");
+  const [authorizationConfirmed, setAuthorizationConfirmed] = useState(false);
   const [failureMessage, setFailureMessage] = useState("");
   const [mode, setMode] = useState<"brush" | "erase" | "box">("box");
   const [brushSize, setBrushSize] = useState(32);
@@ -48,6 +49,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
     "editing" | "processing" | "succeeded" | "failed"
   >("editing");
   const isMountedRef = useRef(true);
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   const uploadAsset = useMutation({
     mutationFn: async (file: File | Blob) => {
@@ -60,7 +62,9 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
       });
 
       if (!res.ok) {
-        const error = await res.json().catch(() => ({ error: "Upload failed" }));
+        const error = await res
+          .json()
+          .catch(() => ({ error: "Upload failed" }));
         throw new Error(error.error || "Upload failed");
       }
 
@@ -86,10 +90,16 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
 
       const res = await fetch("/api/remove-objects", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKeyRef.current || "",
+        },
         body: JSON.stringify({
           imageUrl: sourceImageUrl,
           maskUrl: finalMaskUrl,
+          authorizationConfirmed,
+          authorizationPolicyVersion: "removal-auth-v1",
+          authorizationSubject: "image-owner-or-authorized-editor",
         }),
       });
 
@@ -165,7 +175,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
       const status = query.state.data?.taskStatus;
       const hasOutput = Boolean(query.state.data?.outputImageUrl);
       return status &&
-        (["pending", "starting", "processing"].includes(status) ||
+        (["queued", "processing"].includes(status) ||
           (status === "succeeded" && !hasOutput))
         ? 3000
         : false;
@@ -174,10 +184,13 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
       const res = await fetch(`/api/remove-objects/${taskId}`, {
         credentials: "include",
       });
+      const data = await res
+        .json()
+        .catch(() => ({ error: "Failed to fetch task status" }));
       if (!res.ok) {
-        throw new Error("Failed to fetch task status");
+        throw new Error(data.error || "Failed to fetch task status");
       }
-      return res.json();
+      return data;
     },
   });
 
@@ -189,7 +202,8 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
   }, []);
 
   const editorState = useMemo(
-    () => deriveEditorState(history.present.hasMask, segmentSelection.isPending),
+    () =>
+      deriveEditorState(history.present.hasMask, segmentSelection.isPending),
     [history.present.hasMask, segmentSelection.isPending],
   );
 
@@ -210,6 +224,12 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
   }, [editorState, taskPhase]);
 
   useEffect(() => {
+    if (taskQuery.error) {
+      setFailureMessage(taskQuery.error.message);
+      setTaskPhase("failed");
+      return;
+    }
+
     if (!taskQuery.data) {
       return;
     }
@@ -232,7 +252,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
       return;
     }
 
-    if (taskQuery.data.taskStatus === "failed") {
+    if (["failed", "expired"].includes(taskQuery.data.taskStatus)) {
       setFailureMessage(
         taskQuery.data.errorMsg || "Object removal failed. Please try again.",
       );
@@ -241,7 +261,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
         taskQuery.data.errorMsg || "Object removal failed. Please try again.",
       );
     }
-  }, [taskQuery.data]);
+  }, [taskQuery.data, taskQuery.error]);
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
@@ -250,6 +270,8 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
     setHistory(createInitialMaskHistory());
     setTaskId("");
     setOutputImageUrl("");
+    setAuthorizationConfirmed(false);
+    idempotencyKeyRef.current = null;
     setFailureMessage("");
     setMode("box");
     setTaskPhase("editing");
@@ -275,6 +297,20 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
   };
 
   const handleRemove = () => {
+    if (!authorizationConfirmed) {
+      toast.error(
+        "Please confirm that you own or are authorized to edit this image.",
+      );
+      return;
+    }
+
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `remove-object-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+
     if (currentMaskBlob) {
       void removeObject.mutateAsync(undefined);
       return;
@@ -306,6 +342,8 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
   const handleReset = () => {
     setTaskId("");
     setOutputImageUrl("");
+    setAuthorizationConfirmed(false);
+    idempotencyKeyRef.current = null;
     setFailureMessage("");
     setTaskPhase("editing");
     setCurrentMaskBlob(null);
@@ -316,32 +354,31 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
     setResetSignal((current) => current + 1);
   };
 
-  const handleMaskChange = useCallback(({
-    hasMask,
-    blob,
-  }: {
-    hasMask: boolean;
-    blob?: Blob;
-  }) => {
-    setCurrentMaskBlob(blob || null);
-    setHistory((current) => ({
-      ...current,
-      present: {
-        hasMask,
-        aiPrompt: current.present.aiPrompt,
-      },
-    }));
-    if (taskPhase === "failed") {
-      setTaskPhase("editing");
-      setFailureMessage("");
-    }
-  }, [taskPhase]);
+  const handleMaskChange = useCallback(
+    ({ hasMask, blob }: { hasMask: boolean; blob?: Blob }) => {
+      setCurrentMaskBlob(blob || null);
+      setHistory((current) => ({
+        ...current,
+        present: {
+          hasMask,
+          aiPrompt: current.present.aiPrompt,
+        },
+      }));
+      if (taskPhase === "failed") {
+        setTaskPhase("editing");
+        setFailureMessage("");
+      }
+    },
+    [taskPhase],
+  );
 
   const handleEditAgain = () => {
     setSelectedFile(null);
     setSourceImageUrl("");
     setTaskId("");
     setOutputImageUrl("");
+    setAuthorizationConfirmed(false);
+    idempotencyKeyRef.current = null;
     setFailureMessage("");
     setTaskPhase("editing");
     setCurrentMaskBlob(null);
@@ -356,14 +393,12 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
   };
 
   const handleDownload = () => {
-    if (!outputImageUrl) {
+    if (!outputImageUrl || !taskId) {
       return;
     }
 
     const link = document.createElement("a");
-    link.href = outputImageUrl.startsWith("/api/proxy-image?url=")
-      ? outputImageUrl
-      : `/api/proxy-image?url=${encodeURIComponent(outputImageUrl)}`;
+    link.href = `/api/download-object?taskId=${encodeURIComponent(taskId)}`;
     link.download = "";
     link.rel = "noopener";
     document.body.appendChild(link);
@@ -415,7 +450,12 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
                     {t("result.download")}
                   </Button>
                 ) : null}
-                <Button type="button" variant="outline" size="sm" onClick={handleEditAgain}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEditAgain}
+                >
                   {t("result.editAgain")}
                 </Button>
               </div>
@@ -447,14 +487,20 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
               <RemoveObjectsResultPanel
                 state={viewState}
                 outputImageUrl={outputImageUrl}
+                authorizationConfirmed={authorizationConfirmed}
                 errorMessage={failureMessage}
                 hasBoxSelection={Boolean(boxSelection)}
                 hasMask={history.present.hasMask}
                 mode={mode}
                 brushSize={brushSize}
                 canPaintMask={history.present.hasMask}
-                canRemove={Boolean(sourceImageUrl) && (history.present.hasMask || Boolean(boxSelection))}
-                isBusy={viewState === "processing" || segmentSelection.isPending}
+                canRemove={
+                  Boolean(sourceImageUrl) &&
+                  (history.present.hasMask || Boolean(boxSelection))
+                }
+                isBusy={
+                  viewState === "processing" || segmentSelection.isPending
+                }
                 onModeChange={setMode}
                 onBrushSizeChange={setBrushSize}
                 onUndo={() => setUndoSignal((current) => current + 1)}
@@ -463,6 +509,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
                 onRetry={handleRetry}
                 onEditAgain={handleEditAgain}
                 onDownload={handleDownload}
+                onAuthorizationChange={setAuthorizationConfirmed}
               />
             </div>
           </CardContent>

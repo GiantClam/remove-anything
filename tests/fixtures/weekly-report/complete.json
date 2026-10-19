@@ -1,0 +1,307 @@
+{
+  "metadata": {
+    "source": "fixture GA export",
+    "property_id": "fixture-property",
+    "stream_id": "fixture-stream",
+    "retrieved_at": "2026-11-06T00:00:00Z",
+    "window": {
+      "start": "2026-10-01T00:00:00Z",
+      "end": "2026-10-08T00:00:00Z",
+      "time_zone": "UTC"
+    }
+  },
+  "events": [
+    {
+      "eventName": "tool_view",
+      "event_id": "view-1",
+      "landing_page": "/remove-background",
+      "tool_slug": "remove-background",
+      "locale": "en",
+      "is_authenticated": false
+    },
+    {
+      "eventName": "tool_view",
+      "event_id": "view-1",
+      "landing_page": "/remove-background",
+      "tool_slug": "remove-background",
+      "locale": "en",
+      "is_authenticated": false
+    },
+    {
+      "eventName": "upload_started",
+      "event_id": "upload-1",
+      "landing_page": "/remove-background",
+      "tool_slug": "remove-background",
+      "locale": "en",
+      "is_authenticated": false
+    },
+    {
+      "eventName": "task_created",
+      "event_id": "task-created-1",
+      "landing_page": "/remove-background",
+      "tool_slug": "remove-background",
+      "locale": "en",
+      "is_authenticated": false
+    },
+    {
+      "eventName": "task_succeeded",
+      "event_id": "task-success-1",
+      "landing_page": "/remove-background",
+      "tool_slug": "remove-background",
+      "locale": "en",
+      "is_authenticated": false
+    },
+    {
+      "eventName": "result_downloaded",
+      "event_id": "download-1",
+      "landing_page": "/remove-background",
+      "tool_slug": "remove-background",
+      "locale": "en",
+      "is_authenticated": false
+    },
+    {
+      "eventName": "signup_completed",
+      "event_id": "signup-1",
+      "landing_page": "/remove-background",
+      "tool_slug": "remove-background",
+      "locale": "en",
+      "is_authenticated": true
+    },
+    {
+      "eventName": "tool_view",
+      "eventCount": 0,
+      "landing_page": "/remove-watermark",
+      "tool_slug": "remove-watermark",
+      "locale": "zh-tw",
+      "is_authenticated": true
+    },
+    {
+      "eventName": "tool_view",
+      "eventCount": 3,
+      "landing_page": "/remove-background",
+      "tool_slug": "remove-background",
+      "locale": "en",
+      "is_authenticated": false
+    }
+  ],
+  "tasks": {
+    "metadata": {
+      "source": "fixture task ledger",
+      "property_id": "fixture-property",
+      "stream_id": "fixture-stream",
+      "retrieved_at": "2026-11-06T00:00:00Z",
+      "window": {
+        "start": "2026-10-01T00:00:00Z",
+        "end": "2026-10-08T00:00:00Z",
+        "time_zone": "UTC"
+      }
+    },
+    "rows": [
+      {
+        "task_id": "task-1",
+        "landing_page": "/remove-background",
+        "tool_slug": "remove-background",
+        "locale": "en",
+        "is_authenticated": false,
+        "task_status": "succeeded",
+        "latency_ms": 100,
+        "attempt_count": 1
+      },
+      {
+        "task_id": "task-2",
+        "landing_page": "/remove-background",
+        "tool_slug": "remove-background",
+        "locale": "en",
+        "is_authenticated": false,
+        "task_status": "succeeded",
+        "latency_ms": 200,
+        "attempt_count": 2
+      },
+      {
+        "task_id": "task-3",
+        "landing_page": "/remove-background",
+        "tool_slug": "remove-background",
+        "locale": "en",
+        "is_authenticated": false,
+        "task_status": "succeeded",
+        "latency_ms": 300,
+        "attempt_count": 1
+      },
+      {
+        "task_id": "task-4",
+        "landing_page": "/remove-background",
+        "tool_slug": "remove-background",
+        "locale": "en",
+        "is_authenticated": false,
+        "task_status": "failed",
+        "latency_ms": 400,
+        "attempt_count": 2
+      },
+      {
+        "task_id": "task-1",
+        "landing_page": "/remove-background",
+        "tool_slug": "remove-background",
+        "locale": "en",
+        "is_authenticated": false,
+        "task_status": "succeeded",
+        "latency_ms": 100,
+        "attempt_count": 1
+      }
+    ]
+  },
+  "purchases": {
+    "metadata": {
+      "source": "fixture purchase ledger",
+      "property_id": "fixture-property",
+      "stream_id": "fixture-stream",
+      "retrieved_at": "2026-11-06T00:00:00Z",
+      "window": {
+        "start": "2026-10-01T00:00:00Z",
+        "end": "2026-11-05T00:00:00Z",
+        "time_zone": "UTC"
+      },
+      "complete": true
+    },
+    "rows": [
+      {
+        "order_id": "order-1",
+        "customer_id": "customer-1",
+        "purchased_at": "2026-10-01T12:00:00Z",
+        "is_first_purchase": true,
+        "landing_page": "/remove-background",
+        "tool_slug": "remove-background",
+        "locale": "en",
+        "is_authenticated": false
+      },
+      {
+        "order_id": "order-2",
+        "customer_id": "customer-1",
+        "purchased_at": "2026-10-15T12:00:00Z",
+        "is_first_purchase": false,
+        "landing_page": "/remove-background",
+        "tool_slug": "remove-background",
+        "locale": "en",
+        "is_authenticated": false
+      },
+      {
+        "order_id": "order-3",
+        "customer_id": "customer-2",
+        "purchased_at": "2026-10-02T12:00:00Z",
+        "is_first_purchase": true,
+        "landing_page": "/remove-background",
+        "tool_slug": "remove-background",
+        "locale": "en",
+        "is_authenticated": false
+      },
+      {
+        "order_id": "order-4",
+        "customer_id": "customer-3",
+        "purchased_at": "2026-10-07T12:00:00Z",
+        "is_first_purchase": true,
+        "landing_page": "/remove-background",
+        "tool_slug": "remove-background",
+        "locale": "en",
+        "is_authenticated": false
+      },
+      {
+        "order_id": "order-1",
+        "customer_id": "customer-1",
+        "purchased_at": "2026-10-01T12:00:00Z",
+        "is_first_purchase": true,
+        "landing_page": "/remove-background",
+        "tool_slug": "remove-background",
+        "locale": "en",
+        "is_authenticated": false
+      }
+    ]
+  },
+  "costs": {
+    "metadata": {
+      "source": "fixture provider cost ledger",
+      "property_id": "fixture-property",
+      "stream_id": "fixture-stream",
+      "retrieved_at": "2026-11-06T00:00:00Z",
+      "window": {
+        "start": "2026-10-01T00:00:00Z",
+        "end": "2026-10-08T00:00:00Z",
+        "time_zone": "UTC"
+      }
+    },
+    "rows": [
+      {
+        "cost_id": "cost-1",
+        "tool_slug": "remove-background",
+        "currency": "USD",
+        "provider_cost": 0.01,
+        "retry_cost": 0,
+        "storage_cost": 0.001,
+        "credits_consumed": 2
+      },
+      {
+        "cost_id": "cost-2",
+        "tool_slug": "remove-background",
+        "currency": "USD",
+        "provider_cost": 0.02,
+        "retry_cost": 0.01,
+        "storage_cost": 0,
+        "credits_consumed": 2
+      }
+    ]
+  },
+  "gsc": {
+    "metadata": {
+      "source": "fixture Search Console",
+      "property_id": "fixture-property",
+      "stream_id": "fixture-stream",
+      "retrieved_at": "2026-11-06T00:00:00Z",
+      "window": {
+        "start": "2026-10-01T00:00:00Z",
+        "end": "2026-10-08T00:00:00Z",
+        "time_zone": "UTC"
+      },
+      "property": "sc-domain:fixture.test"
+    },
+    "dimensions": [
+      "page",
+      "query"
+    ],
+    "rows": [
+      {
+        "keys": [
+          "/remove-background",
+          "background removal"
+        ],
+        "impressions": 100,
+        "clicks": 10,
+        "position": 2
+      },
+      {
+        "keys": [
+          "/remove-background",
+          "photo background"
+        ],
+        "impressions": 200,
+        "clicks": 20,
+        "position": 4
+      },
+      {
+        "keys": [
+          "/remove-watermark",
+          "watermark"
+        ],
+        "impressions": 0,
+        "clicks": 0,
+        "position": 0
+      },
+      {
+        "keys": [
+          "/remove-background",
+          "background removal"
+        ],
+        "impressions": 100,
+        "clicks": 10,
+        "position": 2
+      }
+    ]
+  }
+}

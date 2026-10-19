@@ -127,6 +127,7 @@ export async function POST(req: NextRequest) {
         taskStatus: "pending",
         isPrivate: true,
         orientation: orientation as "landscape" | "portrait" | null,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 

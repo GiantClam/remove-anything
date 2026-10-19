@@ -154,6 +154,7 @@ export async function POST(req: NextRequest) {
         inputImageUrl: finalR2Url,
         taskStatus: "pending",
         isPrivate: true,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 

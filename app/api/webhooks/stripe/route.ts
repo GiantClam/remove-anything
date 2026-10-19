@@ -1,14 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { headers } from "next/headers";
 import Stripe from "stripe";
 
 import { getErrorMessage } from "@/lib/handle-error";
 import { prisma } from "@/db/prisma";
 import { stripe } from "@/lib/stripe";
 import { env } from "@/env.mjs";
-import { OrderPhase, PaymentChannelType } from "@/db/type";
+import { OrderPhase } from "@/db/type";
 import { ChargeOrderHashids } from "@/db/dto/charge-order.dto";
 import { fulfillChargeOrderPayment } from "@/modules/payments/charge-order";
+import {
+  ANALYTICS_EVENTS,
+  createOrderAnalyticsEvent,
+  emitServerAnalyticsEvent,
+} from "@/lib/analytics-events";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -116,8 +120,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       return;
     }
 
+    let paymentApplied = false;
     await prisma.$transaction(async (tx) => {
-      await fulfillChargeOrderPayment(tx, {
+      const result = await fulfillChargeOrderPayment(tx, {
         chargeOrderId: order.id,
         userId,
         result: JSON.stringify({
@@ -127,7 +132,24 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           rawCheckoutSession: session,
         }),
       });
+      paymentApplied = !result.alreadyPaid;
     });
+
+    // A concurrent or retried webhook can observe the already-paid order.
+    // Return successfully without emitting a second purchase fact.
+    if (!paymentApplied) {
+      return;
+    }
+
+    // The pending-phase guard above makes this fact idempotent for provider
+    // retries. The stable order event_id provides a second dedupe boundary for
+    // downstream analytics sinks.
+    await emitServerAnalyticsEvent(
+      createOrderAnalyticsEvent(ANALYTICS_EVENTS.purchaseCompleted, orderId, {
+        plan: chargeProductId,
+        is_authenticated: Boolean(userId),
+      }),
+    );
 
     console.log("✅ Order processed successfully:", orderId);
   } catch (error) {

@@ -8,8 +8,8 @@ import { aiGateway } from "@/lib/ai-gateway";
 import { createBackgroundRemovalTask } from "@/db/queries/background-removal";
 import { getUserCredit } from "@/db/queries/account";
 import { prisma } from "@/db/prisma";
-import { Credits, model } from "@/config/constants";
 import { BillingType } from "@/db/type";
+import { assertPaidToolEnabled } from "@/lib/tool-registry";
 
 const ratelimit = new KVRateLimit(kv, {
   limit: 5,
@@ -28,6 +28,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
   const userId = user.id;
+  let tool: ReturnType<typeof assertPaidToolEnabled>;
+  try {
+    tool = assertPaidToolEnabled("batch-remove-background");
+  } catch {
+    return NextResponse.json(
+      { error: "Paid batch output is currently unavailable", code: "PAID_OUTPUT_UNAVAILABLE" },
+      { status: 402 },
+    );
+  }
 
   const { success } = await ratelimit.limit(
     getKey(user.id) + `_${req.ip ?? ""}`,
@@ -42,8 +51,8 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
     const { imageUrls } = data;
 
-    if (!Array.isArray(imageUrls) || imageUrls.length === 0 || imageUrls.length > 50) {
-      return NextResponse.json({ error: "Invalid image URLs array (1-50 images required)" }, { status: 400 });
+    if (!Array.isArray(imageUrls) || imageUrls.length === 0 || imageUrls.length > tool.limits.maxFiles) {
+      return NextResponse.json({ error: `Invalid image URLs array (1-${tool.limits.maxFiles} images required)`, maxFiles: tool.limits.maxFiles }, { status: 400 });
     }
 
     // 验证所有URL
@@ -55,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     // 检查图片总大小（可选，如果需要严格控制）
     let totalSize = 0;
-    const maxTotalSize = 100 * 1024 * 1024; // 100MB
+    const maxTotalSize = tool.limits.maxFileSizeMb * 1024 * 1024;
     
     for (const url of imageUrls) {
       try {
@@ -65,7 +74,8 @@ export async function POST(req: NextRequest) {
           totalSize += parseInt(contentLength, 10);
           if (totalSize > maxTotalSize) {
             return NextResponse.json({ 
-              error: `Total image size exceeds 100MB limit. Current total: ${Math.round(totalSize / 1024 / 1024)}MB` 
+              error: `Total image size exceeds ${tool.limits.maxFileSizeMb}MB limit. Current total: ${Math.round(totalSize / 1024 / 1024)}MB`,
+              maxFileSizeMb: tool.limits.maxFileSizeMb,
             }, { status: 400 });
           }
         }
@@ -76,7 +86,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 检查用户积分
-    const requiredCredits = Credits[model.backgroundRemoval] * imageUrls.length;
+    const requiredCredits = tool.creditCost! * imageUrls.length;
     try {
       const userCredit = await getUserCredit(userId);
       if (userCredit.credit < requiredCredits) {
@@ -157,7 +167,7 @@ export async function POST(req: NextRequest) {
     // 只为成功的任务扣费
     if (completedCount > 0) {
       try {
-        const creditsToDeduct = Credits[model.backgroundRemoval] * completedCount;
+        const creditsToDeduct = tool.creditCost! * completedCount;
         await prisma.$transaction(async (tx) => {
           const userCredit = await tx.userCredit.findFirst({ where: { userId } });
           
@@ -220,4 +230,4 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-} 
+}
