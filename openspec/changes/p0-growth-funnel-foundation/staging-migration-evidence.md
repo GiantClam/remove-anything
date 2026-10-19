@@ -81,13 +81,13 @@ Reference: [Supabase RLS-enabled/no-policy advisory](https://supabase.com/docs/g
 
 ## SQL identity and review artifacts
 
-The exact SQL actually applied is retained in [`staging-rehearsal.sql`](staging-rehearsal.sql) as three labeled historical transactions: initial candidate, P0 idempotency rerun, and the billing-cascade removal. Its first line restricts the target to this staging project and rejects production migration use. The first transaction is retained exactly as applied, including the subsequently rejected billing FK; do not extract it as the approved final plan. This review artifact is outside `db/migrations` and deploy automation.
+The SQL statements actually applied are retained in [`staging-rehearsal.sql`](staging-rehearsal.sql) as three labeled historical transactions: initial candidate, P0 idempotency rerun, and the billing-cascade removal. Review labels were added and the trailing blank line was removed; the transaction statements are unchanged. Its first line restricts the target to this staging project and rejects production migration use. The first transaction includes the subsequently rejected billing FK; do not extract it as the approved final plan. This review artifact is outside `db/migrations` and deploy automation.
 
 The source/revised candidate files below remain local under `/tmp`; no baseline reconciliation has been added to the repository's production migration directory.
 
 | Artifact                                                          | SHA256                                                             |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Durable actual-applied staging SQL review artifact                | `da581612b2a1894fdcb874a674a0dd14a4a9f0c514a54e0d310db102a9dc8e32` |
+| Durable actual-applied staging SQL review artifact                | `6a0d88ad7b564f75ac6271bc7ab355d555c626ed8b66d0d6fa088860214260e4` |
 | Production schema metadata JSON                                   | `33614483aa8e428cd7fa98a9b9c345ff668c555d682b251f579c868d111710dd` |
 | Local metadata reconstruction SQL                                 | `1fead81abda2fc89a26582445ccb8ab2c7afe9419d3efcaea020323dd3b46562` |
 | Original review-only reconciliation candidate, retained unchanged | `8207bdaf59c0cf78f257d21944a025e543d6bcdb8d8b7d568b60f4e6822c061e` |

@@ -241,4 +241,3 @@ BEGIN
 END $preconditions$;
 ALTER TABLE public.user_billing DROP CONSTRAINT user_billing_task_id_fkey;
 COMMIT;
-
