@@ -36,7 +36,7 @@ Earlier account evidence records GA4 account `29849090`, property `559043519`, s
 - [x] Decode image inputs and verify MIME, 10MB bytes, 40MP safety limits, trusted HTTPS source origins, and matching PNG-mask dimensions in the main image creation/upload routes.
 - [x] Return authorized preview addresses from background status GET/SSE and keep preview requests out of download counts; sign private R2 downloads on the server.
 - [x] Require an authenticated owner for composition creation/update and constrain the final update to that owner; require database-backed administrator permission for background-library creation and nonpublic listing, with denial before side effects.
-- [ ] Enforce anonymous low-resolution output on the server and implement approved paid/full-output entitlements.
+- [x] Enforce anonymous low-resolution output on the server and keep paid/full-output entitlements disabled until an authenticated owner and recorded cost approval exist. The three core download boundaries now reject `output=full` before signing, storage reads, counters, or analytics; paid full-output delivery remains blocked pending cost approval and a separate full-resolution implementation.
 - [ ] Enforce declared processing timeout, queue/concurrency limits, retry behavior, and input safety consistently in remaining detection/segmentation/composition flows.
 - [ ] Close background composition authorization and historical public storage/URL bypasses; verify actual provider source approvals and private bucket policy.
 
@@ -47,7 +47,7 @@ Earlier account evidence records GA4 account `29849090`, property `559043519`, s
 - [x] Add selected server lifecycle/payment fact hooks and idempotent Stripe fulfillment with route-level tests.
 - [x] Provide the review template (`weekly-funnel-review.md`) and an export helper that reports unavailable input as `NO DATA`.
 - [ ] Wire and verify the complete required behavioral event chain across all six tools, signup, paywall, and checkout.
-- [ ] Deliver server facts durably to the chosen analytics destination and verify receipt/recovery; the current default sink is structured logs.
+- [ ] Deliver server facts durably to the chosen analytics destination and verify receipt/recovery. A server-only `analytics_events` sink and production table are now deployed with stable `event_id` uniqueness, RLS, and client ACL revocation; runtime event-chain receipt and recovery verification remain open.
 - [ ] Implement and validate weekly page/tool/locale/auth funnels plus GSC, latency, retry, cost, repeat-purchase, and missing-event metrics. The offline helper now supports explicit grouping, supported reliability/cost/GSC slices, deduplication, and `NO DATA`, but production exports and receipt remain unverified.
 
 ## Core tool experience and retention
@@ -70,7 +70,7 @@ The worker is implemented in dry-run mode. As of 2026-10-15, execution is delibe
 - [x] Rehearse scoped baseline repair and P0 patches on the isolated PostgreSQL 17 branch; verify mapped columns, sequence/table identity, indexes, repeated patches, and new-table RLS/ACL.
 - [x] Verify synthetic historical task IDs, billing links, download/view relationships, scalar types and ownership predicates in a staging-only SQL transaction; independently confirm rollback cleanup and unchanged sequence state.
 - [x] Rehearse the remaining queue/image/composition schema on isolated staging, verify 45 mapped columns, indexes/FKs/RLS/ACL, and roll back explicit-ID synthetic fixtures without sequence changes.
-- [ ] Verify exact Prisma/application binary compatibility and rollback, accept the applied `0007_production_baseline_reconciliation.sql` through real application paths, and isolate Preview resources. SQL-only results remain separate from full integration acceptance.
+- [ ] Verify exact Prisma/application binary compatibility and rollback, accept the applied `0007_production_baseline_reconciliation.sql` and additive analytics migration through real application paths, and isolate Preview resources. SQL-only results remain separate from full integration acceptance.
 - [x] Add unit and in-process route tests for registry/cost gates, quota, reservations, states, refunds, analytics IDs, callbacks, secure downloads, retention, and Stripe fulfillment.
 - [x] Render all six canonical pages in English and the existing `zh-tw` locale in a browser and inspect H1, contracts, metadata, Schema, related links, and locale URLs.
 - [x] Complete a mocked watermark queued/success/ZIP-download/expired-error browser flow, with the mock and development-auth boundaries recorded.

@@ -104,6 +104,7 @@ export async function resolve(specifier, context, nextResolve) {
         "@/env.mjs",
         "@/lib/task-queue",
         "@/lib/analytics-events",
+        "@/lib/server-analytics-events",
       ]).has(specifier)
     ) {
       return {
@@ -141,6 +142,7 @@ export async function resolve(specifier, context, nextResolve) {
         "@/lib/background-task-status",
         "@/lib/task-lifecycle",
         "@/lib/analytics-events",
+        "@/lib/server-analytics-events",
       ]).has(specifier) ||
       specifier === "./task-processor"
     ) {
@@ -183,6 +185,7 @@ export async function resolve(specifier, context, nextResolve) {
         "@/env.mjs",
         "@/lib/r2-s3",
         "@/lib/analytics-events",
+        "@/lib/server-analytics-events",
       ]).has(specifier)
     ) {
       return {
@@ -226,6 +229,7 @@ export async function resolve(specifier, context, nextResolve) {
         "@/lib/handle-error",
         "@/lib/r2-s3",
         "@/lib/analytics-events",
+        "@/lib/server-analytics-events",
       ]).has(specifier)
     ) {
       return {
@@ -245,6 +249,7 @@ export async function resolve(specifier, context, nextResolve) {
         "@/lib/stripe",
         "@/env.mjs",
         "@/lib/analytics-events",
+        "@/lib/server-analytics-events",
         "@/lib/handle-error",
         "@/env.mjs",
         "@/lib/runninghub-output",
@@ -511,6 +516,7 @@ export async function resolve(specifier, context, nextResolve) {
         "@/lib/handle-error",
         "@/lib/log-snag",
         "@/lib/analytics-events",
+        "@/lib/server-analytics-events",
       ]).has(specifier)
     ) {
       return {
@@ -523,7 +529,9 @@ export async function resolve(specifier, context, nextResolve) {
   }
   if (
     parentPath === path.join(root, "lib/task-lifecycle.ts") &&
-    specifier === "@/lib/analytics-events"
+    new Set(["@/lib/analytics-events", "@/lib/server-analytics-events"]).has(
+      specifier,
+    )
   ) {
     return {
       url: pathToFileURL(path.join(root, "tests/support/task-refund-stubs.ts"))

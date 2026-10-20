@@ -11,8 +11,8 @@ import { fulfillChargeOrderPayment } from "@/modules/payments/charge-order";
 import {
   ANALYTICS_EVENTS,
   createOrderAnalyticsEvent,
-  emitServerAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();

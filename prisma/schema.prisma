@@ -399,6 +399,34 @@ model subscribers {
   updatedAt DateTime @default(now()) @map(name: "updated_at")
 }
 
+/// Server-confirmed funnel facts. This table is intentionally server-only;
+/// browser behavior continues to use GA4 and never writes directly here.
+model AnalyticsEvent {
+  eventId         String   @id @map("event_id")
+  name            String
+  taskId          String?  @map("task_id")
+  orderId         String?  @map("order_id")
+  userId          String?  @map("user_id")
+  toolSlug        String?  @map("tool_slug")
+  landingPage     String?  @map("landing_page")
+  locale          String?
+  fileType        String?  @map("file_type")
+  fileSizeBucket  String?  @map("file_size_bucket")
+  isAuthenticated Boolean? @map("is_authenticated")
+  plan            String?
+  creditsBefore   Int?     @map("credits_before")
+  creditsAfter    Int?     @map("credits_after")
+  experimentId    String?  @map("experiment_id")
+  payload         Json
+  occurredAt      DateTime @default(now()) @map("occurred_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([occurredAt], map: "analytics_events_occurred_at_idx")
+  @@index([name, occurredAt], map: "analytics_events_name_occurred_at_idx")
+  @@index([toolSlug, occurredAt], map: "analytics_events_tool_occurred_at_idx")
+  @@map("analytics_events")
+}
+
 model UserBilling {
   id          Int      @id @default(autoincrement())
   userId      String   @map(name: "user_id")

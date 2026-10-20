@@ -13,8 +13,8 @@ import { kv, KVRateLimit } from "@/lib/kv";
 import {
   ANALYTICS_EVENTS,
   createTaskAnalyticsEvent,
-  emitServerAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import {
   readLimitedResponse,
   ResultSizeLimitError,
@@ -32,6 +32,11 @@ import {
   TaskLifecycleError,
 } from "@/lib/task-lifecycle";
 import { getToolRegistryEntry } from "@/lib/tool-registry";
+import {
+  assertOutputEntitlement,
+  getRequestedOutputTier,
+  OutputEntitlementError,
+} from "@/lib/output-entitlements";
 
 import {
   createBindingsFromRequest,
@@ -84,6 +89,7 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const taskId = url.searchParams.get("taskId");
     const preview = url.searchParams.get("preview") === "1";
+    const outputTier = getRequestedOutputTier(url.searchParams.get("output"));
 
     if (!taskId) {
       return NextResponse.json(
@@ -113,6 +119,12 @@ export async function GET(req: NextRequest) {
         );
       throw error;
     }
+
+    assertOutputEntitlement({
+      toolSlug: "remove-background",
+      requestedTier: outputTier,
+      userId,
+    });
 
     // 获取图片
     const r2Key = getR2ObjectKey(taskRecord.outputImageUrl, env.R2_URL_BASE);
@@ -201,6 +213,12 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof OutputEntitlementError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     if (error instanceof UnsupportedOutputFormatError) {
       return NextResponse.json({ error: error.message }, { status: 502 });
     }

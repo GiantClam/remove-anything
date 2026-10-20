@@ -8,8 +8,8 @@ import { logsnag } from "@/lib/log-snag";
 import {
   ANALYTICS_EVENTS,
   createTaskAnalyticsEvent,
-  emitServerAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import { normalizeTaskStatus, refundFailedTaskCredit } from "@/lib/task-lifecycle";
 
 const WebhookSchema = z.object({

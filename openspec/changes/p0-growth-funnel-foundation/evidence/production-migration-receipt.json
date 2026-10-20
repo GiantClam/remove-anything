@@ -6,6 +6,11 @@
       "name": "0007_production_baseline_reconciliation.sql",
       "checksum": "73235ffc5c603ceb674b20700cb8d98347278c94a3b9c24d3853992179cd0cf7",
       "appliedAt": "2026-10-20T14:45:55Z"
+    },
+    {
+      "name": "0008_durable_analytics_events.sql",
+      "checksum": "d0d652755702d8eb9b2a57f4837bbed9f52ddc1313b3efb1555f431cf8b2f889",
+      "appliedAt": "2026-10-20T17:03:41Z"
     }
   ]
 }

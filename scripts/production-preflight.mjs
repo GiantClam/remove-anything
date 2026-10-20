@@ -129,6 +129,26 @@ export const REQUIRED_TABLE_COLUMNS = {
     "status",
     "result_image_url",
   ],
+  analytics_events: [
+    "event_id",
+    "name",
+    "task_id",
+    "order_id",
+    "user_id",
+    "tool_slug",
+    "landing_page",
+    "locale",
+    "file_type",
+    "file_size_bucket",
+    "is_authenticated",
+    "plan",
+    "credits_before",
+    "credits_after",
+    "experiment_id",
+    "payload",
+    "occurred_at",
+    "created_at",
+  ],
 };
 
 export const REQUIRED_INDEXES = {
@@ -150,6 +170,18 @@ export const REQUIRED_INDEXES = {
     "object_removal_tasks_retention_idx",
     "object_removal_tasks_audit_expires_at_idx",
   ],
+  analytics_events: [
+    "analytics_events_occurred_at_idx",
+    "analytics_events_name_occurred_at_idx",
+    "analytics_events_tool_occurred_at_idx",
+  ],
+};
+
+export const REQUIRED_TABLE_SECURITY = {
+  analytics_events: {
+    rlsEnabled: true,
+    revokedRoles: ["PUBLIC", "anon", "authenticated"],
+  },
 };
 
 const INDEX_COLUMNS = {
@@ -185,6 +217,9 @@ const INDEX_COLUMNS = {
     "expires_at",
   ],
   object_removal_tasks_audit_expires_at_idx: ["audit_expires_at"],
+  analytics_events_occurred_at_idx: ["occurred_at"],
+  analytics_events_name_occurred_at_idx: ["name", "occurred_at"],
+  analytics_events_tool_occurred_at_idx: ["tool_slug", "occurred_at"],
 };
 
 const P0_COLUMN_RULES = {
@@ -225,14 +260,15 @@ const P0_COLUMN_RULES = {
   },
 };
 
-// Production was reconciled by the guarded one-time cutover. That migration
-// contains the lifecycle, authorization, retention, TaskData array defaults,
-// and remaining baseline DDL in one transaction. The earlier 0002-0006 files
-// remain useful for isolated rehearsal/history, but a production receipt must
-// describe the migration that was actually applied rather than claim those
-// superseded files ran independently.
+// Production was reconciled by the guarded one-time cutover. The additive
+// durable analytics table is tracked separately so its receipt and schema
+// checks remain explicit. The earlier 0002-0006 files remain useful for
+// isolated rehearsal/history, but a production receipt must describe the
+// migrations that were actually applied rather than claim those superseded
+// files ran independently.
 export const EXPECTED_MIGRATIONS = [
   "0007_production_baseline_reconciliation.sql",
+  "0008_durable_analytics_events.sql",
 ];
 
 const PLACEHOLDER_RE =
@@ -384,6 +420,7 @@ export async function queryDatabase(databaseUrl, factory) {
 
     const tables = {};
     const indexes = {};
+    const security = {};
     for (const table of Object.keys(REQUIRED_TABLE_COLUMNS)) {
       const rows = await sql`
         SELECT column_name, data_type, is_nullable, column_default, datetime_precision
@@ -416,6 +453,44 @@ export async function queryDatabase(databaseUrl, factory) {
         `;
         indexes[table] = indexRows;
       }
+
+      if (REQUIRED_TABLE_SECURITY[table]) {
+        const securityRows = await sql`
+          SELECT c.relrowsecurity AS rls_enabled,
+            has_table_privilege('anon', c.oid, 'SELECT') AS anon_select,
+            has_table_privilege('anon', c.oid, 'INSERT') AS anon_insert,
+            has_table_privilege('anon', c.oid, 'UPDATE') AS anon_update,
+            has_table_privilege('anon', c.oid, 'DELETE') AS anon_delete,
+            has_table_privilege('authenticated', c.oid, 'SELECT') AS authenticated_select,
+            has_table_privilege('authenticated', c.oid, 'INSERT') AS authenticated_insert,
+            has_table_privilege('authenticated', c.oid, 'UPDATE') AS authenticated_update,
+            has_table_privilege('authenticated', c.oid, 'DELETE') AS authenticated_delete,
+            EXISTS (SELECT 1 FROM aclexplode(COALESCE(c.relacl, acldefault('r', c.relowner))) a WHERE a.grantee = 0 AND a.privilege_type = 'SELECT') AS public_select,
+            EXISTS (SELECT 1 FROM aclexplode(COALESCE(c.relacl, acldefault('r', c.relowner))) a WHERE a.grantee = 0 AND a.privilege_type = 'INSERT') AS public_insert,
+            EXISTS (SELECT 1 FROM aclexplode(COALESCE(c.relacl, acldefault('r', c.relowner))) a WHERE a.grantee = 0 AND a.privilege_type = 'UPDATE') AS public_update,
+            EXISTS (SELECT 1 FROM aclexplode(COALESCE(c.relacl, acldefault('r', c.relowner))) a WHERE a.grantee = 0 AND a.privilege_type = 'DELETE') AS public_delete
+          FROM pg_class c
+          JOIN pg_namespace ns ON ns.oid = c.relnamespace
+          WHERE ns.nspname = 'public' AND c.relname = ${table}
+        `;
+        security[table] = securityRows[0]
+          ? {
+              rlsEnabled: Boolean(securityRows[0].rls_enabled),
+              privileges: Object.fromEntries(
+                [
+                  "public",
+                  "anon",
+                  "authenticated",
+                ].flatMap((role) =>
+                  ["select", "insert", "update", "delete"].map((privilege) => [
+                    `${role}_${privilege}`,
+                    Boolean(securityRows[0][`${role}_${privilege}`]),
+                  ]),
+                ),
+              ),
+            }
+          : null;
+      }
     }
 
     const migrationTables = await sql`
@@ -447,6 +522,7 @@ export async function queryDatabase(databaseUrl, factory) {
       status: "ok",
       tables,
       indexes,
+      security,
       migrationTrackingTables,
       migrationRows,
       blockers: [],
@@ -538,6 +614,27 @@ export function compareDatabaseSchema(database) {
         blockers.push(
           `database index ${index} has an incompatible definition or column order`,
         );
+      }
+    }
+  }
+
+  for (const [table, requirement] of Object.entries(REQUIRED_TABLE_SECURITY)) {
+    const actual = database.security?.[table];
+    if (!actual) {
+      blockers.push(`database security metadata for ${table} is missing`);
+      continue;
+    }
+    if (actual.rlsEnabled !== requirement.rlsEnabled) {
+      blockers.push(`database table ${table} does not have the required RLS state`);
+    }
+    for (const role of requirement.revokedRoles) {
+      const normalizedRole = role.toLowerCase();
+      for (const privilege of ["select", "insert", "update", "delete"]) {
+        if (actual.privileges?.[`${normalizedRole}_${privilege}`]) {
+          blockers.push(
+            `database table ${table} grants ${privilege} to ${role}`,
+          );
+        }
       }
     }
   }

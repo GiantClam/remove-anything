@@ -96,6 +96,14 @@ test("object download rejects another account before signing or fetching", async
   assert.deepEqual(fetchCalls, []);
 });
 
+test("object full output stays disabled before signing or fetching", async () => {
+  const response = await GET(request("taskId=task-17&output=full"));
+  assert.equal(response.status, 402);
+  assert.equal((await response.json()).code, "FULL_OUTPUT_NOT_ENABLED");
+  assert.deepEqual(state.signedRequests, []);
+  assert.deepEqual(fetchCalls, []);
+});
+
 test("object download accepts the owner, signs only its R2 key, and caps the image edge", async () => {
   const response = await GET(request("taskId=%20task-17%20"));
   assert.equal(response.status, 200);

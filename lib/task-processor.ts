@@ -5,8 +5,8 @@ import {
   ANALYTICS_EVENTS,
   createCreditsAnalyticsEvent,
   createTaskAnalyticsEvent,
-  emitServerAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import { taskQueueManager } from "@/lib/task-queue";
 import {
   ProviderTaskCreatedPersistenceError,

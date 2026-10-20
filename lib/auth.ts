@@ -7,8 +7,8 @@ import { env } from "@/env.mjs";
 import {
   ANALYTICS_EVENTS,
   createUserAnalyticsEvent,
-  emitServerAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 import { logsnag } from "@/lib/log-snag";
 
