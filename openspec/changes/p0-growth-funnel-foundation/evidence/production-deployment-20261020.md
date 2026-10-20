@@ -2,6 +2,8 @@
 
 Deployed: 2026-10-20 (UTC). Vercel deployment: `dpl_EBUiAJaMuWsT6zGjKZKyqBn3Uhen`. Git SHA: `e9182e0ed02f4cbe26b5098dd904e32e3ae12b97` (merge of PR #3).
 
+The evidence-only follow-up merge (PR #4) produced `dpl_CC8QgSWzxTKg2menFvtPFD5tYiGs`, which also reached `READY` without runtime code changes.
+
 The deployment reached `READY` and GitHub reported the Vercel status as success. The production read-only checks then passed:
 
 - `node scripts/verify-seo.mjs https://www.remove-anything.com`.
