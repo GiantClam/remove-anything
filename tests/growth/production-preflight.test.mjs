@@ -166,7 +166,7 @@ test("unused AI Gateway token remains optional and environment info never includ
   }
 });
 
-test("migration audit enumerates all checked-in P0 SQL patches with checksums", () => {
+test("migration audit enumerates the applied production cutover with a checksum", () => {
   const files = inspectMigrationFiles();
   assert.deepEqual(
     files.map((entry) => entry.name),

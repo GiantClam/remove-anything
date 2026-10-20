@@ -225,11 +225,14 @@ const P0_COLUMN_RULES = {
   },
 };
 
+// Production was reconciled by the guarded one-time cutover. That migration
+// contains the lifecycle, authorization, retention, TaskData array defaults,
+// and remaining baseline DDL in one transaction. The earlier 0002-0006 files
+// remain useful for isolated rehearsal/history, but a production receipt must
+// describe the migration that was actually applied rather than claim those
+// superseded files ran independently.
 export const EXPECTED_MIGRATIONS = [
-  "0002_task_lifecycle.sql",
-  "0003_authorization_audit.sql",
-  "0004_task_retention.sql",
-  "0005_task_audit_retention.sql",
+  "0007_production_baseline_reconciliation.sql",
 ];
 
 const PLACEHOLDER_RE =
