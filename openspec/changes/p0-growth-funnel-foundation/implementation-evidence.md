@@ -68,6 +68,10 @@ The production schema was modified by the reviewed cutover and the merged applic
 
 The production application deployment is therefore complete for the P0 foundation/schema/SEO surface. Full release acceptance remains blocked by exact Prisma/rollback evidence, isolated application resources, provider/storage behavior, entitlements, composition authorization, retention, durable analytics/purchase evidence and the other unchecked tasks.
 
+On 2026-10-20 16:25 UTC (2026-10-21 00:25 Asia/Shanghai), a headless Chromium read-only visit to `/remove-background` loaded the production GA4 script and sent `page_view` to measurement ID `G-VD6F0YDBQ5`; the Google Analytics collect response was HTTP 204. The signed-in GA4 Realtime report then showed one active user, one page view, and one `page_view` plus one `session_start` event. This closes the first page-view receipt check only; the required six-tool behavioral chain, signup, paywall, checkout, durable server events and DebugView evidence remain open.
+
+On the same release surface, random-ID `dbOnly=true` probes through `/api/remove-objects/[id]` and `/api/task/[id]` returned the expected 404 task-not-found responses after querying production Prisma models. The unauthenticated session/account/history probes retained their expected `{}`, 401, 200 empty-queue and 401 responses. This is read-only application-path compatibility evidence; rollback and write/concurrency acceptance remain open.
+
 Fresh local verification after the preflight fixes: `pnpm test` **337/337 passed**, exit 0; focused preflight suite passed; `pnpm exec tsc --noEmit --pretty false --incremental false` exited 0. The production cutover receipt is bound to target fingerprint `1826c82e7de6862d2129213b5a1080a7535bf38140bf20d72cc81c7ccd066715` and the current `0007` checksum; the environment preflight still needs the actual Vercel runtime variables and a reachable direct Prisma connection before it can close. This remains an environment/application gate, not a claim of full-spec readiness.
 
 ## Historical fixtures and route authorization, 2026-10-19
