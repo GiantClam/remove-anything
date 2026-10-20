@@ -11,9 +11,19 @@ import { getCurrentUser } from "@/lib/auth-utils";
 import { getErrorMessage } from "@/lib/handle-error";
 import { kv, KVRateLimit } from "@/lib/kv";
 import {
+  ANALYTICS_EVENTS,
+  createTaskAnalyticsEvent,
+  emitServerAnalyticsEvent,
+} from "@/lib/analytics-events";
+import {
   readLimitedResponse,
   ResultSizeLimitError,
 } from "@/lib/limited-response";
+import {
+  createLowResolutionImage,
+  LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX,
+  UnsupportedOutputFormatError,
+} from "@/lib/low-resolution-output";
 import { getR2ObjectKey } from "@/lib/r2-object-key";
 import { createR2S3Service } from "@/lib/r2-s3";
 import {
@@ -141,11 +151,18 @@ export async function GET(req: NextRequest) {
         { error: "Result is not a PNG image" },
         { status: 502 },
       );
-    const imageBuffer = await readLimitedResponse(
-      imageResponse,
+    const maxOutputBytes =
       getToolRegistryEntry("remove-background")!.limits.maxOutputSizeMb *
-        1024 *
-        1024,
+      1024 *
+      1024;
+    const sourceImage = await readLimitedResponse(
+      imageResponse,
+      maxOutputBytes,
+    );
+    const image = await createLowResolutionImage(
+      sourceImage,
+      contentType,
+      maxOutputBytes,
     );
 
     // 增加下载计数
@@ -156,19 +173,37 @@ export async function GET(req: NextRequest) {
         console.warn("Failed to increment download count:", countError);
         // 不阻断下载流程
       }
+      try {
+        await emitServerAnalyticsEvent(
+          createTaskAnalyticsEvent(
+            ANALYTICS_EVENTS.resultDownloaded,
+            taskRecord.id,
+            {
+              tool_slug: "remove-background",
+              is_authenticated: Boolean(userId),
+            },
+          ),
+        );
+      } catch (analyticsError) {
+        console.warn("Background download analytics failed:", analyticsError);
+      }
     }
 
     // 返回图片文件
-    return new Response(imageBuffer, {
+    return new Response(image.bytes, {
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": image.contentType,
         "Content-Disposition": `${preview ? "inline" : "attachment"}; filename="background-removed-${taskId.replace(/[^a-zA-Z0-9_-]/g, "_")}.png"`,
         "Cache-Control": "private, no-store, max-age=0",
         "X-Content-Type-Options": "nosniff",
+        "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
         Vary: "Cookie, Authorization",
       },
     });
   } catch (error) {
+    if (error instanceof UnsupportedOutputFormatError) {
+      return NextResponse.json({ error: error.message }, { status: 502 });
+    }
     if (error instanceof ResultSizeLimitError) {
       return NextResponse.json(
         { error: error.message, code: "RESULT_TOO_LARGE" },

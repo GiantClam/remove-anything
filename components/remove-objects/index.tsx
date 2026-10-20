@@ -16,6 +16,8 @@ import {
   type RemoveObjectViewState,
 } from "@/lib/remove-objects/mask-state";
 import type { FrameEditorBox } from "@/lib/remove-objects/runninghub";
+import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
+import { trackAnalyticsEvent } from "@/lib/gtag";
 
 import { EditorCanvas } from "./editor-canvas";
 import { RemoveObjectsResultPanel } from "./result-panel";
@@ -34,6 +36,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
   const [currentMaskBlob, setCurrentMaskBlob] = useState<Blob | null>(null);
   const [history, setHistory] = useState(createInitialMaskHistory());
   const [taskId, setTaskId] = useState("");
+  const [taskRecordId, setTaskRecordId] = useState<number | null>(null);
   const [outputImageUrl, setOutputImageUrl] = useState("");
   const [authorizationConfirmed, setAuthorizationConfirmed] = useState(false);
   const [failureMessage, setFailureMessage] = useState("");
@@ -108,7 +111,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
         throw new Error(data.error || "Remove failed");
       }
 
-      return data as { success: boolean; taskId: string };
+      return data as { success: boolean; taskId: string; recordId: number };
     },
     onMutate: () => {
       setTaskPhase("processing");
@@ -117,6 +120,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
     },
     onSuccess: (data) => {
       setTaskId(data.taskId);
+      setTaskRecordId(data.recordId);
     },
     onError: (error) => {
       const message =
@@ -269,6 +273,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
     setCurrentMaskBlob(null);
     setHistory(createInitialMaskHistory());
     setTaskId("");
+    setTaskRecordId(null);
     setOutputImageUrl("");
     setAuthorizationConfirmed(false);
     idempotencyKeyRef.current = null;
@@ -336,11 +341,18 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
   };
 
   const handleRetry = () => {
+    if (taskRecordId !== null) {
+      trackAnalyticsEvent(ANALYTICS_EVENTS.retryStarted, {
+        task_id: String(taskRecordId),
+        tool_slug: "remove-objects",
+      });
+    }
     handleRemove();
   };
 
   const handleReset = () => {
     setTaskId("");
+    setTaskRecordId(null);
     setOutputImageUrl("");
     setAuthorizationConfirmed(false);
     idempotencyKeyRef.current = null;
@@ -376,6 +388,7 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
     setSelectedFile(null);
     setSourceImageUrl("");
     setTaskId("");
+    setTaskRecordId(null);
     setOutputImageUrl("");
     setAuthorizationConfirmed(false);
     idempotencyKeyRef.current = null;

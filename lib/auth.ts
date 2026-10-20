@@ -1,8 +1,14 @@
-import { NextAuthOptions } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+
 import { prisma } from "@/db/prisma";
 import { env } from "@/env.mjs";
+import {
+  ANALYTICS_EVENTS,
+  createUserAnalyticsEvent,
+  emitServerAnalyticsEvent,
+} from "@/lib/analytics-events";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 import { logsnag } from "@/lib/log-snag";
 
@@ -15,15 +21,19 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
-    })
+    }),
   );
 }
 
 export const authOptions: NextAuthOptions = {
   // 只在数据库URL存在且不在构建时且prisma客户端可用时使用Prisma适配器
-  ...(env.DATABASE_URL && !shouldSkipDatabaseQuery() && prisma && typeof prisma === 'object' && Object.keys(prisma).length > 0 && {
-    adapter: PrismaAdapter(prisma) as any,
-  }),
+  ...(env.DATABASE_URL &&
+    !shouldSkipDatabaseQuery() &&
+    prisma &&
+    typeof prisma === "object" &&
+    Object.keys(prisma).length > 0 && {
+      adapter: PrismaAdapter(prisma) as any,
+    }),
   providers,
   debug: process.env.NODE_ENV === "development",
   callbacks: {
@@ -40,10 +50,10 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     signIn: async ({ user, account, profile }) => {
-      console.log("🔐 登录回调:", { 
-        user: user?.email, 
+      console.log("🔐 登录回调:", {
+        user: user?.email,
         provider: account?.provider,
-        hasProfile: !!profile 
+        hasProfile: !!profile,
       });
       return true;
     },
@@ -92,7 +102,9 @@ export const authOptions: NextAuthOptions = {
             },
           });
 
-          console.log(`🎉 新用户 ${user.id} 注册成功，赠送 ${signupBonus} 积分`);
+          console.log(
+            `🎉 新用户 ${user.id} 注册成功，赠送 ${signupBonus} 积分`,
+          );
         });
 
         // 发送通知（非关键路径，失败忽略）
@@ -111,6 +123,23 @@ export const authOptions: NextAuthOptions = {
         } catch (err) {
           console.error("❌ LogSnag通知发送失败:", err);
         }
+
+        try {
+          await emitServerAnalyticsEvent(
+            createUserAnalyticsEvent(
+              ANALYTICS_EVENTS.signupCompleted,
+              user.id,
+              {
+                is_authenticated: true,
+                plan: "free",
+                credits_after: signupBonus,
+              },
+            ),
+          );
+        } catch (analyticsError) {
+          // Signup and its initial credits must not fail because a sink is unavailable.
+          console.warn("Signup analytics failed:", analyticsError);
+        }
       } catch (error) {
         console.error("❌ createUser 初始化积分失败:", error);
       }
@@ -118,7 +147,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/signin",
-    signOut: "/signout", 
+    signOut: "/signout",
     error: "/signin",
   },
   session: {
@@ -126,4 +155,4 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   ...(env.NEXTAUTH_SECRET && { secret: env.NEXTAUTH_SECRET }),
-}; 
+};

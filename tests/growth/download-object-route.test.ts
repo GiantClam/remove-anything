@@ -2,6 +2,7 @@ import { NextRequest } from "next/server.js";
 
 import assert from "node:assert/strict";
 import test, { afterEach, beforeEach } from "node:test";
+import sharp from "sharp";
 
 import { GET } from "../../app/api/download-object/route";
 import {
@@ -20,13 +21,25 @@ const originalFetch = globalThis.fetch;
 const fetchCalls: { url: string; options?: RequestInit }[] = [];
 let upstreamStatus = 200;
 let upstreamContentType: string | null = "image/webp; charset=binary";
-const imageBytes = new Uint8Array([0x52, 0x49, 0x46, 0x46]);
+let imageBytes = new Uint8Array();
 
-beforeEach(() => {
+beforeEach(async () => {
   resetDownloadRouteState();
   fetchCalls.length = 0;
   upstreamStatus = 200;
   upstreamContentType = "image/webp; charset=binary";
+  imageBytes = new Uint8Array(
+    await sharp({
+      create: {
+        width: 2048,
+        height: 1200,
+        channels: 4,
+        background: { r: 40, g: 120, b: 220, alpha: 1 },
+      },
+    })
+      .webp()
+      .toBuffer(),
+  );
   state.user = { id: "owner-1" };
   state.task = {
     id: 17,
@@ -83,7 +96,7 @@ test("object download rejects another account before signing or fetching", async
   assert.deepEqual(fetchCalls, []);
 });
 
-test("object download accepts the owner and signs only the configured R2 object key", async () => {
+test("object download accepts the owner, signs only its R2 key, and caps the image edge", async () => {
   const response = await GET(request("taskId=%20task-17%20"));
   assert.equal(response.status, 200);
   assert.deepEqual(state.lookupIds, ["task-17"]);
@@ -98,7 +111,10 @@ test("object download accepts the owner and signs only the configured R2 object 
   assert.equal(fetchCalls[0]?.options?.redirect, "error");
   assert.equal(fetchCalls[0]?.options?.cache, "no-store");
   assert.ok(fetchCalls[0]?.options?.signal instanceof AbortSignal);
-  assert.deepEqual(new Uint8Array(await response.arrayBuffer()), imageBytes);
+  const downloaded = new Uint8Array(await response.arrayBuffer());
+  const metadata = await sharp(downloaded).metadata();
+  assert.ok(metadata.width! <= 1024);
+  assert.ok(metadata.height! <= 1024);
   assert.equal(response.headers.get("content-type"), "image/webp");
   assert.equal(
     response.headers.get("content-disposition"),
@@ -109,6 +125,7 @@ test("object download accepts the owner and signs only the configured R2 object 
     "private, no-store, max-age=0",
   );
   assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(response.headers.get("x-output-max-edge-px"), "1024");
   assert.equal(response.headers.get("vary"), "Cookie, Authorization");
   assert.deepEqual(state.emittedEvents, [
     {
@@ -134,6 +151,11 @@ test("preview keeps all access checks and uses private inline output", async () 
     response.headers.get("cache-control"),
     "private, no-store, max-age=0",
   );
+  const metadata = await sharp(
+    new Uint8Array(await response.arrayBuffer()),
+  ).metadata();
+  assert.ok(metadata.width! <= 1024);
+  assert.ok(metadata.height! <= 1024);
   assert.deepEqual(state.emittedEvents, []);
 });
 
@@ -224,7 +246,10 @@ test("download analytics failure does not block the attachment", async () => {
   state.emitError = new Error("simulated analytics failure");
   const response = await GET(request());
   assert.equal(response.status, 200);
-  assert.deepEqual(new Uint8Array(await response.arrayBuffer()), imageBytes);
+  const metadata = await sharp(
+    new Uint8Array(await response.arrayBuffer()),
+  ).metadata();
+  assert.ok(metadata.width! <= 1024);
   assert.equal(state.emittedEvents.length, 1);
 });
 

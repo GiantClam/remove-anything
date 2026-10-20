@@ -55,6 +55,20 @@ export async function POST(req: NextRequest) {
       case "payment_intent.succeeded":
         await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
         break;
+
+      case "checkout.session.expired":
+        await handlePaymentFailure(
+          event.data.object as Stripe.Checkout.Session,
+          event.id,
+        );
+        break;
+
+      case "payment_intent.payment_failed":
+        await handlePaymentFailure(
+          event.data.object as Stripe.PaymentIntent,
+          event.id,
+        );
+        break;
       
       case "invoice.payment_succeeded":
         await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
@@ -167,6 +181,24 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
       metadata: paymentIntent.metadata,
     } as Stripe.Checkout.Session);
   }
+}
+
+async function handlePaymentFailure(
+  payment: Stripe.Checkout.Session | Stripe.PaymentIntent,
+  stripeEventId: string,
+) {
+  const metadata = payment.metadata;
+  const orderId = metadata?.orderId;
+  if (!orderId) return;
+
+  await emitServerAnalyticsEvent(
+    createOrderAnalyticsEvent(ANALYTICS_EVENTS.purchaseFailed, orderId, {
+      plan: metadata?.chargeProductId,
+      is_authenticated: Boolean(metadata?.userId),
+      provider: "stripe",
+      event_id: `purchase_failed:stripe:${stripeEventId}`,
+    }),
+  );
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {

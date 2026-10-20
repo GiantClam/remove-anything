@@ -2,6 +2,7 @@
 
 import {
   createAnalyticsEvent,
+  getAnalyticsPageContext,
   type AnalyticsEventFields,
   type AnalyticsEventName,
 } from "@/lib/analytics-events";
@@ -42,7 +43,13 @@ export function trackAnalyticsEvent(
   eventName: AnalyticsEventName,
   fields: AnalyticsEventFields = {},
 ) {
-  const event = createAnalyticsEvent(eventName, fields);
+  const pageContext = typeof window === "undefined"
+    ? {}
+    : getAnalyticsPageContext(
+        window.location.pathname,
+        document.documentElement.lang,
+      );
+  const event = createAnalyticsEvent(eventName, { ...pageContext, ...fields });
   trackEvent(event.name, event.params);
   return event;
 }

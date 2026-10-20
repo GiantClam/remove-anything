@@ -7,7 +7,9 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import SignBox from "@/components/sign-box";
+import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
 import { getErrorMessage } from "@/lib/handle-error";
+import { trackAnalyticsEvent } from "@/lib/gtag";
 
 export function DownloadAction({
   id,
@@ -35,6 +37,18 @@ export function DownloadAction({
     if (isDownloading || disabled) return;
     setIsDownloading(true);
     try {
+      const toolSlug =
+        taskType === "background-removal"
+          ? "remove-background"
+          : taskType === "watermark-removal"
+            ? "remove-watermark"
+            : taskType === "sora2-video-watermark-removal"
+              ? "sora2-video-watermark-removal"
+              : "remove-background";
+      trackAnalyticsEvent(ANALYTICS_EVENTS.downloadClicked, {
+        task_id: id,
+        tool_slug: toolSlug,
+      });
       const taskId = encodeURIComponent(id);
       const apiUrl =
         taskType === "background-removal"

@@ -1,20 +1,23 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { createProjectAuthProvider } from "@/modules/auth/adapter";
-import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { z } from "zod";
 
 import { ChargeOrderHashids } from "@/db/dto/charge-order.dto";
 import { ChargeProductHashids } from "@/db/dto/charge-product.dto";
 import { prisma } from "@/db/prisma";
 import { OrderPhase } from "@/db/type";
+import {
+  ANALYTICS_EVENTS,
+  createOrderAnalyticsEvent,
+  emitServerAnalyticsEvent,
+} from "@/lib/analytics-events";
+import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { getErrorMessage } from "@/lib/handle-error";
-import { kv } from "@/lib/kv";
-import { createStripeClient } from "@/modules/payments/stripe/adapter";
-import { absoluteUrl } from "@/lib/utils";
-
 // 为这个 API 创建自定义速率限制器
-import { KVRateLimit } from "@/lib/kv";
+import { kv, KVRateLimit } from "@/lib/kv";
+import { absoluteUrl } from "@/lib/utils";
+import { createProjectAuthProvider } from "@/modules/auth/adapter";
+import { createStripeClient } from "@/modules/payments/stripe/adapter";
 
 const CreateChargeOrderSchema = z.object({
   currency: z.enum(["CNY", "USD"]).default("USD"),
@@ -26,7 +29,7 @@ const CreateChargeOrderSchema = z.object({
 
 const ratelimit = new KVRateLimit(kv, {
   limit: 2,
-  window: "5s"
+  window: "5s",
 });
 
 // 包装函数以匹配适配器期望的类型
@@ -105,6 +108,19 @@ export async function POST(req: NextRequest) {
     });
 
     const orderId = ChargeOrderHashids.encode(newChargeOrder.id);
+    try {
+      await emitServerAnalyticsEvent(
+        createOrderAnalyticsEvent(ANALYTICS_EVENTS.orderCreated, orderId, {
+          plan: productId,
+          amount: product.amount,
+          currency,
+          is_authenticated: true,
+        }),
+      );
+    } catch (analyticsError) {
+      // Measurement delivery must not strand a newly-created pending order.
+      console.warn("Order creation analytics failed:", analyticsError);
+    }
     const fallbackBillingUrl = absoluteUrl(`/pricing?orderId=${orderId}`);
     const originUrl = url || fallbackBillingUrl;
     const pricingUrl = appendQueryParams(originUrl, { orderId });

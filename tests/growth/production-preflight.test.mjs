@@ -195,6 +195,7 @@ function validSchema() {
         "idempotency_key",
         "retention_checked_at",
         "retention_cleaned_at",
+        "audit_expires_at",
       ],
       background_removal_tasks: [
         "id",
@@ -208,6 +209,7 @@ function validSchema() {
         "idempotency_key",
         "retention_checked_at",
         "retention_cleaned_at",
+        "audit_expires_at",
       ],
       watermark_removal_tasks: [
         "id",
@@ -257,12 +259,13 @@ function validSchema() {
       ],
     },
     indexes: {
-      task_data: ["task_data_retention_idx"],
+      task_data: ["task_data_retention_idx", "task_data_audit_expires_at_idx"],
       background_removal_tasks: [
         "background_removal_tasks_principal_created_idx",
         "background_removal_tasks_user_created_idx",
         "background_removal_tasks_idempotency_idx",
         "background_removal_tasks_retention_idx",
+        "background_removal_tasks_audit_expires_at_idx",
       ],
       watermark_removal_tasks: [
         "watermark_removal_tasks_idempotency_idx",

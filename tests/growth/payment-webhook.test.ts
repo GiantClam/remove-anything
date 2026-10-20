@@ -144,3 +144,23 @@ test("a callback with another user does not fulfill the order", async () => {
   assert.deepEqual(state.creditTransactions, []);
   assert.deepEqual(state.analyticsEvents, []);
 });
+
+test("Stripe payment failures emit a stable purchase failure event without granting credits", async () => {
+  const { POST } = await routePromise;
+  const event = checkoutEvent("evt_payment_failed", "payment_intent.payment_failed");
+  event.data.object.id = "pi_failed_17";
+  event.data.object.object = "payment_intent";
+
+  assert.equal((await POST(request(event))).status, 200);
+  assert.equal((await POST(request(event))).status, 200);
+  assert.equal(state.order?.phase, OrderPhase.Pending);
+  assert.equal(state.credit?.credit, 4);
+  assert.equal(state.transactionCalls, 0);
+  assert.equal(state.analyticsEvents.length, 2, "Stripe may redeliver the same signed event");
+  assert.ok(state.analyticsEvents.every((analyticsEvent) => analyticsEvent.name === "purchase_failed"));
+  assert.ok(state.analyticsEvents.every((analyticsEvent) => analyticsEvent.params.order_id === ChargeOrderHashids.encode(17)));
+  assert.deepEqual(
+    state.analyticsEvents.map((analyticsEvent) => analyticsEvent.params.event_id),
+    ["purchase_failed:stripe:evt_payment_failed", "purchase_failed:stripe:evt_payment_failed"],
+  );
+});

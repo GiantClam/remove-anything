@@ -50,6 +50,7 @@ export const env = createEnv({
     // Model API Keys (accessed via AI Gateway)
     REPLICATE_API_TOKEN: z.string().min(1).default("placeholder"),
     REPLICATE_WEBHOOK_SECRET: z.string().optional(),
+    REPLICATE_OUTPUT_URL_PREFIXES: z.string().optional(),
     GEMINI_API_KEY: z.string().min(1).default("placeholder"),
     
     // RunningHub API Configuration
@@ -159,6 +160,7 @@ export const env = createEnv({
     // Model API Keys
     REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN,
     REPLICATE_WEBHOOK_SECRET: process.env.REPLICATE_WEBHOOK_SECRET,
+    REPLICATE_OUTPUT_URL_PREFIXES: process.env.REPLICATE_OUTPUT_URL_PREFIXES,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     RUNNINGHUB_API_BASE_URL: process.env.RUNNINGHUB_API_BASE_URL,
     RUNNINGHUB_API_KEY: process.env.RUNNINGHUB_API_KEY,

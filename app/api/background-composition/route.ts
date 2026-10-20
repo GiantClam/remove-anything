@@ -2,10 +2,64 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/db/prisma";
 import { getCurrentUser } from "@/lib/auth-utils";
+import {
+  CompositionInputError,
+  decodeCompositionImageDataUrl,
+  readCompositionJson,
+  validateCreateCompositionInput,
+  validateUpdateCompositionInput,
+} from "@/lib/background-composition-input";
 import { getErrorMessage } from "@/lib/handle-error";
+import { ImageInputError } from "@/lib/image-input";
 import { uploadToR2 } from "@/lib/upload";
 
 export const dynamic = "force-dynamic";
+
+const DEFAULT_HISTORY_PAGE = 1;
+const DEFAULT_HISTORY_LIMIT = 20;
+const MAX_HISTORY_PAGE = 10_000;
+const MAX_HISTORY_LIMIT = 100;
+
+function parseHistoryPaginationValue(
+  rawValue: string | null,
+  defaultValue: number,
+  maximum: number,
+) {
+  if (rawValue === null) return defaultValue;
+  if (!/^\d+$/.test(rawValue)) {
+    throw new CompositionInputError(
+      "INVALID_COMPOSITION_INPUT",
+      "Invalid pagination parameters",
+      400,
+    );
+  }
+  const value = Number(rawValue);
+  if (!Number.isSafeInteger(value) || value < 1) {
+    throw new CompositionInputError(
+      "INVALID_COMPOSITION_INPUT",
+      "Invalid pagination parameters",
+      400,
+    );
+  }
+  return Math.min(value, maximum);
+}
+
+function redactInlineDataUrls(value: unknown): unknown {
+  if (typeof value === "string") {
+    return /^\s*data:/i.test(value) ? "data:[omitted]" : value;
+  }
+  if (Array.isArray(value)) return value.map(redactInlineDataUrls);
+  if (value && typeof value === "object") {
+    if (value instanceof Date) return value;
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nested]) => [
+        key,
+        redactInlineDataUrls(nested),
+      ]),
+    );
+  }
+  return value;
+}
 
 // 创建背景合成任务
 export async function POST(req: NextRequest) {
@@ -17,34 +71,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await req.json();
-    const {
-      foregroundImageUrl,
-      backgroundType,
-      backgroundData,
-      compositionParams,
-    } = data;
-
-    if (
-      !foregroundImageUrl ||
-      !backgroundType ||
-      !backgroundData ||
-      !compositionParams
-    ) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
-    }
+    const data = validateCreateCompositionInput(await readCompositionJson(req));
 
     // 创建合成任务记录
     const composition = await prisma.backgroundComposition.create({
       data: {
         userId,
-        foregroundImageUrl,
-        backgroundType,
-        backgroundData,
-        compositionParams,
+        foregroundImageUrl: data.foregroundImageUrl,
+        backgroundType: data.backgroundType,
+        backgroundData: data.backgroundData,
+        compositionParams: data.compositionParams,
         status: "pending",
       },
     });
@@ -60,6 +96,15 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
+    if (
+      error instanceof CompositionInputError ||
+      error instanceof ImageInputError
+    ) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     console.error("创建背景合成任务失败:", error);
     return NextResponse.json(
       { error: getErrorMessage(error) },
@@ -78,15 +123,8 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await req.json();
-    const { compositionId, resultImageDataUrl } = data;
-
-    if (!compositionId || !resultImageDataUrl) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
-    }
+    const { compositionId, resultImageDataUrl } =
+      validateUpdateCompositionInput(await readCompositionJson(req));
 
     // 查找合成任务
     const composition = await prisma.backgroundComposition.findFirst({
@@ -103,24 +141,19 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // 将base64图片转换为File并上传到R2
-    const base64Data = resultImageDataUrl.replace(
-      /^data:image\/[a-z]+;base64,/,
-      "",
+    const image = await decodeCompositionImageDataUrl(
+      resultImageDataUrl,
+      ["image/png"],
+      `composition-${compositionId}.png`,
     );
-    const buffer = Buffer.from(base64Data, "base64");
-    const file = new File([buffer], `composition-${compositionId}.png`, {
-      type: "image/png",
-    });
-
-    const resultImageUrl = await uploadToR2(file);
+    const resultImageUrl = await uploadToR2(image.file);
 
     // 更新合成任务
     const updatedComposition = await prisma.backgroundComposition.update({
       where: { id: compositionId, userId },
       data: {
         resultImageUrl,
-        resultImageSize: buffer.length,
+        resultImageSize: image.bytes.length,
         status: "completed",
         completedAt: new Date(),
       },
@@ -131,6 +164,15 @@ export async function PUT(req: NextRequest) {
       data: updatedComposition,
     });
   } catch (error) {
+    if (
+      error instanceof CompositionInputError ||
+      error instanceof ImageInputError
+    ) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     console.error("更新合成结果失败:", error);
     return NextResponse.json(
       { error: getErrorMessage(error) },
@@ -150,8 +192,16 @@ export async function GET(req: NextRequest) {
     }
 
     const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get("page") || "1");
-    const limit = parseInt(url.searchParams.get("limit") || "20");
+    const page = parseHistoryPaginationValue(
+      url.searchParams.get("page"),
+      DEFAULT_HISTORY_PAGE,
+      MAX_HISTORY_PAGE,
+    );
+    const limit = parseHistoryPaginationValue(
+      url.searchParams.get("limit"),
+      DEFAULT_HISTORY_LIMIT,
+      MAX_HISTORY_LIMIT,
+    );
 
     const [compositions, total] = await Promise.all([
       prisma.backgroundComposition.findMany({
@@ -168,7 +218,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: compositions,
+      data: compositions.map(redactInlineDataUrls),
       pagination: {
         page,
         limit,
@@ -177,6 +227,12 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof CompositionInputError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     console.error("获取合成历史失败:", error);
     return NextResponse.json(
       { error: getErrorMessage(error) },

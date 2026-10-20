@@ -37,7 +37,7 @@ export type RetentionDb = Record<RetentionModelName, RetentionDelegate> &
       "backgroundComposition" | "backgroundImage" | "media" | "user",
       Pick<RetentionDelegate, "count">
     >
-  >;
+  > & { userBilling?: Pick<RetentionDelegate, "findMany"> };
 export type RetentionStorage = {
   deleteItemInBucket: (key: string) => Promise<void>;
 };
@@ -58,7 +58,9 @@ export type RetentionIssue = {
     | "external_or_provider"
     | "shared_reference"
     | "delete_failed"
-    | "active_overdue";
+    | "active_overdue"
+    | "financial_history"
+    | "audit_state_changed";
   error?: string;
   attempts?: number;
 };
@@ -79,6 +81,7 @@ export type RetentionReport = {
   activeBlockers: RetentionIssue[];
   auditTrimmed: number;
   auditWouldTrim: number;
+  auditTrimBlocked: RetentionIssue[];
   auditTrimUnsupported: RetentionModelName[];
 };
 
@@ -88,11 +91,11 @@ const MODEL_CONFIG: Record<
 > = {
   taskData: {
     urlFields: ["inputImageUrl", "imageUrl", "r2Url", "replicateUrls"],
-    supportsAuditExpiry: false,
+    supportsAuditExpiry: true,
   },
   backgroundRemovalTask: {
     urlFields: ["inputImageUrl", "outputImageUrl"],
-    supportsAuditExpiry: false,
+    supportsAuditExpiry: true,
   },
   watermarkRemovalTask: {
     urlFields: ["inputZipUrl", "outputZipUrl"],
@@ -104,7 +107,12 @@ const MODEL_CONFIG: Record<
   },
 };
 const MODEL_NAMES = Object.keys(MODEL_CONFIG) as RetentionModelName[];
-const CLEANED_TERMINAL_STATUSES = ["expired", "failed", "canceled", "cancelled"];
+const CLEANED_TERMINAL_STATUSES = [
+  "expired",
+  "failed",
+  "canceled",
+  "cancelled",
+];
 const ACTIVE_STATUSES = [
   "queued",
   "pending",
@@ -313,6 +321,17 @@ async function trimAuditRows(
   batchSize: number,
   report: RetentionReport,
 ) {
+  const auditDeadlineWhere = {
+    OR: [
+      { auditExpiresAt: { lte: now } },
+      {
+        auditExpiresAt: null,
+        createdAt: {
+          lte: new Date(now.getTime() - MINIMAL_AUDIT_RETENTION_MS),
+        },
+      },
+    ],
+  };
   for (const model of MODEL_NAMES) {
     if (!MODEL_CONFIG[model].supportsAuditExpiry) {
       report.auditTrimUnsupported.push(model);
@@ -322,7 +341,7 @@ async function trimAuditRows(
     if (!delegate?.findMany || !delegate.deleteMany) continue;
     const candidates = await delegate.findMany({
       where: {
-        auditExpiresAt: { lte: now },
+        ...auditDeadlineWhere,
         retentionCleanedAt: { not: null },
         taskStatus: { in: CLEANED_TERMINAL_STATUSES },
       },
@@ -335,26 +354,98 @@ async function trimAuditRows(
       .filter(
         (row) =>
           asDate(row.retentionCleanedAt) &&
-          asDate(row.auditExpiresAt) &&
-          asDate(row.auditExpiresAt)!.getTime() <= now.getTime() &&
+          (asDate(row.auditExpiresAt)?.getTime() ??
+            (asDate(row.createdAt)?.getTime() ?? Infinity) +
+              MINIMAL_AUDIT_RETENTION_MS) <= now.getTime() &&
           CLEANED_TERMINAL_STATUSES.includes(String(row.taskStatus)),
       )
       .slice(0, batchSize)
       .map((row) => row.id);
     if (!ids.length) continue;
+
+    // TaskData is linked to UserBilling with an existing cascade relation.
+    // Never delete a task row until the billing reference has been checked;
+    // a missing/failed lookup preserves the audit history and reports why.
+    let billingLinkedIds = new Set<number | string>();
+    if (model === "taskData") {
+      if (!db.userBilling?.findMany) {
+        report.auditTrimBlocked.push(
+          ...ids.map((recordId) => ({
+            model,
+            recordId,
+            field: "userBillings",
+            reason: "financial_history" as const,
+            error:
+              "Billing-reference lookup is unavailable; audit row was preserved",
+          })),
+        );
+        continue;
+      }
+      try {
+        const billingRows = await db.userBilling.findMany({
+          where: { taskId: { in: ids } },
+          select: { taskId: true },
+        });
+        billingLinkedIds = new Set(
+          (billingRows || [])
+            .map((row) => row.taskId)
+            .filter((taskId): taskId is number | string => taskId != null),
+        );
+      } catch {
+        report.auditTrimBlocked.push(
+          ...ids.map((recordId) => ({
+            model,
+            recordId,
+            field: "userBillings",
+            reason: "financial_history" as const,
+            error: "Billing-reference lookup failed; audit row was preserved",
+          })),
+        );
+        continue;
+      }
+    }
+    for (const recordId of billingLinkedIds) {
+      if (ids.includes(recordId)) {
+        report.auditTrimBlocked.push({
+          model,
+          recordId,
+          field: "userBillings",
+          reason: "financial_history",
+        });
+      }
+    }
+    const eligibleIds = ids.filter((id) => !billingLinkedIds.has(id));
+    if (!eligibleIds.length) continue;
     if (dryRun) {
-      report.auditWouldTrim += ids.length;
+      report.auditWouldTrim += eligibleIds.length;
       continue;
     }
     const result = await delegate.deleteMany({
       where: {
-        id: { in: ids },
+        id: { in: eligibleIds },
         retentionCleanedAt: { not: null },
         taskStatus: { in: CLEANED_TERMINAL_STATUSES },
-        auditExpiresAt: { lte: now },
+        ...auditDeadlineWhere,
+        ...(model === "taskData" ? { userBillings: { none: {} } } : {}),
       },
     });
-    report.auditTrimmed += Number((result as { count?: number })?.count || 0);
+    const trimmed = Number((result as { count?: number })?.count || 0);
+    report.auditTrimmed += trimmed;
+    if (trimmed < eligibleIds.length) {
+      const remaining = await delegate.findMany({
+        where: { id: { in: eligibleIds } },
+        select: { id: true },
+      });
+      for (const row of remaining || []) {
+        report.auditTrimBlocked.push({
+          model,
+          recordId: row.id,
+          field: "retention eligibility",
+          reason: "audit_state_changed",
+          error: "Audit row no longer matched the guarded deletion predicates",
+        });
+      }
+    }
   }
 }
 
@@ -405,6 +496,7 @@ export async function runTaskRetention(
     activeBlockers: [],
     auditTrimmed: 0,
     auditWouldTrim: 0,
+    auditTrimBlocked: [],
     auditTrimUnsupported: [],
   };
 
@@ -529,7 +621,9 @@ export async function runTaskRetention(
         const previousStatus = String(record.taskStatus || "").toLowerCase();
         // A failed/canceled free task returned its allowance. Preserve that
         // evidence when files expire so monthly quota cannot charge it again.
-        data.taskStatus = ["failed", "canceled", "cancelled"].includes(previousStatus)
+        data.taskStatus = ["failed", "canceled", "cancelled"].includes(
+          previousStatus,
+        )
           ? previousStatus
           : "expired";
         data.retentionCleanedAt = now;

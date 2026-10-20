@@ -11,6 +11,14 @@ Checked on 2026-10-19. Production runs on Vercel; the optional Cloudflare Worker
 
 No environment values or secrets belong in this document, a PR, logs, or chat. Configure secrets directly in the service dashboard or through an authenticated secret-management command.
 
+### Fresh deployment-credential check — 2026-10-19
+
+- Name-only Vercel CLI inspection of both Production and Preview found no `CLOUDFLARE_API_TOKEN` or `CLOUDFLARE_ACCOUNT_ID`. Existing `CLOUDFLARE_KV_API_TOKEN` and `CLOUDFLARE_KV_ACCOUNT_ID` are separate runtime/KV settings and are not Wrangler deployment credentials.
+- GitHub currently lists only the `Preview` and `Production` repository environments. The `staging` environment is absent; listing its secrets returns 404. The latest Worker workflow run, `39208975472`, passed installation/build and failed in the deployment step. No Worker deployment was confirmed.
+- `wrangler.toml` still has placeholder KV and D1 IDs for staging. Creating the GitHub secrets alone will not make the Worker configuration deployable; provision and bind real isolated staging resources first.
+- A current production GET smoke returned HTTP 200 for `/remove-objects` and `/sitemap-tools.xml`, but the page still lacked JSON-LD and the sitemap still omitted `/remove-objects`.
+- The protected Vercel Preview's unauthenticated permission checks returned 401 for background-library creation/private listing and composition creation/history. Those checks do not establish database, storage, provider, or task-flow acceptance; Preview still shares production resources.
+
 ## R2 setup needed for Vercel staging
 
 1. Open Cloudflare **R2 object storage → Overview** and select the same account as the existing `R2_ACCOUNT_ID`.
@@ -46,14 +54,13 @@ After all overrides are in place, redeploy Preview and independently verify that
 
 This is not required to publish the Vercel application. If retaining the Worker staging experiment:
 
-1. In Cloudflare **Account API tokens → Create Token**, select **Edit Cloudflare Workers**, then restrict access to the intended account.
-2. For an existing `remove-anything-staging` Worker, grant **Workers → Editor** scoped to that Worker. Creating a new Worker requires **Workers product → Admin**; alternatively create it in the dashboard, then use the narrower Editor token for CI.
-3. Only when changing a Route or Custom Domain, add **Zone → Workers Routes → Write** for the affected zone. This workflow currently uses no route or custom-domain changes.
-4. Direct provisioning/access of KV, D1, or R2 requires the corresponding resource permissions. Binding an existing resource during Worker deployment does not itself require direct resource data permissions.
-5. In **GitHub → GiantClam/remove-anything → Settings → Environments**, create/select **staging**. Save the API token as `CLOUDFLARE_API_TOKEN` and the verified account ID as `CLOUDFLARE_ACCOUNT_ID` in that environment's secrets. The account ID is available from the Cloudflare account dashboard; it is not a separately issued secret. Do not put a Worker deployment token into Vercel runtime variables.
-6. Replace the staging KV and D1 placeholders in `wrangler.toml` with provisioned staging resource IDs before dispatching the workflow. Adding credentials alone cannot make the current placeholder configuration deployable.
+1. In Cloudflare **Manage Account → Members → API Tokens**, create a token for CI. The current Workers roles are `Editor` and `Admin`: use `Editor` scoped to the existing `remove-anything-staging` Worker. If CI must create that Worker, use product-scoped `Admin` for the initial creation, then replace it with a token scoped to that Worker and revoke the broader token.
+2. Only when changing a Route or Custom Domain, add **Zone → Workers Routes → Write** for the affected zone. This workflow currently uses no route or custom-domain changes.
+3. Direct provisioning/access of KV, D1, or R2 requires the corresponding resource permissions. Binding an existing resource during Worker deployment requires Worker `Editor` access; it does not itself require direct resource data permissions.
+4. In **GitHub → GiantClam/remove-anything → Settings → Environments**, create/select **staging**. Save the API token as `CLOUDFLARE_API_TOKEN` and the verified account ID as `CLOUDFLARE_ACCOUNT_ID` in that environment's secrets. The account ID is available from the Cloudflare account dashboard; it is not a separately issued secret. Do not put a Worker deployment token into Vercel runtime variables.
+5. Replace the staging KV and D1 placeholders in `wrangler.toml` with provisioned staging resource IDs before dispatching the workflow. Adding credentials alone cannot make the current placeholder configuration deployable.
 
-Official references: [Cloudflare GitHub Actions](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) and [Workers roles and permissions](https://developers.cloudflare.com/workers/authorization/workers/), checked 2026-10-19.
+Official references: [Cloudflare GitHub Actions](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/), [Workers roles and permissions](https://developers.cloudflare.com/workers/authorization/workers/), [R2 token permissions](https://developers.cloudflare.com/r2/api/tokens/), and [GitHub deployment environments](https://docs.github.com/actions/deployment/targeting-different-environments/using-environments-for-deployment), checked 2026-10-19.
 
 ## Production release boundary
 

@@ -1,243 +1,239 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { getErrorMessage } from "@/lib/handle-error";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { isIP } from "node:net";
+
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
 import { env } from "@/env.mjs";
-import { findBackgroundRemovalTaskByReplicateId, updateBackgroundRemovalTask } from "@/db/queries/background-removal";
-import { nanoid } from "nanoid";
+import {
+  findBackgroundRemovalTaskByReplicateId,
+  updateBackgroundRemovalTask,
+} from "@/db/queries/background-removal";
+import { readLimitedResponse, ResultSizeLimitError } from "@/lib/limited-response";
 import { createR2S3Service } from "@/lib/r2-s3";
 
-// 下载图片并保存到R2
-async function downloadAndSaveToR2(imageUrl: string, taskId: string): Promise<string> {
-  try {
-    console.log(`📥 开始下载并保存图片到R2: ${imageUrl}`);
-    
-    // 下载图片
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to download image: ${response.status}`);
-    }
-    
-    const imageBuffer = await response.arrayBuffer();
-    const contentType = response.headers.get('content-type') || 'image/png';
-    
-    const s3 = createR2S3Service();
-    
-    // 生成文件名
-    const fileExtension = contentType.includes('png') ? 'png' : 'jpg';
-    const storedFilename = `${taskId}-${nanoid(8)}.${fileExtension}`;
-    const fileName = `background-removal/processed/${storedFilename}`;
+export const dynamic = "force-dynamic";
 
-    await s3.putItemInBucket(storedFilename, Buffer.from(imageBuffer), {
-      path: "background-removal/processed",
-      ContentType: contentType,
-      acl: "public-read",
-    });
-    
-    // 构建公共访问URL
-    const r2PublicUrl = `${env.R2_URL_BASE}/${fileName}`;
-    
-    console.log(`✅ 图片已保存到R2: ${r2PublicUrl}`);
-    return r2PublicUrl;
-    
-  } catch (error) {
-    console.error(`❌ 保存图片到R2失败:`, error);
-    throw error;
+const MAX_BODY_BYTES = 64 * 1024;
+const MAX_OUTPUT_BYTES = 10 * 1024 * 1024;
+const MAX_TIMESTAMP_SKEW_SECONDS = 5 * 60;
+
+const WebhookSchema = z.object({
+  id: z.string().min(1).max(200),
+  status: z.enum(["pending", "starting", "processing", "succeeded", "failed", "canceled"]),
+  output: z.unknown().optional(),
+  error: z.unknown().optional(),
+  logs: z.unknown().optional(),
+});
+
+type ImageType = { mime: "image/png" | "image/jpeg" | "image/webp"; extension: "png" | "jpg" | "webp" };
+
+function imageType(bytes: Uint8Array): ImageType | null {
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    Buffer.from(bytes.subarray(1, 8)).equals(Buffer.from("PNG\r\n\x1a\n"))
+  ) {
+    return { mime: "image/png", extension: "png" };
+  }
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return { mime: "image/jpeg", extension: "jpg" };
+  }
+  if (
+    bytes.length >= 12 &&
+    Buffer.from(bytes.subarray(0, 4)).toString() === "RIFF" &&
+    Buffer.from(bytes.subarray(8, 12)).toString() === "WEBP"
+  ) {
+    return { mime: "image/webp", extension: "webp" };
+  }
+  return null;
+}
+
+function safeHttpsUrl(value: string): URL | null {
+  try {
+    const url = new URL(value);
+    const rawPath = value.match(/^https:\/\/[^/?#]+([^?#]*)/i)?.[1] || "/";
+    const decodedPath = decodeURIComponent(rawPath);
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      url.port ||
+      url.hash ||
+      isIP(url.hostname.replace(/^\[|\]$/g, "")) ||
+      url.hostname === "localhost" ||
+      /\.(localhost|local)$/.test(url.hostname) ||
+      /[\\\x00-\x20]/.test(value) ||
+      /%(?:2f|5c|25)/i.test(rawPath) ||
+      decodedPath.split("/").some((segment) => segment === "." || segment === "..")
+    ) {
+      return null;
+    }
+    return url;
+  } catch {
+    return null;
   }
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    console.log("🚀 Replicate Webhook 开始处理");
-    console.log("🔍 环境检查:", {
-      NODE_ENV: process.env.NODE_ENV,
-      VERCEL: process.env.VERCEL,
-      timestamp: new Date().toISOString()
-    });
+function isAllowedProviderOutput(value: string): boolean {
+  const output = safeHttpsUrl(value);
+  if (!output) return false;
+  const prefixes = env.REPLICATE_OUTPUT_URL_PREFIXES || "";
+  return prefixes.split(",").some((entry) => {
+    const prefix = safeHttpsUrl(entry.trim());
+    if (!prefix || prefix.search || prefix.pathname === "/") return false;
+    const path = `${prefix.pathname.replace(/\/$/, "")}/`;
+    return output.origin === prefix.origin && output.pathname.startsWith(path);
+  });
+}
 
-    const body = await req.json();
-    console.log("📨 Webhook 数据:", {
-      id: body.id,
-      status: body.status,
-      hasOutput: !!body.output,
-      hasError: !!body.error
-    });
-    
-    // 验证 webhook 签名（生产环境应该验证）
-    const signature = req.headers.get('replicate-signature');
-    if (env.REPLICATE_WEBHOOK_SECRET && signature) {
-      // TODO: 在生产环境中验证 webhook 签名
-      // const isValid = verifyWebhookSignature(body, signature, env.REPLICATE_WEBHOOK_SECRET);
-      // if (!isValid) {
-      //   return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-      // }
-    }
-    
-    console.log("📨 收到 Replicate webhook:", {
-      id: body.id,
-      status: body.status,
-      output: body.output ? "有输出" : "无输出",
-      outputType: body.output ? typeof body.output : "undefined",
-      logs: body.logs ? "有日志" : "无日志",
-      logsType: body.logs ? typeof body.logs : "undefined",
-      logsIsArray: body.logs ? Array.isArray(body.logs) : "undefined",
-      error: body.error ? "有错误" : "无错误",
-      errorType: body.error ? typeof body.error : "undefined"
-    });
-    
-    // 查找对应的 BackgroundRemovalTask 记录
-    console.log(`🔍 查找 BackgroundRemovalTask 记录，replicateId: ${body.id}`);
-    let taskRecord;
-    try {
-      taskRecord = await findBackgroundRemovalTaskByReplicateId(body.id);
-    } catch (dbError) {
-      console.error("❌ 数据库查询失败:", {
-        error: dbError.message,
-        replicateId: body.id
-      });
-      // 即使数据库查询失败，也返回 200 避免 webhook 重试
-      return NextResponse.json({ 
-        message: "Database query failed, but webhook received",
-        error: dbError.message
-      }, { status: 200 });
-    }
-    
-    if (!taskRecord) {
-      console.warn(`⚠️ 未找到对应的 BackgroundRemovalTask 记录，replicateId: ${body.id}`);
-      // 返回 200 而不是 404，避免 webhook 重试
-      return NextResponse.json({ 
-        message: "Task not found, but webhook received" 
-      }, { status: 200 });
-    }
-    
-    console.log("✅ 找到任务记录:", {
-      id: taskRecord.id,
-      userId: taskRecord.userId || "anonymous",
-      status: taskRecord.taskStatus
-    });
-    
-    // 根据 Replicate 状态更新数据库
-    let updateData: any = {};
-    
-    switch (body.status) {
-      case "pending":
-        updateData = {
-          taskStatus: "pending",
-        };
-        console.log(`⏳ 任务等待中: ${body.id}`);
-        break;
-        
-      case "starting":
-        updateData = {
-          taskStatus: "starting",
-          executeStartTime: BigInt(Date.now()),
-        };
-        console.log(`🚀 任务开始处理: ${body.id}`);
-        break;
-        
-      case "processing":
-        updateData = {
-          taskStatus: "processing",
-        };
-        console.log(`⚙️ 任务处理中: ${body.id}`);
-        break;
-        
-      case "succeeded":
-        const replicateImageUrl = Array.isArray(body.output) ? body.output[0] : body.output;
-        
-        // 安全处理 logs 字段
-        let logsText = "";
-        if (body.logs) {
-          if (Array.isArray(body.logs)) {
-            logsText = body.logs.join("\n");
-          } else if (typeof body.logs === "string") {
-            logsText = body.logs;
-          } else {
-            logsText = JSON.stringify(body.logs);
-          }
-        }
-        
-        // 下载Replicate的结果图片并保存到R2
-        let r2ImageUrl = replicateImageUrl; // 默认使用Replicate URL作为备用
-        try {
-          r2ImageUrl = await downloadAndSaveToR2(replicateImageUrl, body.id);
-          console.log(`✅ 图片已保存到R2: ${r2ImageUrl}`);
-        } catch (r2Error) {
-          console.error(`❌ 保存到R2失败，使用原始URL:`, r2Error);
-          // 继续使用Replicate的URL，不阻断流程
-        }
-        
-        updateData = {
-          taskStatus: "succeeded",
-          outputImageUrl: r2ImageUrl,
-          executeEndTime: BigInt(Date.now()),
-          errorMsg: logsText,
-        };
-        console.log(`✅ 任务成功完成: ${body.id}，最终图片URL: ${r2ImageUrl}`);
-        break;
-        
-      case "failed":
-      case "canceled":
-        // 安全处理错误信息
-        let errorMsg = "Task failed";
-        if (body.error) {
-          if (typeof body.error === "string") {
-            errorMsg = body.error;
-          } else if (body.error.message) {
-            errorMsg = body.error.message;
-          } else {
-            errorMsg = JSON.stringify(body.error);
-          }
-        }
-        
-        updateData = {
-          taskStatus: "failed",
-          executeEndTime: BigInt(Date.now()),
-          errorMsg: errorMsg,
-        };
-        console.log(`❌ 任务失败: ${body.id}，错误: ${errorMsg}`);
-        break;
-        
-      default:
-        console.log(`ℹ️ 未知状态: ${body.status} for ${body.id}`);
-        return NextResponse.json({ 
-          message: "Unknown status" 
-        }, { status: 200 });
-    }
-    
-    // 更新数据库记录
-    try {
-      await updateBackgroundRemovalTask(body.id, updateData);
-      console.log(`🔄 已更新 BackgroundRemovalTask 记录: ${taskRecord.id}，状态: ${updateData.taskStatus}`);
-    } catch (dbError) {
-      console.error("❌ 数据库更新失败:", {
-        error: dbError.message,
-        taskRecordId: taskRecord.id,
-        updateData: updateData
-      });
-      return NextResponse.json(
-        { error: "Database update failed", details: dbError.message },
-        { status: 500 }
-      );
-    }
-    
-    console.log(`✅ Webhook 处理完成: ${body.id}，状态: ${body.status}`);
-    
-    return NextResponse.json({ 
-      message: "Webhook processed successfully",
-      taskId: body.id,
-      taskRecordId: taskRecord.id,
-      status: updateData.taskStatus
-    }, { status: 200 });
-    
-  } catch (error) {
-    console.error("❌ Webhook 详细错误:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-      constructor: error.constructor.name
-    });
-    return NextResponse.json(
-      { error: getErrorMessage(error) },
-      { status: 500 }
-    );
+function providerOutput(body: z.infer<typeof WebhookSchema>): string | null {
+  if (typeof body.output === "string") return body.output;
+  if (Array.isArray(body.output) && body.output.length === 1 && typeof body.output[0] === "string") {
+    return body.output[0];
   }
-} 
+  return null;
+}
+
+function webhookKey(secret: string): Buffer | null {
+  if (!secret.startsWith("whsec_")) return null;
+  const encoded = secret.slice("whsec_".length);
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) return null;
+  const decoded = Buffer.from(encoded, "base64");
+  if (
+    decoded.length < 16 ||
+    decoded.toString("base64").replace(/=+$/, "") !== encoded.replace(/=+$/, "")
+  ) {
+    return null;
+  }
+  return decoded;
+}
+
+function hasValidWebhookSignature(rawBody: Uint8Array, req: Request): boolean {
+  const secret = env.REPLICATE_WEBHOOK_SECRET;
+  const id = req.headers.get("webhook-id");
+  const timestamp = req.headers.get("webhook-timestamp");
+  const signatures = req.headers.get("webhook-signature");
+  if (!secret || secret.length < 32 || !id || !timestamp || !signatures) return false;
+  const key = webhookKey(secret);
+  if (!key) return false;
+
+  const timestampSeconds = Number(timestamp);
+  if (!Number.isSafeInteger(timestampSeconds) || Math.abs(Math.floor(Date.now() / 1000) - timestampSeconds) > MAX_TIMESTAMP_SKEW_SECONDS) {
+    return false;
+  }
+
+  const expected = createHmac("sha256", key)
+    .update(`${id}.${timestamp}.`)
+    .update(rawBody)
+    .digest("base64");
+  const expectedBytes = Buffer.from(expected);
+  return signatures.split(" ").some((candidate) => {
+    const match = /^v1,([A-Za-z0-9+/]+={0,2})$/.exec(candidate);
+    if (!match) return false;
+    const encoded = match[1];
+    const actualBytes = Buffer.from(encoded);
+    return actualBytes.length === expectedBytes.length && timingSafeEqual(actualBytes, expectedBytes);
+  });
+}
+
+async function persistProviderOutput(source: string, taskRecordId: number): Promise<string> {
+  if (!isAllowedProviderOutput(source)) throw new Error("Provider output source is not approved");
+  const response = await fetch(source, {
+    redirect: "error",
+    cache: "no-store",
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!response.ok || response.status >= 300) throw new Error("Provider output could not be retrieved");
+  const bytes = await readLimitedResponse(response, MAX_OUTPUT_BYTES);
+  const detected = imageType(bytes);
+  if (!detected) throw new Error("Unsupported provider output format");
+
+  const digest = createHash("sha256").update(bytes).digest("hex");
+  const filename = `${taskRecordId}-callback-${digest}.${detected.extension}`;
+  const path = "background-removal/processed";
+  const stored = await createR2S3Service().putItemInBucket(filename, Buffer.from(bytes), {
+    path,
+    ContentType: detected.mime,
+    acl: "private",
+  });
+  return stored.completedUrl;
+}
+
+function errorText(error: unknown): string {
+  if (typeof error === "string") return error.slice(0, 8_000);
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message.slice(0, 8_000);
+  }
+  return "Task failed";
+}
+
+function logText(logs: unknown): string {
+  if (typeof logs === "string") return logs.slice(0, 8_000);
+  if (Array.isArray(logs)) return logs.filter((item) => typeof item === "string").join("\n").slice(0, 8_000);
+  return "";
+}
+
+export async function POST(req: Request) {
+  const secret = env.REPLICATE_WEBHOOK_SECRET;
+  if (!secret || secret.length < 32) {
+    return NextResponse.json({ error: "Replicate callback authentication is unavailable" }, { status: 503 });
+  }
+  if (!req.headers.get("webhook-id") || !req.headers.get("webhook-timestamp") || !req.headers.get("webhook-signature")) {
+    return NextResponse.json({ error: "Invalid callback signature" }, { status: 401 });
+  }
+
+  try {
+    const bytes = await readLimitedResponse(new Response(req.body, { headers: req.headers }), MAX_BODY_BYTES);
+    if (!hasValidWebhookSignature(bytes, req)) {
+      return NextResponse.json({ error: "Invalid callback signature" }, { status: 401 });
+    }
+
+    let rawBody: string;
+    try {
+      rawBody = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch {
+      return NextResponse.json({ error: "Invalid callback payload" }, { status: 400 });
+    }
+    const body = WebhookSchema.parse(JSON.parse(rawBody));
+    const taskRecord = await findBackgroundRemovalTaskByReplicateId(body.id);
+    if (!taskRecord) return NextResponse.json({ message: "Task not found" }, { status: 200 });
+
+    const updateData: Parameters<typeof updateBackgroundRemovalTask>[1] = {};
+    if (body.status === "pending") {
+      updateData.taskStatus = "pending";
+    } else if (body.status === "starting") {
+      updateData.taskStatus = "starting";
+      updateData.executeStartTime = BigInt(Date.now());
+    } else if (body.status === "processing") {
+      updateData.taskStatus = "processing";
+    } else if (body.status === "succeeded") {
+      const source = providerOutput(body);
+      if (!source || !isAllowedProviderOutput(source)) {
+        return NextResponse.json({ error: "Provider result is not approved" }, { status: 503 });
+      }
+      // Persist the bytes before changing task state. A migration failure leaves
+      // the task recoverable through polling and never stores a provider URL.
+      const outputImageUrl = await persistProviderOutput(source, taskRecord.id);
+      updateData.taskStatus = "succeeded";
+      updateData.outputImageUrl = outputImageUrl;
+      updateData.executeEndTime = BigInt(Date.now());
+      updateData.errorMsg = logText(body.logs);
+    } else {
+      updateData.taskStatus = "failed";
+      updateData.executeEndTime = BigInt(Date.now());
+      updateData.errorMsg = errorText(body.error);
+    }
+
+    await updateBackgroundRemovalTask(body.id, updateData);
+    return NextResponse.json({ message: "Webhook processed successfully", taskId: body.id, status: updateData.taskStatus }, { status: 200 });
+  } catch (error) {
+    if (error instanceof ResultSizeLimitError) {
+      return NextResponse.json({ error: "Callback or output exceeds the supported size" }, { status: 413 });
+    }
+    if (error instanceof z.ZodError || error instanceof SyntaxError) {
+      return NextResponse.json({ error: "Invalid callback payload" }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Webhook could not be recorded; poll the original task" }, { status: 503 });
+  }
+}

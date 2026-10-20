@@ -1,5 +1,7 @@
 import { unstable_setRequestLocale } from "next-intl/server";
 
+import { DeletionRequestForm } from "@/components/privacy/deletion-request-form";
+
 type Props = {
   params: { locale: string };
 };
@@ -598,6 +600,7 @@ export default function IndexPage({ params: { locale } }: Props) {
           You may also contact Us to request access to, correct, or delete any
           personal information that You have provided to Us.
         </p>
+        <DeletionRequestForm />
         <p className="leading-7 [&:not(:first-child)]:mt-6">
           Please note, however, that We may need to retain certain information
           when we have a legal obligation or lawful basis to do so.

@@ -6,6 +6,11 @@ import {
   refreshBackgroundTaskStatus,
 } from "@/lib/background-task-status";
 import {
+  ANALYTICS_EVENTS,
+  createTaskAnalyticsEvent,
+  emitServerAnalyticsEvent,
+} from "@/lib/analytics-events";
+import {
   canRetryAutomatically,
   isTaskExpired,
   normalizeTaskStatus,
@@ -287,6 +292,12 @@ class TaskQueueManager {
       const persisted = await refreshBackgroundTaskStatus(task, isActive);
       if (!isActive()) return true;
       const nextStatus = getBackgroundTaskStatus(persisted);
+      await this.emitTransitionEvent(
+        task.id,
+        status,
+        nextStatus,
+        task.userId,
+      );
       if (nextStatus === "failed")
         await refundFailedTaskCredit(
           persisted.userId,
@@ -390,12 +401,45 @@ class TaskQueueManager {
     });
     if (!persisted) return true;
     const nextStatus = normalizeTaskStatus(persisted.taskStatus);
+    await this.emitTransitionEvent(
+      task.id,
+      currentStatus,
+      nextStatus,
+      task.userId,
+    );
     if (nextStatus === "failed")
       await refundFailedTaskCredit(persisted.userId, persisted.id, "image");
     return (
       ["failed", "expired"].includes(nextStatus) ||
       (nextStatus === "succeeded" && Boolean(persisted.imageUrl))
     );
+  }
+
+  private async emitTransitionEvent(
+    taskId: number,
+    previousStatus: string,
+    nextStatus: string,
+    userId: string | null,
+  ) {
+    const eventName =
+      nextStatus === "succeeded"
+        ? ANALYTICS_EVENTS.processingCompleted
+        : nextStatus === "failed"
+          ? ANALYTICS_EVENTS.processingFailed
+          : nextStatus === "processing" && previousStatus !== "processing"
+            ? ANALYTICS_EVENTS.processingStarted
+            : null;
+    if (!eventName || previousStatus === nextStatus) return;
+
+    try {
+      await emitServerAnalyticsEvent(
+        createTaskAnalyticsEvent(eventName, taskId, {
+          is_authenticated: Boolean(userId),
+        }),
+      );
+    } catch (analyticsError) {
+      console.warn("Task lifecycle analytics failed:", analyticsError);
+    }
   }
 
   /** Stop future polls and prevent in-flight reads from writing afterward. */

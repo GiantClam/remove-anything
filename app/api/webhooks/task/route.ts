@@ -53,15 +53,33 @@ export async function POST(req: Request) {
     }
 
     if (transitioned) {
-      const eventName = status === "succeeded"
+      const fields = {
+        is_authenticated: Boolean(task.userId),
+        locale: task.locale ?? undefined,
+      };
+      const legacyEventName = status === "succeeded"
         ? ANALYTICS_EVENTS.taskSucceeded
         : status === "failed" || status === "expired"
           ? ANALYTICS_EVENTS.taskFailed
-          : status === "processing" ? ANALYTICS_EVENTS.taskProcessing : ANALYTICS_EVENTS.taskCreated;
-      await emitServerAnalyticsEvent(createTaskAnalyticsEvent(eventName, task.id, {
-        is_authenticated: Boolean(task.userId),
-        locale: task.locale ?? undefined,
-      }));
+          : status === "processing"
+            ? ANALYTICS_EVENTS.taskProcessing
+            : ANALYTICS_EVENTS.taskCreated;
+      await emitServerAnalyticsEvent(
+        createTaskAnalyticsEvent(legacyEventName, task.id, fields),
+      );
+
+      const lifecycleEventName = status === "succeeded"
+        ? ANALYTICS_EVENTS.processingCompleted
+        : status === "failed" || status === "expired"
+          ? ANALYTICS_EVENTS.processingFailed
+          : status === "processing"
+            ? ANALYTICS_EVENTS.processingStarted
+            : null;
+      if (lifecycleEventName) {
+        await emitServerAnalyticsEvent(
+          createTaskAnalyticsEvent(lifecycleEventName, task.id, fields),
+        );
+      }
     }
 
     // The refund helper rechecks the persisted failure and claims its real

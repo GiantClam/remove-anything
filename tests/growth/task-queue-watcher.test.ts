@@ -120,3 +120,25 @@ test("generic success without output stays recoverable instead of succeeded", as
   assert.equal(state.generic!.imageUrl, null);
   assert.equal(manager.getActiveWatchers().count, 1);
 });
+
+test("generic status transitions emit processing lifecycle events once with the app task id", async () => {
+  const manager = (await managerPromise).taskQueueManager;
+  state.generic!.taskStatus = "pending";
+  state.providerStatus = "RUNNING";
+  manager.startStatusWatcher(17, "watcher-generic", "image");
+  await waitFor(
+    () => state.analyticsEvents.some((event) => event.name === "processing_started"),
+    "processing start analytics",
+  );
+
+  state.providerStatus = "SUCCESS";
+  await waitFor(() => manager.getActiveWatchers().count === 0, "successful task completion");
+  assert.deepEqual(
+    state.analyticsEvents.map((event) => event.name),
+    ["processing_started", "processing_completed"],
+  );
+  assert.deepEqual(
+    state.analyticsEvents.map((event) => event.params.task_id),
+    ["17", "17"],
+  );
+});

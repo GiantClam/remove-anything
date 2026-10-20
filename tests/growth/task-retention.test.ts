@@ -19,6 +19,10 @@ function matchValue(value: any, filter: any): boolean {
   if (filter instanceof Date)
     return new Date(value).getTime() === filter.getTime();
   if (typeof filter !== "object") return value === filter;
+  if ("none" in filter && Array.isArray(value) && value.length > 0)
+    return false;
+  if ("some" in filter && (!Array.isArray(value) || value.length === 0))
+    return false;
   if ("in" in filter && !filter.in.includes(value)) return false;
   if ("notIn" in filter && filter.notIn.includes(value)) return false;
   if ("not" in filter && matchValue(value, filter.not)) return false;
@@ -108,6 +112,16 @@ function makeDb(rows: RetentionRows, calls: AnyRecord[]) {
     "user",
   ])
     db[model] = { count: async () => 0 };
+  db.userBilling = {
+    findMany: async (args: AnyRecord) => {
+      const taskIds = args.where.taskId.in as number[];
+      return rows.taskData.flatMap((row: AnyRecord) =>
+        taskIds.includes(row.id)
+          ? (row.userBillings || []).map(() => ({ taskId: row.id }))
+          : [],
+      );
+    },
+  };
   return db as any;
 }
 function dueTask(id: number, overrides: AnyRecord = {}) {
@@ -343,7 +357,12 @@ test("checked markers rotate blocked work and cleaned markers prevent repeated s
   const rows = emptyRows();
   rows.backgroundRemovalTask.push(
     dueTask(1, { outputImageUrl: "https://provider.example.test/output.png" }),
-    dueTask(2, { outputImageUrl: `${BASE}/tasks/2/output.png` }),
+    dueTask(2, {
+      outputImageUrl: `${BASE}/tasks/2/output.png`,
+      // Keep this row available for the third scan so the test isolates
+      // checked-marker rotation from the separate 90-day audit trim.
+      auditExpiresAt: new Date("2027-01-01T00:00:00.000Z"),
+    }),
   );
   const calls: AnyRecord[] = [];
   const options = {
@@ -398,6 +417,102 @@ test("audit trimming deletes at most the configured batch and never historical e
   assert.ok(rows.objectRemovalTask.some((row) => row.id === 3));
 });
 
+test("all task models retain audit metadata for 90 days and TaskData billing history is protected", async () => {
+  const { runTaskRetention } = await retentionPromise;
+  const rows = emptyRows();
+  rows.taskData.push(
+    dueTask(10, {
+      taskStatus: "expired",
+      retentionCleanedAt: OLD,
+      auditExpiresAt: OLD,
+    }),
+    dueTask(11, {
+      taskStatus: "expired",
+      retentionCleanedAt: OLD,
+      auditExpiresAt: OLD,
+      userBillings: [{ id: 77 }],
+    }),
+  );
+  rows.backgroundRemovalTask.push(
+    dueTask(12, {
+      taskStatus: "expired",
+      retentionCleanedAt: OLD,
+      auditExpiresAt: OLD,
+    }),
+  );
+  rows.watermarkRemovalTask.push(
+    dueTask(13, {
+      taskStatus: "expired",
+      retentionCleanedAt: OLD,
+      auditExpiresAt: OLD,
+    }),
+  );
+  rows.objectRemovalTask.push(
+    dueTask(14, {
+      taskStatus: "expired",
+      retentionCleanedAt: OLD,
+      auditExpiresAt: OLD,
+    }),
+  );
+  const calls: AnyRecord[] = [];
+  const report = await runTaskRetention({
+    db: makeDb(rows, calls),
+    storage: { deleteItemInBucket: async () => {} },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
+    isSharedAsset: async () => false,
+  });
+
+  assert.equal(report.auditTrimUnsupported.length, 0);
+  assert.equal(report.auditTrimmed, 4);
+  assert.deepEqual(
+    report.auditTrimBlocked.map(({ model, recordId, reason }) => ({
+      model,
+      recordId,
+      reason,
+    })),
+    [{ model: "taskData", recordId: 11, reason: "financial_history" }],
+  );
+  const taskDataDelete = calls.find(
+    (call) => call.op === "deleteMany" && call.model === "taskData",
+  );
+  assert.ok(taskDataDelete);
+  assert.deepEqual(taskDataDelete.args.where.id, { in: [10] });
+  assert.deepEqual(taskDataDelete.args.where.userBillings, { none: {} });
+  assert.ok(rows.taskData.some((row) => row.id === 11));
+});
+
+test("legacy audit rows derive their 90-day deadline from task creation", async () => {
+  const { MINIMAL_AUDIT_RETENTION_MS, runTaskRetention } =
+    await retentionPromise;
+  const rows = emptyRows();
+  const createdAt = new Date(NOW.getTime() - MINIMAL_AUDIT_RETENTION_MS);
+  rows.backgroundRemovalTask.push(
+    dueTask(21, {
+      taskStatus: "expired",
+      createdAt,
+      retentionCleanedAt: OLD,
+      auditExpiresAt: null,
+    }),
+  );
+  const calls: AnyRecord[] = [];
+  const report = await runTaskRetention({
+    db: makeDb(rows, calls),
+    storage: { deleteItemInBucket: async () => {} },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
+    isSharedAsset: async () => false,
+  });
+  assert.equal(report.auditTrimmed, 1);
+  const trim = calls.find((call) => call.op === "deleteMany");
+  assert.ok(trim);
+  assert.deepEqual(trim.args.where.OR[1].createdAt, {
+    lte: new Date(NOW.getTime() - MINIMAL_AUDIT_RETENTION_MS),
+  });
+});
+
 test("default reference checks protect reuse by another task and shared asset tables", async () => {
   const { runTaskRetention } = await retentionPromise;
   const rows = emptyRows();
@@ -439,6 +554,7 @@ test("successful file cleanup removes payload metadata before the audit period e
       replicateLogs: ["private provider logs"],
       replicateUrls: [`${BASE}/tasks/5/output.png`],
       replicateMetrics: { private: true },
+      auditExpiresAt: new Date("2027-01-01T00:00:00.000Z"),
     }),
   );
   const report = await runTaskRetention({
@@ -487,12 +603,23 @@ test("cleaning failed and canceled tasks preserves their returned quota and perm
   const { runTaskRetention } = await retentionPromise;
   const rows = emptyRows();
   rows.watermarkRemovalTask.push(
-    dueTask(1, { taskStatus: "failed", inputZipUrl: "", auditExpiresAt: new Date("2027-01-01T00:00:00Z") }),
-    dueTask(2, { taskStatus: "canceled", inputZipUrl: "", auditExpiresAt: OLD }),
+    dueTask(1, {
+      taskStatus: "failed",
+      inputZipUrl: "",
+      auditExpiresAt: new Date("2027-01-01T00:00:00Z"),
+    }),
+    dueTask(2, {
+      taskStatus: "canceled",
+      inputZipUrl: "",
+      auditExpiresAt: OLD,
+    }),
   );
   const calls: AnyRecord[] = [];
   const report = await runTaskRetention({
-    db: makeDb(rows, calls), configuredR2Url: BASE, now: NOW, dryRun: false,
+    db: makeDb(rows, calls),
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
     storage: { deleteItemInBucket: async () => undefined },
     isSharedAsset: async () => false,
   });

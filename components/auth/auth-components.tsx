@@ -1,8 +1,12 @@
 "use client";
 
 import { ReactNode } from "react";
+
 import { signIn } from "next-auth/react";
+
 import { useAuth } from "@/hooks/use-auth";
+import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
+import { trackAnalyticsEvent } from "@/lib/gtag";
 
 interface AuthComponentProps {
   children: ReactNode;
@@ -10,17 +14,17 @@ interface AuthComponentProps {
 
 export function SignedIn({ children }: AuthComponentProps) {
   const { isSignedIn } = useAuth();
-  
+
   if (!isSignedIn) return null;
-  
+
   return <>{children}</>;
 }
 
 export function SignedOut({ children }: AuthComponentProps) {
   const { isSignedIn } = useAuth();
-  
+
   if (isSignedIn) return null;
-  
+
   return <>{children}</>;
 }
 
@@ -30,10 +34,18 @@ interface SignInButtonProps {
   forceRedirectUrl?: string;
 }
 
-export function SignInButton({ children, mode, forceRedirectUrl }: SignInButtonProps) {
+export function SignInButton({
+  children,
+  mode,
+  forceRedirectUrl,
+}: SignInButtonProps) {
   const handleClick = () => {
-    signIn("google", { 
-      callbackUrl: forceRedirectUrl || "/app" // 将被app/page.tsx重定向到正确的locale
+    trackAnalyticsEvent(ANALYTICS_EVENTS.signupStarted, {
+      auth_intent: "sign_in",
+      is_authenticated: false,
+    });
+    signIn("google", {
+      callbackUrl: forceRedirectUrl || "/app", // 将被app/page.tsx重定向到正确的locale
     });
   };
 
@@ -42,4 +54,4 @@ export function SignInButton({ children, mode, forceRedirectUrl }: SignInButtonP
       {children}
     </div>
   );
-} 
+}

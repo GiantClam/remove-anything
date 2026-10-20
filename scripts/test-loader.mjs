@@ -46,15 +46,87 @@ export async function resolve(specifier, context, nextResolve) {
   const parentPath = context.parentURL?.startsWith("file:")
     ? fileURLToPath(context.parentURL)
     : "";
+  if (
+    parentPath === path.join(root, "app/api/privacy/deletion-request/route.ts")
+  ) {
+    if (specifier === "next/server")
+      return nextResolve("next/server.js", context);
+    if (new Set(["@/env.mjs", "@/lib/email", "@/lib/kv"]).has(specifier)) {
+      return {
+        url: pathToFileURL(
+          path.join(root, "tests/support/deletion-request-stubs.ts"),
+        ).href,
+        shortCircuit: true,
+      };
+    }
+  }
+  const sora2RoutePaths = new Set([
+    path.join(root, "app/api/sora2-video-watermark-removal-url/route.ts"),
+    path.join(root, "app/api/sora2-video-watermark-removal-r2/route.ts"),
+    path.join(root, "app/api/sora2-video-watermark-removal/route.ts"),
+  ]);
+  if (sora2RoutePaths.has(parentPath) && specifier === "next/server") {
+    return nextResolve("next/server.js", context);
+  }
+  if (
+    sora2RoutePaths.has(parentPath) &&
+    new Set([
+      "@/modules/auth/adapter",
+      "@/lib/auth-utils",
+      "@/modules/tasks/sdk",
+      "@/modules/tasks/adapters/prisma-repo",
+      "@/modules/runninghub",
+      "@/modules/runninghub/sdk",
+      "@/lib/task-queue",
+      "@/lib/db",
+      "@/db/prisma",
+      "@/config/constants",
+      "@/db/type",
+      "@/db/queries/account",
+      "@/env.mjs",
+      "@/lib/r2-upload",
+      "@/lib/cf-media",
+      "@/lib/handle-error",
+    ]).has(specifier)
+  ) {
+    return {
+      url: pathToFileURL(path.join(root, "tests/support/sora2-route-stubs.ts"))
+        .href,
+      shortCircuit: true,
+    };
+  }
   if (parentPath === path.join(root, "app/api/webhooks/runninghub/route.ts")) {
     if (specifier === "next/server")
       return nextResolve("next/server.js", context);
     if (
-      new Set(["@/db/prisma", "@/env.mjs", "@/lib/task-queue"]).has(specifier)
+      new Set([
+        "@/db/prisma",
+        "@/env.mjs",
+        "@/lib/task-queue",
+        "@/lib/analytics-events",
+      ]).has(specifier)
     ) {
       return {
         url: pathToFileURL(
           path.join(root, "tests/support/runninghub-webhook-stubs.ts"),
+        ).href,
+        shortCircuit: true,
+      };
+    }
+  }
+  if (parentPath === path.join(root, "app/api/webhooks/replicate/route.ts")) {
+    if (specifier === "next/server")
+      return nextResolve("next/server.js", context);
+    if (
+      new Set([
+        "@/env.mjs",
+        "@/db/queries/background-removal",
+        "@/lib/r2-s3",
+      ]).has(specifier)
+    ) {
+      return {
+        url: pathToFileURL(
+          path.join(root, "tests/support/replicate-webhook-stubs.ts"),
         ).href,
         shortCircuit: true,
       };
@@ -68,6 +140,7 @@ export async function resolve(specifier, context, nextResolve) {
         "@/modules/runninghub",
         "@/lib/background-task-status",
         "@/lib/task-lifecycle",
+        "@/lib/analytics-events",
       ]).has(specifier) ||
       specifier === "./task-processor"
     ) {
@@ -109,11 +182,33 @@ export async function resolve(specifier, context, nextResolve) {
         "@/db/prisma",
         "@/env.mjs",
         "@/lib/r2-s3",
+        "@/lib/analytics-events",
       ]).has(specifier)
     ) {
       return {
         url: pathToFileURL(
           path.join(root, "tests/support/legacy-download-stubs.ts"),
+        ).href,
+        shortCircuit: true,
+      };
+    }
+  }
+  if (parentPath === path.join(root, "app/api/mine-tasks/route.ts")) {
+    if (specifier === "next/server")
+      return nextResolve("next/server.js", context);
+    if (
+      new Set([
+        "@/db/prisma",
+        "@/env.mjs",
+        "@/lib/auth-utils",
+        "@/lib/build-check",
+        "@/lib/handle-error",
+        "@/lib/task-lifecycle",
+      ]).has(specifier)
+    ) {
+      return {
+        url: pathToFileURL(
+          path.join(root, "tests/support/mine-tasks-stubs.ts"),
         ).href,
         shortCircuit: true,
       };

@@ -18,7 +18,8 @@ export const backgroundStatusState = {
   beforeResult: null as (() => void | Promise<void>) | null,
   beforeMigration: null as (() => void | Promise<void>) | null,
   migrationError: false,
-  migratedOutput: "https://storage.example.test/background-removal/processed/private-result.png",
+  migratedOutput:
+    "https://storage.example.test/background-removal/processed/private-result.png",
   migrationCalls: [] as { url: string; kind: string; recordId: number }[],
 };
 
@@ -44,6 +45,7 @@ export function resetBackgroundStatusState() {
     createdAt: new Date(),
     updatedAt: new Date(),
     expiresAt: new Date(Date.now() + 60_000),
+    auditExpiresAt: null,
     retryCount: 0,
     idempotencyKey: null,
     retentionCheckedAt: null,
@@ -62,12 +64,14 @@ export function resetBackgroundStatusState() {
   state.beforeResult = null;
   state.beforeMigration = null;
   state.migrationError = false;
-  state.migratedOutput = "https://storage.example.test/background-removal/processed/private-result.png";
+  state.migratedOutput =
+    "https://storage.example.test/background-removal/processed/private-result.png";
   state.migrationCalls.length = 0;
 }
 
 export async function findBackgroundRemovalTaskByReplicateId(taskId: string) {
-  if (backgroundStatusState.readError) throw new Error("Injected database read failure");
+  if (backgroundStatusState.readError)
+    throw new Error("Injected database read failure");
   const task = backgroundStatusState.task;
   return task?.replicateId === taskId ? { ...task } : null;
 }
@@ -80,7 +84,8 @@ export const runninghubAPI = {
   getTaskStatus: async () => {
     backgroundStatusState.providerCalls++;
     await backgroundStatusState.beforeStatus?.();
-    if (backgroundStatusState.providerError) throw new Error("Injected provider status failure");
+    if (backgroundStatusState.providerError)
+      throw new Error("Injected provider status failure");
     return { code: 0, data: { status: backgroundStatusState.providerStatus } };
   },
   getTaskResult: async () => {
@@ -97,13 +102,30 @@ export const runninghubAPI = {
 
 export const backgroundStatusPrisma = {
   backgroundRemovalTask: {
-    updateMany: async ({ where, data }: { where: { id: number; taskStatus: string; outputImageUrl: string | null; expiresAt?: Date | null }; data: Record<string, unknown> }) => {
+    updateMany: async ({
+      where,
+      data,
+    }: {
+      where: {
+        id: number;
+        taskStatus: string;
+        outputImageUrl: string | null;
+        expiresAt?: Date | null;
+      };
+      data: Record<string, unknown>;
+    }) => {
       const state = backgroundStatusState;
       if (state.writeError) throw new Error("Injected database write failure");
       state.beforeUpdate?.();
       state.beforeUpdate = null;
-      if (!state.task || state.task.id !== where.id || state.task.taskStatus !== where.taskStatus || state.task.outputImageUrl !== where.outputImageUrl ||
-        (where.expiresAt !== undefined && state.task.expiresAt?.getTime() !== where.expiresAt?.getTime())) {
+      if (
+        !state.task ||
+        state.task.id !== where.id ||
+        state.task.taskStatus !== where.taskStatus ||
+        state.task.outputImageUrl !== where.outputImageUrl ||
+        (where.expiresAt !== undefined &&
+          state.task.expiresAt?.getTime() !== where.expiresAt?.getTime())
+      ) {
         return { count: 0 };
       }
       state.task = { ...state.task, ...data };
@@ -113,10 +135,15 @@ export const backgroundStatusPrisma = {
   },
 };
 
-export async function persistRunningHubOutput(url: string, kind: string, recordId: number) {
+export async function persistRunningHubOutput(
+  url: string,
+  kind: string,
+  recordId: number,
+) {
   backgroundStatusState.migrationCalls.push({ url, kind, recordId });
   await backgroundStatusState.beforeMigration?.();
-  if (backgroundStatusState.migrationError) throw new Error("Injected private storage failure");
+  if (backgroundStatusState.migrationError)
+    throw new Error("Injected private storage failure");
   return backgroundStatusState.migratedOutput;
 }
 

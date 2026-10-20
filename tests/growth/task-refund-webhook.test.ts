@@ -56,7 +56,12 @@ test("processing and success callbacks never refund and terminal success cannot 
   assert.equal(state.credit, 4);
   assert.equal(state.transactionCalls, 0);
   assert.equal(state.refundCasAttempts, 0);
-  assert.deepEqual(state.events.map((event) => event.name), ["task_processing", "task_succeeded"]);
+  assert.deepEqual(state.events.map((event) => event.name), [
+    "task_processing",
+    "processing_started",
+    "task_succeeded",
+    "processing_completed",
+  ]);
 });
 
 test("duplicate failed callbacks return only the real consumed debit once", async () => {
@@ -64,6 +69,7 @@ test("duplicate failed callbacks return only the real consumed debit once", asyn
   assert.equal((await callback()).status, 200);
   assertRefundedOnce();
   assert.equal(state.events.filter((event) => event.name === "task_failed").length, 1);
+  assert.equal(state.events.filter((event) => event.name === "processing_failed").length, 1);
   assert.equal(state.notifications, 1);
 });
 
@@ -81,6 +87,7 @@ test("concurrent failed callbacks share the withdrawal CAS and emit one refund f
   assert.equal(state.refundCasAttempts, 2, "both transactions must reach the competing debit claim");
   assertRefundedOnce();
   assert.equal(state.events.filter((event) => event.name === "task_failed").length, 1);
+  assert.equal(state.events.filter((event) => event.name === "processing_failed").length, 1);
   assert.equal(state.notifications, 1);
 });
 

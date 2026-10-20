@@ -185,6 +185,7 @@ model TaskData {
   idempotencyKey   String?  @map(name: "idempotency_key")
   retentionCheckedAt DateTime? @map("retention_checked_at")
   retentionCleanedAt DateTime? @map("retention_cleaned_at")
+  auditExpiresAt     DateTime? @default(dbgenerated("(CURRENT_TIMESTAMP + interval '90 days')")) @map("audit_expires_at")
   loraUrl          String?  @map("lora_url")
   loraName         String?  @map("lora_name")
   loraScale        Float?   @map("lora_scale")
@@ -205,6 +206,7 @@ model TaskData {
 
   @@map(name: "task_data")
   @@index([retentionCleanedAt, retentionCheckedAt, expiresAt], map: "task_data_retention_idx")
+  @@index([auditExpiresAt], map: "task_data_audit_expires_at_idx")
 }
 
 model BackgroundRemovalTask {
@@ -230,6 +232,7 @@ model BackgroundRemovalTask {
   idempotencyKey   String?   @map(name: "idempotency_key")
   retentionCheckedAt DateTime? @map("retention_checked_at")
   retentionCleanedAt DateTime? @map("retention_cleaned_at")
+  auditExpiresAt     DateTime? @default(dbgenerated("(CURRENT_TIMESTAMP + interval '90 days')")) @map("audit_expires_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -241,6 +244,7 @@ model BackgroundRemovalTask {
   @@index([userId, createdAt], map: "background_removal_tasks_user_created_idx")
   @@index([idempotencyKey], map: "background_removal_tasks_idempotency_idx")
   @@index([retentionCleanedAt, retentionCheckedAt, expiresAt], map: "background_removal_tasks_retention_idx")
+  @@index([auditExpiresAt], map: "background_removal_tasks_audit_expires_at_idx")
 }
 
 model WatermarkRemovalTask {
@@ -268,7 +272,7 @@ model WatermarkRemovalTask {
   authorizationPolicyVersion String? @map(name: "authorization_policy_version")
   authorizationSubject String? @map(name: "authorization_subject")
   authorizationConfirmedAt DateTime? @map(name: "authorization_confirmed_at")
-  auditExpiresAt   DateTime? @map(name: "audit_expires_at")
+  auditExpiresAt   DateTime? @default(dbgenerated("(CURRENT_TIMESTAMP + interval '90 days')")) @map(name: "audit_expires_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -306,7 +310,7 @@ model ObjectRemovalTask {
   authorizationPolicyVersion String? @map(name: "authorization_policy_version")
   authorizationSubject String? @map(name: "authorization_subject")
   authorizationConfirmedAt DateTime? @map(name: "authorization_confirmed_at")
-  auditExpiresAt   DateTime? @map(name: "audit_expires_at")
+  auditExpiresAt   DateTime? @default(dbgenerated("(CURRENT_TIMESTAMP + interval '90 days')")) @map(name: "audit_expires_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 

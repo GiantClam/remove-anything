@@ -13,6 +13,11 @@ import {
   readLimitedResponse,
   ResultSizeLimitError,
 } from "@/lib/limited-response";
+import {
+  createLowResolutionImage,
+  LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX,
+  UnsupportedOutputFormatError,
+} from "@/lib/low-resolution-output";
 import { getR2ObjectKey } from "@/lib/r2-object-key";
 import { createR2S3Service } from "@/lib/r2-s3";
 import {
@@ -112,11 +117,15 @@ export async function GET(req: NextRequest) {
     }
     const filename = `object-removed-${taskId.replace(/[^a-zA-Z0-9_-]/g, "_")}.${extension}`;
 
-    const image = await readLimitedResponse(
-      response,
+    const maxOutputBytes =
       getToolRegistryEntry("remove-objects")!.limits.maxOutputSizeMb *
-        1024 *
-        1024,
+      1024 *
+      1024;
+    const sourceImage = await readLimitedResponse(response, maxOutputBytes);
+    const image = await createLowResolutionImage(
+      sourceImage,
+      contentType,
+      maxOutputBytes,
     );
     if (!preview) {
       try {
@@ -131,16 +140,20 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return new Response(image, {
+    return new Response(image.bytes, {
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": image.contentType,
         "Content-Disposition": `${preview ? "inline" : "attachment"}; filename="${filename}"`,
         "Cache-Control": "private, no-store, max-age=0",
         "X-Content-Type-Options": "nosniff",
+        "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
         Vary: "Cookie, Authorization",
       },
     });
   } catch (error) {
+    if (error instanceof UnsupportedOutputFormatError) {
+      return NextResponse.json({ error: error.message }, { status: 502 });
+    }
     if (error instanceof ResultSizeLimitError) {
       return NextResponse.json(
         { error: error.message, code: "RESULT_TOO_LARGE" },

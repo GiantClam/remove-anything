@@ -26,6 +26,7 @@ export interface CreateTaskOptions {
   workflowId: string;
   nodeInfoList: RunningHubNodeInput[];
   taskRecordId?: number;
+  webhookRecordType?: "video" | "object" | "watermark";
 }
 
 export interface UploadFileOptions {
@@ -56,20 +57,38 @@ export class TaskCreationOutcomeUnknownError extends Error {
   }
 }
 
+export class TaskCreationRejectedError extends Error {
+  readonly code = "TASK_CREATION_REJECTED";
+  readonly taskWasNotCreated = true;
+
+  constructor(message: string) {
+    super(message);
+    this.name = "TaskCreationRejectedError";
+  }
+}
+
 function isExplicitCapacityRejection(result: RunningHubCreateTaskResponse) {
+  const data = result.data;
+  if (data != null && (typeof data !== "object" || Array.isArray(data)))
+    return false;
+  const taskId = data?.taskId;
   return (
     result.code !== 0 &&
-    !result.data?.taskId &&
+    (taskId == null || taskId === "") &&
     /^(TASK_QUEUE_MAXED|TASK_INSTANCE_MAXED)(?:\b|$)/.test(result.msg || "")
   );
 }
 
 // Callback delivery is optional: polling remains available when a secure
 // callback URL has not been configured. Never send an unauthenticated URL.
-function getWebhookUrl(taskRecordId?: number): string | undefined {
+function getWebhookUrl(
+  taskRecordId?: number,
+  recordType?: CreateTaskOptions["webhookRecordType"],
+): string | undefined {
   const secret = process.env.RUNNINGHUB_WEBHOOK_SECRET;
   if (
-    !taskRecordId ||
+    !Number.isSafeInteger(taskRecordId) ||
+    taskRecordId! <= 0 ||
     !secret ||
     secret.length < 32 ||
     !process.env.NEXTAUTH_URL
@@ -81,6 +100,10 @@ function getWebhookUrl(taskRecordId?: number): string | undefined {
       return undefined;
     const callback = new URL("/api/webhooks/runninghub", site);
     callback.searchParams.set("key", secret);
+    if (Number.isSafeInteger(taskRecordId) && taskRecordId! > 0 && recordType) {
+      callback.searchParams.set("recordId", String(taskRecordId));
+      callback.searchParams.set("recordType", recordType);
+    }
     return callback.toString();
   } catch {
     return undefined;
@@ -156,8 +179,9 @@ export class RunningHubAPI {
   async createTaskWithR2Url(
     options: CreateTaskOptions & { r2Url: string },
   ): Promise<string> {
-    const { workflowId, nodeInfoList, taskRecordId, r2Url } = options;
-    const webhookUrl = getWebhookUrl(taskRecordId);
+    const { workflowId, nodeInfoList, taskRecordId, r2Url, webhookRecordType } =
+      options;
+    const webhookUrl = getWebhookUrl(taskRecordId, webhookRecordType);
     const nodeInfoListWithR2Url = nodeInfoList.map((node) =>
       node.fieldName === "video_file" || node.fieldName === "video"
         ? { ...node, fieldValue: r2Url }
@@ -194,8 +218,9 @@ export class RunningHubAPI {
   }
 
   async createTaskGeneric(options: CreateTaskOptions): Promise<string> {
-    const { workflowId, nodeInfoList, taskRecordId } = options;
-    const webhookUrl = getWebhookUrl(taskRecordId);
+    const { workflowId, nodeInfoList, taskRecordId, webhookRecordType } =
+      options;
+    const webhookUrl = getWebhookUrl(taskRecordId, webhookRecordType);
     const payload = {
       apiKey: this.apiKey,
       workflowId,
@@ -203,7 +228,7 @@ export class RunningHubAPI {
       ...(webhookUrl && { webhookUrl }),
     };
 
-    // Only an explicit rejection proves that a paid provider job was not made.
+    // Only an explicit capacity rejection proves that a paid job was not made.
     // Transport errors and invalid responses may follow a successful creation.
     for (let attempt = 0; attempt < 2; attempt += 1) {
       let result: RunningHubCreateTaskResponse;
@@ -225,10 +250,11 @@ export class RunningHubAPI {
         await sleep(1500);
         continue;
       }
-      if (result.code !== 0)
-        throw new Error(
+      if (isExplicitCapacityRejection(result))
+        throw new TaskCreationRejectedError(
           redactCallbackSecret(`Create task failed (api): ${result.msg}`),
         );
+      if (result.code !== 0) throw new TaskCreationOutcomeUnknownError();
       if (typeof result.data?.taskId !== "string" || !result.data.taskId)
         throw new TaskCreationOutcomeUnknownError();
       return result.data.taskId;
@@ -268,6 +294,7 @@ export class RunningHubAPI {
         { nodeId: "377", fieldName: "upload", fieldValue: filename },
       ],
       taskRecordId,
+      webhookRecordType: "watermark",
     });
   }
 
@@ -294,6 +321,7 @@ export class RunningHubAPI {
         },
       ],
       taskRecordId,
+      webhookRecordType: "video",
     });
   }
 
@@ -328,7 +356,12 @@ export class RunningHubAPI {
       throw new Error("RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID is not configured");
     }
 
-    return this.createTaskGeneric({ workflowId, nodeInfoList, taskRecordId });
+    return this.createTaskGeneric({
+      workflowId,
+      nodeInfoList,
+      taskRecordId,
+      webhookRecordType: "object",
+    });
   }
 
   async getTaskStatus(taskId: string): Promise<RunningHubTaskStatus> {

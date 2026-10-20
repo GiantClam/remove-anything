@@ -23,4 +23,5 @@
 - 示例中的 Prisma schema 结构仅供参考，你需要根据实际模型调整
 - 认证适配器需要根据你使用的认证库（Clerk、NextAuth 等）进行实现
 - 所有适配器都使用依赖注入模式，便于测试和替换
+- `prisma-queue.example.ts` 仅展示应用自行入队的适配器实现；将该队列作为 `OrchestratorDeps.queue` 传入现有任务编排器仅为源码兼容，不会产生运行时入队行为
 

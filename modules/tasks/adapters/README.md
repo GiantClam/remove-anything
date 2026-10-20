@@ -14,3 +14,5 @@
 - `prisma-repo.example.ts` - TaskRepository 的 Prisma 实现
 - `prisma-queue.example.ts` - TaskQueue 的 Prisma 实现
 
+`TaskQueue` 适配器示例可供应用自己的队列流程使用。将它作为 `OrchestratorDeps.queue` 传给任务编排器仅为源码兼容，不会触发入队或自动重试。
+

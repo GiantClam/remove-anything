@@ -12,6 +12,7 @@ import {
 
 export const ANONYMOUS_PRINCIPAL_COOKIE = "remove_anything_principal";
 export const TASK_RESULT_TTL_MS = 24 * 60 * 60 * 1000;
+export const TASK_AUDIT_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
 export const ANONYMOUS_TASK_WINDOW_MS = TASK_RESULT_TTL_MS;
 export const AUTHENTICATED_MONTHLY_TASK_LIMIT = 5;
 export const ANONYMOUS_TASK_LIMIT = 1;
@@ -111,6 +112,10 @@ export function normalizeTaskStatus(value: unknown): TaskLifecycleStatus {
 
 export function taskExpiresAt(createdAt: Date | number = Date.now()) {
   return new Date((createdAt instanceof Date ? createdAt.getTime() : createdAt) + TASK_RESULT_TTL_MS);
+}
+
+export function taskAuditExpiresAt(createdAt: Date | number = Date.now()) {
+  return new Date((createdAt instanceof Date ? createdAt.getTime() : createdAt) + TASK_AUDIT_RETENTION_MS);
 }
 
 export function isTaskExpired(task: { expiresAt?: Date | null; createdAt?: Date | null }) {

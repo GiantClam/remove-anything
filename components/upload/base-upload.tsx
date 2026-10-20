@@ -7,6 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Upload, X, FileIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { ANALYTICS_EVENTS, getFileSizeBucket } from "@/lib/analytics-events";
+import { trackAnalyticsEvent } from "@/lib/gtag";
 
 interface BaseUploadProps {
   onFileSelect: (file: File) => void;
@@ -35,6 +38,15 @@ export function BaseUpload({
 }: BaseUploadProps) {
   const [dragOver, setDragOver] = useState(false);
   const t = useTranslations("Upload");
+  const { isLoaded, isSignedIn } = useAuth();
+
+  const trackUploadStarted = (file: File) => {
+    trackAnalyticsEvent(ANALYTICS_EVENTS.uploadStarted, {
+      file_type: file.type || undefined,
+      file_size_bucket: getFileSizeBucket(file.size),
+      ...(isLoaded ? { is_authenticated: isSignedIn } : {}),
+    });
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -65,6 +77,8 @@ export function BaseUpload({
           return;
         }
 
+        validFiles.forEach(trackUploadStarted);
+
         if (onFilesSelect) {
           onFilesSelect(validFiles);
           return;
@@ -85,6 +99,8 @@ export function BaseUpload({
       alert(t("fileSizeLimit", { size: maxSize / (1024 * 1024) }));
       return;
     }
+
+    trackUploadStarted(file);
     
     onFileSelect(file);
   };

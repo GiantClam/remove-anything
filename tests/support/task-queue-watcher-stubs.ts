@@ -58,6 +58,7 @@ export const watcherState = {
   persistError: false,
   beforeBackgroundUpdate: null as (() => void) | null,
   updates: 0,
+  analyticsEvents: [] as AnalyticsEvent[],
 };
 
 export function resetWatcherState() {
@@ -77,6 +78,7 @@ export function resetWatcherState() {
   watcherState.persistError = false;
   watcherState.beforeBackgroundUpdate = null;
   watcherState.updates = 0;
+  watcherState.analyticsEvents.length = 0;
 }
 
 function matches(task: Task | null, where: Record<string, unknown>) {
@@ -138,6 +140,10 @@ export const runninghubAPI = {
 };
 
 export const taskProcessor = { processTask: async () => undefined };
+export async function emitServerAnalyticsEvent(event: AnalyticsEvent) {
+  watcherState.analyticsEvents.push(event);
+  return event;
+}
 export const refundFailedTaskCredit = async () => false;
 export const canRetryAutomatically = () => false;
 export const normalizeTaskStatus = (value: unknown) => {
@@ -178,3 +184,9 @@ export async function refreshBackgroundTaskStatus(task: Task, isActive: () => bo
   const persisted = await prisma.backgroundRemovalTask.findFirst({ where: { id: task.id, replicateId: task.replicateId } });
   return result.count ? persisted : persisted;
 }
+import type { AnalyticsEvent } from "../../lib/analytics-events";
+
+export {
+  ANALYTICS_EVENTS,
+  createTaskAnalyticsEvent,
+} from "../../lib/analytics-events";

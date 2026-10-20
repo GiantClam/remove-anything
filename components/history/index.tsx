@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 
-import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 import copy from "copy-to-clipboard";
 import { debounce } from "lodash-es";
@@ -12,7 +12,7 @@ import qs from "query-string";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Masonry from "react-masonry-css";
 import { toast } from "sonner";
-import Link from "next/link";
+
 import Loading from "@/components/loading/index";
 import BlurFade from "@/components/magicui/blur-fade";
 import PlaygroundLoading from "@/components/playground/loading";
@@ -20,7 +20,9 @@ import { EmptyPlaceholder } from "@/components/shared/empty-placeholder";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoraConfig, ModelName, Ratio } from "@/config/constants";
 import { TaskSelectDto, TaskStatus } from "@/db/type";
+import { useAuth } from "@/hooks/use-auth";
 import { cn, createRatio } from "@/lib/utils";
+
 import { Button } from "../ui/button";
 import Container from "./container";
 import { DownloadAction } from "./download-action";
@@ -34,7 +36,7 @@ const useQueryMineTasksMutation = (config?: {
     mutationFn: async (values: any) => {
       const path = config?.explore ? "/api/explore" : "/api/mine-tasks";
       const res = await fetch(`${path}?${qs.stringify(values)}`, {
-        credentials: 'include', // 使用 cookie 认证而不是 Bearer token
+        credentials: "include", // 使用 cookie 认证而不是 Bearer token
       });
 
       if (!res.ok && res.status >= 500) {
@@ -56,7 +58,13 @@ const breakpointColumnsObj = {
   640: 1,
 };
 
-export default function History({ locale, explore }: { locale: string, explore?: boolean }) {
+export default function History({
+  locale,
+  explore,
+}: {
+  locale: string;
+  explore?: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [init, setInit] = useState(false);
   const t = useTranslations("History");
@@ -173,7 +181,7 @@ export default function History({ locale, explore }: { locale: string, explore?:
               {dataSource.map((item, idx) => (
                 <div
                   key={item.id}
-                  className="border-stroke-light bg-surface-300 hover:border-stroke-strong mb-4 flex break-inside-avoid flex-col space-y-4 overflow-hidden rounded-xl border relative"
+                  className="border-stroke-light bg-surface-300 hover:border-stroke-strong relative mb-4 flex break-inside-avoid flex-col space-y-4 overflow-hidden rounded-xl border"
                 >
                   {item.taskStatus === TaskStatus.Processing ? (
                     <div
@@ -181,54 +189,90 @@ export default function History({ locale, explore }: { locale: string, explore?:
                     >
                       <PlaygroundLoading />
                     </div>
-                  ) : (
+                  ) : item.taskType === "sora2-video-watermark-removal" ? (
                     <BlurFade
                       key={item?.imageUrl!}
                       delay={0.25 + (idx % pageParams.pageSize) * 0.05}
                       inView
                     >
+                      <video
+                        src={item.imageUrl || undefined}
+                        aria-label={`AI processed video: ${item.inputPrompt || "watermark removal result"}`}
+                        className={`w-full rounded-xl object-cover ${createRatio(item.aspectRatio as Ratio)} pointer-events-none`}
+                        controls
+                        muted
+                      />
+                    </BlurFade>
+                  ) : item.imageUrl ? (
+                    <BlurFade
+                      key={item.imageUrl}
+                      delay={0.25 + (idx % pageParams.pageSize) * 0.05}
+                      inView
+                    >
                       <img
-                        src={item.imageUrl!}
-                        alt={`AI processed image: ${item.inputPrompt || 'background removal result'}`}
-                        title={item.inputPrompt!}
+                        src={item.imageUrl}
+                        alt={`AI processed image: ${item.inputPrompt || "background removal result"}`}
+                        title={item.inputPrompt || undefined}
                         className={`w-full rounded-xl object-cover ${createRatio(item.aspectRatio as Ratio)} pointer-events-none`}
                       />
                     </BlurFade>
+                  ) : (
+                    <div
+                      className={`bg-pattern flex w-full items-center justify-center rounded-xl ${createRatio(item.aspectRatio as Ratio)}`}
+                      aria-label="Result preview unavailable"
+                    >
+                      <span className="text-content-light text-sm">
+                        Result preview unavailable
+                      </span>
+                    </div>
                   )}
-                  <Link
-                    className="absolute right-1 top-1 !m-0"
-                    target="_blank"
-                    href={`https://pinterest.com/pin/create/button/?url=https://pinterest.com/pin/create/button/?description=${encodeURIComponent(item.inputPrompt!)}&url=${encodeURIComponent(item.imageUrl!)}`}
-                  >
-                    <span className="[&>svg]:h-7 [&>svg]:w-7 [&>svg]:fill-[#e60023]">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512">
-                        <path d="M496 256c0 137-111 248-248 248-25.6 0-50.2-3.9-73.4-11.1 10.1-16.5 25.2-43.5 30.8-65 3-11.6 15.4-59 15.4-59 8.1 15.4 31.7 28.5 56.8 28.5 74.8 0 128.7-68.8 128.7-154.3 0-81.9-66.9-143.2-152.9-143.2-107 0-163.9 71.8-163.9 150.1 0 36.4 19.4 81.7 50.3 96.1 4.7 2.2 7.2 1.2 8.3-3.3 .8-3.4 5-20.3 6.9-28.1 .6-2.5 .3-4.7-1.7-7.1-10.1-12.5-18.3-35.3-18.3-56.6 0-54.7 41.4-107.6 112-107.6 60.9 0 103.6 41.5 103.6 100.9 0 67.1-33.9 113.6-78 113.6-24.3 0-42.6-20.1-36.7-44.8 7-29.5 20.5-61.3 20.5-82.6 0-19-10.2-34.9-31.4-34.9-24.9 0-44.9 25.7-44.9 60.2 0 22 7.4 36.8 7.4 36.8s-24.5 103.8-29 123.2c-5 21.4-3 51.6-.9 71.2C65.4 450.9 0 361.1 0 256 0 119 111 8 248 8s248 111 248 248z"></path>
-                      </svg>
-                    </span>
-                  </Link>
-                  {
-                    !explore && (
-                      <>
-                        <div className="text-content-light inline-block px-4 py-2 text-sm">
-                          <p className="line-clamp-4 italic md:line-clamp-6 lg:line-clamp-[8]">
-                            {item.inputPrompt}
-                          </p>
-                        </div>
-                        <div className="flex flex-row flex-wrap space-x-1 px-2">
-                          {ModelName[item.model as keyof typeof ModelName] && (
+                  {item.imageUrl &&
+                    item.taskType !== "sora2-video-watermark-removal" && (
+                      <Link
+                        className="absolute right-1 top-1 !m-0"
+                        target="_blank"
+                        href={`https://pinterest.com/pin/create/button/?url=https://pinterest.com/pin/create/button/?description=${encodeURIComponent(item.inputPrompt || "")}&url=${encodeURIComponent(item.imageUrl)}`}
+                      >
+                        <span className="[&>svg]:h-7 [&>svg]:w-7 [&>svg]:fill-[#e60023]">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 496 512"
+                          >
+                            <path d="M496 256c0 137-111 248-248 248-25.6 0-50.2-3.9-73.4-11.1 10.1-16.5 25.2-43.5 30.8-65 3-11.6 15.4-59 15.4-59 8.1 15.4 31.7 28.5 56.8 28.5 74.8 0 128.7-68.8 128.7-154.3 0-81.9-66.9-143.2-152.9-143.2-107 0-163.9 71.8-163.9 150.1 0 36.4 19.4 81.7 50.3 96.1 4.7 2.2 7.2 1.2 8.3-3.3 .8-3.4 5-20.3 6.9-28.1 .6-2.5 .3-4.7-1.7-7.1-10.1-12.5-18.3-35.3-18.3-56.6 0-54.7 41.4-107.6 112-107.6 60.9 0 103.6 41.5 103.6 100.9 0 67.1-33.9 113.6-78 113.6-24.3 0-42.6-20.1-36.7-44.8 7-29.5 20.5-61.3 20.5-82.6 0-19-10.2-34.9-31.4-34.9-24.9 0-44.9 25.7-44.9 60.2 0 22 7.4 36.8 7.4 36.8s-24.5 103.8-29 123.2c-5 21.4-3 51.6-.9 71.2C65.4 450.9 0 361.1 0 256 0 119 111 8 248 8s248 111 248 248z"></path>
+                          </svg>
+                        </span>
+                      </Link>
+                    )}
+                  {!explore && (
+                    <>
+                      <div className="text-content-light inline-block px-4 py-2 text-sm">
+                        <p className="line-clamp-4 italic md:line-clamp-6 lg:line-clamp-[8]">
+                          {item.inputPrompt}
+                        </p>
+                      </div>
+                      <div className="flex flex-row flex-wrap space-x-1 px-2">
+                        {ModelName[item.model as keyof typeof ModelName] && (
+                          <div className="bg-surface-alpha-strong text-content-base inline-flex items-center rounded-md border border-transparent px-1.5 py-0.5 font-mono text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                            {ModelName[item.model as keyof typeof ModelName]}
+                          </div>
+                        )}
+                        {item.loraName &&
+                          LoraConfig[item.loraName as keyof typeof LoraConfig]
+                            ?.styleName && (
                             <div className="bg-surface-alpha-strong text-content-base inline-flex items-center rounded-md border border-transparent px-1.5 py-0.5 font-mono text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                              {ModelName[item.model as keyof typeof ModelName]}
+                              {
+                                LoraConfig[
+                                  item.loraName as keyof typeof LoraConfig
+                                ]?.styleName
+                              }
                             </div>
                           )}
-                          {item.loraName && LoraConfig[item.loraName as keyof typeof LoraConfig]?.styleName && (
-                            <div className="bg-surface-alpha-strong text-content-base inline-flex items-center rounded-md border border-transparent px-1.5 py-0.5 font-mono text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                              {LoraConfig[item.loraName as keyof typeof LoraConfig]?.styleName}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-row justify-between space-x-2 p-4 pt-0">
-                          {/* 只为非背景移除任务、非水印移除任务和非Sora2视频去水印任务显示复制prompt按钮 */}
-                          {item.taskType !== "background-removal" && item.taskType !== "watermark-removal" && item.taskType !== "sora2-video-watermark-removal" && (
+                      </div>
+                      <div className="flex flex-row justify-between space-x-2 p-4 pt-0">
+                        {/* 只为非背景移除任务、非水印移除任务和非Sora2视频去水印任务显示复制prompt按钮 */}
+                        {item.taskType !== "background-removal" &&
+                          item.taskType !== "watermark-removal" &&
+                          item.taskType !== "sora2-video-watermark-removal" && (
                             <button
                               className="focus-ring text-content-strong border-stroke-strong hover:border-stroke-stronger data-[state=open]:bg-surface-alpha-light inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border bg-transparent px-2.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
                               onClick={() => copyPrompt(item.inputPrompt!)}
@@ -237,17 +281,23 @@ export default function History({ locale, explore }: { locale: string, explore?:
                               {t("action.copy")}
                             </button>
                           )}
-                          <DownloadAction
-                            disabled={item.taskStatus === TaskStatus.Processing}
-                            id={item.id}
-                            taskType={item.taskType === "background-removal" ? "background-removal" : 
-                                     item.taskType === "watermark-removal" ? "watermark-removal" : 
-                                     item.taskType === "sora2-video-watermark-removal" ? "sora2-video-watermark-removal" : "image"}
-                          />
-                        </div>
-                      </>
-                    )
-                  }
+                        <DownloadAction
+                          disabled={item.taskStatus === TaskStatus.Processing}
+                          id={item.id}
+                          taskType={
+                            item.taskType === "background-removal"
+                              ? "background-removal"
+                              : item.taskType === "watermark-removal"
+                                ? "watermark-removal"
+                                : item.taskType ===
+                                    "sora2-video-watermark-removal"
+                                  ? "sora2-video-watermark-removal"
+                                  : "image"
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </Masonry>

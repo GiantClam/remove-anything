@@ -12,13 +12,21 @@
 export const ANALYTICS_EVENTS = {
   toolView: "tool_view",
   uploadStarted: "upload_started",
+  uploadCompleted: "upload_completed",
+  retryStarted: "retry_started",
   taskCreated: "task_created",
   taskProcessing: "task_processing",
   taskSucceeded: "task_succeeded",
   taskFailed: "task_failed",
+  processingStarted: "processing_started",
+  processingCompleted: "processing_completed",
+  processingFailed: "processing_failed",
+  downloadClicked: "download_clicked",
   resultDownloaded: "result_downloaded",
+  upgradeClicked: "upgrade_clicked",
   signupStarted: "signup_started",
   signupCompleted: "signup_completed",
+  paywallViewed: "paywall_viewed",
   checkoutStarted: "checkout_started",
   orderCreated: "order_created",
   purchaseCompleted: "purchase_completed",
@@ -54,6 +62,7 @@ export interface AnalyticsEventFields {
   event_id?: string;
   task_id?: string;
   order_id?: string;
+  user_id?: string;
   tool_slug?: string;
   landing_page?: string;
   locale?: string;
@@ -77,6 +86,11 @@ const TASK_EVENTS = new Set<string>([
   ANALYTICS_EVENTS.taskProcessing,
   ANALYTICS_EVENTS.taskSucceeded,
   ANALYTICS_EVENTS.taskFailed,
+  ANALYTICS_EVENTS.retryStarted,
+  ANALYTICS_EVENTS.processingStarted,
+  ANALYTICS_EVENTS.processingCompleted,
+  ANALYTICS_EVENTS.processingFailed,
+  ANALYTICS_EVENTS.downloadClicked,
   ANALYTICS_EVENTS.resultDownloaded,
 ]);
 
@@ -86,6 +100,8 @@ const PAYMENT_EVENTS = new Set<string>([
   ANALYTICS_EVENTS.purchaseCompleted,
   ANALYTICS_EVENTS.purchaseFailed,
 ]);
+
+const USER_EVENTS = new Set<string>([ANALYTICS_EVENTS.signupCompleted]);
 
 function randomId(): string {
   // `crypto.randomUUID` is available in browsers and modern Node runtimes.
@@ -132,9 +148,25 @@ export function createOrderAnalyticsEvent(
   });
 }
 
+/** Build an account lifecycle event with a stable user identity for retries. */
+export function createUserAnalyticsEvent(
+  name: AnalyticsEventName,
+  userId: string | number,
+  fields: AnalyticsEventFields = {},
+): AnalyticsEvent {
+  const user_id = String(userId);
+  return createAnalyticsEvent(name, {
+    ...fields,
+    user_id,
+    event_id: fields.event_id ?? `${name}:user:${user_id}`,
+  });
+}
+
 /** Build a credit ledger fact with a stable transaction key when available. */
 export function createCreditsAnalyticsEvent(
-  name: typeof ANALYTICS_EVENTS.creditsConsumed | typeof ANALYTICS_EVENTS.creditsRefunded,
+  name:
+    | typeof ANALYTICS_EVENTS.creditsConsumed
+    | typeof ANALYTICS_EVENTS.creditsRefunded,
   fields: AnalyticsEventFields & { transaction_id?: string | number } = {},
 ): AnalyticsEvent {
   const transactionId = fields.transaction_id;
@@ -164,6 +196,10 @@ export function createAnalyticsEvent(
     throw new Error(`Analytics event "${name}" requires order_id`);
   }
 
+  if (USER_EVENTS.has(name) && !fields.user_id) {
+    throw new Error(`Analytics event "${name}" requires user_id`);
+  }
+
   const params = Object.entries(fields).reduce<AnalyticsEventFields>(
     (clean, [key, value]) => {
       if (value !== undefined) {
@@ -178,7 +214,63 @@ export function createAnalyticsEvent(
   return { name, params: params as AnalyticsEvent["params"] };
 }
 
-export type AnalyticsEventSink = (event: AnalyticsEvent) => void | Promise<void>;
+const ANALYTICS_LOCALES = new Set([
+  "en",
+  "zh-tw",
+  "fr",
+  "ja",
+  "ko",
+  "de",
+  "pt",
+  "es",
+  "ar",
+]);
+
+const CORE_TOOL_SLUGS = new Set([
+  "remove-background",
+  "transparent-png-maker",
+  "white-background-maker",
+  "change-background-color",
+  "remove-watermark",
+  "remove-objects",
+]);
+
+/** Resolve only explicit route context; never infer a tool from arbitrary query data. */
+export function getAnalyticsPageContext(
+  pathname: string,
+  htmlLang?: string,
+): Pick<AnalyticsEventFields, "landing_page" | "locale" | "tool_slug"> {
+  const segments = pathname
+    .split("?")[0]
+    .split("#")[0]
+    .split("/")
+    .filter(Boolean);
+  const prefix = segments[0]?.toLowerCase();
+  const prefixedLocale =
+    prefix && ANALYTICS_LOCALES.has(prefix) ? prefix : undefined;
+  const localeFromHtml = htmlLang?.toLowerCase();
+  const htmlLocale =
+    localeFromHtml && ANALYTICS_LOCALES.has(localeFromHtml)
+      ? localeFromHtml
+      : undefined;
+  const canonicalSegments = prefixedLocale ? segments.slice(1) : segments;
+  const slug =
+    canonicalSegments.length === 1 && CORE_TOOL_SLUGS.has(canonicalSegments[0])
+      ? canonicalSegments[0]
+      : undefined;
+
+  return {
+    landing_page: pathname.split("?")[0].split("#")[0] || "/",
+    ...(prefixedLocale || htmlLocale
+      ? { locale: prefixedLocale || htmlLocale }
+      : {}),
+    ...(slug ? { tool_slug: slug } : {}),
+  };
+}
+
+export type AnalyticsEventSink = (
+  event: AnalyticsEvent,
+) => void | Promise<void>;
 
 /**
  * Emit a server fact through a replaceable sink. Keeping the sink injectable
@@ -196,5 +288,8 @@ export async function emitServerAnalyticsEvent(
 function defaultAnalyticsEventSink(event: AnalyticsEvent): void {
   // Structured logs are useful even before a GA4 server credential exists and
   // can be collected by the hosting platform without leaking request payloads.
-  console.info("[analytics]", JSON.stringify({ event: event.name, ...event.params }));
+  console.info(
+    "[analytics]",
+    JSON.stringify({ event: event.name, ...event.params }),
+  );
 }

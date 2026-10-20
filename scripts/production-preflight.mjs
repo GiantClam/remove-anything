@@ -67,6 +67,7 @@ export const REQUIRED_TABLE_COLUMNS = {
     "idempotency_key",
     "retention_checked_at",
     "retention_cleaned_at",
+    "audit_expires_at",
   ],
   background_removal_tasks: [
     "id",
@@ -80,6 +81,7 @@ export const REQUIRED_TABLE_COLUMNS = {
     "idempotency_key",
     "retention_checked_at",
     "retention_cleaned_at",
+    "audit_expires_at",
   ],
   watermark_removal_tasks: [
     "id",
@@ -130,12 +132,13 @@ export const REQUIRED_TABLE_COLUMNS = {
 };
 
 export const REQUIRED_INDEXES = {
-  task_data: ["task_data_retention_idx"],
+  task_data: ["task_data_retention_idx", "task_data_audit_expires_at_idx"],
   background_removal_tasks: [
     "background_removal_tasks_principal_created_idx",
     "background_removal_tasks_user_created_idx",
     "background_removal_tasks_idempotency_idx",
     "background_removal_tasks_retention_idx",
+    "background_removal_tasks_audit_expires_at_idx",
   ],
   watermark_removal_tasks: [
     "watermark_removal_tasks_idempotency_idx",
@@ -155,6 +158,7 @@ const INDEX_COLUMNS = {
     "retention_checked_at",
     "expires_at",
   ],
+  task_data_audit_expires_at_idx: ["audit_expires_at"],
   background_removal_tasks_principal_created_idx: [
     "principal_id",
     "created_at",
@@ -166,6 +170,7 @@ const INDEX_COLUMNS = {
     "retention_checked_at",
     "expires_at",
   ],
+  background_removal_tasks_audit_expires_at_idx: ["audit_expires_at"],
   watermark_removal_tasks_idempotency_idx: ["idempotency_key"],
   watermark_removal_tasks_retention_idx: [
     "retention_cleaned_at",
@@ -224,6 +229,7 @@ export const EXPECTED_MIGRATIONS = [
   "0002_task_lifecycle.sql",
   "0003_authorization_audit.sql",
   "0004_task_retention.sql",
+  "0005_task_audit_retention.sql",
 ];
 
 const PLACEHOLDER_RE =
@@ -618,9 +624,7 @@ export function validateReceipt(
     !Array.isArray(receipt.patches) ||
     receipt.patches.length !== EXPECTED_MIGRATIONS.length
   )
-    return [
-      "manual migration receipt must contain exactly the three P0 patches",
-    ];
+    return ["manual migration receipt must contain all current P0 patches"];
   const blockers = [];
   const names = new Set();
   for (const expected of migrationFiles) {

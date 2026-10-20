@@ -33,6 +33,7 @@ import { createRunningHubClient } from "@/modules/runninghub";
 import { createVideoTaskWithR2Url } from "@/modules/tasks/sdk";
 
 const rh = createRunningHubClient();
-// 与 TaskRepository/TaskQueue 一起注入到编排函数
+// 与 TaskRepository 一起注入到编排函数。
+// 可选的 OrchestratorDeps.queue 仅为源码兼容保留，不会被编排器调用。
 ```
 
