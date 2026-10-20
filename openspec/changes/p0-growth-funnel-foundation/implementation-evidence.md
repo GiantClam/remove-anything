@@ -1,6 +1,18 @@
 # P0 implementation evidence
 
-Reviewed: 2026-10-20 (Asia/Shanghai). Change status: **in progress**. The application branch has a Vercel Preview; production still runs `36d7e86460f837f7369f0caab6b0d62b65a8ce2c`. The guarded production schema cutover was applied on 2026-10-20; the 28-day baseline has not started. Dated local evidence below describes its original verification scope.
+Reviewed: 2026-10-21 (Asia/Shanghai). Change status: **in progress**. Production now serves the merged application commit `7c6094cfb59c1b5311da95cd24ef65952df02a0b`; the 28-day baseline has not started. The guarded production schema cutover was applied on 2026-10-20. Dated evidence below preserves the boundary of each verification.
+
+## 2026-10-21 continuation
+
+The remaining low-resolution output boundary was completed in the working tree. `output=full` is checked immediately after task ownership and before R2 key resolution, signed URL creation, storage fetches, download counters, or server analytics on the background, object, and legacy download routes. The registry still has no approved paid cost decision, so all six tools remain preview-only; the full-resolution paid delivery path is intentionally still a release gate.
+
+The shared analytics vocabulary is now client-safe. Server routes, workers, and webhooks use a server-only durable sink backed by `public.analytics_events`; client pages continue to use the pure event builders and GA4 tracker. The production migration ledger records `20261020170341 remove_anything_durable_analytics_events`. Read-only checks confirmed 18 columns, the three expected indexes, `timestamp(3)` event timestamps, RLS enabled, and no `PUBLIC`, `anon`, or `authenticated` DML privileges. A transaction-scoped duplicate probe observed one row for two writes with the same `event_id`, then rolled back; existing task-table counts stayed unchanged. Runtime event receipt and retry/recovery are still open because no production task or payment side effect was generated.
+
+Quality gates after this continuation: `pnpm test` — **341/341 passed**; `pnpm exec tsc --noEmit --pretty false --incremental false` — exit 0; `SKIP_DB_BUILD=1 pnpm build` — exit 0; `openspec validate p0-growth-funnel-foundation --strict --no-interactive` — valid; `git diff --check` — exit 0. The production preflight now includes the durable analytics table/index/security assertions and the receipt includes both applied SQL patches. The local `.env.production` snapshot does not contain the full runtime deployment secret set, so that local preflight remains environment-blocked even though the Supabase schema checks passed through the managed database API.
+
+## 2026-10-21 production deployment
+
+PR #7 was merged to `main` at `2026-10-20T17:14:04Z` with merge commit `7c6094cfb59c1b5311da95cd24ef65952df02a0b`. Vercel deployment `8W8LsKhPe7t7SaFKaq9pkdbcBahz` reached `success`. Public production checks then passed: `node scripts/verify-seo.mjs https://www.remove-anything.com`, the six-page canonical smoke with `G-VD6F0YDBQ5`, `/remove-objects` and `/sitemap-tools.xml` HTTP 200 checks, unauthenticated `/api/auth/session` `{}`, `/api/account` 401, `/api/mine-tasks` 401, and `/api/task-queue/status` 200 with an empty `0/4` queue. These probes are read-only; they do not close provider, R2 mutation, purchase, retention execution, full-output delivery, or durable event-receipt gates.
 
 ## 2026-10-21 continuation
 
