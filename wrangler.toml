@@ -68,10 +68,15 @@ database_id = "your-d1-development-database-id"
 
 # 预发布环境配置
 [env.staging]
+# 使用独立的 Worker 名称，避免 staging 部署覆盖生产 Worker
+name = "remove-anything-staging"
 # 覆盖生产环境的变量
 [env.staging.vars]
 ENVIRONMENT = "staging"
 NODE_ENV = "production"
+
+[env.staging.ai]
+binding = "AI"
 
 [[env.staging.kv_namespaces]]
 binding = "KV"

@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  createAnalyticsEvent,
+  getAnalyticsPageContext,
+  type AnalyticsEventFields,
+  type AnalyticsEventName,
+} from "@/lib/analytics-events";
+
 declare global {
   interface Window {
     dataLayer?: unknown[];
@@ -12,10 +19,11 @@ export function pageview(url: string, title?: string) {
     return;
   }
 
-  window.gtag("event", "page_view", {
+  const event = createAnalyticsEvent("page_view", {
     page_location: url,
     page_title: title,
   });
+  window.gtag("event", event.name, event.params);
 }
 
 export function trackEvent(
@@ -26,5 +34,22 @@ export function trackEvent(
     return;
   }
 
-  window.gtag("event", eventName, params);
+  const event = createAnalyticsEvent(eventName, params);
+  window.gtag("event", event.name, event.params);
+}
+
+/** Send one event using the shared P0 funnel vocabulary and field contract. */
+export function trackAnalyticsEvent(
+  eventName: AnalyticsEventName,
+  fields: AnalyticsEventFields = {},
+) {
+  const pageContext = typeof window === "undefined"
+    ? {}
+    : getAnalyticsPageContext(
+        window.location.pathname,
+        document.documentElement.lang,
+      );
+  const event = createAnalyticsEvent(eventName, { ...pageContext, ...fields });
+  trackEvent(event.name, event.params);
+  return event;
 }

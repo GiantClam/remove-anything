@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { getCurrentUser } from "@/lib/auth-utils";
-import { uploadToR2 } from "@/lib/upload";
 import { getErrorMessage } from "@/lib/handle-error";
+import { ImageInputError, readTrustedRemoteImage } from "@/lib/image-input";
+import { getToolRegistryEntry } from "@/lib/tool-registry";
+import { uploadToR2 } from "@/lib/upload";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,39 +15,46 @@ export async function POST(req: NextRequest) {
     console.log("用户ID:", userId || "anonymous");
 
     const { imageUrl } = await req.json();
-    
+
     if (!imageUrl) {
-      return NextResponse.json({ error: "No image URL provided" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No image URL provided" },
+        { status: 400 },
+      );
     }
 
-    // 下载图片
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      return NextResponse.json({ error: "Failed to fetch image" }, { status: 400 });
-    }
+    const tool = getToolRegistryEntry("remove-watermark");
+    if (!tool)
+      return NextResponse.json(
+        { error: "Tool configuration unavailable" },
+        { status: 503 },
+      );
+    const image = await readTrustedRemoteImage(imageUrl, {
+      maxBytes: tool.limits.maxFileSizeMb * 1024 * 1024,
+      allowedMimeTypes: tool.inputFormats,
+      maxPixels: tool.limits.maxPixels,
+    });
 
-    const imageBuffer = await response.arrayBuffer();
-    const contentType = response.headers.get("content-type") || "image/jpeg";
-    
-    // 创建 File 对象
-    const imageFile = new File([imageBuffer], "image.jpg", { type: contentType });
-    
     // 上传到 R2
-    const uploadedUrl = await uploadToR2(imageFile);
-    
+    const uploadedUrl = await uploadToR2(image.file);
+
     console.log("✅ 图片上传成功:", uploadedUrl);
 
     return NextResponse.json({
       success: true,
       url: uploadedUrl,
-      message: "Image uploaded successfully"
+      message: "Image uploaded successfully",
     });
-
   } catch (error) {
+    if (error instanceof ImageInputError)
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
     console.error("❌ 图片上传失败:", error);
     return NextResponse.json(
       { error: getErrorMessage(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

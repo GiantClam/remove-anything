@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "targetFingerprint": "1826c82e7de6862d2129213b5a1080a7535bf38140bf20d72cc81c7ccd066715",
+  "patches": [
+    {
+      "name": "0007_production_baseline_reconciliation.sql",
+      "checksum": "73235ffc5c603ceb674b20700cb8d98347278c94a3b9c24d3853992179cd0cf7",
+      "appliedAt": "2026-10-20T14:45:55Z"
+    }
+  ]
+}

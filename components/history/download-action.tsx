@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState } from "react";
 
-import { useAuth } from "@/hooks/use-auth";
 import { ArrowDownToLine, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import SignBox from "@/components/sign-box";
 
+import SignBox from "@/components/sign-box";
+import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
 import { getErrorMessage } from "@/lib/handle-error";
+import { trackAnalyticsEvent } from "@/lib/gtag";
 
 export function DownloadAction({
   id,
@@ -19,151 +20,119 @@ export function DownloadAction({
   id: string;
   disabled?: boolean;
   showText?: boolean;
-  taskType?: "image" | "background-removal" | "watermark-removal" | "sora2-video-watermark-removal";
+  taskType?:
+    | "image"
+    | "background-removal"
+    | "watermark-removal"
+    | "sora2-video-watermark-removal";
 }) {
-  // 根据任务类型选择不同的国际化命名空间
-  const namespace = taskType === "sora2-video-watermark-removal" ? "Sora2VideoWatermarkRemovalPage" : "History";
+  const namespace =
+    taskType === "sora2-video-watermark-removal"
+      ? "Sora2VideoWatermarkRemovalPage"
+      : "History";
   const t = useTranslations(namespace);
-  const [isDownloading, startDownloadTransition] = useTransition();
-  const [isPending, setIsPending] = useState(false);
-  const { userId } = useAuth();
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  const download = async (id: string) => {
-    if (isDownloading || isPending) {
-      return;
+  const download = async () => {
+    if (isDownloading || disabled) return;
+    setIsDownloading(true);
+    try {
+      const toolSlug =
+        taskType === "background-removal"
+          ? "remove-background"
+          : taskType === "watermark-removal"
+            ? "remove-watermark"
+            : taskType === "sora2-video-watermark-removal"
+              ? "sora2-video-watermark-removal"
+              : "remove-background";
+      trackAnalyticsEvent(ANALYTICS_EVENTS.downloadClicked, {
+        task_id: id,
+        tool_slug: toolSlug,
+      });
+      const taskId = encodeURIComponent(id);
+      const apiUrl =
+        taskType === "background-removal"
+          ? `/api/download-background?taskId=${taskId}`
+          : `/api/download?taskId=${taskId}${taskType === "image" ? "" : `&type=${taskType}`}`;
+      const response = await fetch(apiUrl, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        const message = response.headers
+          .get("content-type")
+          ?.includes("application/json")
+          ? (await response.json()).error
+          : await response.text();
+        throw new Error(message || `Download failed (${response.status})`);
+      }
+
+      const blob = await response.blob();
+      const extension =
+        taskType === "watermark-removal"
+          ? "zip"
+          : taskType === "sora2-video-watermark-removal"
+            ? "mp4"
+            : taskType === "background-removal"
+              ? "png"
+              : "jpg";
+      const filename =
+        response.headers
+          .get("content-disposition")
+          ?.match(/filename="([^"]+)"/i)?.[1] ||
+        `result-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}.${extension}`;
+      const file = new File([blob], filename, { type: blob.type });
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: filename });
+          toast.success(t("action.downloadSuccess"));
+          return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === "AbortError")
+            return;
+          // A declined or unavailable share can still use the fetched file.
+        }
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = filename;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      toast.success(t("action.downloadSuccess"));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsDownloading(false);
     }
-    startDownloadTransition(() => {
-      toast.promise(
-        async () => {
-          setIsPending(true);
-          
-          try {
-            // 根据任务类型选择不同的API端点和文件名
-            let apiUrl: string;
-            let fileName: string;
-            let fileExtension: string;
-            
-            if (taskType === "background-removal") {
-              apiUrl = `/api/download-background?taskId=${id}`;
-              fileExtension = "png";
-              fileName = `background-removed-${id}.${fileExtension}`;
-            } else if (taskType === "watermark-removal") {
-              apiUrl = `/api/download?taskId=${id}&type=watermark-removal`;
-              fileExtension = "zip";
-              fileName = `watermark-removed-${id}.${fileExtension}`;
-            } else if (taskType === "sora2-video-watermark-removal") {
-              apiUrl = `/api/download?taskId=${id}&type=sora2-video-watermark-removal`;
-              fileExtension = "mp4";
-              fileName = `sora2-video-watermark-removed-${id}.${fileExtension}`;
-            } else {
-              apiUrl = `/api/download?taskId=${id}`;
-              fileExtension = "jpg";
-              fileName = `task-${id}.${fileExtension}`;
-            }
-            
-            console.log("🔍 开始下载:", { apiUrl, fileName, taskType });
-            
-            // 直接下载：不再创建 blob，交给浏览器/系统下载器处理
-            const absUrl = apiUrl.startsWith('http') ? apiUrl : `${window.location.origin}${apiUrl}`;
-
-            // 优先尝试 Web Share API 分享文件（移动端可直接保存到相册/文件）
-            try {
-              // 先获取文件内容
-              const response = await fetch(absUrl, { credentials: 'include' });
-              if (response.ok) {
-                const blob = await response.blob();
-                const file = new File([blob], fileName, { type: blob.type });
-                
-                // @ts-ignore
-                if (navigator.share && typeof navigator.share === 'function') {
-                  // @ts-ignore
-                  await navigator.share({ 
-                    files: [file], 
-                    title: fileName,
-                    text: taskType === "background-removal" ? "去背景图片" : 
-                          taskType === "watermark-removal" ? "去水印图片" :
-                          taskType === "sora2-video-watermark-removal" ? "去水印视频" : "AI生成图片"
-                  });
-                  console.log("✅ 使用 Web Share API 分享文件成功");
-                  return;
-                }
-              }
-            } catch (e) {
-              console.log("ℹ️ Web Share API 不可用或被拒绝，使用直接下载回退", e);
-            }
-
-            // 平台检测
-            const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
-            const isIOS = /iP(hone|od|ad)/.test(ua);
-            const isAndroid = /Android/.test(ua);
-            const isMobile = isIOS || isAndroid;
-
-            if (isMobile) {
-              // 移动端：优先尝试直接下载到相册/文件管理器
-              if (isIOS) {
-                // iOS：新开标签展示，由用户通过分享保存到相册
-                window.open(absUrl, '_blank');
-                toast.info("长按图片→保存到相册", { duration: 4000 });
-              } else if (isAndroid) {
-                // Android：使用 a[download] 触发保存到下载目录
-                const link = document.createElement("a");
-                link.href = absUrl;
-                link.download = fileName;
-                link.style.display = "none";
-                document.body.appendChild(link);
-                setTimeout(() => link.click(), 50);
-                setTimeout(() => document.body.removeChild(link), 200);
-                toast.info("文件已保存到下载目录，图库会自动扫描导入", { duration: 4000 });
-              }
-            } else {
-              // PC端：直接下载到本地
-              const link = document.createElement("a");
-              link.href = absUrl;
-              link.download = fileName;
-              link.style.display = "none";
-              document.body.appendChild(link);
-              setTimeout(() => link.click(), 50);
-              setTimeout(() => document.body.removeChild(link), 200);
-              toast.success("文件已开始下载", { duration: 2000 });
-            }
-            
-          } catch (error) {
-            console.error("❌ 下载失败:", error);
-            throw error;
-          } finally {
-            setIsPending(false);
-          }
-        },
-        {
-          loading: t("action.downloadLoading"),
-          success: () => {
-            setIsPending(false);
-            return t("action.downloadSuccess");
-          },
-          error: (error) => {
-            setIsPending(false);
-            return getErrorMessage(error);
-          },
-        },
-      );
-    });
   };
 
-  return (
-    <SignBox>
-      <button
-        aria-label={t("action.download")}
-        disabled={disabled}
-        className="focus-ring text-content-strong border-stroke-strong hover:border-stroke-stronger data-[state=open]:bg-surface-alpha-light inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border bg-transparent px-2.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
-        onClick={() => download(id!)}
-      >
-        {isDownloading || isPending ? (
-          <Loader2 className="icon-xs animate-spin" />
-        ) : (
-          <ArrowDownToLine className="icon-xs" />
-        )}
-        {showText && <span className="ml-2">{t("action.download")}</span>}
-      </button>
-    </SignBox>
+  const button = (
+    <button
+      type="button"
+      aria-label={t("action.download")}
+      disabled={disabled || isDownloading}
+      className="focus-ring text-content-strong border-stroke-strong hover:border-stroke-stronger data-[state=open]:bg-surface-alpha-light inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border bg-transparent px-2.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+      onClick={() => void download()}
+    >
+      {isDownloading ? (
+        <Loader2 className="icon-xs animate-spin" />
+      ) : (
+        <ArrowDownToLine className="icon-xs" />
+      )}
+      {showText && <span className="ml-2">{t("action.download")}</span>}
+    </button>
+  );
+
+  // These task routes authorize the signed anonymous cookie server-side.
+  return taskType === "background-removal" ||
+    taskType === "watermark-removal" ? (
+    button
+  ) : (
+    <SignBox>{button}</SignBox>
   );
 }

@@ -3,12 +3,19 @@ import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 export interface CreateWatermarkRemovalTaskData {
   userId?: string;
+  principalId?: string;
   runninghubTaskId: string;
   inputZipUrl: string;
+  idempotencyKey?: string;
+  authorizationConfirmed?: boolean;
+  authorizationPolicyVersion?: string;
+  authorizationSubject?: string;
+  authorizationConfirmedAt?: Date;
 }
 
 export interface UpdateWatermarkRemovalTaskData {
   runninghubTaskId?: string;
+  inputZipUrl?: string;
   taskStatus?: string;
   outputZipUrl?: string;
   executeStartTime?: bigint;
@@ -30,7 +37,17 @@ export async function createWatermarkRemovalTask(data: CreateWatermarkRemovalTas
       runninghubTaskId: data.runninghubTaskId,
       inputZipUrl: data.inputZipUrl,
       taskStatus: "pending",
-      userId: data.userId || null
+      userId: data.userId || null,
+      principalId: data.principalId || null,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      idempotencyKey: data.idempotencyKey || null,
+      authorizationConfirmed: Boolean(data.authorizationConfirmed),
+      authorizationPolicyVersion: data.authorizationPolicyVersion || null,
+      authorizationSubject: data.authorizationSubject || null,
+      authorizationConfirmedAt: data.authorizationConfirmedAt || null,
+      auditExpiresAt: data.authorizationConfirmed
+        ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+        : null,
     };
 
     const task = await prisma.watermarkRemovalTask.create({

@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
 import { cn, getMime } from "@/lib/utils";
+import { ANALYTICS_EVENTS, getFileSizeBucket } from "@/lib/analytics-events";
+import { trackAnalyticsEvent } from "@/lib/gtag";
 
 import { BaseUpload } from "./base-upload";
 import { RemoveAction } from "./remove-action";
@@ -119,6 +121,18 @@ const FormUpload = (props: FormUploadProps) => {
   const { userId, isSignedIn } = useAuth();
   const getLicenseSts = useGetLicenseSts();
 
+  const trackUploadCompleted = (items: UploadValue[]) => {
+    for (const item of items) {
+      const file = item.originFile;
+      if (!file) continue;
+      trackAnalyticsEvent(ANALYTICS_EVENTS.uploadCompleted, {
+        file_type: file.type || undefined,
+        file_size_bucket: getFileSizeBucket(file.size),
+        is_authenticated: isSignedIn,
+      });
+    }
+  };
+
   const handleFileChange = async (files: File[]) => {
     console.log("🔧 Upload 组件：handleFileChange 被调用", { filesLength: files.length, files });
     
@@ -202,6 +216,7 @@ const FormUpload = (props: FormUploadProps) => {
                 fileType: r?.fileType || item.fileType,
               };
             });
+            trackUploadCompleted(updatedItems);
 
             if (multiple) {
               onChange?.([...value, ...updatedItems]);
@@ -224,6 +239,7 @@ const FormUpload = (props: FormUploadProps) => {
               url: URL.createObjectURL(item.originFile!),
               originFile: item.originFile,  // 保存原始文件对象，供后续API使用
             }));
+            trackUploadCompleted(localItems);
 
             // 更新对应的文件状态
             if (multiple) {
@@ -247,6 +263,7 @@ const FormUpload = (props: FormUploadProps) => {
             url: URL.createObjectURL(item.originFile!),
             originFile: item.originFile,  // 保存原始文件对象，供后续API使用
           }));
+          trackUploadCompleted(localItems);
 
           // 更新对应的文件状态
           if (multiple) {

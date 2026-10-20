@@ -1,11 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
+import { env } from "@/env.mjs";
+import { getR2ObjectKey } from "@/lib/r2-object-key";
+import { normalizeTaskStatus } from "@/lib/task-lifecycle";
 import { runninghubAPI } from "@/modules/runninghub";
 import { findSora2VideoWatermarkRemovalTaskByRunningHubId, updateSora2VideoWatermarkRemovalTask } from "@/db/queries/sora2-video-watermark-removal";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = 'force-dynamic';
+
+function protectedVideoPreview(taskId: string, status: unknown, imageUrl: string | null | undefined) {
+  return normalizeTaskStatus(status) === "succeeded" &&
+    getR2ObjectKey(imageUrl, env.R2_URL_BASE)
+    ? `/api/download?${new URLSearchParams({
+        type: "sora2-video-watermark-removal",
+        taskId,
+        preview: "1",
+      })}`
+    : null;
+}
+
+function visibleVideoStatus(status: unknown, imageUrl: string | null | undefined) {
+  const normalized = normalizeTaskStatus(status);
+  return normalized === "succeeded" && !getR2ObjectKey(imageUrl, env.R2_URL_BASE)
+    ? "processing"
+    : status;
+}
 
 export async function GET(
   req: NextRequest,
@@ -42,13 +63,17 @@ export async function GET(
 
     // 如果只查询数据库状态，直接返回
     if (dbOnly) {
+      const visibleStatus = visibleVideoStatus(
+        taskRecord.taskStatus,
+        taskRecord.imageUrl,
+      );
       return NextResponse.json({
         success: true,
         id: taskRecord.id,
         runninghubTaskId: taskId,
-        taskStatus: taskRecord.taskStatus,
-        inputImageUrl: taskRecord.inputImageUrl,
-        imageUrl: taskRecord.imageUrl,
+        taskStatus: visibleStatus,
+        inputImageUrl: null,
+        imageUrl: protectedVideoPreview(taskId, visibleStatus, taskRecord.imageUrl),
         errorMsg: taskRecord.errorMsg,
         createdAt: taskRecord.createdAt,
         executeStartTime: taskRecord.executeStartTime?.toString(),
@@ -220,9 +245,13 @@ export async function GET(
       success: true,
       id: taskRecord.id,
       runninghubTaskId: taskId,
-      taskStatus: finalStatus,
-      inputImageUrl: taskRecord.inputImageUrl,
-      imageUrl: outputVideoUrl || taskRecord.imageUrl,
+      taskStatus: visibleVideoStatus(finalStatus, outputVideoUrl || taskRecord.imageUrl),
+      inputImageUrl: null,
+      imageUrl: protectedVideoPreview(
+        taskId,
+        finalStatus,
+        outputVideoUrl || taskRecord.imageUrl,
+      ),
       errorMsg: taskRecord.errorMsg,
       createdAt: taskRecord.createdAt,
       executeStartTime: taskRecord.executeStartTime?.toString(),

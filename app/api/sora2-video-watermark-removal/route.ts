@@ -4,11 +4,14 @@ import { runninghubAPI } from "@/modules/runninghub";
 import { createProjectAuthProvider } from "@/modules/auth/adapter";
 import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { prisma } from "@/db/prisma";
-import { taskQueueManager } from "@/lib/task-queue";
-import { Credits, model, TASK_QUEUE_CONFIG } from "@/config/constants";
+import { Credits, model } from "@/config/constants";
 import { BillingType } from "@/db/type";
 import { getUserCredit } from "@/db/queries/account";
 import { env } from "@/env.mjs";
+import {
+  TaskCreationOutcomeUnknownError,
+  TaskCreationRejectedError,
+} from "@/modules/runninghub/sdk";
 
 // 包装函数以匹配适配器期望的类型
 const getCurrentUser = async () => {
@@ -127,12 +130,22 @@ export async function POST(req: NextRequest) {
         taskStatus: "pending",
         isPrivate: true,
         orientation: orientation as "landscape" | "portrait" | null,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 
-    // 直接尝试创建 RunningHub 任务
+    // Provider creation is the no-replay boundary. The SDK may retry once only
+    // after its explicit capacity rejection; route-level fallback must never
+    // submit the same paid task again.
+    let runninghubTaskId: string | undefined;
+    let providerCreateStarted = false;
     try {
-      const runninghubTaskId = await runninghubAPI.createVideoWatermarkRemovalTask(uploadedFileName, undefined, {
+      await prisma.taskData.update({
+        where: { id: taskRecord.id },
+        data: { taskStatus: "Processing" },
+      });
+      providerCreateStarted = true;
+      runninghubTaskId = await runninghubAPI.createVideoWatermarkRemovalTask(uploadedFileName, taskRecord.id, {
         workflowId,
         uploadNodeId,
         uploadFieldName,
@@ -161,89 +174,92 @@ export async function POST(req: NextRequest) {
         message: "任务已开始处理"
       });
 
-           } catch (error) {
-             console.error("❌ 创建RunningHub任务失败:", error);
-             
-             // 检查是否是可重试的错误（队列满或机器不足）
-             const errorMessage = error instanceof Error ? error.message : '';
-             const isRetryableError = errorMessage.includes('TASK_QUEUE_MAXED') || 
-                                     errorMessage.includes('TASK_INSTANCE_MAXED') ||
-                                     errorMessage.includes('421') ||
-                                     errorMessage.includes('415');
+    } catch (error) {
+      console.error("❌ 创建RunningHub任务失败:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isExplicitRejection =
+        error instanceof TaskCreationRejectedError ||
+        ((error as { code?: string; taskWasNotCreated?: boolean })?.code === "TASK_CREATION_REJECTED" &&
+          (error as { taskWasNotCreated?: boolean })?.taskWasNotCreated === true);
+      const isUnknownOutcome =
+        error instanceof TaskCreationOutcomeUnknownError ||
+        (providerCreateStarted && !isExplicitRejection);
 
-             // 检查是否是视频文件验证错误
-             const isVideoValidationError = errorMessage.includes('Invalid video file') ||
-                                          errorMessage.includes('custom_validation_failed') ||
-                                          errorMessage.includes('VHS_LoadVideo');
-
-             if (isVideoValidationError) {
-               // 视频文件验证失败，标记任务失败并返回具体错误
-               await prisma.taskData.update({
-                 where: { id: taskRecord.id },
-                 data: {
-                   taskStatus: "Failed",
-                   errorMsg: "Invalid video file format. Please ensure your video is a valid MP4, MOV, AVI, MKV, or WEBM file with proper encoding."
-                 },
-               });
-               
-               return NextResponse.json({ 
-                 error: "Invalid video file format", 
-                 details: "RunningHub cannot process this video file. Please try:\n1. Re-encoding the video with H.264 codec\n2. Using a different video file\n3. Converting to MP4 format\n4. Ensuring the video is not corrupted",
-                 code: "INVALID_VIDEO_FILE",
-                 suggestions: [
-                   "Re-encode with H.264 codec",
-                   "Try a different video file", 
-                   "Convert to MP4 format",
-                   "Check if video is corrupted"
-                 ]
-               }, { status: 400 });
-             }
-
-             if (isRetryableError) {
-        // 加入等待队列
-        const { taskId: queueTaskId, queuePosition } = await taskQueueManager.addTask({
-          userId: userId || "anonymous",
-          taskType: "sora2-video-watermark-removal",
-          priority: 1,
-          metadata: {
-            taskRecordId: taskRecord.id,
-            uploadedFileName,
-            workflowId,
-            uploadNodeId,
-            uploadFieldName,
-          }
-        });
-
-        // 更新任务状态为等待
-        await prisma.taskData.update({
-          where: { id: taskRecord.id },
-          data: {
-            taskStatus: "Queued",
-          },
-        });
-
-        return NextResponse.json({ 
-          success: true, 
-          taskId: queueTaskId, 
+      // A returned provider ID proves creation even if a later database or
+      // billing write failed. Keep it visible and never turn it into a retry.
+      if (runninghubTaskId) {
+        try {
+          await prisma.taskData.update({
+            where: { id: taskRecord.id },
+            data: { replicateId: runninghubTaskId, taskStatus: "Processing" },
+          });
+        } catch (persistenceError) {
+          console.error("❌ Provider task could not be linked for reconciliation:", persistenceError);
+        }
+        return NextResponse.json({
+          success: true,
+          taskId: runninghubTaskId,
           taskRecordId: taskRecord.id,
-          status: "queued",
-          queuePosition,
-          message: "系统繁忙，任务已加入等待队列，将在资源可用时自动重试"
-        });
-      } else {
-        // 不可重试的错误，标记任务失败
-        await prisma.taskData.update({
-          where: { id: taskRecord.id },
-          data: {
-            taskStatus: "Failed",
-          },
-        });
-        
-        return NextResponse.json({ 
-          error: "创建任务失败", 
-          details: errorMessage 
-        }, { status: 500 });
+          status: "processing",
+          message: "Provider task was created; follow-up persistence needs reconciliation.",
+        }, { status: 202 });
       }
+
+      // Transport and malformed-response outcomes may hide a provider task.
+      // Keep the record active for reconciliation rather than inviting a retry.
+      if (isUnknownOutcome) {
+        try {
+          await prisma.taskData.update({
+            where: { id: taskRecord.id },
+            data: {
+              taskStatus: "Processing",
+              errorMsg: errorMessage,
+            },
+          });
+        } catch (persistenceError) {
+          console.error("❌ Unknown provider outcome could not be persisted:", persistenceError);
+        }
+        return NextResponse.json({
+          success: false,
+          taskRecordId: taskRecord.id,
+          status: "submission-unknown",
+          code: "TASK_CREATION_OUTCOME_UNKNOWN",
+          message: "Provider submission outcome is unknown. Check task status before retrying.",
+        }, { status: 202 });
+      }
+
+      const isVideoValidationError = errorMessage.includes("Invalid video file") ||
+        errorMessage.includes("custom_validation_failed") ||
+        errorMessage.includes("VHS_LoadVideo");
+      await prisma.taskData.update({
+        where: { id: taskRecord.id },
+        data: {
+          taskStatus: "Failed",
+          errorMsg: isVideoValidationError
+            ? "Invalid video file format. Please ensure your video is a valid MP4, MOV, AVI, MKV, or WEBM file with proper encoding."
+            : errorMessage,
+        },
+      });
+
+      if (isVideoValidationError) {
+        return NextResponse.json({
+          error: "Invalid video file format",
+          details: "RunningHub cannot process this video file. Please try:\n1. Re-encoding the video with H.264 codec\n2. Using a different video file\n3. Converting to MP4 format\n4. Ensuring the video is not corrupted",
+          code: "INVALID_VIDEO_FILE",
+          suggestions: [
+            "Re-encode with H.264 codec",
+            "Try a different video file",
+            "Convert to MP4 format",
+            "Check if video is corrupted",
+          ],
+        }, { status: 400 });
+      }
+
+      return NextResponse.json({
+        error: "创建任务失败",
+        code: isExplicitRejection ? "TASK_CREATION_REJECTED" : undefined,
+        details: errorMessage,
+      }, { status: 502 });
     }
 
   } catch (error) {

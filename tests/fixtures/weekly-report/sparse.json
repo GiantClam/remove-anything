@@ -1,0 +1,91 @@
+{
+  "events": [
+    {
+      "eventName": "tool_view",
+      "eventCount": "bad"
+    },
+    {
+      "eventName": "tool_view",
+      "eventCount": 2
+    },
+    {
+      "name": "task_failed",
+      "params": {
+        "event_id": "failed-1",
+        "task_id": "task-1",
+        "tool_slug": "remove-background"
+      }
+    },
+    {
+      "eventName": "task_succeeded",
+      "eventCount": -1
+    }
+  ],
+  "tasks": {
+    "rows": [
+      {
+        "task_id": "partial-task-1",
+        "task_status": "succeeded",
+        "started_at": "2026-10-01T00:00:00Z",
+        "completed_at": "2026-10-01T00:00:01Z"
+      },
+      {
+        "task_id": "partial-task-2",
+        "task_status": "failed",
+        "latency_ms": "invalid",
+        "attempt_count": 0
+      },
+      {
+        "task_id": "partial-task-3",
+        "attempt_count": 2
+      }
+    ]
+  },
+  "purchases": {
+    "rows": [
+      {
+        "order_id": "sparse-order",
+        "customer_id": "customer",
+        "purchased_at": "2026-10-01T00:00:00Z",
+        "is_first_purchase": true
+      }
+    ]
+  },
+  "costs": {
+    "rows": [
+      {
+        "cost_id": "partial-cost-1",
+        "tool_slug": "remove-background",
+        "currency": "USD",
+        "provider_cost": 0.1,
+        "credits_consumed": 2
+      },
+      {
+        "cost_id": "partial-cost-2",
+        "tool_slug": "remove-background",
+        "currency": "USD",
+        "provider_cost": 0.2,
+        "retry_cost": 0,
+        "storage_cost": 0,
+        "credits_consumed": 2
+      },
+      {
+        "cost_id": "currency-missing",
+        "tool_slug": "remove-objects",
+        "provider_cost": 5
+      }
+    ]
+  },
+  "gsc": {
+    "dimensions": [
+      "page"
+    ],
+    "rows": [
+      {
+        "page": "/remove-background",
+        "clicks": 2,
+        "position": 3
+      }
+    ]
+  }
+}

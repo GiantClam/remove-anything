@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { z } from "zod";
 
 import { getErrorMessage } from "@/lib/handle-error";
+import { ImageInputError, readTrustedRemoteImage } from "@/lib/image-input";
+import {
+  acquireProcessingLease,
+  OBJECT_GEOMETRY_PROCESSING_KEY,
+  ProcessingTimeoutError,
+  runWithinProcessingDeadline,
+  sleepUntilProcessingDeadline,
+} from "@/lib/processing-guard";
 import {
   buildSegmentNodeInfoList,
   getRunningHubOutputFileUrl,
   normalizeRunningHubStatus,
 } from "@/lib/remove-objects/runninghub";
+import { getToolRegistryEntry } from "@/lib/tool-registry";
 import { runninghubAPI } from "@/modules/runninghub";
 
 const SegmentSchema = z.object({
@@ -21,13 +31,13 @@ const SegmentSchema = z.object({
 
 export const dynamic = "force-dynamic";
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function isTransientRunningHubError(error: unknown) {
   const message =
-    error instanceof Error ? error.message : typeof error === "string" ? error : "";
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
 
   return (
     message.includes("status=504") ||
@@ -39,20 +49,62 @@ function isTransientRunningHubError(error: unknown) {
 }
 
 export async function POST(req: NextRequest) {
+  let lease: ReturnType<typeof acquireProcessingLease> | null = null;
+  let runninghubTaskId: string | null = null;
+  let deadline = 0;
   try {
     const body = SegmentSchema.parse(await req.json());
-    const taskId = await runninghubAPI.createObjectSegmentTask(
-      buildSegmentNodeInfoList(body.imageUrl, body.bbox),
+    const tool = getToolRegistryEntry("remove-objects");
+    if (!tool) {
+      return NextResponse.json(
+        { error: "Tool configuration unavailable", code: "TOOL_UNAVAILABLE" },
+        { status: 503 },
+      );
+    }
+    const image = await readTrustedRemoteImage(body.imageUrl, {
+      maxBytes: tool.limits.maxFileSizeMb * 1024 * 1024,
+      allowedMimeTypes: tool.inputFormats,
+      maxPixels: tool.limits.maxPixels,
+    });
+    if (
+      body.bbox.x + body.bbox.w > image.width ||
+      body.bbox.y + body.bbox.h > image.height
+    ) {
+      throw new ImageInputError(
+        "BBOX_OUT_OF_BOUNDS",
+        "The selected area must stay within the image dimensions",
+        400,
+      );
+    }
+    lease = acquireProcessingLease(OBJECT_GEOMETRY_PROCESSING_KEY);
+    if (!lease) {
+      return NextResponse.json(
+        {
+          error: "Object segmentation is busy. Please retry shortly.",
+          code: "PROCESSING_CAPACITY_EXCEEDED",
+        },
+        { status: 429, headers: { "retry-after": "5" } },
+      );
+    }
+    deadline = Date.now() + tool.limits.timeoutSeconds * 1000;
+    runninghubTaskId = await runWithinProcessingDeadline(
+      () =>
+        runninghubAPI.createObjectSegmentTask(
+          buildSegmentNodeInfoList(body.imageUrl, body.bbox),
+        ),
+      deadline,
     );
 
-    const startedAt = Date.now();
-    while (Date.now() - startedAt < 90_000) {
+    while (Date.now() < deadline) {
       let statusResult;
       try {
-        statusResult = await runninghubAPI.getTaskStatus(taskId);
+        statusResult = await runWithinProcessingDeadline(
+          () => runninghubAPI.getTaskStatus(runninghubTaskId!),
+          deadline,
+        );
       } catch (error) {
         if (isTransientRunningHubError(error)) {
-          await sleep(1500);
+          if (!(await sleepUntilProcessingDeadline(deadline, 1500))) break;
           continue;
         }
 
@@ -63,7 +115,11 @@ export async function POST(req: NextRequest) {
 
       if (normalizedStatus === "failed") {
         return NextResponse.json(
-          { error: statusResult.data?.error || "AI could not refine the selected area" },
+          {
+            error:
+              statusResult.data?.error ||
+              "AI could not refine the selected area",
+          },
           { status: 422 },
         );
       }
@@ -71,10 +127,13 @@ export async function POST(req: NextRequest) {
       if (normalizedStatus === "succeeded") {
         let outputs;
         try {
-          outputs = await runninghubAPI.getTaskResult(taskId);
+          outputs = await runWithinProcessingDeadline(
+            () => runninghubAPI.getTaskResult(runninghubTaskId!),
+            deadline,
+          );
         } catch (error) {
           if (isTransientRunningHubError(error)) {
-            await sleep(1500);
+            if (!(await sleepUntilProcessingDeadline(deadline, 1500))) break;
             continue;
           }
 
@@ -90,7 +149,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (outputs?.code === 804) {
-          await sleep(1500);
+          if (!(await sleepUntilProcessingDeadline(deadline, 1500))) break;
           continue;
         }
 
@@ -100,23 +159,43 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      await sleep(1500);
+      if (!(await sleepUntilProcessingDeadline(deadline, 1500))) break;
     }
 
-    await runninghubAPI.cancelTask(taskId).catch(() => null);
+    if (runninghubTaskId)
+      void runninghubAPI.cancelTask(runninghubTaskId).catch(() => null);
 
     return NextResponse.json(
       { error: "Segment request timed out before a mask was ready" },
       { status: 504 },
     );
   } catch (error) {
+    if (error instanceof ProcessingTimeoutError) {
+      if (runninghubTaskId)
+        void runninghubAPI.cancelTask(runninghubTaskId).catch(() => null);
+      return NextResponse.json(
+        { error: "Segment request timed out before a mask was ready" },
+        { status: 504 },
+      );
+    }
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message || "Invalid request" },
         { status: 400 },
       );
     }
+    if (error instanceof ImageInputError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
 
-    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json(
+      { error: getErrorMessage(error) },
+      { status: 500 },
+    );
+  } finally {
+    lease?.release();
   }
 }

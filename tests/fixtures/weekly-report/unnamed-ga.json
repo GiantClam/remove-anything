@@ -1,0 +1,19 @@
+{
+  "rows": [
+    {
+      "dimensionValues": [
+        {
+          "value": "tool_view"
+        },
+        {
+          "value": "/remove-background"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "9"
+        }
+      ]
+    }
+  ]
+}

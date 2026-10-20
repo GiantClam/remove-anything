@@ -1,143 +1,248 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth-utils";
-import { runninghubAPI } from "@/modules/runninghub";
-import { createWatermarkRemovalTask, updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";
-import { uploadToR2 } from "@/lib/upload";
-import JSZip from "jszip";
-import { getErrorMessage } from "@/lib/handle-error";
-import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 
-// 强制动态渲染，避免构建时静态生成
-export const dynamic = 'force-dynamic';
+import JSZip from "jszip";
+import { nanoid } from "nanoid";
+
+import { prisma } from "@/db/prisma";
+import { updateWatermarkRemovalTask } from "@/db/queries/watermark-removal";
+import { getCurrentUser } from "@/lib/auth-utils";
+import { getErrorMessage } from "@/lib/handle-error";
+import {
+  ImageInputError,
+  readTrustedRemoteImage,
+  validateImageFile,
+} from "@/lib/image-input";
+import {
+  markImageTaskReservationFailed,
+  reserveImageTask,
+} from "@/lib/image-task-reservation";
+import {
+  anonymousPrincipalCookie,
+  createAnonymousPrincipal,
+  getAnonymousPrincipalFromRequest,
+  TaskLifecycleError,
+} from "@/lib/task-lifecycle";
+import { getToolRegistryEntry } from "@/lib/tool-registry";
+import { uploadToR2 } from "@/lib/upload";
+import { runninghubAPI } from "@/modules/runninghub";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  let placeholderTaskId: number | undefined;
+  let json = (body: unknown, init?: ResponseInit) =>
+    NextResponse.json(body, init);
   try {
+    const tool = getToolRegistryEntry("remove-watermark");
+    if (!tool)
+      return json({ error: "Tool configuration unavailable" }, { status: 503 });
     const user = await getCurrentUser();
-    const userId = user?.id;
+    const userId = user?.id || null;
+    const idempotencyKey = req.headers.get("idempotency-key")?.trim() || null;
+    const incomingToken = req.cookies.get("remove_anything_principal")?.value;
+    const principalId = userId ? null : getAnonymousPrincipalFromRequest(req);
+    const principalToken = userId
+      ? null
+      : principalId
+        ? incomingToken
+        : createAnonymousPrincipal();
+    const resolvedPrincipalId = userId
+      ? null
+      : principalId ||
+        getAnonymousPrincipalFromRequest(
+          new Request(req.url, {
+            headers: { cookie: `remove_anything_principal=${principalToken}` },
+          }),
+        );
+    json = (body: unknown, init?: ResponseInit) => {
+      const response = NextResponse.json(body, init);
+      if (!userId && principalToken && !principalId)
+        response.headers.append(
+          "Set-Cookie",
+          anonymousPrincipalCookie(principalToken),
+        );
+      return response;
+    };
 
-    console.log("🚀 开始处理去水印请求...");
-    console.log("用户ID:", userId || "anonymous");
-
-    // 检查Content-Type，支持FormData和JSON两种格式
-    const contentType = req.headers.get('content-type') || '';
-    
     let imageFiles: File[] = [];
-    
-    if (contentType.includes('multipart/form-data')) {
-      // 处理FormData格式
+    let imageUrls: string[] = [];
+    let authorizationConfirmed = false;
+    let authorizationPolicyVersion = "removal-auth-v1";
+    let authorizationSubject = "image-owner-or-authorized-editor";
+    if (req.headers.get("content-type")?.includes("multipart/form-data")) {
       const formData = await req.formData();
-      const images = formData.getAll('images') as File[];
-      
-      if (!images || images.length === 0) {
-        return NextResponse.json({ error: "No images provided" }, { status: 400 });
-      }
-
-      imageFiles = images;
+      imageFiles = formData.getAll("images") as File[];
+      authorizationConfirmed =
+        formData.get("authorizationConfirmed") === "true";
+      authorizationPolicyVersion = String(
+        formData.get("authorizationPolicyVersion") ||
+          authorizationPolicyVersion,
+      );
+      authorizationSubject = String(
+        formData.get("authorizationSubject") || authorizationSubject,
+      );
     } else {
-      // 处理JSON格式
       const data = await req.json();
-      const imageUrls = data.imageUrls || [];
-      
-      if (!imageUrls || imageUrls.length === 0) {
-        return NextResponse.json({ error: "No image URLs provided" }, { status: 400 });
+      if (
+        !Array.isArray(data.imageUrls) ||
+        data.imageUrls.some((url: unknown) => typeof url !== "string")
+      ) {
+        return json(
+          { error: "A valid image URLs array is required" },
+          { status: 400 },
+        );
       }
-
-      // 对于JSON格式，我们需要下载图片并转换为File对象
-      // 这里简化处理，要求前端提供FormData
-      return NextResponse.json({ error: "Please use FormData for image uploads" }, { status: 400 });
+      imageUrls = data.imageUrls;
+      authorizationConfirmed = data.authorizationConfirmed === true;
+      authorizationPolicyVersion = String(
+        data.authorizationPolicyVersion || authorizationPolicyVersion,
+      );
+      authorizationSubject = String(
+        data.authorizationSubject || authorizationSubject,
+      );
+    }
+    const imageCount = imageFiles.length || imageUrls.length;
+    if (imageCount === 0)
+      return json({ error: "No images provided" }, { status: 400 });
+    if (imageCount > 1) {
+      return json(
+        {
+          error:
+            "The free watermark tool supports one image per task. Batch output is not available yet.",
+          code: "PAID_OUTPUT_UNAVAILABLE",
+          maxFiles: 1,
+        },
+        { status: 402 },
+      );
+    }
+    if (!authorizationConfirmed) {
+      return json(
+        {
+          error:
+            "Authorization confirmation is required before removing a watermark",
+          code: "AUTHORIZATION_REQUIRED",
+        },
+        { status: 400 },
+      );
     }
 
-    console.log(`📸 收到 ${imageFiles.length} 张图片`);
-
-    // 创建ZIP文件
-    const zip = new JSZip();
-    
-    for (let i = 0; i < imageFiles.length; i++) {
-      const file = imageFiles[i];
-      const extension = file.name.split('.').pop() || 'jpg';
-      const fileName = `image_${i + 1}.${extension}`;
-      
-      const arrayBuffer = await file.arrayBuffer();
-      zip.file(fileName, arrayBuffer);
-    }
-
-    // 生成ZIP文件
-    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
-    console.log("📦 ZIP文件创建成功，大小:", zipBuffer.length, "bytes");
-
-    // 上传ZIP文件到R2
-    let zipUrl: string;
-    try {
-      // 创建一个临时的Blob来上传
-      const zipBlob = new Blob([zipBuffer], { type: 'application/zip' });
-      const zipFile = new File([zipBlob], 'images.zip', { type: 'application/zip' });
-      
-      zipUrl = await uploadToR2(zipFile);
-      console.log("✅ ZIP文件上传到R2成功:", zipUrl);
-    } catch (uploadError) {
-      console.error("❌ ZIP文件上传到R2失败:", uploadError);
-      return NextResponse.json({ error: "Failed to upload ZIP file" }, { status: 500 });
-    }
-
-    // 上传ZIP文件到RunningHub
-    let filename: string;
-    try {
-      filename = await runninghubAPI.uploadZip(zipBuffer);
-    } catch (uploadError) {
-      console.error("❌ ZIP文件上传到RunningHub失败:", uploadError);
-      return NextResponse.json({ error: "Failed to upload to RunningHub" }, { status: 500 });
-    }
-
-    // 先创建任务记录（用于 webhook 回调）
-    let taskRecord;
-    try {
-      taskRecord = await createWatermarkRemovalTask({
-        userId: userId || undefined,
-        runninghubTaskId: "pending", // 临时值，稍后更新
-        inputZipUrl: zipUrl,
+    const reservation = await reserveImageTask({
+      model: "watermarkRemovalTask",
+      principal: { userId, principalId: resolvedPrincipalId },
+      idempotencyKey,
+      data: {
+        runninghubTaskId: `pending-${nanoid(12)}`,
+        inputZipUrl: "",
+        authorizationConfirmed: true,
+        authorizationPolicyVersion,
+        authorizationSubject,
+        authorizationConfirmedAt: new Date(),
+        auditExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      },
+    });
+    const taskRecord = reservation.task;
+    if (reservation.idempotent) {
+      if (
+        taskRecord.taskStatus === "queued" &&
+        taskRecord.runninghubTaskId.startsWith("pending-")
+      ) {
+        const response = json(
+          {
+            error:
+              "Task is still starting. Retry with the same idempotency key.",
+            code: "TASK_STARTING",
+          },
+          { status: 409 },
+        );
+        response.headers.set("Retry-After", "2");
+        return response;
+      }
+      return json({
+        success: true,
+        taskId: taskRecord.runninghubTaskId,
+        taskRecordId: taskRecord.id,
+        status: taskRecord.taskStatus,
+        idempotent: true,
       });
-    } catch (dbError) {
-      console.error("❌ 创建任务记录失败:", dbError);
-      return NextResponse.json({ error: "Failed to create task record" }, { status: 500 });
     }
+    placeholderTaskId = taskRecord.id;
+    const inputOptions = {
+      maxBytes: tool.limits.maxFileSizeMb * 1024 * 1024,
+      allowedMimeTypes: tool.inputFormats,
+      maxPixels: tool.limits.maxPixels,
+    };
+    const input = imageUrls.length
+      ? await readTrustedRemoteImage(imageUrls[0], inputOptions)
+      : await validateImageFile(imageFiles[0], inputOptions);
 
-    // 创建去水印任务（包含 webhook URL）
-    let taskId: string;
-    try {
-      taskId = await runninghubAPI.createWatermarkRemovalTask(filename, taskRecord.id);
-    } catch (createError) {
-      console.error("❌ 创建去水印任务失败:", createError);
-      return NextResponse.json({ error: "Failed to create watermark removal task" }, { status: 500 });
-    }
-
-    // 更新任务记录中的 runninghubTaskId
+    const zip = new JSZip();
+    const file = input.file;
+    const extension =
+      file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
+    zip.file(`image_1.${extension}`, await file.arrayBuffer());
+    const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+    const zipUrl = await uploadToR2(
+      new File([new Uint8Array(zipBuffer)], "images.zip", {
+        type: "application/zip",
+      }),
+    );
+    await updateWatermarkRemovalTask(taskRecord.id, { inputZipUrl: zipUrl });
+    const filename = await runninghubAPI.uploadZip(zipBuffer);
+    const providerTaskId = await runninghubAPI.createWatermarkRemovalTask(
+      filename,
+      taskRecord.id,
+    );
     try {
       await updateWatermarkRemovalTask(taskRecord.id, {
-        runninghubTaskId: taskId,
+        runninghubTaskId: providerTaskId,
       });
-    } catch (updateError) {
-      console.error("❌ 更新任务记录失败:", updateError);
-      // 不返回错误，因为任务已经创建成功
+      await prisma.watermarkRemovalTask.updateMany({
+        where: { id: taskRecord.id, taskStatus: "queued" },
+        data: {
+          taskStatus: "processing",
+          executeStartTime: BigInt(Date.now()),
+        },
+      });
+    } catch (error) {
+      await runninghubAPI.cancelTask(providerTaskId).catch(() => null);
+      throw error;
     }
-
-    console.log("✅ 去水印任务创建成功:", {
-      taskId,
-      taskRecordId: taskRecord.id,
-      userId: userId || "anonymous"
-    });
-
-    return NextResponse.json({
+    return json({
       success: true,
-      taskId,
+      taskId: providerTaskId,
       taskRecordId: taskRecord.id,
-      message: "Watermark removal task created successfully"
+      status: "processing",
     });
-
   } catch (error) {
-    console.error("❌ 去水印处理失败:", error);
-    return NextResponse.json(
-      { error: getErrorMessage(error) },
-      { status: 500 }
-    );
+    if (
+      (error as { code?: string })?.code === "TASK_CREATION_OUTCOME_UNKNOWN"
+    ) {
+      return json(
+        {
+          error: getErrorMessage(error),
+          code: "TASK_CREATION_OUTCOME_UNKNOWN",
+          recoverable: true,
+        },
+        { status: 503 },
+      );
+    }
+    if (placeholderTaskId)
+      await markImageTaskReservationFailed(
+        "watermarkRemovalTask",
+        placeholderTaskId,
+        error,
+      ).catch(() => null);
+    if (error instanceof TaskLifecycleError)
+      return json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    if (error instanceof ImageInputError)
+      return json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    const message = getErrorMessage(error);
+    return json({ error: message }, { status: 500 });
   }
 }

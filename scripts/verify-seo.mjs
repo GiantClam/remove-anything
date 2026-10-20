@@ -110,6 +110,11 @@ async function main() {
     hreflangs: ["en", "zh-TW", "x-default"],
   });
 
+  await verifyPage("/remove-objects", {
+    canonical: "/remove-objects",
+    hreflangs: ["en", "zh-TW", "x-default"],
+  });
+
   await verifyPage("/blog/ai-background-removal-guide", {
     canonical: "/blog/ai-background-removal-guide",
     hreflangs: ["en", "ar", "x-default"],
@@ -117,8 +122,16 @@ async function main() {
 
   const { text: removeObjectsHtml } = await fetchText("/remove-objects");
   assert(
-    /<meta[^>]+name="robots"[^>]+content="noindex, follow"/i.test(removeObjectsHtml),
-    "/remove-objects should be noindex",
+    /<meta[^>]+name="robots"[^>]+content="index, follow"/i.test(removeObjectsHtml),
+    "/remove-objects should be index, follow",
+  );
+  assert(
+    !/<meta[^>]+name="robots"[^>]+content="noindex, follow"/i.test(removeObjectsHtml),
+    "/remove-objects must not be noindex",
+  );
+  assert(
+    removeObjectsHtml.includes('href="/remove-objects"') || removeObjectsHtml.includes('href="https://www.remove-anything.com/remove-objects"'),
+    "/remove-objects should be linked from navigation",
   );
 
   const { text: sitemapIndex } = await fetchText("/sitemap.xml");
@@ -132,9 +145,18 @@ async function main() {
     assert(sitemapIndex.includes(fileName), `sitemap index missing ${fileName}`);
   }
 
+  const { text: toolsSitemap } = await fetchText("/sitemap-tools.xml");
+  assert(
+    toolsSitemap.includes("/remove-objects"),
+    "/sitemap-tools.xml should contain /remove-objects",
+  );
+
   const { text: i18nSitemap } = await fetchText("/sitemap-i18n.xml");
   assert(!i18nSitemap.includes("/tw/"), "i18n sitemap should not contain /tw/");
-  assert(!i18nSitemap.includes("/remove-objects"), "i18n sitemap should not contain noindex pages");
+  assert(
+    i18nSitemap.includes("/zh-tw/remove-objects"),
+    "i18n sitemap should contain indexable /remove-objects locales",
+  );
 
   console.log(`SEO verification passed for ${baseUrl}`);
 }

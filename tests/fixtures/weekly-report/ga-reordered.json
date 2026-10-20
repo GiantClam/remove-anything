@@ -1,0 +1,121 @@
+{
+  "metadata": {
+    "source": "fixture GA export",
+    "property_id": "fixture-property",
+    "stream_id": "fixture-stream",
+    "retrieved_at": "2026-11-06T00:00:00Z",
+    "window": {
+      "start": "2026-10-01T00:00:00Z",
+      "end": "2026-10-08T00:00:00Z",
+      "time_zone": "UTC"
+    }
+  },
+  "dimensionHeaders": [
+    {
+      "name": "customEvent:locale"
+    },
+    {
+      "name": "customEvent:is_authenticated"
+    },
+    {
+      "name": "customEvent:tool_slug"
+    },
+    {
+      "name": "eventName"
+    },
+    {
+      "name": "landingPage"
+    }
+  ],
+  "metricHeaders": [
+    {
+      "name": "totalUsers"
+    },
+    {
+      "name": "eventCount"
+    }
+  ],
+  "rows": [
+    {
+      "dimensionValues": [
+        {
+          "value": "zh-tw"
+        },
+        {
+          "value": "true"
+        },
+        {
+          "value": "remove-watermark"
+        },
+        {
+          "value": "tool_view"
+        },
+        {
+          "value": "/zh-tw/remove-watermark"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "2"
+        },
+        {
+          "value": "7"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "en"
+        },
+        {
+          "value": "false"
+        },
+        {
+          "value": "remove-background"
+        },
+        {
+          "value": "tool_view"
+        },
+        {
+          "value": "/remove-background"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "3"
+        },
+        {
+          "value": "11"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "(not set)"
+        },
+        {
+          "value": ""
+        },
+        {
+          "value": "remove-background"
+        },
+        {
+          "value": "task_succeeded"
+        },
+        {
+          "value": "/remove-background"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "1"
+        },
+        {
+          "value": "not-a-number"
+        }
+      ]
+    }
+  ]
+}

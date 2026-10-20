@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getErrorMessage } from "@/lib/handle-error";
 import { createRunningHubClient } from "@/modules/runninghub";
 import { createPrismaTaskRepository } from "@/modules/tasks/adapters/prisma-repo";
-import { createPrismaTaskQueue } from "@/modules/tasks/adapters/prisma-queue";
 import { createVideoTaskWithR2Url } from "@/modules/tasks/sdk";
 import { createProjectAuthProvider } from "@/modules/auth/adapter";
 import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
@@ -14,6 +13,7 @@ import { getUserCredit } from "@/db/queries/account";
 import { env } from "@/env.mjs";
 import { uploadToR2, downloadFromR2 } from "@/lib/r2-upload";
 import { buildMediaTransformUrl, prewarmTransformUrl, waitForTransformReady } from "@/lib/cf-media";
+import { getSora2SubmissionDisposition } from "@/lib/video-task-queue-contract";
 
 // 包装函数以匹配适配器期望的类型
 const getCurrentUser = async () => {
@@ -154,6 +154,7 @@ export async function POST(req: NextRequest) {
         inputImageUrl: finalR2Url,
         taskStatus: "pending",
         isPrivate: true,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 
@@ -172,7 +173,6 @@ export async function POST(req: NextRequest) {
     }
     const rh = createRunningHubClient();
     const repo = createPrismaTaskRepository();
-    const queue = createPrismaTaskQueue();
     const uploadNodeId = env.SORA2_UPLOAD_NODE_ID || (isPortrait ? '153' : '205');
     const result = await createVideoTaskWithR2Url({
       model: 'sora2-video-watermark-removal',
@@ -181,19 +181,59 @@ export async function POST(req: NextRequest) {
       uploadNodeId,
       uploadFieldName: 'video',
       r2Url: transformUrl,
-    }, { repo, queue, rh });
+      taskRecordId: taskRecord.id,
+    }, { repo, rh });
 
-    if (result.ok) {
+    const disposition = getSora2SubmissionDisposition(result);
+    if (disposition.accepted && disposition.status === "processing" && disposition.taskId) {
+      // The SDK reports this case only when RunningHub returned a task ID but
+      // its repository write failed. Retry the local link only; never create
+      // the provider task again.
+      if (!result.ok && result.submissionOutcome === "created") {
+        try {
+          await prisma.taskData.update({
+            where: { id: taskRecord.id },
+            data: { replicateId: disposition.taskId, taskStatus: "Processing" },
+          });
+        } catch (persistenceError) {
+          console.error("Provider task created but task record needs reconciliation:", persistenceError);
+          return NextResponse.json({
+            success: true,
+            taskId: disposition.taskId,
+            recordId: taskRecord.id,
+            status: "processing",
+            message: "Provider task was created; task record needs reconciliation.",
+          }, { status: 202 });
+        }
+      }
+
       // 启动后端状态监控
       try {
         const { taskQueueManager } = await import('@/lib/task-queue');
-        taskQueueManager.startStatusWatcher(taskRecord.id, result.taskId);
+        taskQueueManager.startStatusWatcher(taskRecord.id, disposition.taskId);
       } catch {}
 
-      return NextResponse.json({ success: true, taskId: result.taskId, recordId: taskRecord.id, message: 'Task started', transformUrl }, { status: 200 });
+      return NextResponse.json({ success: true, taskId: disposition.taskId, recordId: taskRecord.id, message: 'Task started', transformUrl }, { status: 200 });
     }
-    console.error("RunningHub 同步创建失败，转入队列:", { error: result.error, workflowId, uploadNodeId, transformUrl });
-    return NextResponse.json({ success: true, recordId: taskRecord.id, message: 'Accepted. Enqueued for background retry via Cron.', transformUrl, error: result.error }, { status: 202 });
+    if (disposition.accepted && disposition.status === "submission-unknown") {
+      return NextResponse.json({
+        success: false,
+        recordId: taskRecord.id,
+        status: disposition.status,
+        code: disposition.code,
+        message: "Provider submission outcome is unknown. Check task status before retrying.",
+        transformUrl,
+      }, { status: 202 });
+    }
+    console.error("RunningHub 同步创建失败; no queue replay is allowed after provider submission:", { error: disposition.error, workflowId, uploadNodeId, transformUrl });
+    return NextResponse.json({
+      error: "Failed to create task",
+      code: disposition.code,
+      recordId: taskRecord.id,
+      status: disposition.status,
+      details: disposition.error,
+      transformUrl,
+    }, { status: 502 });
 
   } catch (error) {
     console.error("❌ Sora2 视频去水印任务创建失败:", error);

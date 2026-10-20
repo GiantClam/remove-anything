@@ -3,15 +3,21 @@
 import { cloneElement, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { SignedIn, SignedOut, SignInButton } from "@/components/auth/auth-components";
 import { useTranslations } from "next-intl";
 import { useReward } from "react-rewards";
 
+import { PaywallTracker } from "@/components/analytics/paywall-tracker";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+} from "@/components/auth/auth-components";
 import { BillingFormButton } from "@/components/forms/billing-form-button";
 import { HeaderSection } from "@/components/shared/header-section";
 import { Icons } from "@/components/shared/icons";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
 import SignBox from "@/components/sign-box";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +28,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import type { ChargeProductSelectDto } from "@/db/type";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { url } from "@/lib";
@@ -113,7 +118,11 @@ const PricingCard = ({
             ))} */}
         </ul>
         <SignedIn>
-          <BillingFormButton offer={offer} btnText={t("action.buy")} channel="Stripe" />
+          <BillingFormButton
+            offer={offer}
+            btnText={t("action.buy")}
+            channel="Stripe"
+          />
         </SignedIn>
 
         <SignedOut>
@@ -162,14 +171,12 @@ export function FreeCard() {
 
       <div className="flex h-full flex-col justify-between gap-16 p-6">
         <ul className="space-y-2 text-left text-sm font-medium leading-normal">
-          {["Limited models", "Max 5/month Images"]?.map(
-            (feature) => (
-              <li className="flex items-start gap-x-3" key={feature}>
-                <Icons.check className="size-5 shrink-0 text-purple-500" />
-                <p>{feature}</p>
-              </li>
-            ),
-          )}
+          {["Limited models", "Max 5/month Images"]?.map((feature) => (
+            <li className="flex items-start gap-x-3" key={feature}>
+              <Icons.check className="size-5 shrink-0 text-purple-500" />
+              <p>{feature}</p>
+            </li>
+          ))}
 
           {["Private Generations", "Commercial License"].map((feature) => (
             <li
@@ -241,6 +248,7 @@ export function PricingCards({
 
   return (
     <MaxWidthWrapper>
+      <PaywallTracker open />
       <section className="flex flex-col items-center text-center">
         <HeaderSection label={t("label")} title={t("title")} />
         <div className="mt-4">
@@ -332,7 +340,8 @@ export function PricingCardDialog({
   const product = useMemo(() => {
     let base: ChargeProductSelectDto[] = [];
     if (isSm || isMobile) {
-      if (chargeProduct?.[1]) base = [chargeProduct[1]] as ChargeProductSelectDto[];
+      if (chargeProduct?.[1])
+        base = [chargeProduct[1]] as ChargeProductSelectDto[];
       else base = (chargeProduct ?? []) as ChargeProductSelectDto[];
     } else {
       base = (chargeProduct ?? []) as ChargeProductSelectDto[];
@@ -347,6 +356,7 @@ export function PricingCardDialog({
         onClose(open);
       }}
     >
+      <PaywallTracker open={isOpen} />
       <DialogContent className="w-[96vw] md:w-[960px] md:max-w-[960px]">
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>

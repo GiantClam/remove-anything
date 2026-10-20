@@ -79,7 +79,7 @@ export function constructAlternates({
 }: {
   locale: string;
   path: string;
-  availableLocales?: string[];
+  availableLocales?: readonly string[];
 }): Metadata["alternates"] {
   const cleanPath = normalizePath(path);
   const localizedAlternates = (availableLocales ?? locales).map(normalizeRouteLocale);
@@ -114,7 +114,7 @@ export function buildSeoMetadata({
   title: string;
   description: string;
   keywords?: string | string[];
-  availableLocales?: string[];
+  availableLocales?: readonly string[];
   ogImage?: string;
   openGraphType?: "website" | "article";
   noIndex?: boolean;
@@ -139,14 +139,10 @@ export function buildSeoMetadata({
       path,
       availableLocales,
     }),
-    ...(noIndex
-      ? {
-          robots: {
-            index: false,
-            follow: true,
-          },
-        }
-      : {}),
+    robots: {
+      index: !noIndex,
+      follow: true,
+    },
     openGraph: {
       title,
       description,

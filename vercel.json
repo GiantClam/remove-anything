@@ -6,6 +6,9 @@
     "app/api/cron/process-queue/route.ts": {
       "maxDuration": 60
     },
+    "app/api/cron/cleanup-tasks/route.ts": {
+      "maxDuration": 60
+    },
     "app/api/task/[id]/route.ts": {
       "maxDuration": 15
     },
@@ -27,6 +30,7 @@
     }
   ],
   "crons": [
-    { "path": "/api/cron/process-queue", "schedule": "*/1 * * * *" }
+    { "path": "/api/cron/process-queue", "schedule": "*/1 * * * *" },
+    { "path": "/api/cron/cleanup-tasks", "schedule": "*/15 * * * *" }
   ]
 }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getErrorMessage } from "@/lib/handle-error";
+import { ImageInputError, validateImageFile } from "@/lib/image-input";
+import { getToolRegistryEntry } from "@/lib/tool-registry";
 import { uploadToR2 } from "@/lib/upload";
 
 export const dynamic = "force-dynamic";
@@ -14,19 +16,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "File is required" }, { status: 400 });
     }
 
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "Only image uploads are supported" }, { status: 400 });
-    }
-
-    const uploadedUrl = await uploadToR2(file);
+    const tool = getToolRegistryEntry("remove-objects");
+    if (!tool)
+      return NextResponse.json(
+        { error: "Tool configuration unavailable" },
+        { status: 503 },
+      );
+    const image = await validateImageFile(file, {
+      maxBytes: tool.limits.maxFileSizeMb * 1024 * 1024,
+      allowedMimeTypes: tool.inputFormats,
+      maxPixels: tool.limits.maxPixels,
+    });
+    const uploadedUrl = await uploadToR2(image.file);
 
     return NextResponse.json({
       success: true,
       url: uploadedUrl,
-      contentType: file.type,
+      contentType: image.contentType,
       fileName: file.name,
     });
   } catch (error) {
-    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+    if (error instanceof ImageInputError)
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    return NextResponse.json(
+      { error: getErrorMessage(error) },
+      { status: 500 },
+    );
   }
 }

@@ -5,6 +5,7 @@ export function createRunningHubClient(config?: { baseUrl?: string; apiKey?: str
   const api = new RunningHubAPI({ baseUrl: config?.baseUrl, apiKey: config?.apiKey, defaultWorkflowId: config?.defaultWorkflowId });
   return {
     createTaskGeneric: (opts) => api.createTaskGeneric(opts),
+    cancelTask: (taskId) => api.cancelTask(taskId),
     getTaskStatus: (taskId) => api.getTaskStatus(taskId),
     getTaskResult: (taskId) => api.getTaskResult(taskId),
   };

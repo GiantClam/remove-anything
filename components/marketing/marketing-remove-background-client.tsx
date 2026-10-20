@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Upload, Download, LogIn, Sparkles, Share2, Copy } from 'lucide-react';
+import { Upload, Download, Sparkles, Share2, Copy } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,15 @@ import {
   type BackgroundToolVariant,
 } from '@/lib/background-tool-variants';
 import { buildLocalizedPath, buildLocalizedUrl } from '@/lib/seo';
+
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+
+function createClientIdempotencyKey() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
 const SocialProofBar = dynamic(() => import('./social-proof-bar'), {
   ssr: false,
   loading: () => <div data-social-proof-placeholder></div>,
@@ -59,6 +68,7 @@ export default function MarketingRemoveBackground({
   const [isDragging, setIsDragging] = useState(false);
   const [queuedFiles, setQueuedFiles] = useState<File[]>([]);
   const [recentImages, setRecentImages] = useState<Array<{url: string, timestamp: number}>>([]);
+  const idempotencyKeyRef = useRef<string | null>(null);
   const [showAddBackground, setShowAddBackground] = useState(
     shouldAutoOpenBackgroundPanel(variant),
   );
@@ -459,8 +469,8 @@ export default function MarketingRemoveBackground({
       return;
     }
 
-    // 验证文件大小 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Keep the client gate aligned with the registry and API contract.
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
       toast.error(tPage('fileSizeLimit'));
       return;
     }
@@ -469,6 +479,7 @@ export default function MarketingRemoveBackground({
     setProcessedImage(null);
     setHasError(false);
     setCurrentTaskId(null);
+    idempotencyKeyRef.current = createClientIdempotencyKey();
     setIsProcessing(true);
 
     setUploadedFile(file);
@@ -500,6 +511,7 @@ export default function MarketingRemoveBackground({
       const reader = new FileReader();
       reader.onload = (e) => setOriginalImage(e.target?.result as string);
       reader.readAsDataURL(list[0]);
+      idempotencyKeyRef.current = createClientIdempotencyKey();
       processImage(list[0]);
       if (list.length > 1) setQueuedFiles(prev => [...prev, ...list.slice(1)]);
     } else {
@@ -510,6 +522,10 @@ export default function MarketingRemoveBackground({
   const processImage = async (file: File) => {
     setIsProcessing(true);
     setProcessedImage(null);
+    setHasError(false);
+    setCurrentTaskId(null);
+    const idempotencyKey = idempotencyKeyRef.current || createClientIdempotencyKey();
+    idempotencyKeyRef.current = idempotencyKey;
 
     try {
       // 创建FormData
@@ -519,6 +535,7 @@ export default function MarketingRemoveBackground({
       // 调用API创建异步任务
       const response = await fetch('/api/generate', {
         method: 'POST',
+        headers: { 'Idempotency-Key': idempotencyKey },
         body: formData,
       });
 
@@ -539,16 +556,10 @@ export default function MarketingRemoveBackground({
       }
     } catch (error) {
       console.error('Error processing image:', error);
-      toast.error(tPage('processingFailed'));
-      
-      // 如果API调用失败，显示模拟结果用于演示
-      if (uploadedFile) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setProcessedImage(e.target?.result as string);
-        };
-        reader.readAsDataURL(uploadedFile);
-      }
+      const message = error instanceof Error ? error.message : tPage('processingFailed');
+      setHasError(message);
+      setIsProcessing(false);
+      toast.error(message);
     } finally {
       // 结束与队列推进逻辑由成功/失败回调统一处理，避免生产环境下提前关闭遮罩
     }
@@ -558,10 +569,14 @@ export default function MarketingRemoveBackground({
   const processImageByUrl = async (imageUrl: string) => {
     setIsProcessing(true);
     setProcessedImage(null);
+    setHasError(false);
+    setCurrentTaskId(null);
+    const idempotencyKey = idempotencyKeyRef.current || createClientIdempotencyKey();
+    idempotencyKeyRef.current = idempotencyKey;
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
         body: JSON.stringify({ image: imageUrl }),
       });
       if (!response.ok) throw new Error('Failed to create background removal task');
@@ -574,7 +589,10 @@ export default function MarketingRemoveBackground({
       }
     } catch (error) {
       console.error('Error processing image by URL:', error);
-      toast.error(tPage('processingFailed'));
+      const message = error instanceof Error ? error.message : tPage('processingFailed');
+      setHasError(message);
+      setIsProcessing(false);
+      toast.error(message);
     }
   };
 
@@ -584,6 +602,7 @@ export default function MarketingRemoveBackground({
       if (prev.length === 0) return prev;
       const [next, ...rest] = prev;
       setUploadedFile(next);
+      idempotencyKeyRef.current = createClientIdempotencyKey();
       const reader = new FileReader();
       reader.onload = (e) => setOriginalImage(e.target?.result as string);
       reader.readAsDataURL(next);
@@ -606,7 +625,7 @@ export default function MarketingRemoveBackground({
       toast.success(tPage('taskCreated'));
       
       // 使用 Server-Sent Events 实时监听
-      const eventSource = new EventSource(`/api/task-status-stream/${taskId}`);
+      const eventSource = new EventSource(`/api/task-status-stream/${encodeURIComponent(taskId)}`);
       
       eventSource.onmessage = (event) => {
         try {
@@ -625,17 +644,23 @@ export default function MarketingRemoveBackground({
             }
             
             eventSource.close();
+          } else if (data.status === 'succeeded' || data.status === 'SUCCESS') {
+            setHasError('No output received');
+            setIsProcessing(false);
+            toast.error('No output received');
+            eventSource.close();
           } else if (data.status === 'failed') {
             console.log("❌ 任务失败:", data.error);
             setHasError(data.error || 'Task failed');
             setIsProcessing(false);
             toast.error(data.error || 'Task failed');
             eventSource.close();
-          } else if (data.status === 'timeout') {
+          } else if (data.status === 'expired' || data.status === 'timeout') {
             console.log("⏰ 任务超时");
-            setHasError('Task timeout');
+            const message = data.error || 'Task has expired';
+            setHasError(message);
             setIsProcessing(false);
-            toast.error('Task timeout');
+            toast.error(message);
             eventSource.close();
           } else if (data.error) {
             console.log("❌ SSE 错误:", data.error);
@@ -646,6 +671,8 @@ export default function MarketingRemoveBackground({
           }
         } catch (error) {
           console.error("❌ 解析 SSE 数据失败:", error);
+          eventSource.close();
+          void fallbackToPolling(taskId);
         }
       };
       
@@ -679,16 +706,18 @@ export default function MarketingRemoveBackground({
       try {
         console.log(`🔍 第 ${attempts + 1} 次查询任务状态: ${taskId}`);
         
-        const response = await fetch(`/api/task/${taskId}`);
+        const response = await fetch(`/api/task/${encodeURIComponent(taskId)}`, { cache: 'no-store' });
         
         if (!response.ok) {
-          throw new Error('Failed to get task status');
+          const error = await response.json().catch(() => null);
+          throw new Error(error?.error || tPage('getStatusFailed'));
         }
         
         const taskStatus = await response.json();
         console.log("任务状态:", taskStatus);
         
         switch (taskStatus.status) {
+          case 'queued':
           case 'pending':
           case 'starting':
           case 'processing':
@@ -713,6 +742,7 @@ export default function MarketingRemoveBackground({
             }
             if (taskStatus.output) {
               setProcessedImage(taskStatus.output);
+              setIsProcessing(false);
               toast.success(tPage('backgroundRemoved'));
               
               // 保存到localStorage历史记录
@@ -726,13 +756,14 @@ export default function MarketingRemoveBackground({
             
           case 'failed':
           case 'canceled':
+          case 'expired':
             console.log(`❌ 任务失败: ${taskStatus.error || 'Task failed'}`);
             isPollingStopped = true;
             if (pollTimeout) {
               clearTimeout(pollTimeout);
               pollTimeout = null;
             }
-            throw new Error(taskStatus.error || 'Task failed');
+            throw new Error(taskStatus.error || (taskStatus.status === 'expired' ? 'Task has expired' : 'Task failed'));
             
           default:
             console.log(`⚠️ 未知状态: ${taskStatus.status}`);
@@ -745,7 +776,10 @@ export default function MarketingRemoveBackground({
           clearTimeout(pollTimeout);
           pollTimeout = null;
         }
-        toast.error(tPage('getStatusFailed'));
+        const message = error instanceof Error ? error.message : tPage('getStatusFailed');
+        setHasError(message);
+        setIsProcessing(false);
+        toast.error(message);
       }
     };
     
@@ -753,17 +787,6 @@ export default function MarketingRemoveBackground({
   };
 
   const handleDownload = async () => {
-    // 在开发环境中跳过登录验证
-    if (!isAuthenticated && process.env.NODE_ENV !== 'development') {
-      toast.info(tPage('loginToDownload'));
-      // 保存当前任务ID到sessionStorage，登录后可以继续下载
-      if (currentTaskId) {
-        sessionStorage.setItem('pendingDownloadTaskId', currentTaskId);
-      }
-      window.location.href = buildLocalizedPath(locale, "/signin");
-      return;
-    }
-
     if (!processedImage) {
       toast.error(tPage('noImageToDownload'));
       return;
@@ -779,7 +802,7 @@ export default function MarketingRemoveBackground({
       // 如果有任务ID，使用API下载（支持统计和权限控制）
       if (currentTaskId) {
         console.log(`🔍 开始API下载: ${currentTaskId}`);
-        const response = await fetch(`/api/download-background?taskId=${currentTaskId}`, {
+        const response = await fetch(`/api/download-background?taskId=${encodeURIComponent(currentTaskId)}`, {
           credentials: 'include',
         });
         
@@ -886,13 +909,12 @@ export default function MarketingRemoveBackground({
           setTimeout(() => window.URL.revokeObjectURL(url), 1000);
           return;
         } else {
-          console.warn(`❌ API download failed: ${response.status} ${response.statusText}, falling back to direct download`);
-          const errorText = await response.text();
-          console.warn(`Error details: ${errorText}`);
+          const error = await response.json().catch(() => null);
+          throw new Error(error?.error || tPage('messages.downloadFailed'));
         }
       }
       
-      // 降级方案：直接下载图片URL
+      // 没有远程任务的本地图片可以直接下载。
       const fileName = 'removed-background.png';
       
       if (isMobile) {
@@ -956,7 +978,7 @@ export default function MarketingRemoveBackground({
       }
     } catch (error) {
       console.error('Download error:', error);
-      toast.error('Download failed. Please try again');
+      toast.error(error instanceof Error ? error.message : tPage('messages.downloadFailed'));
     }
   };
 
@@ -978,12 +1000,10 @@ export default function MarketingRemoveBackground({
       const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       const mode = isDark ? 'dark' : 'light';
 
-      // 生成分享URL：包含 before/after，便于社交爬虫在SSR阶段生成OG卡片
+      // Share the tool without exposing source or result storage URLs.
       const params = new URLSearchParams();
       if (currentTaskId) params.set('task', currentTaskId);
       params.set('ref', isAuthenticated ? 'user' : 'guest');
-      if (originalImage) params.set('before', originalImage);
-      params.set('after', processedImage);
       if (currentTaskId) params.set('id', currentTaskId);
       params.set('mode', mode);
 
@@ -1000,9 +1020,8 @@ export default function MarketingRemoveBackground({
             text: shareText,
             url: shareUrl,
           });
-          toast.success('Shared! You may get 2 extra free uses');
+          toast.success('Shared!');
           
-          // TODO: 记录分享事件到后端，给予奖励
         } catch (err) {
           // 用户取消分享或分享失败，降级到复制链接
           handleCopyShareLink(shareUrl, shareText);
@@ -1059,8 +1078,6 @@ export default function MarketingRemoveBackground({
     const params = new URLSearchParams();
     if (currentTaskId) params.set('task', currentTaskId);
     params.set('ref', isAuthenticated ? 'user' : 'guest');
-    if (originalImage) params.set('before', originalImage);
-    params.set('after', processedImage);
     if (currentTaskId) params.set('id', currentTaskId);
     params.set('mode', mode);
     const shareUrl = `${buildLocalizedUrl(locale, toolCopy.path)}?${params.toString()}`;
@@ -1079,7 +1096,7 @@ export default function MarketingRemoveBackground({
   const handleCopyShareLink = async (url: string, text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success('Link copied! Share to get 2 more free uses');
+      toast.success('Link copied!');
     } catch (error) {
       // 降级：使用传统方法
       const textarea = document.createElement('textarea');
@@ -1090,7 +1107,7 @@ export default function MarketingRemoveBackground({
       textarea.select();
       try {
         document.execCommand('copy');
-        toast.success('Link copied! Share to get 2 more free uses');
+        toast.success('Link copied!');
       } catch (err) {
         toast.error('Copy failed. Please copy manually');
       }
@@ -1266,7 +1283,7 @@ export default function MarketingRemoveBackground({
             accept="image/*"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file && file.size > 10 * 1024 * 1024) {
+              if (file && file.size > MAX_IMAGE_SIZE_BYTES) {
                 toast.error('File too large (>10MB). Please compress and try again');
                 e.currentTarget.value = '';
                 return;
@@ -1373,7 +1390,7 @@ export default function MarketingRemoveBackground({
           </div>
           
           <div className="mt-4 grid gap-1 text-xs text-muted-foreground">
-            <p>• PNG, JPG, WEBP up to 15&nbsp;MB</p>
+            <p>• PNG, JPG, WEBP up to 10&nbsp;MB · output PNG up to 10&nbsp;MB · results expire after 24 hours</p>
             <p>• Drag multiple files to auto-queue them</p>
             {queuedFiles.length > 0 && (
               <p>• In queue: {queuedFiles.length} image(s)</p>
@@ -1420,7 +1437,7 @@ export default function MarketingRemoveBackground({
                         className="flex items-center gap-2 border-[#FF4F5E] text-[#FF4F5E] hover:bg-[#FF4F5E] hover:text-white"
                       >
                         <Share2 className="size-4" />
-                        Share to get 2 more free uses
+                        Share this tool
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="min-w-52">
@@ -1461,9 +1478,7 @@ export default function MarketingRemoveBackground({
                         const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
                         const mode = isDark ? 'dark' : 'light';
                         const params = new URLSearchParams();
-                        if (originalImage) params.set('before', originalImage);
-                        params.set('after', processedImage);
-                        if (currentTaskId) params.set('id', currentTaskId);
+                                                            if (currentTaskId) params.set('id', currentTaskId);
                         params.set('mode', mode);
                         const shareUrl = `${buildLocalizedUrl(locale, toolCopy.path)}?${params.toString()}`;
                         navigator.clipboard.writeText(shareUrl);
@@ -1482,7 +1497,7 @@ export default function MarketingRemoveBackground({
                   size="sm" 
                   className="flex items-center gap-2 bg-[#FF4F5E] hover:bg-[#FF3D4E] text-white"
                 >
-                  {isAuthenticated ? (<><Download className="size-4" />{tPage('download')}</>) : (<><LogIn className="size-4" />{tPage('loginDownload')}</>)}
+                  <Download className="size-4" />{tPage('download')}
                 </Button>
               </div>
             </CardTitle>
@@ -1592,6 +1607,18 @@ export default function MarketingRemoveBackground({
                 {hasError && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                     <p className="text-sm text-red-600">{hasError}</p>
+                    {uploadedFile && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => { void processImage(uploadedFile); }}
+                        disabled={isProcessing}
+                      >
+                        Try again
+                      </Button>
+                    )}
                   </div>
                 )}
                 

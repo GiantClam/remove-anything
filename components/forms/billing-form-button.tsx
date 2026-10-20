@@ -5,6 +5,8 @@ import { useTransition } from "react";
 import { Icons } from "@/components/shared/icons";
 import { Button } from "@/components/ui/button";
 import type { ChargeProductSelectDto } from "@/db/type";
+import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
+import { trackAnalyticsEvent } from "@/lib/gtag";
 import { cn } from "@/lib/utils";
 
 interface BillingFormButtonProps {
@@ -26,6 +28,13 @@ export function BillingFormButton({
 
   const checkoutAction = () =>
     startTransition(async () => {
+      trackAnalyticsEvent(ANALYTICS_EVENTS.upgradeClicked, {
+        plan: offer.id,
+        amount: offer.amount,
+        currency: offer.currency?.toUpperCase(),
+        channel,
+        is_authenticated: true,
+      });
       const response = await fetch(`/api/charge-order`, {
         method: "POST",
         body: JSON.stringify({
@@ -43,13 +52,24 @@ export function BillingFormButton({
         throw new Error(data.error || `Unable to start ${channel} checkout`);
       }
 
+      trackAnalyticsEvent(ANALYTICS_EVENTS.checkoutStarted, {
+        order_id: data.orderId,
+        plan: offer.id,
+        amount: offer.amount,
+        currency: offer.currency?.toUpperCase(),
+        channel,
+        is_authenticated: true,
+      });
+
       window.location.href = data.url;
     });
 
   const userOffer = offer.amount === 1990;
   return (
     <Button
-      variant={variant ?? (userOffer && channel === "Stripe" ? "default" : "outline")}
+      variant={
+        variant ?? (userOffer && channel === "Stripe" ? "default" : "outline")
+      }
       className={cn("w-full", className)}
       disabled={isPending}
       onClick={checkoutAction}

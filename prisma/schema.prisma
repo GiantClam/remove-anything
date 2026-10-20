@@ -179,6 +179,13 @@ model TaskData {
   createdAt        DateTime @default(now()) @map(name: "created_at")
   updatedAt        DateTime @default(now()) @map(name: "updated_at")
   errorMsg         String?  @map(name: "error_msg")
+  principalId      String?  @map(name: "principal_id")
+  expiresAt        DateTime? @map(name: "expires_at")
+  retryCount       Int      @default(0) @map(name: "retry_count")
+  idempotencyKey   String?  @map(name: "idempotency_key")
+  retentionCheckedAt DateTime? @map("retention_checked_at")
+  retentionCleanedAt DateTime? @map("retention_cleaned_at")
+  auditExpiresAt     DateTime? @default(dbgenerated("(CURRENT_TIMESTAMP + interval '90 days')")) @map("audit_expires_at")
   loraUrl          String?  @map("lora_url")
   loraName         String?  @map("lora_name")
   loraScale        Float?   @map("lora_scale")
@@ -198,11 +205,14 @@ model TaskData {
   userBillings UserBilling[]
 
   @@map(name: "task_data")
+  @@index([retentionCleanedAt, retentionCheckedAt, expiresAt], map: "task_data_retention_idx")
+  @@index([auditExpiresAt], map: "task_data_audit_expires_at_idx")
 }
 
 model BackgroundRemovalTask {
   id               Int       @id @default(autoincrement())
   userId           String?   @map(name: "user_id")
+  principalId      String?   @map(name: "principal_id")
   replicateId      String    @unique @map(name: "replicate_id")
   inputImageUrl    String    @map(name: "input_image_url")
   outputImageUrl   String?   @map(name: "output_image_url")
@@ -217,6 +227,12 @@ model BackgroundRemovalTask {
   isPublic         Boolean   @default(true) @map(name: "is_public")
   createdAt        DateTime  @default(now()) @map(name: "created_at")
   updatedAt        DateTime  @updatedAt @map(name: "updated_at")
+  expiresAt        DateTime? @map(name: "expires_at")
+  retryCount       Int       @default(0) @map(name: "retry_count")
+  idempotencyKey   String?   @map(name: "idempotency_key")
+  retentionCheckedAt DateTime? @map("retention_checked_at")
+  retentionCleanedAt DateTime? @map("retention_cleaned_at")
+  auditExpiresAt     DateTime? @default(dbgenerated("(CURRENT_TIMESTAMP + interval '90 days')")) @map("audit_expires_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -224,11 +240,17 @@ model BackgroundRemovalTask {
   @@index([userId])
   @@index([taskStatus])
   @@index([createdAt])
+  @@index([principalId, createdAt], map: "background_removal_tasks_principal_created_idx")
+  @@index([userId, createdAt], map: "background_removal_tasks_user_created_idx")
+  @@index([idempotencyKey], map: "background_removal_tasks_idempotency_idx")
+  @@index([retentionCleanedAt, retentionCheckedAt, expiresAt], map: "background_removal_tasks_retention_idx")
+  @@index([auditExpiresAt], map: "background_removal_tasks_audit_expires_at_idx")
 }
 
 model WatermarkRemovalTask {
   id               Int       @id @default(autoincrement())
   userId           String?   @map(name: "user_id")
+  principalId      String?   @map(name: "principal_id")
   runninghubTaskId String    @unique @map(name: "runninghub_task_id")
   inputZipUrl      String    @map(name: "input_zip_url")
   outputZipUrl     String?   @map(name: "output_zip_url")
@@ -241,6 +263,16 @@ model WatermarkRemovalTask {
   isPublic         Boolean   @default(true) @map(name: "is_public")
   createdAt        DateTime  @default(now()) @map(name: "created_at")
   updatedAt        DateTime  @updatedAt @map(name: "updated_at")
+  expiresAt        DateTime? @map(name: "expires_at")
+  retryCount       Int       @default(0) @map(name: "retry_count")
+  idempotencyKey   String?   @map(name: "idempotency_key")
+  retentionCheckedAt DateTime? @map("retention_checked_at")
+  retentionCleanedAt DateTime? @map("retention_cleaned_at")
+  authorizationConfirmed Boolean @default(false) @map(name: "authorization_confirmed")
+  authorizationPolicyVersion String? @map(name: "authorization_policy_version")
+  authorizationSubject String? @map(name: "authorization_subject")
+  authorizationConfirmedAt DateTime? @map(name: "authorization_confirmed_at")
+  auditExpiresAt   DateTime? @default(dbgenerated("(CURRENT_TIMESTAMP + interval '90 days')")) @map(name: "audit_expires_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -248,11 +280,15 @@ model WatermarkRemovalTask {
   @@index([userId])
   @@index([taskStatus])
   @@index([createdAt])
+  @@index([idempotencyKey], map: "watermark_removal_tasks_idempotency_idx")
+  @@index([retentionCleanedAt, retentionCheckedAt, expiresAt], map: "watermark_removal_tasks_retention_idx")
+  @@index([auditExpiresAt], map: "watermark_removal_tasks_audit_expires_at_idx")
 }
 
 model ObjectRemovalTask {
   id               Int       @id @default(autoincrement())
   userId           String?   @map(name: "user_id")
+  principalId      String?   @map(name: "principal_id")
   runninghubTaskId String    @unique @map(name: "runninghub_task_id")
   inputImageUrl    String    @map(name: "input_image_url")
   inputMaskUrl     String    @map(name: "input_mask_url")
@@ -265,6 +301,16 @@ model ObjectRemovalTask {
   isPublic         Boolean   @default(true) @map(name: "is_public")
   createdAt        DateTime  @default(now()) @map(name: "created_at")
   updatedAt        DateTime  @updatedAt @map(name: "updated_at")
+  expiresAt        DateTime? @map(name: "expires_at")
+  retryCount       Int       @default(0) @map(name: "retry_count")
+  idempotencyKey   String?   @map(name: "idempotency_key")
+  retentionCheckedAt DateTime? @map("retention_checked_at")
+  retentionCleanedAt DateTime? @map("retention_cleaned_at")
+  authorizationConfirmed Boolean @default(false) @map(name: "authorization_confirmed")
+  authorizationPolicyVersion String? @map(name: "authorization_policy_version")
+  authorizationSubject String? @map(name: "authorization_subject")
+  authorizationConfirmedAt DateTime? @map(name: "authorization_confirmed_at")
+  auditExpiresAt   DateTime? @default(dbgenerated("(CURRENT_TIMESTAMP + interval '90 days')")) @map(name: "audit_expires_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -272,6 +318,9 @@ model ObjectRemovalTask {
   @@index([userId])
   @@index([taskStatus])
   @@index([createdAt])
+  @@index([idempotencyKey], map: "object_removal_tasks_idempotency_idx")
+  @@index([retentionCleanedAt, retentionCheckedAt, expiresAt], map: "object_removal_tasks_retention_idx")
+  @@index([auditExpiresAt], map: "object_removal_tasks_audit_expires_at_idx")
 }
 
 model TaskDownloads {

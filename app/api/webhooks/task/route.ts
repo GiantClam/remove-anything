@@ -1,151 +1,106 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-
 import { z } from "zod";
 
 import { prisma } from "@/db/prisma";
-import { getUserCredit } from "@/db/queries/account";
-import { TaskStatus, BillingType } from "@/db/type";
 import { env } from "@/env.mjs";
 import { getErrorMessage } from "@/lib/handle-error";
 import { logsnag } from "@/lib/log-snag";
+import {
+  ANALYTICS_EVENTS,
+  createTaskAnalyticsEvent,
+  emitServerAnalyticsEvent,
+} from "@/lib/analytics-events";
+import { normalizeTaskStatus, refundFailedTaskCredit } from "@/lib/task-lifecycle";
 
 const WebhookSchema = z.object({
-  taskStatus: z.string(),
-  replicateId: z.string(),
+  taskStatus: z.string().transform((value) => value.trim().toLowerCase()).refine(
+    (value) => ["queued", "pending", "starting", "processing", "running", "succeeded", "success", "failed", "canceled", "cancelled", "expired", "timeout"].includes(value),
+    "Unsupported task status",
+  ),
+  replicateId: z.string().min(1),
 });
 
 export async function POST(req: Request) {
-  // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
-  const TASK_HEADER_KEY = env.TASK_HEADER_KEY;
-
-  if (!TASK_HEADER_KEY) {
-    throw new Error("Please add TASK_HEADER_KEY");
+  if (!env.TASK_HEADER_KEY) {
+    return NextResponse.json({ error: "Task callback authentication is unavailable" }, { status: 503 });
+  }
+  if (req.headers.get("remove-anything-webhook-key") !== env.TASK_HEADER_KEY) {
+    return NextResponse.json({ error: "Invalid task callback key" }, { status: 400 });
   }
 
-  // Get the headers
-  const headerPayload = headers();
-  const webhookKey = headerPayload.get("remove-anything-webhook-key");
-
-  // If there are no headers, error out
-  if (!webhookKey || webhookKey! !== TASK_HEADER_KEY) {
-    return new Response("Error occured -- no headers", {
-      status: 400,
-    });
-  }
-
-  // Get the body
   try {
-    const payload = await req.json();
-    const body = WebhookSchema.parse(payload);
-    const { replicateId, taskStatus } = body;
-    // Do something with the payload
-    // For this guide, you simply log the payload to the console
-    const taskData = await prisma.taskData.findFirst({
-      where: {
-        replicateId,
-      },
-    });
-    if (!taskData || !taskData.id) {
-      return NextResponse.json(
-        { error: "Task data not found" },
-        { status: 404 },
+    const { replicateId, taskStatus } = WebhookSchema.parse(await req.json());
+    const task = await prisma.taskData.findFirst({ where: { replicateId } });
+    if (!task) return NextResponse.json({ error: "Task data not found" }, { status: 404 });
+
+    const status = normalizeTaskStatus(taskStatus);
+    const previousStatus = normalizeTaskStatus(task.taskStatus);
+    const terminal = ["succeeded", "failed", "expired"].includes(previousStatus);
+    if ((terminal && previousStatus !== status) || (previousStatus === "processing" && status === "queued")) {
+      return NextResponse.json({ success: true, message: "Newer task state already recorded" });
+    }
+
+    let transitioned = false;
+    if (task.taskStatus !== status) {
+      const result = await prisma.taskData.updateMany({
+        where: { id: task.id, taskStatus: task.taskStatus },
+        data: {
+          taskStatus: status,
+          ...(["succeeded", "failed", "expired"].includes(status) ? { executeEndTime: BigInt(Date.now()) } : {}),
+        },
+      });
+      transitioned = result.count > 0 && previousStatus !== status;
+    }
+
+    if (transitioned) {
+      const fields = {
+        is_authenticated: Boolean(task.userId),
+        locale: task.locale ?? undefined,
+      };
+      const legacyEventName = status === "succeeded"
+        ? ANALYTICS_EVENTS.taskSucceeded
+        : status === "failed" || status === "expired"
+          ? ANALYTICS_EVENTS.taskFailed
+          : status === "processing"
+            ? ANALYTICS_EVENTS.taskProcessing
+            : ANALYTICS_EVENTS.taskCreated;
+      await emitServerAnalyticsEvent(
+        createTaskAnalyticsEvent(legacyEventName, task.id, fields),
       );
-    }
-    if (
-      taskData.taskStatus === TaskStatus.Succeeded &&
-      taskStatus !== TaskStatus.Succeeded
-    ) {
-      console.log(`⚠️ Webhook received for already succeeded task: ${replicateId}`);
-      return NextResponse.json({ success: true, message: "Task already succeeded" });
-    }
-    if (!taskData.userId) {
-      console.log("⚠️ 任务没有关联用户，跳过积分处理");
-      return new Response("", { status: 200 });
-    }
-    
-    const account = await getUserCredit(taskData.userId);
 
-    const billingData = await prisma.userBilling.findFirst({
-      where: {
-        AND: [
-          {
-            taskId: taskData.id,
-          },
-          {
-            type: BillingType.Refund,
-          },
-        ],
-      },
-    });
-
-    if (billingData) {
-      return new Response("", { status: 200 });
-    }
-
-    await prisma.$transaction(async (tx) => {
-      const billingData = await tx.userBilling.findFirst({
-        where: {
-          AND: [
-            {
-              taskId: taskData.id,
-            },
-            {
-              type: BillingType.Withdraw,
-            },
-          ],
-        },
-      });
-      if (!billingData) {
-        throw new Error("Billing data not found");
+      const lifecycleEventName = status === "succeeded"
+        ? ANALYTICS_EVENTS.processingCompleted
+        : status === "failed" || status === "expired"
+          ? ANALYTICS_EVENTS.processingFailed
+          : status === "processing"
+            ? ANALYTICS_EVENTS.processingStarted
+            : null;
+      if (lifecycleEventName) {
+        await emitServerAnalyticsEvent(
+          createTaskAnalyticsEvent(lifecycleEventName, task.id, fields),
+        );
       }
+    }
 
-      const billingAmount = billingData.amount;
-      const newBilling = await tx.userBilling.create({
-        data: {
-          userId: billingData.userId,
-          state: "Done",
-          amount: -billingAmount,
-          type: BillingType.Refund,
-          taskId: taskData.id,
-          description: "Refund",
-        },
-      });
-
-      await tx.userCreditTransaction.create({
-        data: {
-          userId: billingData.userId,
-          credit: -billingAmount,
-          billingId: newBilling.id,
-          balance: account.credit - billingAmount,
-          type: "Refund",
-        },
-      });
-      await tx.userCredit.update({
-        where: {
-          id: Number(account.id),
-        },
-        data: {
-          credit: {
-            decrement: billingAmount,
-          },
-        },
-      });
-    });
-    await logsnag.track({
-      channel: "refund",
-      event: "Refund points",
-      user_id: taskData.userId,
-      description: `用户绘画任务执行失败`,
-      icon: "💰",
-    });
+    // The refund helper rechecks the persisted failure and claims its real
+    // withdrawal. Success, processing, and free tasks cannot receive credits.
+    if (status === "failed" && task.userId) {
+      const refunded = await refundFailedTaskCredit(task.userId, task.id, "image");
+      if (refunded) {
+        await logsnag.track({
+          channel: "refund",
+          event: "Refund points",
+          user_id: task.userId,
+          description: "Task failed; its consumed credits were returned",
+          icon: "💰",
+        }).catch((error: unknown) => console.warn("Refund notification failed:", error));
+      }
+    }
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.log("error--->", error);
     return NextResponse.json(
       { error: getErrorMessage(error) },
-      { status: 400 },
+      { status: error instanceof z.ZodError ? 400 : 500 },
     );
   }
-
-  return new Response("", { status: 200 });
 }

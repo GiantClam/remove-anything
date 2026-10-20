@@ -4,6 +4,7 @@ import { BLOG_CATEGORIES } from "@/config/blog";
 import { defaultLocale, locales } from "@/config";
 import { alternativePageLocales } from "@/lib/alternative-pages";
 import { buildLocalizedUrl } from "@/lib/seo";
+import { getIndexableTools, type ToolRegistryEntry } from "@/lib/tool-registry";
 import { env } from "@/env.mjs";
 
 type ChangeFrequency = "daily" | "weekly" | "monthly";
@@ -19,6 +20,9 @@ type StaticPage = {
   path: string;
   priority: number;
   changeFrequency: ChangeFrequency;
+  indexable?: boolean;
+  availableLocales?: readonly string[];
+  lastModified?: string;
 };
 
 const now = new Date();
@@ -32,22 +36,18 @@ const corePages: StaticPage[] = [
   { path: "/terms-of-use", priority: 0.3, changeFrequency: "monthly" },
 ];
 
-const toolPages: StaticPage[] = [
-  { path: "/remove-background", priority: 1, changeFrequency: "daily" },
-  { path: "/transparent-png-maker", priority: 0.95, changeFrequency: "daily" },
-  { path: "/white-background-maker", priority: 0.95, changeFrequency: "daily" },
-  { path: "/change-background-color", priority: 0.9, changeFrequency: "daily" },
-  { path: "/batch-remove-background", priority: 0.9, changeFrequency: "weekly" },
-  { path: "/batch-image-compressor", priority: 0.88, changeFrequency: "weekly" },
-  { path: "/batch-image-resizer", priority: 0.88, changeFrequency: "weekly" },
-  { path: "/batch-image-format-converter", priority: 0.88, changeFrequency: "weekly" },
-  { path: "/png-to-jpg", priority: 0.86, changeFrequency: "weekly" },
-  { path: "/jpg-to-png", priority: 0.86, changeFrequency: "weekly" },
-  { path: "/webp-to-png", priority: 0.86, changeFrequency: "weekly" },
-  { path: "/remove-watermark", priority: 0.8, changeFrequency: "weekly" },
-  { path: "/batch-watermark-removal", priority: 0.78, changeFrequency: "weekly" },
-  { path: "/sora2-video-watermark-removal", priority: 0.7, changeFrequency: "weekly" },
-];
+function toStaticToolPage(entry: ToolRegistryEntry): StaticPage {
+  return {
+    path: entry.canonicalPath,
+    priority: entry.sitemapPriority,
+    changeFrequency: entry.sitemapChangeFrequency,
+    indexable: entry.indexable,
+    availableLocales: entry.availableLocales,
+    lastModified: entry.lastModified,
+  };
+}
+
+const toolPages: StaticPage[] = getIndexableTools().map(toStaticToolPage);
 
 const comparisonPages: StaticPage[] = [
   { path: "/remove-bg-alternative", priority: 0.72, changeFrequency: "weekly" },
@@ -61,7 +61,7 @@ function toEntry(locale: string, page: StaticPage): SitemapEntry {
     url: buildLocalizedUrl(locale, page.path),
     priority: page.priority,
     changeFrequency: page.changeFrequency,
-    lastModified: now,
+    lastModified: page.lastModified ? new Date(page.lastModified) : now,
   };
 }
 
@@ -78,7 +78,12 @@ function getBlogLocales() {
 function getLocalizedStaticEntries(pages: StaticPage[]) {
   return locales
     .filter((locale) => locale !== defaultLocale)
-    .flatMap((locale) => pages.map((page) => toEntry(locale, page)));
+    .flatMap((locale) =>
+      pages
+        .filter((page) => !page.availableLocales || page.availableLocales.includes(locale))
+        .filter((page) => page.indexable !== false)
+        .map((page) => toEntry(locale, page)),
+    );
 }
 
 function getLocalizedComparisonEntries() {

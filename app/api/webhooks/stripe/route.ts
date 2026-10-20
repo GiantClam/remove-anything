@@ -1,14 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { headers } from "next/headers";
 import Stripe from "stripe";
 
 import { getErrorMessage } from "@/lib/handle-error";
 import { prisma } from "@/db/prisma";
 import { stripe } from "@/lib/stripe";
 import { env } from "@/env.mjs";
-import { OrderPhase, PaymentChannelType } from "@/db/type";
+import { OrderPhase } from "@/db/type";
 import { ChargeOrderHashids } from "@/db/dto/charge-order.dto";
 import { fulfillChargeOrderPayment } from "@/modules/payments/charge-order";
+import {
+  ANALYTICS_EVENTS,
+  createOrderAnalyticsEvent,
+  emitServerAnalyticsEvent,
+} from "@/lib/analytics-events";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -50,6 +54,20 @@ export async function POST(req: NextRequest) {
       
       case "payment_intent.succeeded":
         await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+        break;
+
+      case "checkout.session.expired":
+        await handlePaymentFailure(
+          event.data.object as Stripe.Checkout.Session,
+          event.id,
+        );
+        break;
+
+      case "payment_intent.payment_failed":
+        await handlePaymentFailure(
+          event.data.object as Stripe.PaymentIntent,
+          event.id,
+        );
         break;
       
       case "invoice.payment_succeeded":
@@ -116,8 +134,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       return;
     }
 
+    let paymentApplied = false;
     await prisma.$transaction(async (tx) => {
-      await fulfillChargeOrderPayment(tx, {
+      const result = await fulfillChargeOrderPayment(tx, {
         chargeOrderId: order.id,
         userId,
         result: JSON.stringify({
@@ -127,7 +146,24 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           rawCheckoutSession: session,
         }),
       });
+      paymentApplied = !result.alreadyPaid;
     });
+
+    // A concurrent or retried webhook can observe the already-paid order.
+    // Return successfully without emitting a second purchase fact.
+    if (!paymentApplied) {
+      return;
+    }
+
+    // The pending-phase guard above makes this fact idempotent for provider
+    // retries. The stable order event_id provides a second dedupe boundary for
+    // downstream analytics sinks.
+    await emitServerAnalyticsEvent(
+      createOrderAnalyticsEvent(ANALYTICS_EVENTS.purchaseCompleted, orderId, {
+        plan: chargeProductId,
+        is_authenticated: Boolean(userId),
+      }),
+    );
 
     console.log("✅ Order processed successfully:", orderId);
   } catch (error) {
@@ -145,6 +181,24 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
       metadata: paymentIntent.metadata,
     } as Stripe.Checkout.Session);
   }
+}
+
+async function handlePaymentFailure(
+  payment: Stripe.Checkout.Session | Stripe.PaymentIntent,
+  stripeEventId: string,
+) {
+  const metadata = payment.metadata;
+  const orderId = metadata?.orderId;
+  if (!orderId) return;
+
+  await emitServerAnalyticsEvent(
+    createOrderAnalyticsEvent(ANALYTICS_EVENTS.purchaseFailed, orderId, {
+      plan: metadata?.chargeProductId,
+      is_authenticated: Boolean(metadata?.userId),
+      provider: "stripe",
+      event_id: `purchase_failed:stripe:${stripeEventId}`,
+    }),
+  );
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {

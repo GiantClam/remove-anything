@@ -1,187 +1,155 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/db/prisma";
-import { findBackgroundRemovalTaskByReplicateId } from "@/db/queries/background-removal";
-import { runninghubAPI } from "@/modules/runninghub";
 
-export const dynamic = 'force-dynamic';
+import { findBackgroundRemovalTaskByReplicateId } from "@/db/queries/background-removal";
+import { getCurrentUser } from "@/lib/auth-utils";
+import {
+  getBackgroundTaskPreviewUrl,
+  getBackgroundTaskStatus,
+  refreshBackgroundTaskStatus,
+} from "@/lib/background-task-status";
+import {
+  assertTaskOwnership,
+  getTaskPrincipalFromRequest,
+  TaskLifecycleError,
+} from "@/lib/task-lifecycle";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: { taskId: string } },
 ) {
   const taskId = params.taskId;
-  
   if (!taskId) {
     return NextResponse.json({ error: "Task ID is required" }, { status: 400 });
   }
 
-  // 设置 SSE 响应头
-  const headers = new Headers({
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Cache-Control',
-  });
+  const user = await getCurrentUser();
+  const principal = getTaskPrincipalFromRequest(req, user?.id);
+  if (!principal.userId && !principal.principalId) {
+    return NextResponse.json(
+      { error: "Not authenticated", code: "ANONYMOUS_PRINCIPAL_REQUIRED" },
+      { status: 401 },
+    );
+  }
 
   const encoder = new TextEncoder();
-  
-  const stream = new ReadableStream({
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let closed = false;
+  let stop = () => {
+    closed = true;
+    if (timer) clearTimeout(timer);
+  };
+
+  const stream = new ReadableStream<Uint8Array>({
     start(controller) {
-      let intervalId: NodeJS.Timeout;
       let attempts = 0;
-      const maxAttempts = 120; // 20分钟
-      
+      const maxAttempts = 120;
+      const abort = () => close();
+      const cleanup = () => {
+        if (closed) return;
+        closed = true;
+        if (timer) clearTimeout(timer);
+        req.signal.removeEventListener("abort", abort);
+      };
+      const close = () => {
+        if (closed) return;
+        cleanup();
+        controller.close();
+      };
+      stop = cleanup;
+      req.signal.addEventListener("abort", abort, { once: true });
+
+      const send = (data: Record<string, unknown>) => {
+        if (!closed)
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(data)}\n\n`),
+          );
+      };
       const checkTaskStatus = async () => {
+        if (closed) return;
+        attempts++;
         try {
-          attempts++;
-          console.log(`🔍 SSE 检查任务状态: ${taskId} (第${attempts}次)`);
-          
-          // 查询任务状态
-          const taskRecord = await findBackgroundRemovalTaskByReplicateId(taskId);
-          
-          if (!taskRecord) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+          let task = await findBackgroundRemovalTaskByReplicateId(taskId);
+          if (!task) {
+            send({
+              taskId,
+              status: "failed",
+              code: "TASK_NOT_FOUND",
               error: "Task not found",
-              status: "error" 
-            })}\n\n`));
-            controller.close();
+            });
+            close();
             return;
           }
-
-          // 如果任务还在进行中，主动检查 RunningHub 状态
-          if (['pending', 'starting', 'processing'].includes(taskRecord.taskStatus)) {
-            console.log(`🔄 任务进行中，检查 RunningHub 状态: ${taskId}`);
-            
-            try {
-              const statusResp = await runninghubAPI.getTaskStatus(taskId);
-              console.log(`📡 RunningHub 状态响应:`, JSON.stringify(statusResp, null, 2));
-              
-              let status: string | undefined;
-              if (statusResp && typeof statusResp === 'object') {
-                if (statusResp.code === 0 && statusResp.data) {
-                  if (typeof statusResp.data === 'string') {
-                    status = statusResp.data;
-                  } else if (statusResp.data && typeof statusResp.data.status === 'string') {
-                    status = statusResp.data.status;
-                  }
-                }
-              }
-              
-              console.log(`📊 解析的 RunningHub 状态: ${status}`);
-              
-              if (status === 'SUCCESS' || status === 'succeeded') {
-                // 获取结果并更新数据库
-                console.log(`🎯 任务成功，获取结果: ${taskId}`);
-                const result = await runninghubAPI.getTaskResult(taskId);
-                let outputUrl: string | null = null;
-                
-                if (result?.data && Array.isArray(result.data) && result.data.length > 0) {
-                  outputUrl = result.data[0]?.fileUrl || null;
-                  console.log(`📦 获取到输出URL: ${outputUrl}`);
-                }
-                
-                // 更新数据库（先保存原始URL，R2转存由后台任务处理）
-                await prisma.backgroundRemovalTask.update({
-                  where: { replicateId: taskId },
-                  data: {
-                    taskStatus: 'succeeded',
-                    outputImageUrl: outputUrl,
-                    executeEndTime: BigInt(Date.now())
-                  }
-                });
-                
-                console.log(`✅ 数据库已更新: ${taskId} -> succeeded`);
-                
-              } else if (status === 'FAILED' || status === 'failed') {
-                // 更新数据库为失败
-                await prisma.backgroundRemovalTask.update({
-                  where: { replicateId: taskId },
-                  data: {
-                    taskStatus: 'failed',
-                    executeEndTime: BigInt(Date.now()),
-                    errorMsg: 'Task failed on RunningHub'
-                  }
-                });
-                
-                console.log(`❌ 数据库已更新: ${taskId} -> failed`);
-                
-              } else if (status === 'RUNNING' || status === 'running' || status === 'Processing' || status === 'processing') {
-                // 更新数据库为处理中
-                await prisma.backgroundRemovalTask.update({
-                  where: { replicateId: taskId },
-                  data: {
-                    taskStatus: 'processing',
-                    executeStartTime: BigInt(Date.now())
-                  }
-                });
-                
-                console.log(`🔄 数据库已更新: ${taskId} -> processing`);
-              }
-              
-            } catch (apiError) {
-              console.error(`❌ RunningHub API 调用失败: ${taskId}`, apiError);
-            }
+          assertTaskOwnership(task, principal);
+          let degraded = false;
+          try {
+            task = await refreshBackgroundTaskStatus(task);
+          } catch (error) {
+            console.error("Background SSE provider refresh failed:", error);
+            degraded = true;
           }
+          assertTaskOwnership(task, principal);
 
-          // 重新查询更新后的任务状态
-          const updatedTaskRecord = await findBackgroundRemovalTaskByReplicateId(taskId);
-          
-          const statusData = {
-            taskId: taskId,
-            status: updatedTaskRecord?.taskStatus || taskRecord.taskStatus,
-            output: updatedTaskRecord?.outputImageUrl || taskRecord.outputImageUrl,
-            error: updatedTaskRecord?.errorMsg || taskRecord.errorMsg,
-            attempts: attempts,
-            maxAttempts: maxAttempts
-          };
-
-          console.log(`📤 SSE 发送状态:`, statusData);
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(statusData)}\n\n`));
-
-          // 如果任务完成或失败，关闭连接
-          if (statusData.status === 'succeeded' || statusData.status === 'failed') {
-            console.log(`✅ SSE 任务完成: ${taskId} -> ${statusData.status}`);
-            clearInterval(intervalId);
-            controller.close();
+          const status = getBackgroundTaskStatus(task);
+          send({
+            taskId,
+            status,
+            output:
+              status === "succeeded"
+                ? getBackgroundTaskPreviewUrl(taskId)
+                : null,
+            error: task.errorMsg,
+            attempts,
+            maxAttempts,
+            ...(degraded ? { degraded: true } : {}),
+          });
+          if (["succeeded", "failed", "expired"].includes(status)) {
+            close();
             return;
           }
-
-          // 如果超过最大尝试次数，关闭连接
           if (attempts >= maxAttempts) {
-            console.log(`⏰ SSE 超时: ${taskId}`);
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-              error: "Task timeout",
-              status: "timeout" 
-            })}\n\n`));
-            clearInterval(intervalId);
-            controller.close();
+            send({
+              taskId,
+              status: "expired",
+              code: "TASK_STATUS_TIMEOUT",
+              error: "Task status check timed out",
+            });
+            close();
             return;
           }
-
         } catch (error) {
-          console.error(`❌ SSE 检查任务状态失败: ${taskId}`, error);
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-            error: "Check failed",
-            status: "error" 
-          })}\n\n`));
+          const lifecycleError =
+            error instanceof TaskLifecycleError ? error : null;
+          send({
+            taskId,
+            status:
+              lifecycleError?.code === "TASK_EXPIRED" ? "expired" : "failed",
+            code: lifecycleError?.code || "TASK_QUERY_FAILED",
+            error:
+              lifecycleError?.message || "Task status could not be checked",
+          });
+          close();
+          return;
         }
+        // Schedule only after the previous provider check has completed.
+        if (!closed) timer = setTimeout(checkTaskStatus, 3000);
       };
 
-      // 立即检查一次
-      checkTaskStatus();
-      
-      // 然后每3秒检查一次
-      intervalId = setInterval(checkTaskStatus, 3000);
-
-      // 处理客户端断开连接
-      req.signal?.addEventListener('abort', () => {
-        console.log(`🔌 SSE 客户端断开连接: ${taskId}`);
-        clearInterval(intervalId);
-        controller.close();
-      });
-    }
+      if (req.signal.aborted) close();
+      else void checkTaskStatus();
+    },
+    cancel() {
+      stop();
+    },
   });
 
-  return new Response(stream, { headers });
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "private, no-store, max-age=0",
+      Vary: "Cookie, Authorization",
+      Connection: "keep-alive",
+    },
+  });
 }

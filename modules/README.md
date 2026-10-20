@@ -20,7 +20,7 @@ RunningHub API 客户端封装，用于创建和管理异步任务。
 
 **功能：**
 - 任务记录管理（Repository 模式）
-- 任务队列（Queue 模式）
+- 任务编排（`queue` 参数仅为源码兼容保留；当前编排器不调用该队列）
 - 任务编排函数
 - 状态同步
 
@@ -114,10 +114,8 @@ import { createVideoTaskWithR2Url } from '@giantclam/aiwebmodules/tasks';
 import { createRunningHubClient } from '@giantclam/aiwebmodules/runninghub';
 // 导入你实现的适配器
 import { createPrismaTaskRepository } from './adapters/prisma-repo';
-import { createPrismaTaskQueue } from './adapters/prisma-queue';
 
 const repo = createPrismaTaskRepository(prisma);
-const queue = createPrismaTaskQueue(prisma);
 const rh = createRunningHubClient();
 
 const result = await createVideoTaskWithR2Url(
@@ -127,9 +125,11 @@ const result = await createVideoTaskWithR2Url(
     workflowId: 'workflow-123',
     r2Url: 'https://.../video.mp4',
   },
-  { repo, queue, rh }
+  { repo, rh }
 );
 ```
+
+`OrchestratorDeps.queue` 仅为源码兼容保留，传入后不会产生任何运行时入队行为。需要持久队列时，请由应用显式调用自己的队列流程；不要把该参数当作失败后的自动重试机制。
 
 ### Auth
 
