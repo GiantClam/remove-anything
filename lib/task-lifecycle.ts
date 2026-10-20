@@ -7,8 +7,8 @@ import { prisma } from "@/db/prisma";
 import {
   ANALYTICS_EVENTS,
   createCreditsAnalyticsEvent,
-  emitServerAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 
 export const ANONYMOUS_PRINCIPAL_COOKIE = "remove_anything_principal";
 export const TASK_RESULT_TTL_MS = 24 * 60 * 60 * 1000;

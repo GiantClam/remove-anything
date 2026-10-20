@@ -9,8 +9,8 @@ import { OrderPhase } from "@/db/type";
 import {
   ANALYTICS_EVENTS,
   createOrderAnalyticsEvent,
-  emitServerAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import { getCurrentUser as getCurrentUserOriginal } from "@/lib/auth-utils";
 import { getErrorMessage } from "@/lib/handle-error";
 // 为这个 API 创建自定义速率限制器

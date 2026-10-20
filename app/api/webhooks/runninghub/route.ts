@@ -8,8 +8,8 @@ import { env } from "@/env.mjs";
 import {
   ANALYTICS_EVENTS,
   createTaskAnalyticsEvent,
-  emitServerAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import {
   readLimitedResponse,
   ResultSizeLimitError,

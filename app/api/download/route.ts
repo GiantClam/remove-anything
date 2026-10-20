@@ -11,8 +11,8 @@ import { kv, KVRateLimit } from "@/lib/kv";
 import {
   ANALYTICS_EVENTS,
   createTaskAnalyticsEvent,
-  emitServerAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import {
   readLimitedResponse,
   ResultSizeLimitError,
@@ -31,6 +31,11 @@ import {
   TaskLifecycleError,
 } from "@/lib/task-lifecycle";
 import { getToolRegistryEntry } from "@/lib/tool-registry";
+import {
+  assertOutputEntitlement,
+  getRequestedOutputTier,
+  OutputEntitlementError,
+} from "@/lib/output-entitlements";
 import { createProjectAuthProvider } from "@/modules/auth/adapter";
 
 import {
@@ -137,6 +142,7 @@ export async function GET(req: NextRequest) {
     const taskId = url.searchParams.get("taskId");
     const type = url.searchParams.get("type");
     const preview = url.searchParams.get("preview") === "1";
+    const outputTier = getRequestedOutputTier(url.searchParams.get("output"));
 
     // 处理去水印任务下载
     if (type === "watermark-removal" && taskId) {
@@ -149,6 +155,12 @@ export async function GET(req: NextRequest) {
       if (!watermarkTask || !watermarkTask.outputZipUrl) {
         return new Response("Not found", { status: 404 });
       }
+
+      assertOutputEntitlement({
+        toolSlug: "remove-watermark",
+        requestedTier: outputTier,
+        userId,
+      });
 
       try {
         assertTaskDownloadAccess(watermarkTask, { userId, principalId });
@@ -304,6 +316,12 @@ export async function GET(req: NextRequest) {
         throw error;
       }
 
+      assertOutputEntitlement({
+        toolSlug: "sora2-video-watermark-removal",
+        requestedTier: outputTier,
+        userId,
+      });
+
       // Legacy Sora2 rows may still contain a provider/public URL. Never fetch
       // that URL from the download boundary: output access must go through the
       // private R2 migration first. This also prevents SSRF and public-bucket
@@ -415,6 +433,12 @@ export async function GET(req: NextRequest) {
       throw error;
     }
 
+    assertOutputEntitlement({
+      toolSlug: "remove-background",
+      requestedTier: outputTier,
+      userId,
+    });
+
     // Historical TaskData rows may point to provider/public URLs. Keep the
     // legacy route compatible only for outputs already migrated to private R2.
     const r2Key = getR2ObjectKey(taskData.imageUrl, env.R2_URL_BASE);
@@ -497,6 +521,12 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof OutputEntitlementError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     if (error instanceof UnsupportedOutputFormatError) {
       return NextResponse.json({ error: error.message }, { status: 502 });
     }

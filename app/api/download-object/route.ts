@@ -5,8 +5,8 @@ import { env } from "@/env.mjs";
 import {
   ANALYTICS_EVENTS,
   createTaskAnalyticsEvent,
-  emitServerAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import { getCurrentUser } from "@/lib/auth-utils";
 import { getErrorMessage } from "@/lib/handle-error";
 import {
@@ -25,6 +25,11 @@ import {
   getTaskPrincipalFromRequest,
   TaskLifecycleError,
 } from "@/lib/task-lifecycle";
+import {
+  assertOutputEntitlement,
+  getRequestedOutputTier,
+  OutputEntitlementError,
+} from "@/lib/output-entitlements";
 import { getToolRegistryEntry } from "@/lib/tool-registry";
 
 export const dynamic = "force-dynamic";
@@ -39,6 +44,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const taskId = searchParams.get("taskId")?.trim();
     const preview = searchParams.get("preview") === "1";
+    const outputTier = getRequestedOutputTier(searchParams.get("output"));
 
     if (!taskId) {
       return NextResponse.json(
@@ -66,6 +72,12 @@ export async function GET(req: NextRequest) {
       }
       throw error;
     }
+
+    assertOutputEntitlement({
+      toolSlug: "remove-objects",
+      requestedTier: outputTier,
+      userId,
+    });
 
     // Result polling migrates provider output to R2. Never fetch arbitrary
     // persisted provider URLs from the download boundary.
@@ -151,6 +163,12 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof OutputEntitlementError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     if (error instanceof UnsupportedOutputFormatError) {
       return NextResponse.json({ error: error.message }, { status: 502 });
     }

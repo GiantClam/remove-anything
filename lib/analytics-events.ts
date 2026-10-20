@@ -4,9 +4,9 @@
  * Client events are sent to GA through `trackAnalyticsEvent` in `lib/gtag`.
  * Server events use `emitServerAnalyticsEvent`, which deliberately accepts a
  * sink so webhooks and workers can use the same contract without depending on
- * a browser global. The default sink writes a structured event to stdout;
- * production can provide a Measurement Protocol or warehouse sink at the
- * application boundary.
+ * a browser global. In production the default sink writes a structured event
+ * to logs. Server-only callers use `lib/server-analytics-events` when
+ * they also need the durable `analytics_events` sink.
  */
 
 export const ANALYTICS_EVENTS = {
@@ -285,9 +285,9 @@ export async function emitServerAnalyticsEvent(
   return event;
 }
 
-function defaultAnalyticsEventSink(event: AnalyticsEvent): void {
-  // Structured logs are useful even before a GA4 server credential exists and
-  // can be collected by the hosting platform without leaking request payloads.
+async function defaultAnalyticsEventSink(event: AnalyticsEvent): Promise<void> {
+  // Client-safe shared code keeps the default sink limited to structured logs.
+  // Server-only callers import `lib/server-analytics-events` for durability.
   console.info(
     "[analytics]",
     JSON.stringify({ event: event.name, ...event.params }),

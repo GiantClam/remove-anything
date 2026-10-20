@@ -257,6 +257,26 @@ function validSchema() {
         "status",
         "result_image_url",
       ],
+      analytics_events: [
+        "event_id",
+        "name",
+        "task_id",
+        "order_id",
+        "user_id",
+        "tool_slug",
+        "landing_page",
+        "locale",
+        "file_type",
+        "file_size_bucket",
+        "is_authenticated",
+        "plan",
+        "credits_before",
+        "credits_after",
+        "experiment_id",
+        "payload",
+        "occurred_at",
+        "created_at",
+      ],
     },
     indexes: {
       task_data: ["task_data_retention_idx", "task_data_audit_expires_at_idx"],
@@ -277,6 +297,24 @@ function validSchema() {
         "object_removal_tasks_retention_idx",
         "object_removal_tasks_audit_expires_at_idx",
       ],
+      analytics_events: [
+        "analytics_events_occurred_at_idx",
+        "analytics_events_name_occurred_at_idx",
+        "analytics_events_tool_occurred_at_idx",
+      ],
+    },
+    security: {
+      analytics_events: {
+        rlsEnabled: true,
+        privileges: Object.fromEntries(
+          ["public", "anon", "authenticated"].flatMap((role) =>
+            ["select", "insert", "update", "delete"].map((privilege) => [
+              `${role}_${privilege}`,
+              false,
+            ]),
+          ),
+        ),
+      },
     },
   };
   const timestamp = new Set([
@@ -322,6 +360,12 @@ function validSchema() {
       included_columns: 0,
       columns: name.endsWith("retention_idx")
         ? ["retention_cleaned_at", "retention_checked_at", "expires_at"]
+        : name === "analytics_events_occurred_at_idx"
+          ? ["occurred_at"]
+          : name === "analytics_events_name_occurred_at_idx"
+            ? ["name", "occurred_at"]
+            : name === "analytics_events_tool_occurred_at_idx"
+              ? ["tool_slug", "occurred_at"]
         : name.endsWith("principal_created_idx")
           ? ["principal_id", "created_at"]
           : name.endsWith("user_created_idx")
