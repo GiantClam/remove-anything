@@ -9,6 +9,7 @@ import {
   ANALYTICS_EVENTS,
   createTaskAnalyticsEvent,
 } from "@/lib/analytics-events";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import {
   readLimitedResponse,
   ResultSizeLimitError,
@@ -18,7 +19,6 @@ import {
   isAllowedRunningHubOutput,
   persistRunningHubOutput,
 } from "@/lib/runninghub-output";
-import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import { taskQueueManager } from "@/lib/task-queue";
 
 export const dynamic = "force-dynamic";
