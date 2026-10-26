@@ -1,6 +1,6 @@
 # External gate audit — 2026-10-26
 
-Scope: current Vercel Preview deployment `dpl_BuGz9Efbc3BAu3Z6K4RbobcYUfbm`, the authorized Supabase staging target `pqrfvwgldarfbcfdxave`, and read-only provider/configuration checks. Production was not modified.
+Scope: Vercel Preview deployment `dpl_BuGz9Efbc3BAu3Z6K4RbobcYUfbm` for the real output checks, followed by current Preview deployment `dpl_9YHQXLiPPA6ZYHQdRWFZXELbi8iD` for the analytics hardening commit, the authorized Supabase staging target `pqrfvwgldarfbcfdxave`, and read-only provider/configuration checks. Production was not modified.
 
 ## Preview deployment and environment configuration
 

@@ -1,5 +1,9 @@
 # P0 implementation evidence
 
+## Current Preview after analytics hardening — 2026-10-27
+
+Commit `c68310b` is deployed as Vercel Preview `dpl_9YHQXLiPPA6ZYHQdRWFZXELbi8iD` (`READY`) at `https://remove-anything-i5a1j40h5-giantclams-projects.vercel.app`. Protected read-only checks returned HTTP 200 for `/remove-watermark`, `/api/task-queue/status`, and `/api/background-images`. The lifecycle analytics namespace fix is included in this deployment; production was not changed.
+
 ## 2026-10-26 current staging recheck (supersedes stale task snapshots)
 
 The latest commit `bfebb7ebf89cb9d1304901ffe86d4273a78eaa1b` is deployed to Vercel Preview deployment `dpl_9wrHh79MTx6PKgN28hkAQd1iF2zd` (`READY`). Its deployment alias is `https://remove-anything-6s2qmbwyi-giantclams-projects.vercel.app`; the Git alias is `https://remove-anything-git-codex-p0-growth-670a33-giantclams-projects.vercel.app`. The protected deployment was reached with `npx vercel@latest curl`; production was not changed.
