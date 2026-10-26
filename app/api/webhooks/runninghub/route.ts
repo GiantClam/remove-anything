@@ -9,7 +9,6 @@ import {
   ANALYTICS_EVENTS,
   createTaskAnalyticsEvent,
 } from "@/lib/analytics-events";
-import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import {
   readLimitedResponse,
   ResultSizeLimitError,
@@ -19,6 +18,7 @@ import {
   isAllowedRunningHubOutput,
   persistRunningHubOutput,
 } from "@/lib/runninghub-output";
+import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import { taskQueueManager } from "@/lib/task-queue";
 
 export const dynamic = "force-dynamic";
@@ -167,15 +167,13 @@ export async function POST(req: Request) {
           },
           { status: 503 },
         );
-      // Preserve the legacy video metadata path; image callbacks migrate only
-      // approved, bounded content into private R2 objects.
-      output = video
-        ? source
-        : await persistRunningHubOutput(
-            source,
-            object ? "object" : "watermark",
-            task.id,
-          );
+      // Migrate every successful provider result into private R2. Provider
+      // URLs are ephemeral and must never become durable download metadata.
+      output = await persistRunningHubOutput(
+        source,
+        video ? "video" : object ? "object" : "watermark",
+        task.id,
+      );
     }
     if (deadline.getTime() <= Date.now())
       return NextResponse.json({ success: true, message: "Task has expired" });
@@ -241,7 +239,7 @@ export async function POST(req: Request) {
       await emitServerAnalyticsEvent(
         createTaskAnalyticsEvent(eventName, task.id, {
           is_authenticated: Boolean(task.userId),
-          locale: "locale" in task ? task.locale ?? undefined : undefined,
+          locale: "locale" in task ? (task.locale ?? undefined) : undefined,
         }),
       );
     }

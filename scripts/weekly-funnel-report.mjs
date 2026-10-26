@@ -92,6 +92,34 @@ function dimensions(row) {
     auth(row.is_authenticated),
   ];
 }
+function exactDimensions(row) {
+  const values = dimensions(row);
+  return values.every((value) => value !== NO_DATA) ? values : null;
+}
+function dimensionKey(values) {
+  return JSON.stringify(values);
+}
+function reportWindowSignature(metadata) {
+  const window = metadata?.window || {};
+  const start = scalar(window.start);
+  const end = scalar(window.end);
+  const timeZone = scalar(window.time_zone ?? window.timeZone);
+  if (
+    typeof start !== "string" ||
+    typeof end !== "string" ||
+    typeof timeZone !== "string" ||
+    time(start) === null ||
+    time(end) === null ||
+    time(end) <= time(start)
+  ) {
+    return null;
+  }
+  return JSON.stringify([start, end, timeZone]);
+}
+function windowsMatch(left, right) {
+  const leftWindow = reportWindowSignature(left);
+  return leftWindow !== null && leftWindow === reportWindowSignature(right);
+}
 function groupRows(rows, key = dimensions) {
   const groups = new Map();
   for (const row of rows) {
@@ -152,6 +180,16 @@ function dataset(value) {
     rows: Array.isArray(value?.rows) ? value.rows : [],
     metadata: value?.metadata || {},
   };
+}
+function eventsDataset(input, reportMetadata) {
+  if (Array.isArray(input?.events)) {
+    return { rows: input.events, metadata: input?.metadata || reportMetadata };
+  }
+  if (input?.events && typeof input.events === "object")
+    return dataset(input.events);
+  if (Array.isArray(input?.rows)) return dataset(input);
+  if (Array.isArray(input)) return dataset(input);
+  return { rows: [], metadata: reportMetadata || {} };
 }
 function headerName(header) {
   const name = typeof header === "string" ? header : header?.name;
@@ -232,6 +270,7 @@ function normalizeEvents(input) {
   const rawWithIds = normalized.filter(
     (row) => !row.aggregate && scalar(row.event_id) !== undefined,
   );
+  const eventQuality = {};
   const deduped = uniqueFacts(
     rawWithIds.map((row) => ({
       ...row,
@@ -239,13 +278,25 @@ function normalizeEvents(input) {
     })),
     "_id",
     "Events",
+    eventQuality,
   ).map(({ _id, ...row }) => row);
-  return [
+  const normalizedRows = [
     ...deduped,
     ...normalized.filter(
       (row) => row.aggregate || scalar(row.event_id) === undefined,
     ),
   ];
+  return {
+    rows: normalizedRows,
+    completeForMissingCounts:
+      invalidNames === 0 &&
+      unnamedGa === 0 &&
+      !normalized.some((row) => row.count === null) &&
+      !normalized.some(
+        (row) => !row.aggregate && scalar(row.event_id) === undefined,
+      ) &&
+      eventQuality.excluded === 0,
+  };
 }
 function sum(rows, field, integer = false) {
   if (!rows.length) return NO_DATA;
@@ -513,29 +564,200 @@ function gscMetrics(gsc) {
   });
 }
 
+function sessionMetrics(sessions, reportMetadata) {
+  if (!sessions) {
+    issues.push(
+      "Visits: NO DATA; provide a sessions dataset with matching report-window provenance and explicit dimensions.",
+    );
+    return new Map();
+  }
+  if (!windowsMatch(sessions.metadata, reportMetadata)) {
+    issues.push(
+      "Visits: NO DATA; the sessions dataset must declare the exact report window and time zone.",
+    );
+    return new Map();
+  }
+
+  const counts = new Map();
+  let invalidRows = 0;
+  let duplicates = 0;
+  const conflicts = new Set();
+  for (const row of sessions.rows) {
+    const values = exactDimensions(row);
+    const count = number(row.session_count, true);
+    if (!values || count === null) {
+      invalidRows += 1;
+      continue;
+    }
+    const id = dimensionKey(values);
+    const existing = counts.get(id);
+    if (existing === undefined) counts.set(id, count);
+    else if (existing === count) duplicates += 1;
+    else conflicts.add(id);
+  }
+  if (invalidRows || conflicts.size) {
+    issues.push(
+      `Visits: NO DATA; ${invalidRows} row(s) lack explicit dimensions or a non-negative integer session_count, and ${conflicts.size} dimension group(s) have conflicting counts.`,
+    );
+    return new Map();
+  }
+  if (duplicates)
+    issues.push(`Sessions: ignored ${duplicates} identical duplicate row(s).`);
+  return counts;
+}
+
+function missingEventMetrics(
+  expectedEvents,
+  events,
+  eventsComplete,
+  eventMetadata,
+  reportMetadata,
+) {
+  const unavailable = (reason) => {
+    issues.push(`Missing events: NO DATA; ${reason}`);
+    return new Map();
+  };
+  if (!expectedEvents)
+    return unavailable("provide an expected_events manifest.");
+  if (expectedEvents.metadata.complete !== true)
+    return unavailable("expected_events metadata must declare complete=true.");
+  if (eventMetadata.complete !== true)
+    return unavailable("events metadata must declare complete=true.");
+  if (
+    !windowsMatch(reportMetadata, eventMetadata) ||
+    !windowsMatch(reportMetadata, expectedEvents.metadata)
+  ) {
+    return unavailable(
+      "events, expected_events, and report metadata must declare the same valid start, end, and time zone.",
+    );
+  }
+  if (!eventsComplete)
+    return unavailable(
+      "event rows must have valid counts, exact dimensions, and deduplicable identities.",
+    );
+
+  const expected = new Map();
+  let invalidRows = 0;
+  let duplicates = 0;
+  const conflicts = new Set();
+  for (const row of expectedEvents.rows) {
+    const values = exactDimensions(row);
+    const eventName = scalar(row.eventName ?? row.event_name ?? row.event);
+    const count = number(row.expected_count, true);
+    if (!values || typeof eventName !== "string" || count === null) {
+      invalidRows += 1;
+      continue;
+    }
+    const id = JSON.stringify([dimensionKey(values), eventName]);
+    const existing = expected.get(id);
+    if (existing === undefined) expected.set(id, { values, eventName, count });
+    else if (existing.count === count) duplicates += 1;
+    else conflicts.add(id);
+  }
+  if (invalidRows || conflicts.size)
+    return unavailable(
+      `${invalidRows} manifest row(s) lack exact dimensions or a valid expected_count, and ${conflicts.size} event/dimension key(s) conflict.`,
+    );
+  if (duplicates)
+    issues.push(
+      `Expected events: ignored ${duplicates} identical duplicate row(s).`,
+    );
+  if (!expected.size)
+    return unavailable(
+      "the complete manifest contains no explicit expectations.",
+    );
+
+  const observed = new Map();
+  for (const row of events) {
+    const values = exactDimensions(row);
+    if (!values || row.count === null)
+      return unavailable(
+        "event rows must all have exact dimensions and valid counts.",
+      );
+    const id = JSON.stringify([dimensionKey(values), row.eventName]);
+    observed.set(id, (observed.get(id) || 0) + row.count);
+  }
+
+  const missingByDimensions = new Map();
+  for (const [id, row] of expected) {
+    const missing = Math.max(0, row.count - (observed.get(id) || 0));
+    const key = dimensionKey(row.values);
+    missingByDimensions.set(key, (missingByDimensions.get(key) || 0) + missing);
+  }
+  return missingByDimensions;
+}
+
 function buildReport(input, inputPath) {
-  const metadata = input?.metadata || input?.events?.metadata || {};
-  const events = normalizeEvents(input);
+  const eventInfo = eventsDataset(
+    input,
+    input?.metadata || input?.events?.metadata || {},
+  );
+  const metadata = input?.metadata || eventInfo.metadata || {};
+  const normalizedEvents = normalizeEvents(input);
+  const events = normalizedEvents.rows;
+  const eventMetadata = eventInfo.metadata || metadata;
   const tasks = dataset(input?.tasks);
   const purchases = dataset(input?.purchases);
   const costs = dataset(input?.costs);
   const gsc = { ...dataset(input?.gsc), dimensions: input?.gsc?.dimensions };
+  const sessions = input?.sessions ? dataset(input.sessions) : null;
+  const expectedEvents = input?.expected_events
+    ? dataset(input.expected_events)
+    : null;
+  const visitsByDimensions = sessionMetrics(sessions, metadata);
+  const missingByDimensions = missingEventMetrics(
+    expectedEvents,
+    events,
+    normalizedEvents.completeForMissingCounts,
+    eventMetadata,
+    metadata,
+  );
+  const sourceRows = [sourceRow("Events / report cohort", metadata)];
+  if (sessions) sourceRows.push(sourceRow("Sessions", sessions.metadata));
+  if (expectedEvents)
+    sourceRows.push(sourceRow("Expected events", expectedEvents.metadata));
+  sourceRows.push(
+    sourceRow("Tasks", tasks.metadata),
+    sourceRow("Purchases", purchases.metadata),
+    sourceRow("Costs", costs.metadata),
+    sourceRow("GSC", gsc.metadata),
+  );
   const totals = groupRows(events, (row) => [row.eventName]).map((group) => [
     ...group.values,
     sum(group.rows, "count", true),
   ]);
-  const funnel = groupRows(events).map((group) => [
-    ...group.values,
-    NO_DATA,
-    NO_DATA,
-    ...STAGES.map(([, aliases]) =>
-      sum(
-        group.rows.filter((row) => aliases.includes(row.eventName)),
-        "count",
-        true,
-      ),
-    ),
-  ]);
+  const eventGroups = new Map(
+    groupRows(events).map((group) => [dimensionKey(group.values), group]),
+  );
+  const funnelDimensions = new Map(
+    [...eventGroups.entries()].map(([id, group]) => [id, group.values]),
+  );
+  for (const id of [
+    ...visitsByDimensions.keys(),
+    ...missingByDimensions.keys(),
+  ]) {
+    if (!funnelDimensions.has(id)) funnelDimensions.set(id, JSON.parse(id));
+  }
+  const funnel = [...funnelDimensions.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([id, values]) => {
+      const group = eventGroups.get(id);
+      return [
+        ...values,
+        NO_DATA,
+        visitsByDimensions.has(id) ? visitsByDimensions.get(id) : NO_DATA,
+        missingByDimensions.has(id) ? missingByDimensions.get(id) : NO_DATA,
+        ...STAGES.map(([, aliases]) =>
+          sum(
+            (group?.rows || []).filter((row) =>
+              aliases.includes(row.eventName),
+            ),
+            "count",
+            true,
+          ),
+        ),
+      ];
+    });
   const missing = DIMENSIONS.map((field, index) => [
     field,
     events.length
@@ -568,13 +790,7 @@ function buildReport(input, inputPath) {
         "Window end",
         "Time zone",
       ],
-      [
-        sourceRow("Events / report cohort", metadata),
-        sourceRow("Tasks", tasks.metadata),
-        sourceRow("Purchases", purchases.metadata),
-        sourceRow("Costs", costs.metadata),
-        sourceRow("GSC", gsc.metadata),
-      ],
+      sourceRows,
     ),
     "",
     "## Counting contract",
@@ -599,6 +815,7 @@ function buildReport(input, inputPath) {
         "Auth",
         "Impressions",
         "Visits",
+        "Missing events",
         ...STAGES.map(([label]) => label),
       ],
       funnel,
@@ -676,8 +893,9 @@ function buildReport(input, inputPath) {
     table(["Missing event field", "Rows"], missing),
     "",
     `- Raw event records without event_id: ${events.length ? events.filter((row) => !row.aggregate && scalar(row.event_id) === undefined).length : NO_DATA}.`,
-    "- Visits, distinct users, active_users_30d and user-level funnel conversion: NO DATA; identity/session cohorts are not implemented.",
-    "- missing_event_count: NO DATA; no authoritative expected-event manifest is imported.",
+    "- Visits use only imported session_count rows with exact page/tool/locale/auth dimensions and a matching report window; absent groups remain NO DATA.",
+    "- Missing events are expected_count minus observed event counts only when events and expected_events both declare complete=true and share exact report-window provenance and dimensions; absent expectations remain NO DATA.",
+    "- Distinct users, active_users_30d and user-level funnel conversion remain NO DATA; identity cohorts are not inferred from session counts.",
     "- Revenue/margin, cost per successful output, approved credit cost and cross-source attribution joins: NO DATA; not implemented by this report.",
     "- Empty or unavailable imports do not establish zero traffic, zero failures, or no purchases.",
     ...issues.map((issue) => `- ${cell(issue)}`),

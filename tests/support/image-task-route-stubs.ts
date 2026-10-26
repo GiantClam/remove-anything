@@ -34,6 +34,11 @@ export const runninghubAPI = {
     if (imageTaskRouteState.providerError) throw imageTaskRouteState.providerError;
     return `object-${imageTaskRouteState.providerCreateCalls}`;
   },
+  createObjectClearTask: async () => {
+    imageTaskRouteState.providerCreateCalls++;
+    if (imageTaskRouteState.providerError) throw imageTaskRouteState.providerError;
+    return `object-clear-${imageTaskRouteState.providerCreateCalls}`;
+  },
   cancelTask: async () => { imageTaskRouteState.providerCancelCalls++; },
 };
 export async function uploadToR2() {

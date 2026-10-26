@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getErrorMessage } from "@/lib/handle-error";
-import { ImageInputError, readTrustedRemoteImage } from "@/lib/image-input";
+import { ImageInputError } from "@/lib/image-input";
 import {
   acquireProcessingLease,
   OBJECT_GEOMETRY_PROCESSING_KEY,
@@ -16,6 +16,7 @@ import {
   getRunningHubOutputFileUrl,
   normalizeRunningHubStatus,
 } from "@/lib/remove-objects/runninghub";
+import { readRemoveObjectsImage } from "@/lib/remove-objects/input-image";
 import { getToolRegistryEntry } from "@/lib/tool-registry";
 import { runninghubAPI } from "@/modules/runninghub";
 
@@ -61,11 +62,13 @@ export async function POST(req: NextRequest) {
         { status: 503 },
       );
     }
-    const image = await readTrustedRemoteImage(body.imageUrl, {
+    const imageOptions = {
       maxBytes: tool.limits.maxFileSizeMb * 1024 * 1024,
       allowedMimeTypes: tool.inputFormats,
       maxPixels: tool.limits.maxPixels,
-    });
+    };
+    const input = await readRemoveObjectsImage(body.imageUrl, imageOptions);
+    const image = input.image;
     if (
       body.bbox.x + body.bbox.w > image.width ||
       body.bbox.y + body.bbox.h > image.height
@@ -90,7 +93,8 @@ export async function POST(req: NextRequest) {
     runninghubTaskId = await runWithinProcessingDeadline(
       () =>
         runninghubAPI.createObjectSegmentTask(
-          buildSegmentNodeInfoList(body.imageUrl, body.bbox),
+          buildSegmentNodeInfoList(input.providerUrl, body.bbox),
+          { deadlineAt: deadline },
         ),
       deadline,
     );
@@ -99,7 +103,10 @@ export async function POST(req: NextRequest) {
       let statusResult;
       try {
         statusResult = await runWithinProcessingDeadline(
-          () => runninghubAPI.getTaskStatus(runninghubTaskId!),
+          () =>
+            runninghubAPI.getTaskStatus(runninghubTaskId!, {
+              deadlineAt: deadline,
+            }),
           deadline,
         );
       } catch (error) {
@@ -128,7 +135,10 @@ export async function POST(req: NextRequest) {
         let outputs;
         try {
           outputs = await runWithinProcessingDeadline(
-            () => runninghubAPI.getTaskResult(runninghubTaskId!),
+            () =>
+              runninghubAPI.getTaskResult(runninghubTaskId!, {
+                deadlineAt: deadline,
+              }),
             deadline,
           );
         } catch (error) {

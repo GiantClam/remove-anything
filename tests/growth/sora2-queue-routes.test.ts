@@ -224,6 +224,64 @@ test("R2 route relinks a known-created provider task without replaying it", asyn
   assert.equal(sora2RouteState.queueRows.length, 0);
 });
 
+test("R2 upload route submits a short-lived signed object URL to RunningHub", async () => {
+  const { POST } = await r2Route;
+  const response = await POST(
+    new NextRequest(
+      "https://app.example.test/api/sora2-video-watermark-removal-r2",
+      {
+        method: "POST",
+        body: (() => {
+          const form = new FormData();
+          form.set("orientation", "landscape");
+          form.set(
+            "video",
+            new File([new Uint8Array(1024 * 1024)], "input.mp4", {
+              type: "video/mp4",
+            }),
+          );
+          return form;
+        })(),
+      },
+    ),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(sora2RouteState.orchestratorCalls.length, 1);
+  assert.equal(
+    sora2RouteState.orchestratorCalls[0]?.r2Url,
+    "https://signed.example.test/uploaded.mp4?expires=3600",
+  );
+  assert.equal(
+    sora2RouteState.records[0]?.inputImageUrl,
+    "https://files.example.test/uploaded.mp4",
+  );
+});
+
+test("R2 upload route binds anonymous tasks to the signed browser principal", async () => {
+  const { POST } = await r2Route;
+  sora2RouteState.user = null;
+  const response = await POST(
+    new NextRequest(
+      "https://app.example.test/api/sora2-video-watermark-removal-r2",
+      {
+        method: "POST",
+        body: (() => {
+          const form = new FormData();
+          form.set("orientation", "landscape");
+          form.set("r2Url", "https://files.example.test/uploaded.mp4");
+          return form;
+        })(),
+      },
+    ),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(sora2RouteState.records[0]?.userId, null);
+  assert.equal(sora2RouteState.records[0]?.principalId, "anonymous-principal");
+  assert.match(response.headers.get("set-cookie") ?? "", /remove_anything_principal=/);
+});
+
 test("upload route keeps unknown submission reconcilable and never enqueues it", async () => {
   const { POST } = await uploadRoute;
   sora2RouteState.providerError = new TaskCreationOutcomeUnknownError(

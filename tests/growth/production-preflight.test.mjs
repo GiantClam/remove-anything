@@ -344,7 +344,9 @@ function validSchema() {
             ? "0"
             : name === "authorization_confirmed"
               ? "false"
-              : null,
+              : name === "audit_expires_at"
+                ? "(CURRENT_TIMESTAMP + INTERVAL '90 days')"
+                : null,
       })),
     );
   }
@@ -366,13 +368,13 @@ function validSchema() {
             ? ["name", "occurred_at"]
             : name === "analytics_events_tool_occurred_at_idx"
               ? ["tool_slug", "occurred_at"]
-        : name.endsWith("principal_created_idx")
-          ? ["principal_id", "created_at"]
-          : name.endsWith("user_created_idx")
-            ? ["user_id", "created_at"]
-            : name.endsWith("audit_expires_at_idx")
-              ? ["audit_expires_at"]
-              : ["idempotency_key"],
+              : name.endsWith("principal_created_idx")
+                ? ["principal_id", "created_at"]
+                : name.endsWith("user_created_idx")
+                  ? ["user_id", "created_at"]
+                  : name.endsWith("audit_expires_at_idx")
+                    ? ["audit_expires_at"]
+                    : ["idempotency_key"],
     }));
   }
   schema.migrationTrackingTables = ["_prisma_migrations"];
@@ -382,6 +384,18 @@ function validSchema() {
 
 test("missing principals and incompatible column types, defaults, nullability and timestamp precision fail", () => {
   assert.deepEqual(compareDatabaseSchema(validSchema()), []);
+  const postgresFormatted = validSchema();
+  for (const table of [
+    "task_data",
+    "background_removal_tasks",
+    "watermark_removal_tasks",
+    "object_removal_tasks",
+  ]) {
+    postgresFormatted.tables[table].find(
+      (column) => column.name === "audit_expires_at",
+    ).default = "(CURRENT_TIMESTAMP + '90 days'::interval)";
+  }
+  assert.deepEqual(compareDatabaseSchema(postgresFormatted), []);
   for (const [field, value] of [
     ["type", "text"],
     ["nullable", true],
@@ -396,6 +410,14 @@ test("missing principals and incompatible column types, defaults, nullability an
       /task_data.retry_count has incompatible/,
     );
   }
+  const wrongAuditDefault = validSchema();
+  wrongAuditDefault.tables.task_data.find(
+    (column) => column.name === "audit_expires_at",
+  ).default = "(CURRENT_TIMESTAMP + INTERVAL '30 days')";
+  assert.match(
+    compareDatabaseSchema(wrongAuditDefault).join("\n"),
+    /task_data.audit_expires_at has incompatible default/,
+  );
   const schema = validSchema();
   schema.tables.task_data = schema.tables.task_data.filter(
     (column) => column.name !== "principal_id",

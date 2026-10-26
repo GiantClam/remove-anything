@@ -142,7 +142,7 @@ test("object download accepts the owner, signs only its R2 key, and caps the ima
         tool_slug: "remove-objects",
         is_authenticated: true,
         task_id: "17",
-        event_id: "result_downloaded:task:17",
+        event_id: "result_downloaded:task:remove-objects:17",
       },
     },
   ]);
@@ -275,7 +275,7 @@ test("anonymous attachment events keep the task key and authentication state", a
   assert.equal(state.emittedEvents[0]?.params.is_authenticated, false);
   assert.equal(
     state.emittedEvents[0]?.params.event_id,
-    "result_downloaded:task:17",
+    "result_downloaded:task:remove-objects:17",
   );
   assert.equal(
     state.emittedEvents[1]?.params.event_id,

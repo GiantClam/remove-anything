@@ -21,11 +21,14 @@ function protectedVideoPreview(taskId: string, status: unknown, imageUrl: string
     : null;
 }
 
-function visibleVideoStatus(status: unknown, imageUrl: string | null | undefined) {
+function visibleVideoStatus(
+  status: unknown,
+  imageUrl: string | null | undefined,
+) {
   const normalized = normalizeTaskStatus(status);
   return normalized === "succeeded" && !getR2ObjectKey(imageUrl, env.R2_URL_BASE)
     ? "processing"
-    : status;
+    : normalized;
 }
 
 export async function GET(
@@ -83,6 +86,7 @@ export async function GET(
 
     let finalStatus = taskRecord.taskStatus;
     let outputVideoUrl = taskRecord.imageUrl as string | null;
+    let finalErrorMsg = taskRecord.errorMsg;
 
     // 如果任务还在进行中，从RunningHub获取最新状态
     console.log(`🔍 检查是否需要从RunningHub获取状态，当前数据库状态: ${taskRecord.taskStatus}`);
@@ -131,13 +135,29 @@ export async function GET(
                        };
                      } else if (taskResult.data && Array.isArray(taskResult.data) && taskResult.data.length > 0) {
                        const outputFile = taskResult.data[0];
-                       outputVideoUrl = outputFile.fileUrl || null;
-                       updateData = {
-                         taskStatus: 'succeeded',
-                         imageUrl: outputVideoUrl,
-                         executeEndTime: BigInt(Date.now())
-                       };
-                       console.log(`✅ 任务实际已完成，输出URL: ${outputFile.fileUrl}`);
+                outputVideoUrl =
+                  typeof outputFile?.fileUrl === "string" &&
+                  outputFile.fileUrl.trim()
+                    ? outputFile.fileUrl.trim()
+                    : null;
+                updateData = outputVideoUrl
+                  ? {
+                      taskStatus: 'succeeded',
+                      imageUrl: outputVideoUrl,
+                      executeEndTime: BigInt(Date.now()),
+                      errorMsg: null,
+                    }
+                  : {
+                      taskStatus: 'processing',
+                      executeEndTime: null,
+                      errorMsg:
+                        "The provider result is not available yet. Please retry shortly.",
+                    };
+                console.log(
+                  outputVideoUrl
+                    ? `✅ 任务实际已完成，输出URL: ${outputVideoUrl}`
+                    : "ℹ️ 任务仍在处理中，无可用输出结果",
+                );
                      } else {
                        // 没有结果，保持processing状态
                        updateData = {
@@ -147,10 +167,14 @@ export async function GET(
                      }
                    } catch (resultError) {
                      console.error("❌ 获取任务结果失败:", resultError);
-                     
-                     // 其他错误，保持processing状态
+              // A provider success without a durable output remains
+              // recoverable; the secure download path must never expose a
+              // terminal success with no stored result.
                      updateData = {
                        taskStatus: 'processing'
+                , executeEndTime: null,
+                errorMsg:
+                  "The result could not be read yet. Please retry shortly.",
                      };
                    }
                  } else {
@@ -175,26 +199,46 @@ export async function GET(
                 updateData = {};
               } else if (taskResult.data && Array.isArray(taskResult.data) && taskResult.data.length > 0) {
                 const outputFile = taskResult.data[0];
-                outputVideoUrl = outputFile.fileUrl || null;
-                updateData = {
-                  taskStatus: 'succeeded',
-                  imageUrl: outputVideoUrl,
-                  executeEndTime: BigInt(Date.now())
-                };
-                console.log(`✅ 任务成功完成，输出URL: ${outputFile.fileUrl}`);
+                outputVideoUrl =
+                  typeof outputFile?.fileUrl === "string" &&
+                  outputFile.fileUrl.trim()
+                    ? outputFile.fileUrl.trim()
+                    : null;
+                updateData = outputVideoUrl
+                  ? {
+                      taskStatus: 'succeeded',
+                      imageUrl: outputVideoUrl,
+                      executeEndTime: BigInt(Date.now()),
+                      errorMsg: null,
+                    }
+                  : {
+                      taskStatus: 'processing',
+                      executeEndTime: null,
+                      errorMsg:
+                        "The provider result is not available yet. Please retry shortly.",
+                    };
+                console.log(
+                  outputVideoUrl
+                    ? `✅ 任务成功完成，输出URL: ${outputVideoUrl}`
+                    : "ℹ️ 供应商报告成功但尚无可用输出，保持处理中",
+                );
               } else {
                 updateData = {
-                  taskStatus: 'succeeded',
-                  executeEndTime: BigInt(Date.now())
+                  taskStatus: 'processing',
+                  executeEndTime: null,
+                  errorMsg:
+                    "The provider result is not available yet. Please retry shortly.",
                 };
-                console.log(`✅ 任务成功完成，但无输出文件`);
+                console.log("ℹ️ 供应商报告成功但无输出文件，保持处理中");
               }
             } catch (resultError) {
               console.error("❌ 获取任务结果失败:", resultError);
-              // 即使获取结果失败，也标记任务为成功
+              // A provider success without durable output remains recoverable.
               updateData = {
-                taskStatus: 'succeeded',
-                executeEndTime: BigInt(Date.now())
+                taskStatus: 'processing',
+                executeEndTime: null,
+                errorMsg:
+                  "The result could not be read yet. Please retry shortly.",
               };
             }
             break;
@@ -207,6 +251,20 @@ export async function GET(
               errorMsg: runninghubStatus.data?.error || 'Task failed'
             };
             console.log(`❌ 任务失败: ${runninghubStatus.data?.error}`);
+            break;
+
+          case 'expired':
+          case 'EXPIRED':
+          case 'timeout':
+          case 'TIMEOUT':
+          case 'timed_out':
+          case 'TIMED_OUT':
+            updateData = {
+              taskStatus: 'expired',
+              executeEndTime: BigInt(Date.now()),
+              errorMsg: runninghubStatus.data?.error || 'Task expired',
+            };
+            console.log(`⌛ 任务已过期`);
             break;
             
           case 'pending':
@@ -225,6 +283,7 @@ export async function GET(
             await updateSora2VideoWatermarkRemovalTask(taskRecord.id, updateData);
             console.log(`🔄 已更新 Sora2视频去水印任务记录: ${taskRecord.id}，状态: ${updateData.taskStatus}`);
             finalStatus = updateData.taskStatus;
+            finalErrorMsg = updateData.errorMsg ?? finalErrorMsg;
           } catch (dbError) {
             console.error("❌ 数据库更新失败:", {
               error: dbError.message,
@@ -252,7 +311,7 @@ export async function GET(
         finalStatus,
         outputVideoUrl || taskRecord.imageUrl,
       ),
-      errorMsg: taskRecord.errorMsg,
+      errorMsg: finalErrorMsg,
       createdAt: taskRecord.createdAt,
       executeStartTime: taskRecord.executeStartTime?.toString(),
       executeEndTime: taskRecord.executeEndTime?.toString()

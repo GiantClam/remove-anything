@@ -257,6 +257,7 @@ const P0_COLUMN_RULES = {
     type: "timestamp without time zone",
     nullable: true,
     precision: 3,
+    default: "(CURRENT_TIMESTAMP + INTERVAL '90 days')",
   },
 };
 
@@ -273,6 +274,22 @@ export const EXPECTED_MIGRATIONS = [
 
 const PLACEHOLDER_RE =
   /(placeholder|your[-_ ]|replace[-_ ]?me|example\.(com|test)|localhost|127\.0\.0\.1|^file:)/i;
+
+function normalizeDefaultExpression(value) {
+  if (value === null || value === undefined) return null;
+  const normalized = String(value).trim().replace(/\s+/g, " ").toLowerCase();
+  if (
+    /\(current_timestamp \+ (?:interval )?'90 days'(?:::interval)?\)/.test(
+      normalized,
+    )
+  ) {
+    return "(current_timestamp + interval '90 days')";
+  }
+  return normalized
+    .replace(/::(?:integer|boolean)$/, "")
+    .replace(/^'|'$/g, "")
+    .trim();
+}
 
 function isUnset(value) {
   return value === undefined || value === null || String(value).trim() === "";
@@ -477,11 +494,7 @@ export async function queryDatabase(databaseUrl, factory) {
           ? {
               rlsEnabled: Boolean(securityRows[0].rls_enabled),
               privileges: Object.fromEntries(
-                [
-                  "public",
-                  "anon",
-                  "authenticated",
-                ].flatMap((role) =>
+                ["public", "anon", "authenticated"].flatMap((role) =>
                   ["select", "insert", "update", "delete"].map((privilege) => [
                     `${role}_${privilege}`,
                     Boolean(securityRows[0][`${role}_${privilege}`]),
@@ -574,15 +587,9 @@ export function compareDatabaseSchema(database) {
         Number(metadata.precision) !== expected.precision
       )
         differences.push("timestamp precision");
-      const defaultValue =
-        metadata.default === null || metadata.default === undefined
-          ? null
-          : String(metadata.default)
-              .replace(/::(?:integer|boolean)$/, "")
-              .replace(/^'|'$/g, "")
-              .trim();
-      if (defaultValue !== (expected.default ?? null))
-        differences.push("default");
+      const defaultValue = normalizeDefaultExpression(metadata.default);
+      const expectedDefault = normalizeDefaultExpression(expected.default);
+      if (defaultValue !== expectedDefault) differences.push("default");
       if (differences.length)
         blockers.push(
           `database column ${table}.${column} has incompatible ${differences.join(", ")}`,
@@ -625,7 +632,9 @@ export function compareDatabaseSchema(database) {
       continue;
     }
     if (actual.rlsEnabled !== requirement.rlsEnabled) {
-      blockers.push(`database table ${table} does not have the required RLS state`);
+      blockers.push(
+        `database table ${table} does not have the required RLS state`,
+      );
     }
     for (const role of requirement.revokedRoles) {
       const normalizedRole = role.toLowerCase();

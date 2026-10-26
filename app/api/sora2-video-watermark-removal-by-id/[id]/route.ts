@@ -4,18 +4,32 @@ import {
   findSora2VideoWatermarkRemovalTaskById,
   updateSora2VideoWatermarkRemovalTask,
 } from "@/db/queries/sora2-video-watermark-removal";
+import { env } from "@/env.mjs";
 import { shouldSkipDatabaseQuery } from "@/lib/build-check";
 import { getErrorMessage } from "@/lib/handle-error";
-import { env } from "@/env.mjs";
 import { getR2ObjectKey } from "@/lib/r2-object-key";
+import { persistRunningHubOutput } from "@/lib/runninghub-output";
 import { normalizeTaskStatus } from "@/lib/task-lifecycle";
+import {
+  getUnknownVideoSubmissionCode,
+  getUnknownVideoSubmissionUpdatedAt,
+} from "@/lib/video-task-queue-contract";
 import { runninghubAPI } from "@/modules/runninghub";
 
 // 强制动态渲染，避免构建时静态生成
 export const dynamic = "force-dynamic";
 
-function protectedVideoPreview(taskId: string | null | undefined, status: unknown, imageUrl: string | null | undefined) {
-  if (!taskId || normalizeTaskStatus(status) !== "succeeded" || !getR2ObjectKey(imageUrl, env.R2_URL_BASE)) return null;
+function protectedVideoPreview(
+  taskId: string | null | undefined,
+  status: unknown,
+  imageUrl: string | null | undefined,
+) {
+  if (
+    !taskId ||
+    normalizeTaskStatus(status) !== "succeeded" ||
+    !getR2ObjectKey(imageUrl, env.R2_URL_BASE)
+  )
+    return null;
   return `/api/download?${new URLSearchParams({
     type: "sora2-video-watermark-removal",
     taskId,
@@ -23,11 +37,24 @@ function protectedVideoPreview(taskId: string | null | undefined, status: unknow
   })}`;
 }
 
-function visibleVideoStatus(status: unknown, imageUrl: string | null | undefined) {
+function visibleVideoStatus(
+  status: unknown,
+  imageUrl: string | null | undefined,
+) {
   const normalized = normalizeTaskStatus(status);
-  return normalized === "succeeded" && !getR2ObjectKey(imageUrl, env.R2_URL_BASE)
+  return normalized === "succeeded" &&
+    !getR2ObjectKey(imageUrl, env.R2_URL_BASE)
     ? "processing"
-    : status;
+    : normalized;
+}
+
+function getProviderStatus(data: unknown): string | null {
+  if (typeof data === "string") return data;
+  if (data && typeof data === "object" && "status" in data) {
+    const status = (data as { status?: unknown }).status;
+    return typeof status === "string" ? status : null;
+  }
+  return null;
 }
 
 export async function GET(
@@ -75,11 +102,17 @@ export async function GET(
 
     // 如果只查询数据库状态，直接返回
     if (dbOnly) {
-      const submissionUnknown =
-        !taskRecord.replicateId &&
-        /TASK_CREATION_OUTCOME_UNKNOWN|outcome is unknown/i.test(
-          taskRecord.errorMsg || "",
-        );
+      const submissionUnknownCode = !taskRecord.replicateId
+        ? getUnknownVideoSubmissionCode(taskRecord.errorMsg)
+        : null;
+      const submissionUnknown = submissionUnknownCode !== null;
+      const submissionUnknownAt = submissionUnknown
+        ? getUnknownVideoSubmissionUpdatedAt(
+            taskRecord.errorMsg,
+            taskRecord.createdAt,
+            taskRecord.updatedAt,
+          )
+        : undefined;
       return NextResponse.json({
         success: true,
         id: taskRecord.id,
@@ -87,10 +120,14 @@ export async function GET(
         taskStatus: submissionUnknown
           ? "submission-unknown"
           : visibleVideoStatus(taskRecord.taskStatus, taskRecord.imageUrl),
-        ...(submissionUnknown ? { createdAt: taskRecord.createdAt } : {}),
-        ...(submissionUnknown ? { code: "TASK_CREATION_OUTCOME_UNKNOWN" } : {}),
+        ...(submissionUnknown ? { createdAt: submissionUnknownAt } : {}),
+        ...(submissionUnknown ? { code: submissionUnknownCode } : {}),
         inputImageUrl: null,
-        imageUrl: protectedVideoPreview(taskRecord.replicateId, taskRecord.taskStatus, taskRecord.imageUrl),
+        imageUrl: protectedVideoPreview(
+          taskRecord.replicateId,
+          taskRecord.taskStatus,
+          taskRecord.imageUrl,
+        ),
         executeStartTime: taskRecord.executeStartTime
           ? Number(taskRecord.executeStartTime)
           : null,
@@ -105,10 +142,17 @@ export async function GET(
     // 如果没有 RunningHub 任务 ID，返回数据库状态
     if (!taskRecord.replicateId) {
       console.log("⚠️ 没有 RunningHub 任务 ID，返回数据库状态");
-      const submissionUnknown =
-        /TASK_CREATION_OUTCOME_UNKNOWN|outcome is unknown/i.test(
-          taskRecord.errorMsg || "",
-        );
+      const submissionUnknownCode = getUnknownVideoSubmissionCode(
+        taskRecord.errorMsg,
+      );
+      const submissionUnknown = submissionUnknownCode !== null;
+      const submissionUnknownAt = submissionUnknown
+        ? getUnknownVideoSubmissionUpdatedAt(
+            taskRecord.errorMsg,
+            taskRecord.createdAt,
+            taskRecord.updatedAt,
+          )
+        : undefined;
       return NextResponse.json({
         success: true,
         id: taskRecord.id,
@@ -116,10 +160,14 @@ export async function GET(
         taskStatus: submissionUnknown
           ? "submission-unknown"
           : visibleVideoStatus(taskRecord.taskStatus, taskRecord.imageUrl),
-        ...(submissionUnknown ? { createdAt: taskRecord.createdAt } : {}),
-        ...(submissionUnknown ? { code: "TASK_CREATION_OUTCOME_UNKNOWN" } : {}),
+        ...(submissionUnknown ? { createdAt: submissionUnknownAt } : {}),
+        ...(submissionUnknown ? { code: submissionUnknownCode } : {}),
         inputImageUrl: null,
-        imageUrl: protectedVideoPreview(taskRecord.replicateId, taskRecord.taskStatus, taskRecord.imageUrl),
+        imageUrl: protectedVideoPreview(
+          taskRecord.replicateId,
+          taskRecord.taskStatus,
+          taskRecord.imageUrl,
+        ),
         executeStartTime: taskRecord.executeStartTime
           ? Number(taskRecord.executeStartTime)
           : null,
@@ -141,8 +189,38 @@ export async function GET(
       console.log("📊 RunningHub 任务状态:", taskStatus);
 
       if (taskStatus.code === 0 && taskStatus.data) {
-        const status = taskStatus.data.status;
+        // RunningHub has returned both `data: "SUCCESS"` and
+        // `data: { status: "SUCCESS" }` across API versions. Accept both
+        // shapes so real provider success is not silently treated as unknown.
+        const status = getProviderStatus(taskStatus.data);
         console.log("📊 任务状态:", status);
+
+        if (!status) {
+          return NextResponse.json({
+            success: true,
+            id: taskRecord.id,
+            runninghubTaskId: taskRecord.replicateId,
+            taskStatus: visibleVideoStatus(
+              taskRecord.taskStatus,
+              taskRecord.imageUrl,
+            ),
+            inputImageUrl: null,
+            imageUrl: protectedVideoPreview(
+              taskRecord.replicateId,
+              taskRecord.taskStatus,
+              taskRecord.imageUrl,
+            ),
+            executeStartTime: taskRecord.executeStartTime
+              ? Number(taskRecord.executeStartTime)
+              : null,
+            executeEndTime: taskRecord.executeEndTime
+              ? Number(taskRecord.executeEndTime)
+              : null,
+            errorMsg: taskRecord.errorMsg,
+            user: taskRecord.user,
+            runninghubStatus: null,
+          });
+        }
 
         let updateData: any = {};
 
@@ -188,28 +266,59 @@ export async function GET(
                 taskResult.data.length > 0
               ) {
                 const outputFile = taskResult.data[0];
-                const outputVideoUrl = outputFile.fileUrl || null;
-                updateData = {
-                  taskStatus: "succeeded",
-                  imageUrl: outputVideoUrl,
-                  executeEndTime: BigInt(Date.now()),
-                  replicateStatus: "succeeded",
-                };
-                console.log(`✅ 任务成功完成，输出URL: ${outputFile.fileUrl}`);
+                const outputVideoUrl =
+                  typeof outputFile?.fileUrl === "string" &&
+                  outputFile.fileUrl.trim()
+                    ? outputFile.fileUrl.trim()
+                    : null;
+                if (outputVideoUrl) {
+                  // Provider URLs are ephemeral and must never become the
+                  // durable task result. Migrate the validated video into the
+                  // private staging/production R2 bucket before exposing
+                  // success to the client.
+                  const persistedVideoUrl = await persistRunningHubOutput(
+                    outputVideoUrl,
+                    "video",
+                    taskRecord.id,
+                  );
+                  updateData = {
+                    taskStatus: "succeeded",
+                    imageUrl: persistedVideoUrl,
+                    executeEndTime: BigInt(Date.now()),
+                    replicateStatus: "succeeded",
+                    errorMsg: null,
+                  };
+                  console.log(`✅ 任务成功完成，输出URL: ${outputVideoUrl}`);
+                } else {
+                  updateData = {
+                    taskStatus: "processing",
+                    executeEndTime: null,
+                    errorMsg:
+                      "The provider result is not available yet. Please retry shortly.",
+                    replicateStatus: "succeeded",
+                  };
+                  console.log("ℹ️ 供应商报告成功但尚无可用输出，保持处理中");
+                }
               } else {
                 updateData = {
-                  taskStatus: "succeeded",
-                  executeEndTime: BigInt(Date.now()),
+                  taskStatus: "processing",
+                  executeEndTime: null,
+                  errorMsg:
+                    "The provider result is not available yet. Please retry shortly.",
                   replicateStatus: "succeeded",
                 };
-                console.log(`✅ 任务成功完成，但无输出文件`);
+                console.log("ℹ️ 供应商报告成功但无输出文件，保持处理中");
               }
             } catch (resultError) {
               console.error("❌ 获取任务结果失败:", resultError);
-              // 即使获取结果失败，也标记任务为成功
+              // A provider success without durable output is recoverable. Do
+              // not expose or persist terminal success until an output URL is
+              // available for the secure download path.
               updateData = {
-                taskStatus: "succeeded",
-                executeEndTime: BigInt(Date.now()),
+                taskStatus: "processing",
+                executeEndTime: null,
+                errorMsg:
+                  "The result could not be read yet. Please retry shortly.",
                 replicateStatus: "succeeded",
               };
             }
@@ -223,6 +332,21 @@ export async function GET(
               executeEndTime: BigInt(Date.now()),
               errorMsg: taskStatus.msg || "Task failed",
               replicateStatus: "failed",
+            };
+            break;
+
+          case "expired":
+          case "EXPIRED":
+          case "timeout":
+          case "TIMEOUT":
+          case "timed_out":
+          case "TIMED_OUT":
+            console.log("⌛ 任务已过期");
+            updateData = {
+              taskStatus: "expired",
+              executeEndTime: BigInt(Date.now()),
+              errorMsg: taskStatus.msg || "Task expired",
+              replicateStatus: "expired",
             };
             break;
 
@@ -254,9 +378,16 @@ export async function GET(
           success: true,
           id: taskRecord.id,
           runninghubTaskId: taskRecord.replicateId,
-          taskStatus: visibleVideoStatus(taskRecord.taskStatus, taskRecord.imageUrl),
+          taskStatus: visibleVideoStatus(
+            taskRecord.taskStatus,
+            taskRecord.imageUrl,
+          ),
           inputImageUrl: null,
-          imageUrl: protectedVideoPreview(taskRecord.replicateId, taskRecord.taskStatus, taskRecord.imageUrl),
+          imageUrl: protectedVideoPreview(
+            taskRecord.replicateId,
+            taskRecord.taskStatus,
+            taskRecord.imageUrl,
+          ),
           executeStartTime: taskRecord.executeStartTime
             ? Number(taskRecord.executeStartTime)
             : null,
@@ -273,9 +404,16 @@ export async function GET(
           success: true,
           id: taskRecord.id,
           runninghubTaskId: taskRecord.replicateId,
-          taskStatus: visibleVideoStatus(taskRecord.taskStatus, taskRecord.imageUrl),
+          taskStatus: visibleVideoStatus(
+            taskRecord.taskStatus,
+            taskRecord.imageUrl,
+          ),
           inputImageUrl: null,
-          imageUrl: protectedVideoPreview(taskRecord.replicateId, taskRecord.taskStatus, taskRecord.imageUrl),
+          imageUrl: protectedVideoPreview(
+            taskRecord.replicateId,
+            taskRecord.taskStatus,
+            taskRecord.imageUrl,
+          ),
           executeStartTime: taskRecord.executeStartTime
             ? Number(taskRecord.executeStartTime)
             : null,
@@ -294,9 +432,16 @@ export async function GET(
         success: true,
         id: taskRecord.id,
         runninghubTaskId: taskRecord.replicateId,
-        taskStatus: visibleVideoStatus(taskRecord.taskStatus, taskRecord.imageUrl),
+        taskStatus: visibleVideoStatus(
+          taskRecord.taskStatus,
+          taskRecord.imageUrl,
+        ),
         inputImageUrl: null,
-        imageUrl: protectedVideoPreview(taskRecord.replicateId, taskRecord.taskStatus, taskRecord.imageUrl),
+        imageUrl: protectedVideoPreview(
+          taskRecord.replicateId,
+          taskRecord.taskStatus,
+          taskRecord.imageUrl,
+        ),
         executeStartTime: taskRecord.executeStartTime
           ? Number(taskRecord.executeStartTime)
           : null,

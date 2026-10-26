@@ -289,8 +289,14 @@ export default function MarketingRemoveBackground({
           a.download = 'composed-image.png';
           document.body.appendChild(a);
           a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          // Keep the anchor and object URL alive briefly so Chromium can
+          // finish scheduling the blob download before cleanup.
+          setTimeout(() => {
+            if (document.body.contains(a)) {
+              document.body.removeChild(a);
+            }
+            URL.revokeObjectURL(url);
+          }, 250);
           toast.success(tPage('messages.downloadSuccess'));
         } else {
           throw new Error('Failed to create blob');
@@ -872,13 +878,14 @@ export default function MarketingRemoveBackground({
               // 立即触发点击
               link.click();
               console.log(`🖱️ 触发下载点击`);
-              
-              // 清理
+
+              // Keep the anchor mounted briefly so Chromium can finish
+              // scheduling blob downloads before the DOM node is removed.
               setTimeout(() => {
                 if (document.body.contains(link)) {
                   document.body.removeChild(link);
                 }
-              }, 100);
+              }, 250);
               
               toast.success("图片已开始下载");
             } catch (downloadError) {
@@ -896,7 +903,7 @@ export default function MarketingRemoveBackground({
                   if (document.body.contains(link)) {
                     document.body.removeChild(link);
                   }
-                }, 100);
+                }, 250);
                 toast.success("图片已开始下载");
               } catch (fallbackError) {
                 console.error("Fallback download also failed:", fallbackError);
@@ -962,13 +969,14 @@ export default function MarketingRemoveBackground({
           // 立即触发点击
           link.click();
           console.log(`🖱️ 触发降级下载点击`);
-          
-          // 清理
+
+          // Keep the anchor mounted briefly so Chromium can finish
+          // scheduling blob downloads before the DOM node is removed.
           setTimeout(() => {
             if (document.body.contains(link)) {
               document.body.removeChild(link);
             }
-          }, 100);
+          }, 250);
           
           toast.success("图片已开始下载");
         } catch (downloadError) {
@@ -1773,13 +1781,15 @@ export default function MarketingRemoveBackground({
           onComplete={(imageUrl) => {
             setProcessedImage(imageUrl);
             setIsProcessing(false);
-            setCurrentTaskId(null);
+            // Keep the task id available for the authenticated download route.
+            // Clearing it here forces the UI into the unauthenticated
+            // processedImage fallback, which bypasses download accounting and
+            // can cancel blob downloads before Chromium has scheduled them.
             toast.success(tPage('backgroundRemoved'));
             advanceQueue();
           }}
           onError={(error) => {
             setIsProcessing(false);
-            setCurrentTaskId(null);
             toast.error(tPage('processingFailed'));
             advanceQueue();
           }}

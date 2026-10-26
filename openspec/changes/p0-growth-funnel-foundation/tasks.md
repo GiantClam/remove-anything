@@ -1,16 +1,16 @@
 # Implementation Tasks
 
-Status reviewed on 2026-10-19. This change is in progress and must not be archived or used to start the 28-day baseline. See `implementation-evidence.md` for verification scope and remaining release gates.
+Status reviewed on 2026-10-21. OpenSpec reports 39/56 tasks complete. This change is in progress and must not be archived or used to start the 28-day baseline. See `implementation-evidence.md` for current verification scope and remaining release gates.
 
 ## Account and release prerequisites
 
 - [x] Confirm the target GA4 property and create the Remove Anything web stream.
-- [x] Create/verify the GSC domain.
+- [ ] Create/verify the GSC domain. DNS TXT visibility was checked from three resolvers on 2026-10-21, but an authenticated Search Console property-verification receipt is still missing; see `evidence/gsc-domain-dns-20261021.md`.
 - [x] Configure production `NEXT_PUBLIC_GA_ID` and verify the deployed GA4 script and a collection request.
 - [ ] Capture production GA4 DebugView/realtime ingestion of the required event chain.
 - [x] Define operating roles for weekly funnel review, reliability review, and per-tool cost approval in `owners.md`.
 
-Earlier account evidence records GA4 account `29849090`, property `559043519`, stream `16131661294`, Measurement ID `G-VD6F0YDBQ5`, and GSC `sc-domain:remove-anything.com`. A deployed page previously delivered `page_view` with HTTP 204. These historical observations do not prove current event ingestion or the implementation in this working tree.
+Account evidence records GA4 account `29849090`, property `559043519`, stream `16131661294`, Measurement ID `G-VD6F0YDBQ5`, and GSC `sc-domain:remove-anything.com`. On 2026-10-21, production Realtime showed `page_view` and `session_start` after one browser visit; the complete task-to-checkout chain and DebugView evidence remain open. See `evidence/production-ga4-realtime-20261021.md`.
 
 ## Registry and SEO
 
@@ -37,8 +37,8 @@ Earlier account evidence records GA4 account `29849090`, property `559043519`, s
 - [x] Return authorized preview addresses from background status GET/SSE and keep preview requests out of download counts; sign private R2 downloads on the server.
 - [x] Require an authenticated owner for composition creation/update and constrain the final update to that owner; require database-backed administrator permission for background-library creation and nonpublic listing, with denial before side effects.
 - [x] Enforce anonymous low-resolution output on the server and keep paid/full-output entitlements disabled until an authenticated owner and recorded cost approval exist. The three core download boundaries now reject `output=full` before signing, storage reads, counters, or analytics; paid full-output delivery remains blocked pending cost approval and a separate full-resolution implementation.
-- [ ] Enforce declared processing timeout, queue/concurrency limits, retry behavior, and input safety consistently in remaining detection/segmentation/composition flows.
-- [ ] Close background composition authorization and historical public storage/URL bypasses; verify actual provider source approvals and private bucket policy.
+- [ ] Enforce declared processing timeout, queue/concurrency limits, retry behavior, and input safety consistently in remaining detection/segmentation/composition flows. Detect/segment validate decoded images, use process-local leases, and now pass the declared request deadline into provider create/status/result calls; the video queue uses task-type-scoped CAS claims, bounded provider deadlines, one safe pre-provider retry, and stale-lease failure recovery without replay. Shared cross-instance capacity, cancellation/reconciliation of late provider submissions, composition execution limits, and real provider acceptance remain open.
+- [ ] Close background composition authorization and historical public storage/URL bypasses; verify actual provider source approvals and private bucket policy. Composition creation/update now require authenticated ownership and validated owned sources; results are stored under scoped keys in a dedicated private bucket and served through short-lived owner/expiry-checked URLs. Legacy arbitrary fetch/signing routes now return 410. Historical public objects/URLs and the actual private-bucket policy still need external reconciliation.
 
 ## Measurement and attribution
 
@@ -47,7 +47,7 @@ Earlier account evidence records GA4 account `29849090`, property `559043519`, s
 - [x] Add selected server lifecycle/payment fact hooks and idempotent Stripe fulfillment with route-level tests.
 - [x] Provide the review template (`weekly-funnel-review.md`) and an export helper that reports unavailable input as `NO DATA`.
 - [ ] Wire and verify the complete required behavioral event chain across all six tools, signup, paywall, and checkout.
-- [ ] Deliver server facts durably to the chosen analytics destination and verify receipt/recovery. A server-only `analytics_events` sink and production table are now deployed with stable `event_id` uniqueness, RLS, and client ACL revocation; runtime event-chain receipt and recovery verification remain open.
+- [ ] Deliver server facts durably to the chosen analytics destination and verify receipt/recovery. A server-only `analytics_events` sink and production table are deployed with stable `event_id` uniqueness, RLS, and client ACL revocation; the schema duplicate-ID probe passed, but runtime delivery, retry/recovery, and event-chain receipt remain unverified.
 - [ ] Implement and validate weekly page/tool/locale/auth funnels plus GSC, latency, retry, cost, repeat-purchase, and missing-event metrics. The offline helper now supports explicit grouping, supported reliability/cost/GSC slices, deduplication, and `NO DATA`, but production exports and receipt remain unverified.
 
 ## Core tool experience and retention
@@ -56,11 +56,11 @@ Earlier account evidence records GA4 account `29849090`, property `559043519`, s
 - [x] Record authorization confirmation, policy version, subject, task ID, and audit deadline for high-risk object/watermark tasks; expose reporting/deletion contact paths.
 - [x] Align the free watermark UI, registry, and create route to one image and a ZIP download; stop materializing untracked public preview files on status reads.
 - [x] Add an authenticated bounded retention worker, default dry run, explicit execute flag, exact R2 key matching, retries, shared/provider blockers, cleanup markers, and a rollout runbook.
-- [ ] Complete the shared upload/preview/process/result/failure/retry/download-or-upgrade flow and low/full-output distinction on all six tools.
+- [ ] Complete the shared upload/preview/process/result/failure/retry/download-or-upgrade flow and low/full-output distinction on all six tools. Low-resolution image/ZIP delivery and a fail-closed full-output gate are implemented on core download routes; both Sora2 status routes now normalize to the shared five-state contract and keep success-without-durable-output recoverable. Mocked browser evidence now also covers the four background variants and Remove Objects retry/download states, but real provider/storage acceptance for all six tools and paid/full delivery remain disabled.
 - [ ] Enforce actual 24-hour source/result deletion including provider copies, overdue active jobs, shared assets, and historical assets missing a manifest.
-- [ ] Apply 90-day minimal audit retention across every task model and verify the earlier-deletion request workflow operationally.
+- [ ] Verify 90-day minimal audit retention and the earlier-deletion request workflow operationally. All four task models have 90-day audit fields and worker support, covered by local unit tests; production audit deletion, request delivery, and fulfillment remain unverified.
 
-The worker is implemented in dry-run mode. As of 2026-10-15, execution is deliberately blocked with `RETENTION_EXECUTION_BLOCKED` because an offline race probe reproduced deletion after a new shared reference and a concurrent task-state/expiry change. Access expiry is not proof of physical deletion. Follow `retention-runbook.md` and `migration-runbook.md`; schema migration, coordinated cleanup claims, and execution rollout remain pending.
+The worker is implemented in dry-run mode. As of 2026-10-21, execution remains deliberately blocked with `RETENTION_EXECUTION_BLOCKED` because an offline race probe reproduced deletion after a new shared reference and a concurrent task-state/expiry change. Access expiry is not proof of physical deletion. Follow `retention-runbook.md` and `migration-runbook.md`; coordinated cleanup claims, provider purge, and execution rollout remain pending.
 
 ## Verification and rollout
 
@@ -70,14 +70,14 @@ The worker is implemented in dry-run mode. As of 2026-10-15, execution is delibe
 - [x] Rehearse scoped baseline repair and P0 patches on the isolated PostgreSQL 17 branch; verify mapped columns, sequence/table identity, indexes, repeated patches, and new-table RLS/ACL.
 - [x] Verify synthetic historical task IDs, billing links, download/view relationships, scalar types and ownership predicates in a staging-only SQL transaction; independently confirm rollback cleanup and unchanged sequence state.
 - [x] Rehearse the remaining queue/image/composition schema on isolated staging, verify 45 mapped columns, indexes/FKs/RLS/ACL, and roll back explicit-ID synthetic fixtures without sequence changes.
-- [ ] Verify exact Prisma/application binary compatibility and rollback, accept the applied `0007_production_baseline_reconciliation.sql` and additive analytics migration through real application paths, and isolate Preview resources. SQL-only results remain separate from full integration acceptance.
+- [ ] Verify exact Prisma/application binary compatibility and rollback, accept the applied `0007_production_baseline_reconciliation.sql` and additive analytics migration through real application paths, and isolate Preview resources. On 2026-10-21, read-only random-ID task lookups returned expected 404s through deployed Prisma paths; mutation, transaction/concurrency, rollback, and Preview isolation acceptance remain open. See `evidence/production-application-probes-20261021.md`.
 - [x] Add unit and in-process route tests for registry/cost gates, quota, reservations, states, refunds, analytics IDs, callbacks, secure downloads, retention, and Stripe fulfillment.
 - [x] Render all six canonical pages in English and the existing `zh-tw` locale in a browser and inspect H1, contracts, metadata, Schema, related links, and locale URLs.
 - [x] Complete a mocked watermark queued/success/ZIP-download/expired-error browser flow, with the mock and development-auth boundaries recorded.
-- [ ] Finish mocked browser processing/error/download flows and real provider flows for all six pages; rendered-page checks alone do not satisfy task-flow acceptance.
+- [ ] Finish mocked browser processing/error/download flows and real provider flows for all six pages; rendered-page checks alone do not satisfy task-flow acceptance. Real object-removal and background-removal provider/storage/download acceptance is verified in staging; image watermark removal reached real provider/storage/download success before the analytics namespace fix, while transparent PNG, white background, background-color, Sora2, and cross-tool acceptance remain open.
 - [ ] Validate migrations, real database concurrency, callback/provider/storage behavior, purchase reconciliation, and audit records in an integration environment.
-- [ ] Run deployed GA4, GSC, sitemap, canonical, indexability, purchase, retention, and audit checks after rollout.
+- [ ] Run deployed GA4, GSC, sitemap, canonical, indexability, purchase, retention, and audit checks after rollout. The 2026-10-21 deployment evidence closes current sitemap/canonical/indexability smoke only; full behavioral analytics, GSC impressions, purchase, physical retention, and audit checks remain open.
 - [ ] Start the 28-day baseline only after every release gate passes.
 - [ ] Expand to P1 pages only after the three-page impressions, stable funnel, and attributable signal gates pass.
 
-Local command results and browser evidence are recorded in `implementation-evidence.md`. The 2026-10-15 local SEO/HTTP smoke passed with GA loader scheduling, and browser hydration confirmed the configured GA ID only with external requests blocked. See `staging-migration-evidence.md` for the schema rehearsal, `staging-compatibility-evidence.md` for SQL-only historical fixtures, and `environment-setup.md` for remaining environment setup. A passing local suite does not close external-service, output entitlement, physical retention, or production measurement gates.
+Local command results and browser evidence are recorded in `implementation-evidence.md`. The 2026-10-15 local SEO/HTTP smoke passed with GA loader scheduling; subsequent production deployment and read-only SEO checks are recorded there and in `evidence/production-deployment-20261020.md`. See `staging-migration-evidence.md` for the schema rehearsal, `staging-compatibility-evidence.md` for SQL-only historical fixtures, and `environment-setup.md` for remaining environment setup. A passing local suite does not close external-service, output entitlement, physical retention, or production measurement gates.

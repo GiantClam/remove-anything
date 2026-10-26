@@ -40,7 +40,10 @@ test("task and payment events carry stable deduplication keys", () => {
     },
   );
   assert.equal(task.params.task_id, "42");
-  assert.equal(task.params.event_id, "task_succeeded:task:42");
+  assert.equal(
+    task.params.event_id,
+    "task_succeeded:task:remove-background:42",
+  );
   assert.deepEqual(retriedTask.params, task.params);
 
   const purchase = createOrderAnalyticsEvent(
@@ -73,6 +76,29 @@ test("task and payment events carry stable deduplication keys", () => {
   );
   assert.equal(signup.params.user_id, "user-4");
   assert.equal(signup.params.event_id, "signup_completed:user:user-4");
+});
+
+test("task event keys include the tool namespace when task IDs share tables", () => {
+  const background = createTaskAnalyticsEvent(
+    ANALYTICS_EVENTS.resultDownloaded,
+    1,
+    { tool_slug: "remove-background" },
+  );
+  const watermark = createTaskAnalyticsEvent(
+    ANALYTICS_EVENTS.resultDownloaded,
+    1,
+    { tool_slug: "remove-watermark" },
+  );
+
+  assert.equal(
+    background.params.event_id,
+    "result_downloaded:task:remove-background:1",
+  );
+  assert.equal(
+    watermark.params.event_id,
+    "result_downloaded:task:remove-watermark:1",
+  );
+  assert.notEqual(background.params.event_id, watermark.params.event_id);
 });
 
 test("checkout and paywall behavior carry comparable funnel dimensions", () => {

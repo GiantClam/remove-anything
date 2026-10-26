@@ -242,6 +242,8 @@ export function createR2S3Service() {
       generateRouteState.r2UploadCalls++;
       return { completedUrl: "https://files.example.test/uploaded.png" };
     },
+    getSignedUrl: async (key: string, bucket: string, expiresIn: number) =>
+      `https://signed.example.test/${bucket}/${key}?expiresIn=${expiresIn}`,
   };
 }
 

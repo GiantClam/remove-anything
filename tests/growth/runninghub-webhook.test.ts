@@ -15,6 +15,10 @@ const source =
 const png = Uint8Array.from([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0,
 ]);
+const mp4 = Uint8Array.from([
+  0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0x00,
+  0x00, 0x02, 0x00, 0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32,
+]);
 
 beforeEach(() => {
   resetRunninghubWebhookState();
@@ -71,6 +75,9 @@ async function callback(options: Parameters<typeof request>[0] = {}) {
 function imageResponse() {
   return new Response(png, { headers: { "content-type": "image/png" } });
 }
+function videoResponse() {
+  return new Response(mp4, { headers: { "content-type": "video/mp4" } });
+}
 
 test("missing or invalid callback credentials are rejected before body, database, or output access", async () => {
   for (const key of [null, "incorrect-secret"]) {
@@ -91,7 +98,10 @@ test("authenticated header failure callback records a canonical failure without 
   assert.equal(state.transitions, 1);
   assert.deepEqual(state.stopped, ["provider-23"]);
   assert.deepEqual(state.uploads, []);
-  assert.deepEqual(state.analyticsEvents.map((event) => event.name), ["processing_failed"]);
+  assert.deepEqual(
+    state.analyticsEvents.map((event) => event.name),
+    ["processing_failed"],
+  );
   assert.equal(state.analyticsEvents[0].params.task_id, "23");
 });
 
@@ -124,7 +134,10 @@ test("object callback fetches only its approved source with timeout, no redirect
   const body = await response.text();
   assert.ok(!body.includes("https://"));
   assert.ok(!body.includes(env.RUNNINGHUB_WEBHOOK_SECRET));
-  assert.deepEqual(state.analyticsEvents.map((event) => event.name), ["processing_completed"]);
+  assert.deepEqual(
+    state.analyticsEvents.map((event) => event.name),
+    ["processing_completed"],
+  );
 });
 
 test("watermark callback wraps a supported image into a bounded private ZIP", async () => {
@@ -155,7 +168,10 @@ test("duplicate completed callbacks do not repeat migration or overwrite a termi
   assert.equal(state.transitions, 1);
   assert.equal(state.object!.outputImageUrl, firstOutput);
   assert.equal(state.object!.taskStatus, "succeeded");
-  assert.deepEqual(state.analyticsEvents.map((event) => event.name), ["processing_completed"]);
+  assert.deepEqual(
+    state.analyticsEvents.map((event) => event.name),
+    ["processing_completed"],
+  );
 });
 
 test("concurrent callback deliveries share an exact content key and only one state transition", async () => {
@@ -316,24 +332,34 @@ test("oversized streamed output is canceled without a write even when content le
   assert.deepEqual(state.uploads, []);
 });
 
-test("the disabled legacy video path keeps metadata-only behavior behind authentication and CAS", async () => {
+test("video callbacks migrate the provider output into private R2", async () => {
   resetRunninghubWebhookState("video");
+  globalThis.fetch = async (url, init) => {
+    assert.equal(url, source);
+    assert.equal(init?.redirect, "error");
+    return videoResponse();
+  };
   assert.equal((await callback()).status, 200);
   assert.equal(state.video!.taskStatus, "succeeded");
-  assert.equal(state.video!.imageUrl, source);
-  assert.deepEqual(state.uploads, []);
+  assert.match(
+    state.video!.imageUrl!,
+    /^https:\/\/r2\.example\.test\/assets\/sora2-video-watermark-removal\/processed\/23-callback-[a-f0-9]{64}\.mp4$/,
+  );
+  assert.equal(state.uploads.length, 1);
+  assert.equal(state.uploads[0]?.options.ContentType, "video/mp4");
 });
 
 test("authenticated callback reattaches a known provider task to its pre-created video record", async () => {
   resetRunninghubWebhookState("video");
   state.video!.replicateId = null;
+  globalThis.fetch = async () => videoResponse();
   assert.equal(
     (await callback({ recordId: state.video!.id, recordType: "video" })).status,
     200,
   );
   assert.equal(state.video!.replicateId, "provider-23");
   assert.equal(state.video!.taskStatus, "succeeded");
-  assert.equal(state.video!.imageUrl, source);
+  assert.match(state.video!.imageUrl!, /sora2-video-watermark-removal/);
   assert.equal(state.transitions, 1);
 });
 

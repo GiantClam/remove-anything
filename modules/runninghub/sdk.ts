@@ -1,3 +1,5 @@
+import { QueueDeadlineExceededError } from "../../lib/video-task-queue-contract";
+
 export interface RunningHubUploadResponse {
   code: number;
   msg: string;
@@ -27,6 +29,7 @@ export interface CreateTaskOptions {
   nodeInfoList: RunningHubNodeInput[];
   taskRecordId?: number;
   webhookRecordType?: "video" | "object" | "watermark";
+  deadlineAt?: number;
 }
 
 export interface UploadFileOptions {
@@ -43,6 +46,13 @@ export interface RunningHubAPIConfig {
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getRequestTimeoutMs(deadlineAt?: number): number {
+  if (deadlineAt === undefined) return 30_000;
+  const remainingMs = deadlineAt - Date.now() - 1_000;
+  if (remainingMs <= 0) throw new Error("Provider sync deadline exceeded");
+  return Math.max(1, Math.min(30_000, Math.floor(remainingMs)));
 }
 
 export class TaskCreationOutcomeUnknownError extends Error {
@@ -218,8 +228,13 @@ export class RunningHubAPI {
   }
 
   async createTaskGeneric(options: CreateTaskOptions): Promise<string> {
-    const { workflowId, nodeInfoList, taskRecordId, webhookRecordType } =
-      options;
+    const {
+      workflowId,
+      nodeInfoList,
+      taskRecordId,
+      webhookRecordType,
+      deadlineAt,
+    } = options;
     const webhookUrl = getWebhookUrl(taskRecordId, webhookRecordType);
     const payload = {
       apiKey: this.apiKey,
@@ -231,13 +246,18 @@ export class RunningHubAPI {
     // Only an explicit capacity rejection proves that a paid job was not made.
     // Transport errors and invalid responses may follow a successful creation.
     for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (typeof deadlineAt === "number" && deadlineAt - Date.now() < 33_000) {
+        throw new QueueDeadlineExceededError(
+          "Queue deadline does not leave time for provider creation",
+        );
+      }
       let result: RunningHubCreateTaskResponse;
       try {
         const response = await fetch(`${this.baseUrl}/task/openapi/create`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(30_000),
+          signal: AbortSignal.timeout(getRequestTimeoutMs(deadlineAt)),
         });
         if (!response.ok) throw new TaskCreationOutcomeUnknownError();
         result = (await response.json()) as RunningHubCreateTaskResponse;
@@ -327,23 +347,33 @@ export class RunningHubAPI {
 
   async createObjectDetectTask(
     nodeInfoList: RunningHubNodeInput[],
+    options: { deadlineAt?: number } = {},
   ): Promise<string> {
     const workflowId = process.env.RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID;
     if (!workflowId || workflowId === "placeholder") {
       throw new Error("RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID is not configured");
     }
 
-    return this.createTaskGeneric({ workflowId, nodeInfoList });
+    return this.createTaskGeneric({
+      workflowId,
+      nodeInfoList,
+      deadlineAt: options.deadlineAt,
+    });
   }
 
   async createObjectSegmentTask(
     nodeInfoList: RunningHubNodeInput[],
+    options: { deadlineAt?: number } = {},
   ): Promise<string> {
     const workflowId =
       process.env.RUNNINGHUB_OBJECT_SEGMENT_WORKFLOW_ID ||
       "2062736566451269633";
 
-    return this.createTaskGeneric({ workflowId, nodeInfoList });
+    return this.createTaskGeneric({
+      workflowId,
+      nodeInfoList,
+      deadlineAt: options.deadlineAt,
+    });
   }
 
   async createObjectRemoveTask(
@@ -364,7 +394,40 @@ export class RunningHubAPI {
     });
   }
 
-  async getTaskStatus(taskId: string): Promise<RunningHubTaskStatus> {
+  async createObjectClearTask(
+    rgbaImage: Buffer,
+    taskRecordId?: number,
+  ): Promise<string> {
+    const workflowId =
+      process.env.RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID ||
+      "1949623946942533633";
+    const fileName = await this.uploadFile(rgbaImage, {
+      fileType: "image",
+      filename: `object-clear-${taskRecordId || Date.now()}.png`,
+      contentType: "image/png",
+    });
+    const nodeInfoList: RunningHubNodeInput[] = [
+      {
+        nodeId:
+          process.env.RUNNINGHUB_OBJECT_REMOVE_UPLOAD_NODE_ID?.trim() || "27",
+        fieldName:
+          process.env.RUNNINGHUB_OBJECT_REMOVE_UPLOAD_FIELD_NAME?.trim() ||
+          "image",
+        fieldValue: fileName,
+      },
+    ];
+    return this.createTaskGeneric({
+      workflowId,
+      nodeInfoList,
+      taskRecordId,
+      webhookRecordType: "object",
+    });
+  }
+
+  async getTaskStatus(
+    taskId: string,
+    options: { deadlineAt?: number } = {},
+  ): Promise<RunningHubTaskStatus> {
     const payload = { apiKey: this.apiKey, taskId };
     const response = await fetch(
       `${this.baseUrl}/task/openapi/status?t=${Date.now()}`,
@@ -376,7 +439,7 @@ export class RunningHubAPI {
           Pragma: "no-cache",
         },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(getRequestTimeoutMs(options.deadlineAt)),
       },
     );
     if (!response.ok) {
@@ -400,7 +463,10 @@ export class RunningHubAPI {
     return result as RunningHubTaskStatus;
   }
 
-  async getTaskResult(taskId: string): Promise<any> {
+  async getTaskResult(
+    taskId: string,
+    options: { deadlineAt?: number } = {},
+  ): Promise<any> {
     const payload = { apiKey: this.apiKey, taskId };
     const response = await fetch(
       `${this.baseUrl}/task/openapi/outputs?t=${Date.now()}`,
@@ -412,7 +478,7 @@ export class RunningHubAPI {
           Pragma: "no-cache",
         },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(getRequestTimeoutMs(options.deadlineAt)),
       },
     );
     if (!response.ok) {

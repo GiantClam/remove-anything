@@ -35,3 +35,4 @@ public/workbox-*.js.map
 # Misc
 .vercel/
 docs/
+.gstack/

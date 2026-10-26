@@ -7,12 +7,14 @@ import { prisma } from "@/db/prisma";
 import { updateObjectRemovalTask } from "@/db/queries/object-removal";
 import { getCurrentUser } from "@/lib/auth-utils";
 import { getErrorMessage } from "@/lib/handle-error";
-import { ImageInputError, readTrustedRemoteImage } from "@/lib/image-input";
+import { ImageInputError } from "@/lib/image-input";
 import {
   markImageTaskReservationFailed,
   reserveImageTask,
 } from "@/lib/image-task-reservation";
 import { buildRemoveNodeInfoList } from "@/lib/remove-objects/runninghub";
+import { readRemoveObjectsImage } from "@/lib/remove-objects/input-image";
+import { composeObjectClearInput } from "@/lib/remove-objects/rgba-input";
 import {
   anonymousPrincipalCookie,
   createAnonymousPrincipal,
@@ -131,13 +133,15 @@ export async function POST(req: NextRequest) {
       allowedMimeTypes: tool.inputFormats,
       maxPixels: tool.limits.maxPixels,
     };
-    const [image, mask] = await Promise.all([
-      readTrustedRemoteImage(body.imageUrl, imageOptions),
-      readTrustedRemoteImage(body.maskUrl, {
+    const [imageInput, maskInput] = await Promise.all([
+      readRemoveObjectsImage(body.imageUrl, imageOptions),
+      readRemoveObjectsImage(body.maskUrl, {
         ...imageOptions,
         allowedMimeTypes: ["image/png"],
       }),
     ]);
+    const image = imageInput.image;
+    const mask = maskInput.image;
     if (image.width !== mask.width || image.height !== mask.height) {
       throw new ImageInputError(
         "MASK_DIMENSIONS_MISMATCH",
@@ -146,10 +150,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    runninghubTaskId = await runninghubAPI.createObjectRemoveTask(
-      buildRemoveNodeInfoList(body.imageUrl, body.maskUrl, prompt),
-      placeholderTask.id,
-    );
+    const removeWorkflow = process.env.RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID?.trim();
+    if (removeWorkflow === "1949623946942533633") {
+      const rgbaInput = await composeObjectClearInput(image, mask);
+      runninghubTaskId = await runninghubAPI.createObjectClearTask(
+        rgbaInput,
+        placeholderTask.id,
+      );
+    } else {
+      runninghubTaskId = await runninghubAPI.createObjectRemoveTask(
+        buildRemoveNodeInfoList(
+          imageInput.providerUrl,
+          maskInput.providerUrl,
+          prompt,
+        ),
+        placeholderTask.id,
+      );
+    }
 
     try {
       await updateObjectRemovalTask(placeholderTask.id, {
