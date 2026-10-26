@@ -2,6 +2,30 @@
 
 Date: 2026-10-26 (Asia/Shanghai). Scope: authorized Supabase preview branch and Vercel Preview deployment only.
 
+## Current recheck — 2026-10-26
+
+- Latest Preview deployment: `dpl_9wrHh79MTx6PKgN28hkAQd1iF2zd`, `READY`.
+- Deployment alias: `remove-anything-6s2qmbwyi-giantclams-projects.vercel.app`.
+- Recheck snapshot before the latest watermark rerun: `task_data=4`, `background_removal_tasks=15`, `object_removal_tasks=2`, `watermark_removal_tasks=4`, `analytics_events=12`; the latest rerun added watermark task `7` and its namespaced durable receipt.
+- Real successful task records currently include background `7/13/14`, object `1/2`, watermark `1/4/7`, and Sora2 `task_data.id=4`. The Sora2 result still needs an application download using its matching anonymous principal cookie and byte-level MP4 verification.
+- Namespaced analytics receipts currently include `result_downloaded:task:remove-watermark:4/7` and `result_downloaded:task:sora2-video-watermark-removal:4`, plus the background/object receipts listed in `implementation-evidence.md`.
+
+### P0 table security observation
+
+A read-only SQL recheck against staging found the following current Data API boundary:
+
+| Table | RLS | `anon` / `authenticated` grants | Policies |
+| --- | --- | --- | --- |
+| `task_data` | disabled | full table DML grants | none |
+| `object_removal_tasks` | disabled | full table DML grants | none |
+| `background_removal_tasks` | enabled | full table DML grants | none |
+| `watermark_removal_tasks` | enabled | no client grants | none |
+| `analytics_events` | enabled | no client grants | none |
+
+This observation was remediated for the P0 tables by staging migration `20261026135812 remove_anything_p0_staging_task_rls_hardening`: RLS is enabled on all five tables and `anon`/`authenticated` table and sequence grants are revoked. A fresh read-only query confirmed no client grants and RLS enabled on every P0 table. Unrelated inherited tables on the shared branch still produce Supabase advisor findings and remain outside this P0-scoped change.
+
+Supabase migration history records `20261026135812 remove_anything_p0_staging_task_rls_hardening` on the staging target.
+
 ## Staging target and schema repair
 
 - Supabase parent project: `ofmwvapsmsokwvqhwhtf`.
