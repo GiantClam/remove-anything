@@ -101,6 +101,29 @@ test("task event keys include the tool namespace when task IDs share tables", ()
   assert.notEqual(background.params.event_id, watermark.params.event_id);
 });
 
+test("lifecycle event builders can namespace shared task-table ids", () => {
+  const sora2 = createTaskAnalyticsEvent(
+    ANALYTICS_EVENTS.processingCompleted,
+    4,
+    { tool_slug: "sora2-video-watermark-removal" },
+  );
+  const background = createTaskAnalyticsEvent(
+    ANALYTICS_EVENTS.processingCompleted,
+    4,
+    { tool_slug: "remove-background" },
+  );
+
+  assert.equal(
+    sora2.params.event_id,
+    "processing_completed:task:sora2-video-watermark-removal:4",
+  );
+  assert.equal(
+    background.params.event_id,
+    "processing_completed:task:remove-background:4",
+  );
+  assert.notEqual(sora2.params.event_id, background.params.event_id);
+});
+
 test("checkout and paywall behavior carry comparable funnel dimensions", () => {
   const checkout = createAnalyticsEvent(ANALYTICS_EVENTS.checkoutStarted, {
     order_id: "order-8",

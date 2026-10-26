@@ -365,6 +365,7 @@ export class TaskProcessor {
       await emitServerAnalyticsEvent(
         createTaskAnalyticsEvent(name, taskId, {
           is_authenticated: true,
+          tool_slug: "sora2-video-watermark-removal",
         }),
       );
     } catch (analyticsError) {

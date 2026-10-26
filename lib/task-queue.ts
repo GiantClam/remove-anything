@@ -297,6 +297,7 @@ class TaskQueueManager {
         status,
         nextStatus,
         task.userId,
+        "remove-background",
       );
       if (nextStatus === "failed")
         await refundFailedTaskCredit(
@@ -406,6 +407,9 @@ class TaskQueueManager {
       currentStatus,
       nextStatus,
       task.userId,
+      task.model === "sora2-video-watermark-removal"
+        ? "sora2-video-watermark-removal"
+        : undefined,
     );
     if (nextStatus === "failed")
       await refundFailedTaskCredit(persisted.userId, persisted.id, "image");
@@ -420,6 +424,7 @@ class TaskQueueManager {
     previousStatus: string,
     nextStatus: string,
     userId: string | null,
+    toolSlug?: string,
   ) {
     const eventName =
       nextStatus === "succeeded"
@@ -435,6 +440,7 @@ class TaskQueueManager {
       await emitServerAnalyticsEvent(
         createTaskAnalyticsEvent(eventName, taskId, {
           is_authenticated: Boolean(userId),
+          ...(toolSlug ? { tool_slug: toolSlug } : {}),
         }),
       );
     } catch (analyticsError) {

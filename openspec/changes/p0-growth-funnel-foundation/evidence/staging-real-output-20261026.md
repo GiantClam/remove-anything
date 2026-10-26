@@ -29,9 +29,17 @@ These checks prove the composition and pixel-output logic. They do not close the
 - Durable analytics contains `event_id=result_downloaded:task:remove-watermark:7`, `name=result_downloaded`, `tool_slug=remove-watermark`, and `task_id=7`.
 - Negative input boundaries also held: an untrusted Preview URL returned HTTP 400 `UNSUPPORTED_IMAGE_URL`, and PNG bytes with a forged MIME returned HTTP 415 `UNSUPPORTED_IMAGE_FORMAT`.
 
+## White background and background-color real provider rerun
+
+- White-background input was submitted through the protected Preview deployment with the real `portrait_before.png` fixture. RunningHub task `2114736529833422850` / staging record `20` completed; the private download returned HTTP 200, `image/png`, `400×400`, and `418,801` bytes. The lifecycle receipt is recorded under the shared background namespace `remove-background`.
+- Background-color input was submitted through the same protected Preview deployment. The first provider task timed out; a new idempotency key created task `22`, which completed through provider, private storage, and download. The real download returned HTTP 200, `image/png`, and `400×400`; the receipt is `result_downloaded:task:remove-background:22`.
+- The page's actual Canvas composition for `#4D96FF` produced opaque corner pixels `[77,150,255,255]`.
+
+Deployment Protection redirected direct browser DOM access to Vercel login, so these route submissions used authenticated `vercel curl` against the same READY Preview deployment. This proves the real application/provider/storage/download path and output pixels; it does not provide a direct browser-DOM screenshot of the protected deployment.
+
 ## Current cross-tool evidence
 
-The staging database currently contains successful real records for background removal (`7`, `13`, `14`, `18`), object removal (`1`, `2`), watermark removal (`1`, `4`, `7`), and Sora2 `task_data.id=4`. Namespaced download receipts include `result_downloaded:task:remove-watermark:4/7`, `result_downloaded:task:remove-background:18`, and `result_downloaded:task:sora2-video-watermark-removal:4`.
+The staging database currently contains successful real records for background removal (`7`, `13`, `14`, `18`, `20`, `22`), object removal (`1`, `2`), watermark removal (`1`, `4`, `7`), and Sora2 `task_data.id=4`. Namespaced download receipts include `result_downloaded:task:remove-watermark:4/7`, `result_downloaded:task:remove-background:18/20/22`, and `result_downloaded:task:sora2-video-watermark-removal:4`.
 
 ## Sora2 video watermark removal
 
