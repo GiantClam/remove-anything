@@ -1,5 +1,13 @@
 # P0 implementation evidence
 
+## 2026-10-27 merge and Preview verification
+
+The latest `origin/main` (`a75a712`) was merged into `codex/p0-growth-funnel-foundation-preview` as merge commit `005c7db`. Conflicts were resolved by retaining the newer staging evidence and the PostgreSQL 90-day audit-default normalization in the read-only production preflight; the merge introduced no production configuration change. Fresh local gates after the merge were `pnpm test` — **394/394 passed**, `pnpm exec tsc --noEmit --pretty false --incremental false` — exit 0, `openspec validate p0-growth-funnel-foundation --strict --no-interactive` — valid, and `git diff --check` — exit 0.
+
+The pushed commit produced Vercel Preview deployment `dpl_2k1UsQw7HvgkKAKfY1DdAv872mKU` (`READY`) at `https://remove-anything-gxker0j9d-giantclams-projects.vercel.app`. Authenticated protected read-only requests returned HTTP 200 for `/remove-watermark`, `/remove-objects`, `/api/task-queue/status`, and `/api/background-images`; unauthenticated `/api/account` and `/api/mine-tasks` returned HTTP 401. All six canonical pages returned HTTP 200 with an H1, the expected canonical URL, and JSON-LD in the rendered HTML. Production was not modified.
+
+The local `preflight:production` command was also run without deployment environment variables; it correctly failed closed on missing runtime configuration and skipped the database rather than making a mutation. This is an environment-evidence blocker, not a successful production preflight.
+
 ## Current Preview after analytics hardening — 2026-10-27
 
 Commit `c68310b` is deployed as Vercel Preview `dpl_9YHQXLiPPA6ZYHQdRWFZXELbi8iD` (`READY`) at `https://remove-anything-i5a1j40h5-giantclams-projects.vercel.app`. Protected read-only checks returned HTTP 200 for `/remove-watermark`, `/api/task-queue/status`, and `/api/background-images`. The lifecycle analytics namespace fix is included in this deployment; production was not changed.
