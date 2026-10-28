@@ -65,17 +65,21 @@ export async function resolve(specifier, context, nextResolve) {
     path.join(root, "app/api/sora2-video-watermark-removal-r2/route.ts"),
     path.join(root, "app/api/sora2-video-watermark-removal/route.ts"),
   ]);
-  const sora2RecordStatusPath = path.join(
-    root,
-    "app/api/sora2-video-watermark-removal-by-id/[id]/route.ts",
-  );
-  if (parentPath === sora2RecordStatusPath && specifier === "next/server") {
+  const sora2RecordStatusPaths = new Set([
+    path.join(
+      root,
+      "app/api/sora2-video-watermark-removal-by-id/[id]/route.ts",
+    ),
+    path.join(root, "app/api/sora2-video-watermark-removal/[id]/route.ts"),
+  ]);
+  if (sora2RecordStatusPaths.has(parentPath) && specifier === "next/server") {
     return nextResolve("next/server.js", context);
   }
   if (
-    parentPath === sora2RecordStatusPath &&
+    sora2RecordStatusPaths.has(parentPath) &&
     new Set([
       "@/db/queries/sora2-video-watermark-removal",
+      "@/db/prisma",
       "@/lib/build-check",
       "@/lib/handle-error",
       "@/env.mjs",

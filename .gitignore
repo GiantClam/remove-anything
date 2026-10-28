@@ -36,3 +36,4 @@ public/workbox-*.js.map
 .vercel/
 docs/
 .gstack/
+.secrets-staging/
