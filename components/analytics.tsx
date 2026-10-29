@@ -72,6 +72,46 @@ export function Analytics() {
             if (debug) {
               cfg.debug_mode = true;
               gtag('set', { debug_mode: true });
+              // gtag config debug_mode alone often serializes as ep.debug_mode.
+              // DebugView reliably keys off collect query _dbg=1 (Tag Assistant /
+              // GA Debugger). Patch transport so ?debug_mode=1 always sets it.
+              function withDbg(url) {
+                if (typeof url !== 'string') return url;
+                if (!/\/g\/collect|\/collect\?/.test(url)) return url;
+                if (/[?&]_dbg=/.test(url)) return url;
+                return url + (url.indexOf('?') >= 0 ? '&' : '?') + '_dbg=1';
+              }
+              try {
+                if (navigator.sendBeacon) {
+                  var beacon = navigator.sendBeacon.bind(navigator);
+                  navigator.sendBeacon = function (url, data) {
+                    return beacon(withDbg(url), data);
+                  };
+                }
+              } catch (e) {}
+              try {
+                var origFetch = window.fetch;
+                window.fetch = function (input, init) {
+                  if (typeof input === 'string') {
+                    return origFetch.call(this, withDbg(input), init);
+                  }
+                  if (input && typeof Request !== 'undefined' && input instanceof Request) {
+                    var patched = withDbg(input.url);
+                    if (patched !== input.url) {
+                      return origFetch.call(this, new Request(patched, input), init);
+                    }
+                  }
+                  return origFetch.call(this, input, init);
+                };
+              } catch (e) {}
+              try {
+                var XO = XMLHttpRequest.prototype.open;
+                XMLHttpRequest.prototype.open = function (method, url) {
+                  var args = Array.prototype.slice.call(arguments);
+                  if (typeof url === 'string') args[1] = withDbg(url);
+                  return XO.apply(this, args);
+                };
+              } catch (e) {}
             }
             gtag('config', '${gaId}', cfg);
           })();

@@ -3,7 +3,7 @@ import { isIP } from "node:net";
 
 import { env } from "@/env.mjs";
 import { readLimitedResponse } from "@/lib/limited-response";
-import { createR2S3Service } from "@/lib/r2-s3";
+import { createTaskOutputR2S3Service } from "@/lib/r2-s3";
 
 const MAX_OUTPUT_BYTES = 10 * 1024 * 1024;
 // Video results are larger than image results, but still bounded so a provider
@@ -158,7 +158,7 @@ export async function persistRunningHubOutput(
           : "watermark-removal/processed";
   // Omit ACL headers: R2 buckets with object-ownership / private defaults reject canned ACLs.
   const key = `${path}/${filename}`;
-  await createR2S3Service().putPrivateItemInBucket(
+  await createTaskOutputR2S3Service().putPrivateItemInBucket(
     key,
     Buffer.from(bytes),
     contentType,

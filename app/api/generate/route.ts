@@ -18,7 +18,7 @@ import {
 } from "@/lib/image-task-reservation";
 import { kv, KVRateLimit } from "@/lib/kv";
 import { getR2ObjectKey } from "@/lib/r2-object-key";
-import { createR2S3Service } from "@/lib/r2-s3";
+import { resolveTaskObjectSignedUrl } from "@/lib/r2-s3";
 import {
   anonymousPrincipalCookie,
   createAnonymousPrincipal,
@@ -255,7 +255,7 @@ export async function POST(req: NextRequest) {
     const providerImageUrl = (() => {
       const key = getR2ObjectKey(imageUrl, env.R2_URL_BASE);
       if (!key) return Promise.resolve(imageUrl);
-      return createR2S3Service().getSignedUrl(key, env.R2_BUCKET, 60 * 60);
+      return resolveTaskObjectSignedUrl(key, 60 * 60);
     })();
 
     let runninghubTaskId: string;

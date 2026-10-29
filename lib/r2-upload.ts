@@ -1,6 +1,11 @@
 import { nanoid } from "nanoid";
 import { env } from "@/env.mjs";
-import { createR2S3Service } from "@/lib/r2-s3";
+import {
+  createR2S3Service,
+  createTaskOutputR2S3Service,
+  resolveTaskObjectSignedUrl,
+  resolveTaskOutputBucket,
+} from "@/lib/r2-s3";
 
 /**
  * 上传文件到 Cloudflare R2 存储
@@ -26,20 +31,14 @@ export async function uploadToR2(file: File): Promise<string> {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    const s3Client = createR2S3Service();
-    
-    console.log("R2 配置信息:", { key, bufferSize: buffer.length });
-    const result = await s3Client.putItemInBucket(filename, buffer, {
-      path: "uploads",
-      ContentType: file.type,
-      acl: "public-read",
-    });
-    
-    const publicUrl = result.completedUrl;
-    console.log("✅ 文件上传成功:", publicUrl);
-    console.log("S3 上传结果:", result);
-    
-    return publicUrl;
+    const outputBucket = resolveTaskOutputBucket();
+    const s3Client = createTaskOutputR2S3Service();
+
+    console.log("R2 配置信息:", { key, bufferSize: buffer.length, bucket: outputBucket });
+    await s3Client.putPrivateItemInBucket(key, buffer, file.type || undefined);
+    const locatorUrl = `${env.R2_URL_BASE.replace(/\/$/, "")}/${key}`;
+    console.log("✅ 文件上传成功:", locatorUrl);
+    return locatorUrl;
   } catch (error: any) {
     console.error("❌ 文件上传失败:", error);
     
@@ -85,8 +84,7 @@ export async function generateR2PresignedDownloadUrl(key: string): Promise<strin
   try {
     console.log("🔗 生成 R2 预签名下载 URL...");
     
-    const s3Client = createR2S3Service();
-    const presignedUrl = await s3Client.getSignedUrl(key, env.R2_BUCKET, 3600);
+    const presignedUrl = await resolveTaskObjectSignedUrl(key, 3600);
     
     console.log("✅ 预签名下载 URL 生成成功:", key);
     return presignedUrl;

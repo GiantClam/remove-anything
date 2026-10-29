@@ -13,7 +13,7 @@ import { getUserCredit } from "@/db/queries/account";
 import { env } from "@/env.mjs";
 import { uploadToR2 } from "@/lib/r2-upload";
 import { getR2ObjectKey } from "@/lib/r2-object-key";
-import { createR2S3Service } from "@/lib/r2-s3";
+import { resolveTaskObjectSignedUrl } from "@/lib/r2-s3";
 import {
   anonymousPrincipalCookie,
   createAnonymousPrincipal,
@@ -181,11 +181,7 @@ export async function POST(req: NextRequest) {
     const objectKey = getR2ObjectKey(finalR2Url, env.R2_URL_BASE);
     const providerInputUrl =
       routeUploadedInput && objectKey
-        ? await createR2S3Service().getSignedUrl(
-            objectKey,
-            env.R2_BUCKET,
-            60 * 60,
-          )
+        ? await resolveTaskObjectSignedUrl(objectKey, 60 * 60)
         : finalR2Url;
     const transformUrl = providerInputUrl;
     console.log("⏳ 已准备 RunningHub 输入 URL，准备创建任务记录并同步触发任务...");

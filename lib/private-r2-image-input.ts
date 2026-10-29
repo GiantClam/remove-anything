@@ -7,7 +7,10 @@ import {
   type ValidatedImageInput,
 } from "@/lib/image-input";
 import { getR2ObjectKey } from "@/lib/r2-object-key";
-import { createR2S3Service } from "@/lib/r2-s3";
+import {
+  createR2S3Service,
+  resolveTaskObjectSignedUrl,
+} from "@/lib/r2-s3";
 
 /** Short-lived GET for server-side ownership validation only. */
 const SIGNED_READ_TTL_SECONDS = 60;
@@ -46,12 +49,13 @@ export async function readTrustedImageAllowingPrivateR2(
   const r2Bucket = runtimeValue(environment, "R2_BUCKET", env.R2_BUCKET);
   const r2Key = getR2ObjectKey(url, r2UrlBase);
   if (r2Key) {
-    const signer = (dependencies.createSigner ?? createR2S3Service)();
-    const signedUrl = await signer.getSignedUrl(
-      r2Key,
-      r2Bucket,
-      SIGNED_READ_TTL_SECONDS,
-    );
+    const signedUrl = dependencies.createSigner
+      ? await dependencies.createSigner().getSignedUrl(
+          r2Key,
+          r2Bucket,
+          SIGNED_READ_TTL_SECONDS,
+        )
+      : await resolveTaskObjectSignedUrl(r2Key, SIGNED_READ_TTL_SECONDS);
     return readTrustedRemoteImage(signedUrl, options, {
       // Presigned GETs use the S3 endpoint origin, not R2_URL_BASE.
       environment: {
