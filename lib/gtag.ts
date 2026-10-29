@@ -33,6 +33,12 @@ export function isGaDebugMode(searchParams?: SearchParamsLike): boolean {
   return fromParams === "1" || fromParams === "true";
 }
 
+function attachGaDebugMode<T extends Record<string, unknown>>(params: T): T {
+  if (!isGaDebugMode()) return params;
+  // Keep ep.debug_mode for sinks that accept it; transport patch adds _dbg=1.
+  return { ...params, debug_mode: true };
+}
+
 export function pageview(url: string, title?: string) {
   if (typeof window === "undefined" || typeof window.gtag !== "function") {
     return;
@@ -42,7 +48,7 @@ export function pageview(url: string, title?: string) {
     page_location: url,
     page_title: title,
   });
-  window.gtag("event", event.name, event.params);
+  window.gtag("event", event.name, attachGaDebugMode(event.params));
 }
 
 export function trackEvent(
@@ -54,7 +60,7 @@ export function trackEvent(
   }
 
   const event = createAnalyticsEvent(eventName, params);
-  window.gtag("event", event.name, event.params);
+  window.gtag("event", event.name, attachGaDebugMode(event.params));
 }
 
 /** Send one event using the shared P0 funnel vocabulary and field contract. */

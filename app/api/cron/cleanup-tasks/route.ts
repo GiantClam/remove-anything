@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/db/prisma";
-import { createR2S3Service } from "@/lib/r2-s3";
+import { createRetentionR2Storage } from "@/lib/r2-s3";
 import { RETENTION_EXECUTE_ENV, runTaskRetention } from "@/lib/task-retention";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
   try {
     const report = await runTaskRetention({
       db: prisma as any,
-      storage: createR2S3Service(),
+      storage: createRetentionR2Storage(),
       configuredR2Url,
       dryRun: !execute,
       batchSize: configuredBatchSize(),

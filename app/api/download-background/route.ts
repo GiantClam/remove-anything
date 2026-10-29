@@ -25,7 +25,7 @@ import {
   UnsupportedOutputFormatError,
 } from "@/lib/low-resolution-output";
 import { getR2ObjectKey } from "@/lib/r2-object-key";
-import { createR2S3Service } from "@/lib/r2-s3";
+import { fetchTaskOutputByKey } from "@/lib/r2-s3";
 import {
   assertTaskDownloadAccess,
   getTaskPrincipalFromRequest,
@@ -138,16 +138,7 @@ export async function GET(req: NextRequest) {
         { status: 409 },
       );
     }
-    const sourceUrl = await createR2S3Service().getSignedUrl(
-      r2Key,
-      env.R2_BUCKET,
-      60,
-    );
-    const imageResponse = await fetch(sourceUrl, {
-      redirect: "error",
-      cache: "no-store",
-      signal: AbortSignal.timeout(30_000),
-    });
+    const imageResponse = await fetchTaskOutputByKey(r2Key, 60);
     if (!imageResponse.ok) {
       return new Response("Image not found", { status: 404 });
     }

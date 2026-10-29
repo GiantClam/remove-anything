@@ -1,5 +1,9 @@
 import { nanoid } from "nanoid";
-import { createR2S3Service } from "@/lib/r2-s3";
+import {
+  createTaskOutputR2S3Service,
+  resolveTaskOutputBucket,
+} from "@/lib/r2-s3";
+import { env } from "@/env.mjs";
 
 /**
  * 上传文件到Cloudflare R2存储
@@ -19,22 +23,20 @@ export async function uploadToR2(file: File): Promise<string> {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    const s3Client = createR2S3Service();
-    
+    const outputBucket = resolveTaskOutputBucket();
+    const s3Client = createTaskOutputR2S3Service();
+
     console.log("文件大小:", buffer.length, "bytes");
     console.log("文件类型:", file.type);
     console.log("上传键:", key);
-    const result = await s3Client.putItemInBucket(filename, buffer, {
-      path: "uploads",
-      ContentType: file.type,
-      acl: "public-read",
-    });
-    
-    const publicUrl = result.completedUrl;
-    console.log("✅ 文件上传成功:", publicUrl);
-    console.log("S3结果:", result);
-    
-    return publicUrl;
+    console.log("上传桶:", outputBucket);
+    // Prefer private bucket (no public ACL). Locator URL still uses R2_URL_BASE
+    // so getR2ObjectKey / signed download paths keep working; anonymous CDN
+    // GETs for new keys return 404 once objects live only on the private bucket.
+    await s3Client.putPrivateItemInBucket(key, buffer, file.type || undefined);
+    const locatorUrl = `${env.R2_URL_BASE.replace(/\/$/, "")}/${key}`;
+    console.log("✅ 文件上传成功:", locatorUrl);
+    return locatorUrl;
   } catch (error: any) {
     console.error("❌ 文件上传失败:", error);
     

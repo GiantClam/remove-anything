@@ -8,7 +8,7 @@ import {
   type ValidatedImageInput,
 } from "@/lib/image-input";
 import { getR2ObjectKey } from "@/lib/r2-object-key";
-import { createR2S3Service } from "@/lib/r2-s3";
+import { resolveTaskObjectSignedUrl } from "@/lib/r2-s3";
 import { isAllowedRunningHubOutput } from "@/lib/runninghub-output";
 
 const SIGNED_INPUT_URL_TTL_SECONDS = 60 * 60;
@@ -89,9 +89,8 @@ export async function readRemoveObjectsImage(
     runtimeValue("R2_URL_BASE", env.R2_URL_BASE),
   );
   if (r2Key) {
-    const signedUrl = await createR2S3Service().getSignedUrl(
+    const signedUrl = await resolveTaskObjectSignedUrl(
       r2Key,
-      runtimeValue("R2_BUCKET", env.R2_BUCKET),
       SIGNED_INPUT_URL_TTL_SECONDS,
     );
     const image = await readTrustedRemoteImage(signedUrl, options, {
