@@ -65,6 +65,37 @@ export async function resolve(specifier, context, nextResolve) {
     path.join(root, "app/api/sora2-video-watermark-removal-r2/route.ts"),
     path.join(root, "app/api/sora2-video-watermark-removal/route.ts"),
   ]);
+  const sora2RecordStatusPaths = new Set([
+    path.join(
+      root,
+      "app/api/sora2-video-watermark-removal-by-id/[id]/route.ts",
+    ),
+    path.join(root, "app/api/sora2-video-watermark-removal/[id]/route.ts"),
+  ]);
+  if (sora2RecordStatusPaths.has(parentPath) && specifier === "next/server") {
+    return nextResolve("next/server.js", context);
+  }
+  if (
+    sora2RecordStatusPaths.has(parentPath) &&
+    new Set([
+      "@/db/queries/sora2-video-watermark-removal",
+      "@/db/prisma",
+      "@/lib/build-check",
+      "@/lib/handle-error",
+      "@/env.mjs",
+      "@/lib/r2-object-key",
+      "@/lib/runninghub-output",
+      "@/lib/task-lifecycle",
+      "@/modules/runninghub",
+    ]).has(specifier)
+  ) {
+    return {
+      url: pathToFileURL(
+        path.join(root, "tests/support/sora2-record-status-stubs.ts"),
+      ).href,
+      shortCircuit: true,
+    };
+  }
   if (sora2RoutePaths.has(parentPath) && specifier === "next/server") {
     return nextResolve("next/server.js", context);
   }
@@ -85,6 +116,9 @@ export async function resolve(specifier, context, nextResolve) {
       "@/db/queries/account",
       "@/env.mjs",
       "@/lib/r2-upload",
+      "@/lib/r2-object-key",
+      "@/lib/r2-s3",
+      "@/lib/task-lifecycle",
       "@/lib/cf-media",
       "@/lib/handle-error",
     ]).has(specifier)
@@ -210,9 +244,8 @@ export async function resolve(specifier, context, nextResolve) {
       ]).has(specifier)
     ) {
       return {
-        url: pathToFileURL(
-          path.join(root, "tests/support/mine-tasks-stubs.ts"),
-        ).href,
+        url: pathToFileURL(path.join(root, "tests/support/mine-tasks-stubs.ts"))
+          .href,
         shortCircuit: true,
       };
     }
@@ -341,13 +374,16 @@ export async function resolve(specifier, context, nextResolve) {
   ) {
     if (specifier === "next/server")
       return nextResolve("next/server.js", context);
+    const routeSpecificModules = parentPath.endsWith(
+      "background-composition/route.ts",
+    )
+      ? new Set(["@/lib/background-composition-result-storage"])
+      : new Set(["@/lib/upload"]);
     if (
-      new Set([
-        "@/lib/auth-utils",
-        "@/db/prisma",
-        "@/lib/upload",
-        "@/lib/handle-error",
-      ]).has(specifier)
+      new Set(["@/lib/auth-utils", "@/db/prisma", "@/lib/handle-error"]).has(
+        specifier,
+      ) ||
+      routeSpecificModules.has(specifier)
     ) {
       const stub = parentPath.endsWith("background-composition/route.ts")
         ? "background-composition-route-stubs.ts"
@@ -424,6 +460,19 @@ export async function resolve(specifier, context, nextResolve) {
         shortCircuit: true,
       };
     }
+  }
+  if (
+    parentPath === path.join(root, "lib/remove-objects/input-image.ts") &&
+    new Set(["@/env.mjs", "@/lib/r2-s3", "@/lib/runninghub-output"]).has(
+      specifier,
+    )
+  ) {
+    return {
+      url: pathToFileURL(
+        path.join(root, "tests/support/object-input-image-stubs.ts"),
+      ).href,
+      shortCircuit: true,
+    };
   }
   if (
     new Set([

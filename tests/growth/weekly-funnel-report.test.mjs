@@ -23,6 +23,47 @@ function reportFor(name) {
   return fs.readFileSync(output, "utf8");
 }
 
+function reportFromInput(input) {
+  const outputDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), "remove-anything-weekly-input-"),
+  );
+  const inputPath = path.join(outputDir, "input.json");
+  const outputPath = path.join(outputDir, "report.md");
+  fs.writeFileSync(inputPath, JSON.stringify(input));
+  const result = spawnSync(process.execPath, [script, inputPath, outputPath], {
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 0, result.stderr);
+  return fs.readFileSync(outputPath, "utf8");
+}
+
+const REPORT_WINDOW = {
+  start: "2026-10-01T00:00:00Z",
+  end: "2026-10-08T00:00:00Z",
+  time_zone: "UTC",
+};
+
+function provenance(overrides = {}) {
+  return {
+    source: "test export",
+    retrieved_at: "2026-10-08T01:00:00Z",
+    property_id: "property-test",
+    stream_id: "stream-test",
+    window: { ...REPORT_WINDOW },
+    ...overrides,
+  };
+}
+
+function metricDimensions(overrides = {}) {
+  return {
+    landing_page: "/remove-background",
+    tool_slug: "remove-background",
+    locale: "en",
+    is_authenticated: false,
+    ...overrides,
+  };
+}
+
 function tableRows(report, section) {
   const lines = report
     .split(`## ${section}\n`)[1]
@@ -86,9 +127,318 @@ test("complete fixture preserves grouping, deduplication, reliability, repeat, c
     report,
     /Counts below are event occurrences, not users, sessions or user conversion rates/,
   );
+  assert.match(report, /Visits use only imported session_count rows/);
   assert.match(
     report,
-    /Visits, distinct users, active_users_30d and user-level funnel conversion: NO DATA/,
+    /Missing events: NO DATA; provide an expected_events manifest/,
+  );
+  assert.match(
+    report,
+    /Distinct users, active_users_30d and user-level funnel conversion remain NO DATA/,
+  );
+});
+
+test("complete session aggregates populate visits only for exact explicit dimensions", () => {
+  const report = reportFromInput({
+    metadata: provenance(),
+    events: {
+      metadata: provenance({ complete: true }),
+      rows: [
+        {
+          eventName: "tool_view",
+          ...metricDimensions(),
+          count: 2,
+        },
+      ],
+    },
+    sessions: {
+      metadata: provenance(),
+      rows: [
+        { ...metricDimensions(), session_count: 8 },
+        {
+          ...metricDimensions({
+            landing_page: "/remove-watermark",
+            tool_slug: "remove-watermark",
+            locale: "zh-tw",
+            is_authenticated: true,
+          }),
+          session_count: 0,
+        },
+      ],
+    },
+  });
+  const funnel = tableRows(
+    report,
+    "Funnel by page / tool / locale / authentication",
+  );
+  assert.equal(
+    funnel.find((row) => row.Tool === "remove-background").Visits,
+    "8",
+  );
+  assert.equal(
+    funnel.find((row) => row.Tool === "remove-watermark").Visits,
+    "0",
+  );
+  assert.match(
+    report,
+    /Visits use only imported session_count rows with exact page\/tool\/locale\/auth dimensions/,
+  );
+});
+
+test("session visits fail closed for missing dimensions, conflicting rows, and mismatched windows", () => {
+  const metadata = provenance();
+  const base = {
+    metadata,
+    events: [
+      { eventName: "tool_view", ...metricDimensions(), event_id: "view-1" },
+    ],
+  };
+
+  const missingDimensions = reportFromInput({
+    ...base,
+    sessions: {
+      metadata: provenance(),
+      rows: [{ landing_page: "/remove-background", session_count: 3 }],
+    },
+  });
+  assert.match(
+    missingDimensions,
+    /Visits: NO DATA; 1 row\(s\) lack explicit dimensions/,
+  );
+  assert.equal(
+    tableRows(
+      missingDimensions,
+      "Funnel by page / tool / locale / authentication",
+    )[0].Visits,
+    "NO DATA",
+  );
+
+  const conflicting = reportFromInput({
+    ...base,
+    sessions: {
+      metadata: provenance(),
+      rows: [
+        { ...metricDimensions(), session_count: 3 },
+        { ...metricDimensions(), session_count: 4 },
+      ],
+    },
+  });
+  assert.match(
+    conflicting,
+    /0 row\(s\) lack explicit dimensions.*1 dimension group\(s\) have conflicting counts/,
+  );
+  assert.equal(
+    tableRows(conflicting, "Funnel by page / tool / locale / authentication")[0]
+      .Visits,
+    "NO DATA",
+  );
+
+  const mismatchedWindow = reportFromInput({
+    ...base,
+    sessions: {
+      metadata: provenance({
+        window: {
+          ...REPORT_WINDOW,
+          end: "2026-10-09T00:00:00Z",
+        },
+      }),
+      rows: [{ ...metricDimensions(), session_count: 3 }],
+    },
+  });
+  assert.match(
+    mismatchedWindow,
+    /Visits: NO DATA; the sessions dataset must declare the exact report window and time zone/,
+  );
+});
+
+test("missing event counts require complete imports, matching provenance, and conflict-free exact dimensions", () => {
+  const dimensions = metricDimensions();
+  const report = reportFromInput({
+    metadata: provenance(),
+    events: {
+      metadata: provenance({ complete: true }),
+      rows: [
+        { eventName: "tool_view", ...dimensions, count: 2 },
+        { eventName: "upload_started", ...dimensions, count: 1 },
+      ],
+    },
+    expected_events: {
+      metadata: provenance({ complete: true }),
+      rows: [
+        { eventName: "tool_view", ...dimensions, expected_count: 3 },
+        { eventName: "upload_started", ...dimensions, expected_count: 1 },
+        { eventName: "processing_completed", ...dimensions, expected_count: 0 },
+      ],
+    },
+  });
+  const funnel = tableRows(
+    report,
+    "Funnel by page / tool / locale / authentication",
+  );
+  assert.equal(funnel[0]["Missing events"], "1");
+  assert.match(
+    report,
+    /Missing events are expected_count minus observed event counts/,
+  );
+
+  const incompleteExpected = reportFromInput({
+    metadata: provenance(),
+    events: {
+      metadata: provenance({ complete: true }),
+      rows: [{ eventName: "tool_view", ...dimensions, count: 2 }],
+    },
+    expected_events: {
+      metadata: provenance({ complete: false }),
+      rows: [{ eventName: "tool_view", ...dimensions, expected_count: 3 }],
+    },
+  });
+  assert.match(
+    incompleteExpected,
+    /Missing events: NO DATA; expected_events metadata must declare complete=true/,
+  );
+  assert.equal(
+    tableRows(
+      incompleteExpected,
+      "Funnel by page / tool / locale / authentication",
+    )[0]["Missing events"],
+    "NO DATA",
+  );
+
+  const incompleteEvents = reportFromInput({
+    metadata: provenance(),
+    events: {
+      metadata: provenance({ complete: false }),
+      rows: [{ eventName: "tool_view", ...dimensions, count: 2 }],
+    },
+    expected_events: {
+      metadata: provenance({ complete: true }),
+      rows: [{ eventName: "tool_view", ...dimensions, expected_count: 3 }],
+    },
+  });
+  assert.match(
+    incompleteEvents,
+    /Missing events: NO DATA; events metadata must declare complete=true/,
+  );
+
+  const conflictingExpected = reportFromInput({
+    metadata: provenance(),
+    events: {
+      metadata: provenance({ complete: true }),
+      rows: [{ eventName: "tool_view", ...dimensions, count: 2 }],
+    },
+    expected_events: {
+      metadata: provenance({ complete: true }),
+      rows: [
+        { eventName: "tool_view", ...dimensions, expected_count: 3 },
+        { eventName: "tool_view", ...dimensions, expected_count: 4 },
+      ],
+    },
+  });
+  assert.match(
+    conflictingExpected,
+    /Missing events: NO DATA; 0 manifest row\(s\).*1 event\/dimension key\(s\) conflict/,
+  );
+
+  const mismatchedWindow = reportFromInput({
+    metadata: provenance(),
+    events: {
+      metadata: provenance({ complete: true }),
+      rows: [{ eventName: "tool_view", ...dimensions, count: 2 }],
+    },
+    expected_events: {
+      metadata: provenance({
+        complete: true,
+        window: { ...REPORT_WINDOW, end: "2026-10-09T00:00:00Z" },
+      }),
+      rows: [{ eventName: "tool_view", ...dimensions, expected_count: 3 }],
+    },
+  });
+  assert.match(
+    mismatchedWindow,
+    /Missing events: NO DATA; events, expected_events, and report metadata must declare the same valid start, end, and time zone/,
+  );
+});
+
+test("complete empty event export uses zero observed counts for explicit expectations", () => {
+  const report = reportFromInput({
+    metadata: provenance(),
+    events: {
+      metadata: provenance({ complete: true }),
+      rows: [
+        {
+          ...metricDimensions({
+            landing_page: "/remove-watermark",
+            tool_slug: "remove-watermark",
+          }),
+          eventName: "tool_view",
+          count: 1,
+        },
+      ],
+    },
+    expected_events: {
+      metadata: provenance({ complete: true }),
+      rows: [
+        {
+          ...metricDimensions(),
+          eventName: "tool_view",
+          expected_count: 2,
+        },
+        {
+          ...metricDimensions({
+            landing_page: "/remove-watermark",
+            tool_slug: "remove-watermark",
+          }),
+          eventName: "upload_started",
+          expected_count: 0,
+        },
+      ],
+    },
+  });
+  const funnel = tableRows(
+    report,
+    "Funnel by page / tool / locale / authentication",
+  );
+  assert.equal(
+    funnel.find((row) => row.Tool === "remove-background")["Missing events"],
+    "2",
+  );
+  assert.equal(
+    funnel.find((row) => row.Tool === "remove-watermark")["Missing events"],
+    "0",
+  );
+
+  const unmanifested = reportFromInput({
+    metadata: provenance(),
+    events: {
+      metadata: provenance({ complete: true }),
+      rows: [
+        {
+          ...metricDimensions({
+            landing_page: "/remove-watermark",
+            tool_slug: "remove-watermark",
+          }),
+          eventName: "tool_view",
+          count: 1,
+        },
+      ],
+    },
+    expected_events: {
+      metadata: provenance({ complete: true }),
+      rows: [
+        {
+          ...metricDimensions(),
+          eventName: "tool_view",
+          expected_count: 1,
+        },
+      ],
+    },
+  });
+  assert.equal(
+    tableRows(
+      unmanifested,
+      "Funnel by page / tool / locale / authentication",
+    ).find((row) => row.Tool === "remove-watermark")["Missing events"],
+    "NO DATA",
   );
 });
 

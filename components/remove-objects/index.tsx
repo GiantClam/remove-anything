@@ -376,12 +376,8 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
           aiPrompt: current.present.aiPrompt,
         },
       }));
-      if (taskPhase === "failed") {
-        setTaskPhase("editing");
-        setFailureMessage("");
-      }
     },
-    [taskPhase],
+    [],
   );
 
   const handleEditAgain = () => {
@@ -405,18 +401,39 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
     setResetSignal((current) => current + 1);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!outputImageUrl || !taskId) {
       return;
     }
 
-    const link = document.createElement("a");
-    link.href = `/api/download-object?taskId=${encodeURIComponent(taskId)}`;
-    link.download = "";
-    link.rel = "noopener";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const response = await fetch(
+        `/api/download-object?taskId=${encodeURIComponent(taskId)}`,
+        { credentials: "include" },
+      );
+      if (!response.ok) {
+        throw new Error(`Download failed with status ${response.status}`);
+      }
+
+      const blobUrl = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = "object-removal.png";
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      // Keep the anchor and object URL alive briefly so Chromium can finish
+      // scheduling the blob download before cleanup.
+      window.setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+        URL.revokeObjectURL(blobUrl);
+      }, 250);
+    } catch (error) {
+      console.error("Object download failed:", error);
+      toast.error("Download failed. Please try again.");
+    }
   };
 
   return (

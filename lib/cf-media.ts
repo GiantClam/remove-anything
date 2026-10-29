@@ -58,7 +58,12 @@ export async function waitForTransformReady(
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
-      const r = await fetch(transformUrl, { headers: { Range: 'bytes=0-1023' } });
+      const remainingMs = timeoutMs - (Date.now() - start);
+      if (remainingMs <= 0) return false;
+      const r = await fetch(transformUrl, {
+        headers: { Range: 'bytes=0-1023' },
+        signal: AbortSignal.timeout(remainingMs),
+      });
       if (r.ok) {
         const ct = r.headers.get('content-type') || '';
         if (ct.includes('video/mp4')) {
@@ -67,10 +72,10 @@ export async function waitForTransformReady(
         }
       }
     } catch {}
-    await new Promise((res) => setTimeout(res, intervalMs));
+    const remainingMs = timeoutMs - (Date.now() - start);
+    if (remainingMs <= 0) return false;
+    await new Promise((res) => setTimeout(res, Math.min(intervalMs, remainingMs)));
     intervalMs = Math.min(Math.floor(intervalMs * backoffFactor), maxIntervalMs);
   }
   return false;
 }
-
-

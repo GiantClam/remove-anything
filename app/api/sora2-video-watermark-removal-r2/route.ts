@@ -11,8 +11,15 @@ import { Credits, model, TASK_QUEUE_CONFIG } from "@/config/constants";
 import { BillingType } from "@/db/type";
 import { getUserCredit } from "@/db/queries/account";
 import { env } from "@/env.mjs";
-import { uploadToR2, downloadFromR2 } from "@/lib/r2-upload";
-import { buildMediaTransformUrl, prewarmTransformUrl, waitForTransformReady } from "@/lib/cf-media";
+import { uploadToR2 } from "@/lib/r2-upload";
+import { getR2ObjectKey } from "@/lib/r2-object-key";
+import { createR2S3Service } from "@/lib/r2-s3";
+import {
+  anonymousPrincipalCookie,
+  createAnonymousPrincipal,
+  getAnonymousPrincipalFromRequest,
+  getTaskPrincipalFromRequest,
+} from "@/lib/task-lifecycle";
 import { getSora2SubmissionDisposition } from "@/lib/video-task-queue-contract";
 
 // 包装函数以匹配适配器期望的类型
@@ -30,6 +37,8 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   let taskRecord: any = null;
+  let json = (payload: unknown, init?: ResponseInit) =>
+    NextResponse.json(payload, init);
   try {
     const contentType = req.headers.get('content-type') || '';
     if (!contentType.includes('multipart/form-data')) {
@@ -80,6 +89,39 @@ export async function POST(req: NextRequest) {
       userId = "dev-user-123";
     }
 
+    // Bind anonymous video tasks to the same signed principal used by the
+    // image tools. This lets the original browser download its private result
+    // while keeping the task inaccessible to another anonymous principal.
+    const incomingPrincipalToken = req.cookies.get(
+      "remove_anything_principal",
+    )?.value;
+    const existingPrincipalId = getAnonymousPrincipalFromRequest(req);
+    const principalToken = userId
+      ? null
+      : existingPrincipalId
+        ? incomingPrincipalToken
+        : createAnonymousPrincipal();
+    const principalRequest =
+      !userId && principalToken && !existingPrincipalId
+        ? new Request(req.url, {
+            headers: { cookie: `remove_anything_principal=${principalToken}` },
+          })
+        : req;
+    const { principalId } = getTaskPrincipalFromRequest(
+      principalRequest,
+      userId,
+    );
+    json = (payload: unknown, init?: ResponseInit) => {
+      const response = NextResponse.json(payload, init);
+      if (!userId && principalToken && !existingPrincipalId) {
+        response.headers.append(
+          "Set-Cookie",
+          anonymousPrincipalCookie(principalToken),
+        );
+      }
+      return response;
+    };
+
     // 检查用户积分（仅对登录用户）
     if (userId) {
       const requiredCredits = Credits[model.sora2VideoWatermarkRemoval];
@@ -91,7 +133,7 @@ export async function POST(req: NextRequest) {
         const userCredit = await getUserCredit(userId);
 
         if (!userCredit || userCredit.credit < requiredCredits) {
-          return NextResponse.json({
+          return json({
             error: "积分不足",
             code: "INSUFFICIENT_CREDITS",
             required: requiredCredits,
@@ -106,6 +148,7 @@ export async function POST(req: NextRequest) {
     let finalR2Url: string;
     let finalFilename: string;
     let finalContentType: string;
+    let routeUploadedInput = false;
 
     if (video) {
       // 模式1: 直接文件上传
@@ -119,6 +162,7 @@ export async function POST(req: NextRequest) {
       // 步骤1: 上传文件到 R2
       console.log("📤 步骤1: 上传文件到 Cloudflare R2...");
       finalR2Url = await uploadToR2(video);
+      routeUploadedInput = true;
       finalFilename = video.name;
       finalContentType = video.type || 'video/mp4';
       console.log("✅ R2 上传成功:", finalR2Url);
@@ -130,25 +174,28 @@ export async function POST(req: NextRequest) {
       finalContentType = 'video/mp4';
     }
 
-    // 步骤2: 构造 Cloudflare Media 变换 URL（避免放大，仅约束尺寸）并预热
-    console.log("📐 步骤2: 构造变换 URL 并预热...");
-    const zoneHost = (process.env.R2_URL_BASE || 'https://s.remove-anything.com').replace('https://', '').replace(/\/$/, '');
-    const isPortrait = orientation === 'portrait';
-    const transformUrl = buildMediaTransformUrl(zoneHost, finalR2Url, {
-      width: isPortrait ? 704 : 1280,
-      height: isPortrait ? 1280 : 704,
-      fit: 'scale-down',
-      audio: true,
-      filename: finalFilename
-    });
-    await prewarmTransformUrl(transformUrl);
-    console.log("⏳ 预热完成，准备创建任务记录并同步触发 RunningHub 任务...");
+    // RunningHub cannot fetch a private raw R2 endpoint. Keep the stable
+    // object URL in the task record, but submit a short-lived signed URL for
+    // files uploaded by this request. The old Media Transform path treated
+    // the raw R2 API host as a Cloudflare zone and returned HTTP 400.
+    const objectKey = getR2ObjectKey(finalR2Url, env.R2_URL_BASE);
+    const providerInputUrl =
+      routeUploadedInput && objectKey
+        ? await createR2S3Service().getSignedUrl(
+            objectKey,
+            env.R2_BUCKET,
+            60 * 60,
+          )
+        : finalR2Url;
+    const transformUrl = providerInputUrl;
+    console.log("⏳ 已准备 RunningHub 输入 URL，准备创建任务记录并同步触发任务...");
 
     // 步骤3: 创建任务记录
     console.log("📝 步骤3: 创建任务记录...");
     taskRecord = await prisma.taskData.create({
       data: {
-        userId: userId,
+        userId: userId || null,
+        principalId,
         model: "sora2-video-watermark-removal",
         inputPrompt: "",
         inputImageUrl: finalR2Url,
@@ -166,13 +213,14 @@ export async function POST(req: NextRequest) {
       : process.env.SORA2_LANDSCAPE_WORKFLOW_ID;
     
     if (!workflowId || workflowId === 'placeholder') {
-      return NextResponse.json(
+      return json(
         { error: 'Sora2 workflow ID not configured. Please set SORA2_LANDSCAPE_WORKFLOW_ID and SORA2_PORTRAIT_WORKFLOW_ID environment variables.' },
         { status: 500 }
       );
     }
     const rh = createRunningHubClient();
     const repo = createPrismaTaskRepository();
+    const isPortrait = orientation === "portrait";
     const uploadNodeId = env.SORA2_UPLOAD_NODE_ID || (isPortrait ? '153' : '205');
     const result = await createVideoTaskWithR2Url({
       model: 'sora2-video-watermark-removal',
@@ -180,7 +228,7 @@ export async function POST(req: NextRequest) {
       workflowId,
       uploadNodeId,
       uploadFieldName: 'video',
-      r2Url: transformUrl,
+      r2Url: providerInputUrl,
       taskRecordId: taskRecord.id,
     }, { repo, rh });
 
@@ -197,7 +245,7 @@ export async function POST(req: NextRequest) {
           });
         } catch (persistenceError) {
           console.error("Provider task created but task record needs reconciliation:", persistenceError);
-          return NextResponse.json({
+          return json({
             success: true,
             taskId: disposition.taskId,
             recordId: taskRecord.id,
@@ -213,10 +261,10 @@ export async function POST(req: NextRequest) {
         taskQueueManager.startStatusWatcher(taskRecord.id, disposition.taskId);
       } catch {}
 
-      return NextResponse.json({ success: true, taskId: disposition.taskId, recordId: taskRecord.id, message: 'Task started', transformUrl }, { status: 200 });
+      return json({ success: true, taskId: disposition.taskId, recordId: taskRecord.id, message: 'Task started', transformUrl }, { status: 200 });
     }
     if (disposition.accepted && disposition.status === "submission-unknown") {
-      return NextResponse.json({
+      return json({
         success: false,
         recordId: taskRecord.id,
         status: disposition.status,
@@ -226,7 +274,7 @@ export async function POST(req: NextRequest) {
       }, { status: 202 });
     }
     console.error("RunningHub 同步创建失败; no queue replay is allowed after provider submission:", { error: disposition.error, workflowId, uploadNodeId, transformUrl });
-    return NextResponse.json({
+    return json({
       error: "Failed to create task",
       code: disposition.code,
       recordId: taskRecord.id,
@@ -240,7 +288,7 @@ export async function POST(req: NextRequest) {
     
     // 检查是否是视频文件验证失败
     if (error instanceof Error && error.message.includes("Invalid video file")) {
-      return NextResponse.json(
+      return json(
         { 
           error: "视频文件格式不支持或文件损坏。请确保上传的是有效的 MP4 视频文件，并且文件大小不超过 50MB。",
           code: "INVALID_VIDEO_FILE"
@@ -264,7 +312,7 @@ export async function POST(req: NextRequest) {
       console.error("❌ 更新任务状态失败:", updateError);
     }
 
-    return NextResponse.json(
+    return json(
       { 
         error: getErrorMessage(error),
         details: error instanceof Error ? error.message : "Unknown error"

@@ -9,9 +9,16 @@ import {
   validateCreateCompositionInput,
   validateUpdateCompositionInput,
 } from "@/lib/background-composition-input";
+import { isBackgroundCompositionResultKey } from "@/lib/background-composition-result-key";
+import {
+  createBackgroundCompositionResultReadUrl,
+  deleteBackgroundCompositionResult,
+  PrivateCompositionStorageError,
+  uploadBackgroundCompositionResult,
+} from "@/lib/background-composition-result-storage";
 import { getErrorMessage } from "@/lib/handle-error";
-import { ImageInputError } from "@/lib/image-input";
-import { uploadToR2 } from "@/lib/upload";
+import { ImageInputError, readTrustedRemoteImage } from "@/lib/image-input";
+import { getToolRegistryEntry } from "@/lib/tool-registry";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +68,192 @@ function redactInlineDataUrls(value: unknown): unknown {
   return value;
 }
 
+function redactComposition(value: Record<string, unknown>) {
+  const { id, resultImageUrl, ...safeValue } = value;
+  const safeResultUrl =
+    typeof id === "number" &&
+    isBackgroundCompositionResultKey(id, resultImageUrl)
+      ? `/api/background-composition?compositionId=${id}`
+      : null;
+  return redactInlineDataUrls({
+    ...safeValue,
+    resultImageUrl: safeResultUrl,
+  });
+}
+
+function parseCompositionId(rawValue: string | null) {
+  if (rawValue === null) return null;
+  if (!/^\d+$/.test(rawValue)) {
+    throw new CompositionInputError(
+      "INVALID_COMPOSITION_INPUT",
+      "Invalid composition id",
+      400,
+    );
+  }
+  const compositionId = Number(rawValue);
+  if (!Number.isSafeInteger(compositionId) || compositionId < 1) {
+    throw new CompositionInputError(
+      "INVALID_COMPOSITION_INPUT",
+      "Invalid composition id",
+      400,
+    );
+  }
+  return compositionId;
+}
+
+const COMPOSITION_RESULT_RETENTION_MS = 24 * 60 * 60 * 1000;
+
+async function assertOwnedCompositionSources(
+  userId: string,
+  foregroundImageUrl: string,
+  backgroundType: string,
+  backgroundData: unknown,
+) {
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - COMPOSITION_RESULT_RETENTION_MS);
+  const activeOwnedTask = {
+    userId,
+    taskStatus: "succeeded",
+    retentionCleanedAt: null,
+    createdAt: { gte: cutoff },
+    OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+  };
+  const findOwnedSource = async (sourceUrl: string) => {
+    const lookups = await Promise.all([
+      prisma.backgroundRemovalTask.findFirst({
+        where: { ...activeOwnedTask, outputImageUrl: sourceUrl },
+        select: { id: true },
+      }),
+      prisma.objectRemovalTask.findFirst({
+        where: { ...activeOwnedTask, outputImageUrl: sourceUrl },
+        select: { id: true },
+      }),
+      prisma.taskData.findFirst({
+        where: { ...activeOwnedTask, imageUrl: sourceUrl },
+        select: { id: true },
+      }),
+    ]);
+    return lookups.some(Boolean);
+  };
+  if (!(await findOwnedSource(foregroundImageUrl))) {
+    throw new CompositionInputError(
+      "COMPOSITION_SOURCE_UNAVAILABLE",
+      "Composition source is unavailable",
+      404,
+    );
+  }
+
+  if (foregroundImageUrl.startsWith("/")) {
+    throw new CompositionInputError(
+      "COMPOSITION_SOURCE_UNAVAILABLE",
+      "Composition source is unavailable",
+      404,
+    );
+  }
+  const tool = getToolRegistryEntry("remove-background");
+  if (!tool) {
+    throw new CompositionInputError(
+      "TOOL_CONFIG_UNAVAILABLE",
+      "Image validation settings are unavailable",
+      503,
+    );
+  }
+  const imageOptions = {
+    maxBytes: tool.limits.maxFileSizeMb * 1024 * 1024,
+    allowedMimeTypes: tool.inputFormats,
+    maxPixels: tool.limits.maxPixels,
+  };
+  const sourceEnvironment = {
+    ...process.env,
+    NEXT_PUBLIC_APP_URL:
+      process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL,
+  };
+  await readTrustedRemoteImage(foregroundImageUrl, imageOptions, {
+    environment: sourceEnvironment,
+  });
+
+  if (backgroundType === "image") {
+    const imageUrl =
+      backgroundData && typeof backgroundData === "object"
+        ? (backgroundData as { imageUrl?: unknown }).imageUrl
+        : null;
+    if (typeof imageUrl !== "string") {
+      throw new CompositionInputError(
+        "COMPOSITION_SOURCE_UNAVAILABLE",
+        "Composition source is unavailable",
+        404,
+      );
+    }
+    const publicImage = await prisma.backgroundImage.findFirst({
+      where: { imageUrl, isPublic: true },
+      select: { id: true },
+    });
+    const ownedImage = await findOwnedSource(imageUrl);
+    if (!publicImage && !ownedImage) {
+      throw new CompositionInputError(
+        "COMPOSITION_SOURCE_UNAVAILABLE",
+        "Composition source is unavailable",
+        404,
+      );
+    }
+    if (imageUrl.startsWith("/"))
+      throw new CompositionInputError(
+        "COMPOSITION_SOURCE_UNAVAILABLE",
+        "Composition source is unavailable",
+        404,
+      );
+    await readTrustedRemoteImage(imageUrl, imageOptions, {
+      environment: sourceEnvironment,
+    });
+  }
+
+  if (backgroundType === "template") {
+    const template =
+      backgroundData && typeof backgroundData === "object"
+        ? (backgroundData as { templateId?: unknown; imageUrl?: unknown })
+        : {};
+    const templateId = template.templateId;
+    const templateImageUrl = template.imageUrl;
+    const allowedTemplates = new Set([
+      "office",
+      "nature",
+      "abstract",
+      "studio",
+      "beach",
+      "city",
+    ]);
+    if (
+      typeof templateId !== "string" ||
+      !allowedTemplates.has(templateId) ||
+      (templateImageUrl !== undefined &&
+        templateImageUrl !== `/templates/${templateId}.jpg`)
+    ) {
+      throw new CompositionInputError(
+        "COMPOSITION_SOURCE_UNAVAILABLE",
+        "Composition source is unavailable",
+        404,
+      );
+    }
+  }
+}
+
+function compositionDeadline(composition: {
+  createdAt?: Date | string | null;
+}) {
+  const createdAt =
+    composition.createdAt instanceof Date
+      ? composition.createdAt
+      : composition.createdAt
+        ? new Date(composition.createdAt)
+        : null;
+  const createdDeadline =
+    createdAt && Number.isFinite(createdAt.getTime())
+      ? createdAt.getTime() + COMPOSITION_RESULT_RETENTION_MS
+      : null;
+  if (createdDeadline === null) return null;
+  return createdDeadline;
+}
+
 // 创建背景合成任务
 export async function POST(req: NextRequest) {
   try {
@@ -72,6 +265,12 @@ export async function POST(req: NextRequest) {
     }
 
     const data = validateCreateCompositionInput(await readCompositionJson(req));
+    await assertOwnedCompositionSources(
+      userId,
+      data.foregroundImageUrl,
+      data.backgroundType,
+      data.backgroundData,
+    );
 
     // 创建合成任务记录
     const composition = await prisma.backgroundComposition.create({
@@ -88,13 +287,16 @@ export async function POST(req: NextRequest) {
     // 在客户端进行图片合成，这里只记录任务
     // 实际的合成将在客户端完成，然后上传结果
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: composition.id,
-        status: composition.status,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          id: composition.id,
+          status: composition.status,
+        },
       },
-    });
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   } catch (error) {
     if (
       error instanceof CompositionInputError ||
@@ -141,32 +343,85 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    const deadline = compositionDeadline(composition);
+    if (
+      composition.status !== "pending" ||
+      deadline === null ||
+      deadline <= Date.now()
+    ) {
+      return NextResponse.json(
+        {
+          error: "Composition can no longer be updated",
+          code:
+            deadline === null || deadline <= Date.now()
+              ? "COMPOSITION_RESULT_EXPIRED"
+              : "COMPOSITION_NOT_PENDING",
+        },
+        { status: deadline === null || deadline <= Date.now() ? 410 : 409 },
+      );
+    }
+
     const image = await decodeCompositionImageDataUrl(
       resultImageDataUrl,
       ["image/png"],
       `composition-${compositionId}.png`,
     );
-    const resultImageUrl = await uploadToR2(image.file);
+    if (deadline <= Date.now()) {
+      return NextResponse.json(
+        {
+          error: "Composition can no longer be updated",
+          code: "COMPOSITION_RESULT_EXPIRED",
+        },
+        { status: 410 },
+      );
+    }
+    const resultImageKey = await uploadBackgroundCompositionResult(
+      compositionId,
+      image.file,
+    );
 
     // 更新合成任务
-    const updatedComposition = await prisma.backgroundComposition.update({
-      where: { id: compositionId, userId },
-      data: {
-        resultImageUrl,
-        resultImageSize: image.bytes.length,
-        status: "completed",
-        completedAt: new Date(),
-      },
-    });
+    let updatedComposition;
+    try {
+      updatedComposition = await prisma.backgroundComposition.update({
+        where: {
+          id: compositionId,
+          userId,
+          status: "pending",
+          createdAt: {
+            gt: new Date(Date.now() - COMPOSITION_RESULT_RETENTION_MS),
+          },
+        },
+        data: {
+          // This field stores a private-bucket object key. It is never exposed
+          // directly and is accepted by the result route only in this format.
+          resultImageUrl: resultImageKey,
+          resultImageSize: image.bytes.length,
+          status: "completed",
+          completedAt: new Date(),
+        },
+      });
+    } catch (error) {
+      try {
+        await deleteBackgroundCompositionResult(resultImageKey, compositionId);
+      } catch (cleanupError) {
+        console.error("背景合成结果孤儿对象清理失败:", cleanupError);
+      }
+      throw error;
+    }
 
-    return NextResponse.json({
-      success: true,
-      data: updatedComposition,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: redactComposition(updatedComposition),
+      },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   } catch (error) {
     if (
       error instanceof CompositionInputError ||
-      error instanceof ImageInputError
+      error instanceof ImageInputError ||
+      error instanceof PrivateCompositionStorageError
     ) {
       return NextResponse.json(
         { error: error.message, code: error.code },
@@ -192,6 +447,100 @@ export async function GET(req: NextRequest) {
     }
 
     const url = new URL(req.url);
+    const compositionId = parseCompositionId(
+      url.searchParams.get("compositionId"),
+    );
+
+    if (compositionId !== null) {
+      const composition = await prisma.backgroundComposition.findFirst({
+        where: { id: compositionId, userId },
+      });
+      if (!composition) {
+        return NextResponse.json(
+          { error: "Composition not found" },
+          { status: 404 },
+        );
+      }
+      const deadline = compositionDeadline(composition);
+      if (
+        composition.status !== "completed" ||
+        deadline === null ||
+        deadline <= Date.now()
+      ) {
+        return NextResponse.json(
+          {
+            error: "Composition result is unavailable",
+            code: "COMPOSITION_RESULT_EXPIRED",
+          },
+          { status: 410 },
+        );
+      }
+      if (!composition.resultImageUrl) {
+        return NextResponse.json(
+          {
+            error: "Composition result is unavailable",
+            code: "RESULT_MIGRATION_REQUIRED",
+          },
+          { status: 409 },
+        );
+      }
+      if (
+        !isBackgroundCompositionResultKey(
+          compositionId,
+          composition.resultImageUrl,
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error: "Composition result is awaiting private storage migration",
+            code: "RESULT_MIGRATION_REQUIRED",
+          },
+          { status: 409 },
+        );
+      }
+
+      try {
+        const signedUrlExpiresIn = Math.min(
+          60,
+          Math.floor((deadline - Date.now()) / 1000),
+        );
+        if (signedUrlExpiresIn < 1) {
+          return NextResponse.json(
+            {
+              error: "Composition result is unavailable",
+              code: "COMPOSITION_RESULT_EXPIRED",
+            },
+            { status: 410 },
+          );
+        }
+        const resultImageUrl = await createBackgroundCompositionResultReadUrl(
+          composition.resultImageUrl,
+          compositionId,
+          signedUrlExpiresIn,
+        );
+        return NextResponse.json(
+          {
+            success: true,
+            data: {
+              id: composition.id,
+              status: composition.status,
+              resultImageUrl,
+              expiresAt: new Date(deadline).toISOString(),
+            },
+          },
+          { headers: { "Cache-Control": "private, no-store" } },
+        );
+      } catch (error) {
+        if (error instanceof PrivateCompositionStorageError) {
+          return NextResponse.json(
+            { error: error.message, code: error.code },
+            { status: error.status },
+          );
+        }
+        throw error;
+      }
+    }
+
     const page = parseHistoryPaginationValue(
       url.searchParams.get("page"),
       DEFAULT_HISTORY_PAGE,
@@ -216,16 +565,19 @@ export async function GET(req: NextRequest) {
       prisma.backgroundComposition.count({ where: { userId } }),
     ]);
 
-    return NextResponse.json({
-      success: true,
-      data: compositions.map(redactInlineDataUrls),
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+    return NextResponse.json(
+      {
+        success: true,
+        data: compositions.map(redactComposition),
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
       },
-    });
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   } catch (error) {
     if (error instanceof CompositionInputError) {
       return NextResponse.json(

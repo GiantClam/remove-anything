@@ -9,7 +9,10 @@ import {
 import { emitServerAnalyticsEvent } from "@/lib/server-analytics-events";
 import { taskQueueManager } from "@/lib/task-queue";
 import {
+  getVideoQueueTransformWaitBudget,
+  hasVideoQueueTaskBudget,
   ProviderTaskCreatedPersistenceError,
+  QueueDeadlineExceededError,
   resolveSora2VideoQueueMetadata,
   TransformReadinessQueueError,
 } from "@/lib/video-task-queue-contract";
@@ -31,7 +34,10 @@ export class TaskProcessor {
   /**
    * 处理视频去水印任务
    */
-  public async processSora2VideoWatermarkRemoval(task: any) {
+  public async processSora2VideoWatermarkRemoval(
+    task: any,
+    deadlineAt?: number,
+  ) {
     const candidateTaskRecordId = Number(task?.metadata?.taskRecordId);
     let taskRecordId: number | undefined =
       Number.isSafeInteger(candidateTaskRecordId) && candidateTaskRecordId > 0
@@ -65,16 +71,39 @@ export class TaskProcessor {
       // Only wait on transformations we generate for our configured R2 host.
       // External input URLs must not be fetched by the application server.
       if (shouldWaitForTransform) {
+        const transformTimeoutMs =
+          typeof deadlineAt === "number"
+            ? getVideoQueueTransformWaitBudget(deadlineAt)
+            : 120_000;
+        if (transformTimeoutMs <= 0) {
+          throw new QueueDeadlineExceededError(
+            "Queue deadline does not leave time for media readiness and provider submission",
+          );
+        }
         const { waitForTransformReady } = await import("@/lib/cf-media");
         const ready = await waitForTransformReady(transformUrl, {
-          timeoutMs: 120000,
+          timeoutMs: transformTimeoutMs,
           intervalMs: 1000,
         });
         if (!ready) {
+          if (typeof deadlineAt === "number") {
+            throw new QueueDeadlineExceededError(
+              "Queue deadline reached while waiting for media readiness",
+            );
+          }
           throw new TransformReadinessQueueError(
             "Media transform not ready within timeout",
           );
         }
+      }
+
+      if (
+        typeof deadlineAt === "number" &&
+        !hasVideoQueueTaskBudget(deadlineAt)
+      ) {
+        throw new QueueDeadlineExceededError(
+          "Queue deadline does not leave time for provider submission",
+        );
       }
 
       // Mark the record active before crossing the provider boundary. If the
@@ -89,11 +118,21 @@ export class TaskProcessor {
         taskRecordId,
       );
 
+      if (
+        typeof deadlineAt === "number" &&
+        !hasVideoQueueTaskBudget(deadlineAt)
+      ) {
+        throw new QueueDeadlineExceededError(
+          "Queue deadline does not leave time for provider submission",
+        );
+      }
+
       const runninghubTaskId = await runninghubAPI.createTaskGeneric({
         workflowId,
         nodeInfoList,
         taskRecordId,
         webhookRecordType: "video",
+        deadlineAt,
       });
 
       // A provider task now exists. A local persistence failure must not make
@@ -104,6 +143,7 @@ export class TaskProcessor {
           data: {
             taskStatus: "Processing",
             replicateId: runninghubTaskId,
+            errorMsg: null,
           },
         });
       } catch (error) {
@@ -145,9 +185,10 @@ export class TaskProcessor {
         (error as any)?.code === "TASK_CREATION_OUTCOME_UNKNOWN";
       const providerTaskWasCreated =
         error instanceof ProviderTaskCreatedPersistenceError;
-      const isSafeReadinessRetry =
-        error instanceof TransformReadinessQueueError &&
-        Number(task?.retryCount ?? 0) === 0;
+      const isSafePreProviderDeferral =
+        Number(task?.retryCount ?? 0) === 0 &&
+        (error instanceof QueueDeadlineExceededError ||
+          error instanceof TransformReadinessQueueError);
 
       if (error instanceof ProviderTaskCreatedPersistenceError) {
         try {
@@ -172,7 +213,7 @@ export class TaskProcessor {
         taskRecordId &&
         !isUnknownProviderOutcome &&
         !providerTaskWasCreated &&
-        !isSafeReadinessRetry
+        !isSafePreProviderDeferral
       ) {
         await prisma.taskData.update({
           where: { id: taskRecordId },
@@ -315,13 +356,16 @@ export class TaskProcessor {
   }
 
   private async emitTaskLifecycleEvent(
-    name: typeof ANALYTICS_EVENTS.processingStarted | typeof ANALYTICS_EVENTS.processingFailed,
+    name:
+      | typeof ANALYTICS_EVENTS.processingStarted
+      | typeof ANALYTICS_EVENTS.processingFailed,
     taskId: number,
   ) {
     try {
       await emitServerAnalyticsEvent(
         createTaskAnalyticsEvent(name, taskId, {
           is_authenticated: true,
+          tool_slug: "sora2-video-watermark-removal",
         }),
       );
     } catch (analyticsError) {

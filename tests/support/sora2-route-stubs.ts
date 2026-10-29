@@ -40,6 +40,30 @@ export async function getCurrentUser() {
   return sora2RouteState.user;
 }
 
+export function getAnonymousPrincipalFromRequest(req: Request) {
+  return req.headers.get("cookie")?.includes("remove_anything_principal=")
+    ? "anonymous-principal"
+    : null;
+}
+
+export function createAnonymousPrincipal() {
+  return "test-anonymous-principal";
+}
+
+export function getTaskPrincipalFromRequest(
+  req: Request,
+  userId: string | null | undefined,
+) {
+  return {
+    userId: userId || null,
+    principalId: userId ? null : getAnonymousPrincipalFromRequest(req),
+  };
+}
+
+export function anonymousPrincipalCookie(token: string) {
+  return `remove_anything_principal=${token}; Path=/`;
+}
+
 export function createProjectAuthProvider(getUser: typeof getCurrentUser) {
   return {
     async getCurrentUser() {
@@ -182,6 +206,19 @@ export async function getUserCredit() {
 
 export async function uploadToR2() {
   return "https://files.example.test/uploaded.mp4";
+}
+
+export function getR2ObjectKey(url: string | null | undefined) {
+  if (!url || !url.startsWith("https://files.example.test/")) return null;
+  return url.slice("https://files.example.test/".length);
+}
+
+export function createR2S3Service() {
+  return {
+    async getSignedUrl(key: string) {
+      return `https://signed.example.test/${key}?expires=3600`;
+    },
+  };
 }
 
 export async function downloadFromR2() {

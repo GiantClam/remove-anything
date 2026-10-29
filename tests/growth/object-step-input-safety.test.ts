@@ -81,4 +81,7 @@ test("detect and segment pass trusted decoded images to provider flow", async ()
   assert.equal(segmentResponse.status, 200);
   assert.equal((await segmentResponse.json()).success, true);
   assert.equal(objectGeometryRouteState.createCalls, 2);
+  assert.ok(objectGeometryRouteState.createDeadlineAt! > Date.now());
+  assert.ok(objectGeometryRouteState.statusDeadlineAt! > Date.now());
+  assert.ok(objectGeometryRouteState.resultDeadlineAt! > Date.now());
 });

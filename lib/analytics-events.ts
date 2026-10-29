@@ -57,6 +57,20 @@ export function getFileSizeBucket(bytes: number): FileSizeBucket {
   return "50mb+";
 }
 
+/** Shared, privacy-safe file dimensions for client upload behavior. */
+export function getFileAnalyticsFields(
+  file: { type?: string; size: number },
+  isAuthenticated?: boolean,
+): Pick<AnalyticsEventFields, "file_type" | "file_size_bucket" | "is_authenticated"> {
+  return {
+    file_type: file.type || undefined,
+    file_size_bucket: getFileSizeBucket(file.size),
+    ...(isAuthenticated === undefined
+      ? {}
+      : { is_authenticated: isAuthenticated }),
+  };
+}
+
 /** Fields shared by the page funnel, task lifecycle, and payment facts. */
 export interface AnalyticsEventFields {
   event_id?: string;
@@ -127,10 +141,18 @@ export function createTaskAnalyticsEvent(
   fields: AnalyticsEventFields = {},
 ): AnalyticsEvent {
   const task_id = String(taskId);
+  // Task record IDs are only unique within their backing table. Include the
+  // canonical tool namespace whenever the caller knows it so downloads and
+  // lifecycle facts from different task tables cannot collide in the durable
+  // event sink. Keep the legacy format for callers that have not migrated
+  // their task namespace yet.
+  const taskNamespace = fields.tool_slug
+    ? `${String(fields.tool_slug)}:`
+    : "";
   return createAnalyticsEvent(name, {
     ...fields,
     task_id,
-    event_id: fields.event_id ?? `${name}:task:${task_id}`,
+    event_id: fields.event_id ?? `${name}:task:${taskNamespace}${task_id}`,
   });
 }
 
@@ -266,6 +288,19 @@ export function getAnalyticsPageContext(
       : {}),
     ...(slug ? { tool_slug: slug } : {}),
   };
+}
+
+/** Build a client event with explicit route context and a generated event_id. */
+export function createClientAnalyticsEvent(
+  name: AnalyticsEventName,
+  pathname: string,
+  htmlLang?: string,
+  fields: AnalyticsEventFields = {},
+): AnalyticsEvent {
+  return createAnalyticsEvent(name, {
+    ...getAnalyticsPageContext(pathname, htmlLang),
+    ...fields,
+  });
 }
 
 export type AnalyticsEventSink = (

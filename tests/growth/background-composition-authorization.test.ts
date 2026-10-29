@@ -12,13 +12,19 @@ import {
 import { TINY_PNG_BYTES } from "../support/image-fixtures";
 
 const previousAllowedOrigins = process.env.IMAGE_INPUT_ALLOWED_ORIGINS;
+const originalFetch = globalThis.fetch;
 
 beforeEach(() => {
+  globalThis.fetch = async () =>
+    new Response(TINY_PNG_BYTES, {
+      headers: { "content-type": "image/png" },
+    });
   process.env.IMAGE_INPUT_ALLOWED_ORIGINS = "https://files.example.test";
   resetCompositionRouteState();
 });
 
 after(() => {
+  globalThis.fetch = originalFetch;
   if (previousAllowedOrigins === undefined)
     delete process.env.IMAGE_INPUT_ALLOWED_ORIGINS;
   else process.env.IMAGE_INPUT_ALLOWED_ORIGINS = previousAllowedOrigins;
@@ -80,6 +86,39 @@ function assertNoDatabaseOrStorage() {
   assert.deepEqual(state.listQueries, []);
   assert.deepEqual(state.countQueries, []);
   assert.deepEqual(state.uploads, []);
+  assert.deepEqual(state.sourceLookups, []);
+  assert.deepEqual(state.resultReadUrls, []);
+}
+
+function assertRecentOwnedTaskSource(where: Record<string, unknown>) {
+  assert.equal(where.userId, "owner-1");
+  assert.equal(where.taskStatus, "succeeded");
+  assert.equal(where.retentionCleanedAt, null);
+  const createdAt = where.createdAt as { gte?: Date } | undefined;
+  assert.ok(createdAt?.gte instanceof Date);
+  assert.ok(
+    Math.abs(createdAt.gte.getTime() - (Date.now() - 24 * 60 * 60 * 1000)) <
+      5_000,
+  );
+  const expiry = where.OR as Array<Record<string, unknown>>;
+  assert.deepEqual(expiry[0], { expiresAt: null });
+  const futureExpiry = expiry[1].expiresAt as { gt?: Date } | undefined;
+  assert.ok(futureExpiry?.gt instanceof Date);
+  assert.ok(futureExpiry.gt.getTime() <= Date.now());
+  assert.ok(futureExpiry.gt.getTime() > Date.now() - 5_000);
+}
+
+function assertFinalWriteBoundToOwner() {
+  const where = state.updates[0].where;
+  assert.equal(where.id, 17);
+  assert.equal(where.userId, "owner-1");
+  assert.equal(where.status, "pending");
+  const createdAt = where.createdAt as { gt?: Date } | undefined;
+  assert.ok(createdAt?.gt instanceof Date);
+  assert.ok(
+    Math.abs(createdAt.gt.getTime() - (Date.now() - 24 * 60 * 60 * 1000)) <
+      5_000,
+  );
 }
 
 for (const [label, user] of [
@@ -142,6 +181,10 @@ test("POST accepts the existing template background shape", async () => {
     userId: "owner-1",
     status: "pending",
   });
+  assert.deepEqual(
+    state.sourceLookups.map((lookup) => lookup.model),
+    ["backgroundRemovalTask", "objectRemovalTask", "taskData"],
+  );
 });
 
 test("POST accepts a safe URL-based image background", async () => {
@@ -157,6 +200,96 @@ test("POST accepts a safe URL-based image background", async () => {
     userId: "owner-1",
     status: "pending",
   });
+  assert.deepEqual(state.sourceLookups[3], {
+    model: "backgroundImage",
+    where: {
+      imageUrl: "https://files.example.test/background.png",
+      isPublic: true,
+    },
+  });
+  for (const lookup of state.sourceLookups.slice(0, 3))
+    assertRecentOwnedTaskSource(lookup.where);
+  for (const lookup of state.sourceLookups.slice(4))
+    assertRecentOwnedTaskSource(lookup.where);
+});
+
+test("POST rejects another user's foreground before creating a composition", async () => {
+  state.sourceOwner = "other-owner";
+  const response = await POST(request("POST", createBody));
+  assert.equal(response.status, 404);
+  assert.equal((await response.json()).code, "COMPOSITION_SOURCE_UNAVAILABLE");
+  assert.deepEqual(state.creates, []);
+  assert.equal(state.sourceLookups.length, 3);
+});
+
+test("POST rejects a foreground source past the 24-hour source deadline", async () => {
+  state.sourceExpiresAt = new Date(Date.now() - 1);
+  const response = await POST(request("POST", createBody));
+  assert.equal(response.status, 404);
+  assert.equal((await response.json()).code, "COMPOSITION_SOURCE_UNAVAILABLE");
+  assert.deepEqual(state.creates, []);
+  assert.equal(state.sourceLookups.length, 3);
+  for (const lookup of state.sourceLookups)
+    assertRecentOwnedTaskSource(lookup.where);
+});
+
+test("POST rejects a nonpublic background source before creating a composition", async () => {
+  state.publicBackgroundAvailable = false;
+  const response = await POST(
+    request("POST", {
+      ...createBody,
+      backgroundType: "image",
+      backgroundData: { imageUrl: "https://files.example.test/background.png" },
+    }),
+  );
+  assert.equal(response.status, 404);
+  assert.equal((await response.json()).code, "COMPOSITION_SOURCE_UNAVAILABLE");
+  assert.deepEqual(state.creates, []);
+});
+
+test("POST accepts a recent owned task result as a noncatalog image background", async () => {
+  const imageUrl = "https://files.example.test/foreground.png?sig=1";
+  state.publicBackgroundAvailable = false;
+  state.ownedSourceUrls.add(imageUrl);
+  const response = await POST(
+    request("POST", {
+      ...createBody,
+      backgroundType: "image",
+      backgroundData: { imageUrl },
+    }),
+  );
+  assert.equal(response.status, 200);
+  assert.equal(state.creates.length, 1);
+  assert.equal(state.sourceLookups[3].model, "backgroundImage");
+  assert.equal(state.sourceLookups.length, 7);
+  for (const lookup of state.sourceLookups.slice(4))
+    assertRecentOwnedTaskSource(lookup.where);
+});
+
+test("POST rejects an unsafe image response before creating a composition", async () => {
+  let fetchCount = 0;
+  globalThis.fetch = async () => {
+    fetchCount++;
+    return fetchCount === 1
+      ? new Response(TINY_PNG_BYTES, {
+          headers: { "content-type": "image/png" },
+        })
+      : new Response("not an image", {
+          headers: { "content-type": "text/html" },
+        });
+  };
+  const response = await POST(
+    request("POST", {
+      ...createBody,
+      backgroundType: "image",
+      backgroundData: {
+        imageUrl: "https://files.example.test/background.png",
+      },
+    }),
+  );
+  assert.equal(response.status, 415);
+  assert.equal(fetchCount, 2);
+  assert.deepEqual(state.creates, []);
 });
 
 test("POST rejects malformed composition parameters without persisting a record", async () => {
@@ -273,7 +406,12 @@ test("PUT checks ownership before upload and constrains the final write to the s
   const response = await PUT(request("PUT", updateBody));
   assert.equal(response.status, 200);
   assert.deepEqual(state.lookups, [{ id: 17, userId: "owner-1" }]);
-  assert.deepEqual(state.events, ["body", "findFirst", "upload", "update"]);
+  assert.deepEqual(state.events, [
+    "body",
+    "findFirst",
+    "private-upload",
+    "update",
+  ]);
   assert.equal(state.uploads.length, 1);
   assert.equal(state.uploads[0].name, "composition-17.png");
   assert.deepEqual(
@@ -281,12 +419,37 @@ test("PUT checks ownership before upload and constrains the final write to the s
     TINY_PNG_BYTES,
   );
   assert.equal(state.updates.length, 1);
-  assert.deepEqual(state.updates[0].where, {
-    id: 17,
-    userId: "owner-1",
-  });
+  assertFinalWriteBoundToOwner();
   assert.equal(state.composition!.status, "completed");
   assert.equal(state.composition!.resultImageSize, TINY_PNG_BYTES.length);
+  assert.equal(
+    state.composition!.resultImageUrl,
+    "background-compositions/17/abcdefghijklmnopqrstu.png",
+  );
+  const body = await response.json();
+  assert.equal(
+    body.data.resultImageUrl,
+    "/api/background-composition?compositionId=17",
+  );
+  assert.equal(JSON.stringify(body).includes("private-r2.example.test"), false);
+});
+
+test("PUT fails closed when a separate private storage bucket is unavailable", async () => {
+  state.privateStorageAvailable = false;
+  const response = await PUT(request("PUT", updateBody));
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).code, "PRIVATE_STORAGE_UNAVAILABLE");
+  assert.equal(state.composition!.status, "pending");
+  assert.deepEqual(state.updates, []);
+});
+
+test("PUT refuses a composition after its 24-hour deadline before upload", async () => {
+  state.composition!.createdAt = new Date(Date.now() - 24 * 60 * 60 * 1000 - 1);
+  const response = await PUT(request("PUT", updateBody));
+  assert.equal(response.status, 410);
+  assert.equal((await response.json()).code, "COMPOSITION_RESULT_EXPIRED");
+  assert.deepEqual(state.uploads, []);
+  assert.deepEqual(state.updates, []);
 });
 
 test("PUT rejects a malformed image data URL before upload or persistence", async () => {
@@ -372,12 +535,29 @@ test("a changed owner between lookup and final write cannot receive the prior ow
   };
   const response = await PUT(request("PUT", updateBody));
   assert.equal(response.status, 500);
-  assert.deepEqual(state.updates[0].where, {
-    id: 17,
-    userId: "owner-1",
-  });
+  assertFinalWriteBoundToOwner();
   assert.equal(state.composition!.status, "pending");
   assert.equal(state.composition!.resultImageUrl, undefined);
+  assert.deepEqual(state.deletes, [
+    { key: state.resultKey, compositionId: 17 },
+  ]);
+  assert.equal(state.events.at(-1), "private-delete");
+});
+
+test("PUT deletes an uploaded orphan if the composition expires before the final write", async (t) => {
+  t.mock.method(console, "error", () => {});
+  state.beforeUpload = () => {
+    state.composition!.createdAt = new Date(
+      Date.now() - 24 * 60 * 60 * 1000 - 1,
+    );
+  };
+  const response = await PUT(request("PUT", updateBody));
+  assert.equal(response.status, 500);
+  assertFinalWriteBoundToOwner();
+  assert.equal(state.composition!.status, "pending");
+  assert.deepEqual(state.deletes, [
+    { key: state.resultKey, compositionId: 17 },
+  ]);
 });
 
 test("GET still requires login before listing history", async () => {
@@ -387,6 +567,101 @@ test("GET still requires login before listing history", async () => {
   );
   assert.equal(response.status, 401);
   assertNoDatabaseOrStorage();
+});
+
+test("result GET rejects anonymous requests before database or signing", async () => {
+  state.user = null;
+  const response = await GET(
+    new NextRequest(
+      "https://remove-anything.test/api/background-composition?compositionId=17",
+    ),
+  );
+  assert.equal(response.status, 401);
+  assert.equal(state.lookups.length, 0);
+  assert.deepEqual(state.resultReadUrls, []);
+});
+
+test("result GET requires a composition owned by the current user", async () => {
+  state.composition!.userId = "other-owner";
+  state.composition!.status = "completed";
+  state.composition!.completedAt = new Date();
+  state.composition!.resultImageUrl = state.resultKey;
+  const response = await GET(
+    new NextRequest(
+      "https://remove-anything.test/api/background-composition?compositionId=17",
+    ),
+  );
+  assert.equal(response.status, 404);
+  assert.deepEqual(state.lookups, [{ id: 17, userId: "owner-1" }]);
+  assert.deepEqual(state.resultReadUrls, []);
+});
+
+test("result GET refuses expired compositions before signing", async () => {
+  state.composition!.status = "completed";
+  state.composition!.createdAt = new Date(Date.now() - 24 * 60 * 60 * 1000 - 1);
+  state.composition!.completedAt = new Date(
+    Date.now() - 24 * 60 * 60 * 1000 - 1,
+  );
+  state.composition!.resultImageUrl = state.resultKey;
+  const response = await GET(
+    new NextRequest(
+      "https://remove-anything.test/api/background-composition?compositionId=17",
+    ),
+  );
+  assert.equal(response.status, 410);
+  assert.equal((await response.json()).code, "COMPOSITION_RESULT_EXPIRED");
+  assert.deepEqual(state.resultReadUrls, []);
+});
+
+test("result GET issues a short-lived signed URL only for the owner", async () => {
+  state.composition!.status = "completed";
+  state.composition!.completedAt = new Date();
+  state.composition!.resultImageUrl = state.resultKey;
+  const response = await GET(
+    new NextRequest(
+      "https://remove-anything.test/api/background-composition?compositionId=17",
+    ),
+  );
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+  assert.deepEqual(state.resultReadUrls, [
+    { key: state.resultKey, compositionId: 17, expiresIn: 60 },
+  ]);
+  assert.equal(
+    (await response.json()).data.resultImageUrl,
+    "https://private-r2.example.test/signed/result.png?expires=60",
+  );
+});
+
+test("result GET keeps the signed URL inside the composition deadline", async () => {
+  state.composition!.status = "completed";
+  state.composition!.createdAt = new Date(
+    Date.now() - 24 * 60 * 60 * 1000 + 1_500,
+  );
+  state.composition!.resultImageUrl = state.resultKey;
+  const response = await GET(
+    new NextRequest(
+      "https://remove-anything.test/api/background-composition?compositionId=17",
+    ),
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(state.resultReadUrls, [
+    { key: state.resultKey, compositionId: 17, expiresIn: 1 },
+  ]);
+});
+
+test("result GET refuses keys that could reference the legacy public bucket", async () => {
+  state.composition!.status = "completed";
+  state.composition!.resultImageUrl =
+    "https://files.example.test/legacy-public-result.png";
+  const response = await GET(
+    new NextRequest(
+      "https://remove-anything.test/api/background-composition?compositionId=17",
+    ),
+  );
+  assert.equal(response.status, 409);
+  assert.equal((await response.json()).code, "RESULT_MIGRATION_REQUIRED");
+  assert.deepEqual(state.resultReadUrls, []);
 });
 
 test("GET lists and counts only the authenticated owner's history", async () => {
@@ -448,4 +723,17 @@ test("GET redacts legacy inline data URLs from nested historical values", async 
     body.data[0].backgroundData.template.imageUrl,
     "/templates/office.jpg",
   );
+});
+
+test("GET history never exposes a stored public or private result URL", async () => {
+  state.composition!.resultImageUrl =
+    "https://files.example.test/legacy-public-result.png";
+  const response = await GET(
+    new NextRequest("https://remove-anything.test/api/background-composition"),
+  );
+  assert.equal(response.status, 200);
+  const text = await response.text();
+  assert.equal(text.includes("legacy-public-result.png"), false);
+  assert.equal(text.includes("background-compositions/17/"), false);
+  assert.equal(text.includes('"resultImageUrl":null'), true);
 });

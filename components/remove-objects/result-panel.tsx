@@ -116,6 +116,7 @@ export function RemoveObjectsResultPanel({
             type="button"
             onClick={onDownload}
             disabled={!outputImageUrl}
+            data-testid="remove-objects-download"
             className="w-full gap-2"
           >
             <Download className="size-4" />
@@ -247,6 +248,7 @@ export function RemoveObjectsResultPanel({
           checked={authorizationConfirmed}
           onCheckedChange={(checked) => onAuthorizationChange(checked === true)}
           disabled={isBusy}
+          data-testid="remove-objects-authorization"
           aria-label="Confirm image authorization"
         />
         <span>I confirm that I own or am authorized to edit this image.</span>
@@ -255,6 +257,7 @@ export function RemoveObjectsResultPanel({
       <Button
         type="button"
         onClick={onRemove}
+        data-testid="remove-objects-submit"
         disabled={
           !canRemove ||
           isBusy ||
@@ -274,7 +277,11 @@ export function RemoveObjectsResultPanel({
               "Object removal failed. Adjust the mask and try again."}
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <Button type="button" onClick={onRetry}>
+            <Button
+              type="button"
+              onClick={onRetry}
+              data-testid="remove-objects-retry"
+            >
               {t("result.retry")}
             </Button>
             <Button type="button" variant="outline" onClick={onEditAgain}>

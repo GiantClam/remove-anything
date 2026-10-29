@@ -5,6 +5,7 @@ process.env.RUNNINGHUB_API_BASE_URL = "https://provider.example.test";
 process.env.RUNNINGHUB_API_KEY = "test-key";
 const sdkPromise = import("../../modules/runninghub/sdk");
 const originalFetch = globalThis.fetch;
+const originalAbortSignalTimeout = AbortSignal.timeout;
 const originalSecret = process.env.RUNNINGHUB_WEBHOOK_SECRET;
 const originalSite = process.env.NEXTAUTH_URL;
 beforeEach(() => {
@@ -14,6 +15,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  AbortSignal.timeout = originalAbortSignalTimeout;
   originalSecret === undefined
     ? delete process.env.RUNNINGHUB_WEBHOOK_SECRET
     : (process.env.RUNNINGHUB_WEBHOOK_SECRET = originalSecret);
@@ -60,6 +62,71 @@ test("provider create succeeds once and includes the task callback reference", a
   };
   assert.equal(await (await sdk()).createTaskGeneric(options), "task-1");
   assert.equal(calls, 1);
+});
+
+test("provider create skips when the cron deadline cannot bound one request", async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return response({ code: 0, data: { taskId: "unexpected" } });
+  };
+
+  await assert.rejects(
+    (await sdk()).createTaskGeneric({
+      ...options,
+      deadlineAt: Date.now() + 32_999,
+    }),
+    (error: any) => error.code === "QUEUE_DEADLINE_EXCEEDED",
+  );
+  assert.equal(calls, 0);
+});
+
+test("cron status and result reads use only the remaining request budget", async () => {
+  const timeoutBudgets: number[] = [];
+  AbortSignal.timeout = (milliseconds: number) => {
+    timeoutBudgets.push(milliseconds);
+    return originalAbortSignalTimeout(milliseconds);
+  };
+  globalThis.fetch = async () =>
+    response({ code: 0, msg: "success", data: { status: "RUNNING" } });
+
+  const api = await sdk();
+  const deadlineAt = Date.now() + 2_000;
+  await api.getTaskStatus("task-1", { deadlineAt });
+  await api.getTaskResult("task-1", { deadlineAt });
+
+  assert.equal(timeoutBudgets.length, 2);
+  assert.ok(timeoutBudgets.every((budget) => budget > 0 && budget <= 2_000));
+});
+
+test("object task helpers keep provider requests inside the declared deadline", async () => {
+  const timeoutBudgets: number[] = [];
+  AbortSignal.timeout = (milliseconds: number) => {
+    timeoutBudgets.push(milliseconds);
+    return originalAbortSignalTimeout(milliseconds);
+  };
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    if (calls === 1)
+      return response({ code: 0, msg: "success", data: { taskId: "object-1" } });
+    if (calls === 2)
+      return response({ code: 0, msg: "success", data: { status: "SUCCEEDED" } });
+    return response({ code: 0, msg: "success", data: [] });
+  };
+
+  const deadlineAt = Date.now() + 40_000;
+  const api = await sdk();
+  assert.equal(
+    await api.createObjectSegmentTask([], { deadlineAt }),
+    "object-1",
+  );
+  await api.getTaskStatus("object-1", { deadlineAt });
+  await api.getTaskResult("object-1", { deadlineAt });
+
+  assert.equal(calls, 3);
+  assert.equal(timeoutBudgets.length, 3);
+  assert.ok(timeoutBudgets.every((budget) => budget > 0 && budget <= 30_000));
 });
 
 test("missing callback secret or insecure site leaves polling available without an unauthenticated webhook", async () => {

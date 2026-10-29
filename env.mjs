@@ -25,12 +25,16 @@ export const env = createEnv({
     R2_SECRET_KEY: z.string().min(1).default("placeholder"),
     R2_URL_BASE: z.string().min(1).default("https://placeholder.com"),
     R2_BUCKET: z.string().min(1).default("placeholder"),
+    R2_PRIVATE_BUCKET: z.string().min(1).optional(),
     R2_ACCOUNT_ID: z.string().min(1).default("placeholder"),
 
     STRIPE_API_KEY: z.string().min(1).default("sk_test_placeholder"),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).default("whsec_placeholder"),
     PAYPAL_CLIENT_ID: z.string().min(1).default("paypal-client-id-placeholder"),
-    PAYPAL_CLIENT_SECRET: z.string().min(1).default("paypal-client-secret-placeholder"),
+    PAYPAL_CLIENT_SECRET: z
+      .string()
+      .min(1)
+      .default("paypal-client-secret-placeholder"),
     PAYPAL_ENV: z.enum(["sandbox", "live"]).default("sandbox"),
     WEBHOOK_SECRET: z.string().min(1).default("webhook-secret-placeholder"),
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
@@ -42,48 +46,90 @@ export const env = createEnv({
     APP_ENV: z
       .enum(["development", "production", "staging"])
       .default("development"),
-    
+
     // Cloudflare AI Gateway Configuration
-    CLOUDFLARE_AI_GATEWAY_URL: z.string().url().default("https://placeholder.com"),
+    CLOUDFLARE_AI_GATEWAY_URL: z
+      .string()
+      .url()
+      .default("https://placeholder.com"),
     CLOUDFLARE_AI_GATEWAY_TOKEN: z.string().min(1).default("placeholder"),
-    
+
     // Model API Keys (accessed via AI Gateway)
     REPLICATE_API_TOKEN: z.string().min(1).default("placeholder"),
     REPLICATE_WEBHOOK_SECRET: z.string().optional(),
     REPLICATE_OUTPUT_URL_PREFIXES: z.string().optional(),
     GEMINI_API_KEY: z.string().min(1).default("placeholder"),
-    
+
     // RunningHub API Configuration
-    RUNNINGHUB_API_BASE_URL: z.string().url().default("https://www.runninghub.cn"),
+    RUNNINGHUB_API_BASE_URL: z
+      .string()
+      .url()
+      .default("https://www.runninghub.cn"),
     RUNNINGHUB_API_KEY: z.string().min(1).default("placeholder"),
     RUNNINGHUB_WEBHOOK_SECRET: z.string().min(32).optional(),
     RUNNINGHUB_OUTPUT_URL_PREFIXES: z.string().optional(),
     RUNNINGHUB_WORKFLOW_ID: z.string().min(1).default("placeholder"),
-    RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID: z.string().min(1).default("placeholder"),
-    RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID: z.string().min(1).default("2063827026330607618"),
-    RUNNINGHUB_OBJECT_SEGMENT_WORKFLOW_ID: z.string().min(1).default("2062736566451269633"),
+    RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID: z
+      .string()
+      .min(1)
+      .default("placeholder"),
+    RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID: z
+      .string()
+      .min(1)
+      .default("2063827026330607618"),
+    RUNNINGHUB_OBJECT_SEGMENT_WORKFLOW_ID: z
+      .string()
+      .min(1)
+      .default("2062736566451269633"),
     RUNNINGHUB_OBJECT_DETECT_IMAGE_NODE_ID: z.string().min(1).default("image"),
-    RUNNINGHUB_OBJECT_DETECT_IMAGE_FIELD_NAME: z.string().min(1).default("image"),
-    RUNNINGHUB_OBJECT_DETECT_PROMPT_NODE_ID: z.string().min(1).default("prompt"),
-    RUNNINGHUB_OBJECT_DETECT_PROMPT_FIELD_NAME: z.string().min(1).default("prompt"),
+    RUNNINGHUB_OBJECT_DETECT_IMAGE_FIELD_NAME: z
+      .string()
+      .min(1)
+      .default("image"),
+    RUNNINGHUB_OBJECT_DETECT_PROMPT_NODE_ID: z
+      .string()
+      .min(1)
+      .default("prompt"),
+    RUNNINGHUB_OBJECT_DETECT_PROMPT_FIELD_NAME: z
+      .string()
+      .min(1)
+      .default("prompt"),
     RUNNINGHUB_OBJECT_SEGMENT_IMAGE_NODE_ID: z.string().min(1).default("19"),
-    RUNNINGHUB_OBJECT_SEGMENT_IMAGE_FIELD_NAME: z.string().min(1).default("image"),
-    RUNNINGHUB_OBJECT_SEGMENT_FRAME_EDITOR_NODE_ID: z.string().min(1).default("25"),
-    RUNNINGHUB_OBJECT_SEGMENT_FRAME_EDITOR_FIELD_NAME: z.string().min(1).default("info"),
+    RUNNINGHUB_OBJECT_SEGMENT_IMAGE_FIELD_NAME: z
+      .string()
+      .min(1)
+      .default("image"),
+    RUNNINGHUB_OBJECT_SEGMENT_FRAME_EDITOR_NODE_ID: z
+      .string()
+      .min(1)
+      .default("25"),
+    RUNNINGHUB_OBJECT_SEGMENT_FRAME_EDITOR_FIELD_NAME: z
+      .string()
+      .min(1)
+      .default("info"),
     RUNNINGHUB_OBJECT_REMOVE_IMAGE_NODE_ID: z.string().min(1).default("94"),
-    RUNNINGHUB_OBJECT_REMOVE_IMAGE_FIELD_NAME: z.string().min(1).default("image"),
+    RUNNINGHUB_OBJECT_REMOVE_IMAGE_FIELD_NAME: z
+      .string()
+      .min(1)
+      .default("image"),
     RUNNINGHUB_OBJECT_REMOVE_MASK_NODE_ID: z.string().min(1).default("103"),
-    RUNNINGHUB_OBJECT_REMOVE_MASK_FIELD_NAME: z.string().min(1).default("image"),
+    RUNNINGHUB_OBJECT_REMOVE_MASK_FIELD_NAME: z
+      .string()
+      .min(1)
+      .default("image"),
     RUNNINGHUB_OBJECT_REMOVE_PROMPT_NODE_ID: z.string().min(1).default("6"),
-    RUNNINGHUB_OBJECT_REMOVE_PROMPT_FIELD_NAME: z.string().min(1).default("text"),
-    
+    RUNNINGHUB_OBJECT_REMOVE_PROMPT_FIELD_NAME: z
+      .string()
+      .min(1)
+      .default("text"),
+
     // Sora2 Video Watermark Removal Workflow IDs
     SORA2_LANDSCAPE_WORKFLOW_ID: z.string().min(1).default("placeholder"),
     SORA2_PORTRAIT_WORKFLOW_ID: z.string().min(1).default("placeholder"),
     // Sora2 upload node configuration
     SORA2_UPLOAD_NODE_ID: z.string().min(1).default("205"),
     SORA2_UPLOAD_FIELD_NAME: z.string().min(1).default("video"),
-    
+
     // Legacy OpenAI config (now replaced by Gemini via AI Gateway)
     OPEN_AI_API_ENDPOINT: z.string().url().optional(),
     OPEN_AI_API_KEY: z.string().optional(),
@@ -98,10 +144,22 @@ export const env = createEnv({
       .optional()
       .default(false),
 
-    NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID: z.string().min(1).default("price_placeholder_monthly"),
-    NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID: z.string().min(1).default("price_placeholder_yearly"),
-    NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PLAN_ID: z.string().min(1).default("price_placeholder_business_monthly"),
-    NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID: z.string().min(1).default("price_placeholder_business_yearly"),
+    NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID: z
+      .string()
+      .min(1)
+      .default("price_placeholder_monthly"),
+    NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID: z
+      .string()
+      .min(1)
+      .default("price_placeholder_yearly"),
+    NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PLAN_ID: z
+      .string()
+      .min(1)
+      .default("price_placeholder_business_monthly"),
+    NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID: z
+      .string()
+      .min(1)
+      .default("price_placeholder_business_yearly"),
 
     NEXT_PUBLIC_UMAMI_DATA_ID: z.string().optional(),
     NEXT_PUBLIC_GA_ID: z.string().optional(),
@@ -117,8 +175,10 @@ export const env = createEnv({
     CLOUDFLARE_KV_NAMESPACE_ID: process.env.CLOUDFLARE_KV_NAMESPACE_ID,
     CLOUDFLARE_KV_ACCOUNT_ID: process.env.CLOUDFLARE_KV_ACCOUNT_ID,
     CLOUDFLARE_KV_API_TOKEN: process.env.CLOUDFLARE_KV_API_TOKEN,
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-    NEXT_PUBLIC_SITE_EMAIL_FROM: process.env.NEXT_PUBLIC_SITE_EMAIL_FROM || "noreply@localhost",
+    NEXT_PUBLIC_SITE_URL:
+      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+    NEXT_PUBLIC_SITE_EMAIL_FROM:
+      process.env.NEXT_PUBLIC_SITE_EMAIL_FROM || "noreply@localhost",
     NEXT_PUBLIC_SITE_LINK_PREVIEW_ENABLED:
       process.env.NEXT_PUBLIC_SITE_LINK_PREVIEW_ENABLED == "true",
     LINK_PREVIEW_API_BASE_URL: process.env.LINK_PREVIEW_API_BASE_URL,
@@ -134,29 +194,37 @@ export const env = createEnv({
     R2_SECRET_KEY: process.env.R2_SECRET_KEY,
     R2_URL_BASE: process.env.R2_URL_BASE,
     R2_BUCKET: process.env.R2_BUCKET,
+    R2_PRIVATE_BUCKET: process.env.R2_PRIVATE_BUCKET,
     R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,
 
     STRIPE_API_KEY: process.env.STRIPE_API_KEY || "sk_test_placeholder",
-    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || "whsec_placeholder",
-    PAYPAL_CLIENT_ID: process.env.PAYPAL_CLIENT_ID || "paypal-client-id-placeholder",
+    STRIPE_WEBHOOK_SECRET:
+      process.env.STRIPE_WEBHOOK_SECRET || "whsec_placeholder",
+    PAYPAL_CLIENT_ID:
+      process.env.PAYPAL_CLIENT_ID || "paypal-client-id-placeholder",
     PAYPAL_CLIENT_SECRET:
       process.env.PAYPAL_CLIENT_SECRET || "paypal-client-secret-placeholder",
     PAYPAL_ENV: process.env.PAYPAL_ENV || "sandbox",
     NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID:
-      process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID || "price_placeholder_monthly",
+      process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID ||
+      "price_placeholder_monthly",
     NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID:
-      process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID || "price_placeholder_yearly",
+      process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID ||
+      "price_placeholder_yearly",
     NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PLAN_ID:
-      process.env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PLAN_ID || "price_placeholder_business_monthly",
+      process.env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PLAN_ID ||
+      "price_placeholder_business_monthly",
     NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID:
-      process.env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID || "price_placeholder_business_yearly",
-    TASK_HEADER_KEY: process.env.TASK_HEADER_KEY || "task-header-key-placeholder",
+      process.env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID ||
+      "price_placeholder_business_yearly",
+    TASK_HEADER_KEY:
+      process.env.TASK_HEADER_KEY || "task-header-key-placeholder",
     APP_ENV: process.env.APP_ENV,
-    
+
     // Cloudflare AI Gateway Configuration
     CLOUDFLARE_AI_GATEWAY_URL: process.env.CLOUDFLARE_AI_GATEWAY_URL,
     CLOUDFLARE_AI_GATEWAY_TOKEN: process.env.CLOUDFLARE_AI_GATEWAY_TOKEN,
-    
+
     // Model API Keys
     REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN,
     REPLICATE_WEBHOOK_SECRET: process.env.REPLICATE_WEBHOOK_SECRET,
@@ -164,26 +232,39 @@ export const env = createEnv({
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     RUNNINGHUB_API_BASE_URL: process.env.RUNNINGHUB_API_BASE_URL,
     RUNNINGHUB_API_KEY: process.env.RUNNINGHUB_API_KEY,
-    RUNNINGHUB_WEBHOOK_SECRET: process.env.RUNNINGHUB_WEBHOOK_SECRET || undefined,
+    RUNNINGHUB_WEBHOOK_SECRET:
+      process.env.RUNNINGHUB_WEBHOOK_SECRET || undefined,
     RUNNINGHUB_OUTPUT_URL_PREFIXES: process.env.RUNNINGHUB_OUTPUT_URL_PREFIXES,
     RUNNINGHUB_WORKFLOW_ID: process.env.RUNNINGHUB_WORKFLOW_ID,
-    RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID: process.env.RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID,
-    RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID: process.env.RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID,
-    RUNNINGHUB_OBJECT_DETECT_IMAGE_NODE_ID: process.env.RUNNINGHUB_OBJECT_DETECT_IMAGE_NODE_ID,
-    RUNNINGHUB_OBJECT_DETECT_IMAGE_FIELD_NAME: process.env.RUNNINGHUB_OBJECT_DETECT_IMAGE_FIELD_NAME,
-    RUNNINGHUB_OBJECT_DETECT_PROMPT_NODE_ID: process.env.RUNNINGHUB_OBJECT_DETECT_PROMPT_NODE_ID,
-    RUNNINGHUB_OBJECT_DETECT_PROMPT_FIELD_NAME: process.env.RUNNINGHUB_OBJECT_DETECT_PROMPT_FIELD_NAME,
-    RUNNINGHUB_OBJECT_REMOVE_IMAGE_NODE_ID: process.env.RUNNINGHUB_OBJECT_REMOVE_IMAGE_NODE_ID,
-    RUNNINGHUB_OBJECT_REMOVE_IMAGE_FIELD_NAME: process.env.RUNNINGHUB_OBJECT_REMOVE_IMAGE_FIELD_NAME,
-    RUNNINGHUB_OBJECT_REMOVE_MASK_NODE_ID: process.env.RUNNINGHUB_OBJECT_REMOVE_MASK_NODE_ID,
-    RUNNINGHUB_OBJECT_REMOVE_MASK_FIELD_NAME: process.env.RUNNINGHUB_OBJECT_REMOVE_MASK_FIELD_NAME,
-    RUNNINGHUB_OBJECT_REMOVE_PROMPT_NODE_ID: process.env.RUNNINGHUB_OBJECT_REMOVE_PROMPT_NODE_ID,
-    RUNNINGHUB_OBJECT_REMOVE_PROMPT_FIELD_NAME: process.env.RUNNINGHUB_OBJECT_REMOVE_PROMPT_FIELD_NAME,
+    RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID:
+      process.env.RUNNINGHUB_OBJECT_DETECT_WORKFLOW_ID,
+    RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID:
+      process.env.RUNNINGHUB_OBJECT_REMOVE_WORKFLOW_ID,
+    RUNNINGHUB_OBJECT_DETECT_IMAGE_NODE_ID:
+      process.env.RUNNINGHUB_OBJECT_DETECT_IMAGE_NODE_ID,
+    RUNNINGHUB_OBJECT_DETECT_IMAGE_FIELD_NAME:
+      process.env.RUNNINGHUB_OBJECT_DETECT_IMAGE_FIELD_NAME,
+    RUNNINGHUB_OBJECT_DETECT_PROMPT_NODE_ID:
+      process.env.RUNNINGHUB_OBJECT_DETECT_PROMPT_NODE_ID,
+    RUNNINGHUB_OBJECT_DETECT_PROMPT_FIELD_NAME:
+      process.env.RUNNINGHUB_OBJECT_DETECT_PROMPT_FIELD_NAME,
+    RUNNINGHUB_OBJECT_REMOVE_IMAGE_NODE_ID:
+      process.env.RUNNINGHUB_OBJECT_REMOVE_IMAGE_NODE_ID,
+    RUNNINGHUB_OBJECT_REMOVE_IMAGE_FIELD_NAME:
+      process.env.RUNNINGHUB_OBJECT_REMOVE_IMAGE_FIELD_NAME,
+    RUNNINGHUB_OBJECT_REMOVE_MASK_NODE_ID:
+      process.env.RUNNINGHUB_OBJECT_REMOVE_MASK_NODE_ID,
+    RUNNINGHUB_OBJECT_REMOVE_MASK_FIELD_NAME:
+      process.env.RUNNINGHUB_OBJECT_REMOVE_MASK_FIELD_NAME,
+    RUNNINGHUB_OBJECT_REMOVE_PROMPT_NODE_ID:
+      process.env.RUNNINGHUB_OBJECT_REMOVE_PROMPT_NODE_ID,
+    RUNNINGHUB_OBJECT_REMOVE_PROMPT_FIELD_NAME:
+      process.env.RUNNINGHUB_OBJECT_REMOVE_PROMPT_FIELD_NAME,
     SORA2_LANDSCAPE_WORKFLOW_ID: process.env.SORA2_LANDSCAPE_WORKFLOW_ID,
     SORA2_PORTRAIT_WORKFLOW_ID: process.env.SORA2_PORTRAIT_WORKFLOW_ID,
     SORA2_UPLOAD_NODE_ID: process.env.SORA2_UPLOAD_NODE_ID,
     SORA2_UPLOAD_FIELD_NAME: process.env.SORA2_UPLOAD_FIELD_NAME,
-    
+
     // Legacy OpenAI config
     OPEN_AI_API_ENDPOINT: process.env.OPEN_AI_API_ENDPOINT,
     OPEN_AI_API_KEY: process.env.OPEN_AI_API_KEY,
@@ -193,6 +274,8 @@ export const env = createEnv({
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
     NEXT_PUBLIC_CLARITY_ID: process.env.NEXT_PUBLIC_CLARITY_ID,
   },
-  skipValidation: process.env.NODE_ENV === 'development' || process.env.SKIP_ENV_VALIDATION === 'true', // 在开发环境或设置SKIP_ENV_VALIDATION时跳过环境变量验证
+  skipValidation:
+    process.env.NODE_ENV === "development" ||
+    process.env.SKIP_ENV_VALIDATION === "true", // 在开发环境或设置SKIP_ENV_VALIDATION时跳过环境变量验证
   emptyStringAsUndefined: true,
 });

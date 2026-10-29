@@ -5,6 +5,11 @@ import { taskProcessor } from "@/lib/task-processor";
 import {
   claimVideoQueueItem,
   dispatchVideoQueueItem,
+  recoverStaleVideoQueueItemInTransaction,
+  recoverStaleVideoQueueItems,
+  VIDEO_QUEUE_MIN_TASK_WINDOW_MS,
+  VIDEO_QUEUE_RUN_BUDGET_MS,
+  VIDEO_QUEUE_TASK_TYPE_FILTER,
 } from "@/lib/video-task-queue-contract";
 import { runninghubAPI } from "@/modules/runninghub";
 
@@ -16,46 +21,87 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  // 设置超时保护 - 25秒后强制返回
+  const startedAt = Date.now();
+  const hardDeadline = startedAt + 55_000;
+  const deadlineAt = startedAt + VIDEO_QUEUE_RUN_BUDGET_MS;
   const timeoutId = setTimeout(() => {
-    console.log("⏰ Cron job timeout, returning partial results");
-  }, 25000);
+    console.log("⏰ Cron job is approaching its configured deadline");
+  }, VIDEO_QUEUE_RUN_BUDGET_MS);
 
-  const batchSize = Number(process.env.QUEUE_BATCH_SIZE || 3); // 减少批次大小
+  const configuredBatchSize = Number(process.env.QUEUE_BATCH_SIZE || 3);
+  const batchSize = Number.isFinite(configuredBatchSize)
+    ? Math.max(1, Math.min(3, Math.floor(configuredBatchSize)))
+    : 3;
   let processed = 0;
   let synced = 0;
+  let recovered = 0;
 
   try {
+    recovered = await recoverStaleVideoQueueItems(
+      (args) => (prisma as any).processingQueue.findMany(args),
+      (item, cutoff, recoveredAt) =>
+        (prisma as any).$transaction(async (tx: any) => {
+          return recoverStaleVideoQueueItemInTransaction(
+            tx,
+            item,
+            cutoff,
+            recoveredAt,
+          );
+        }),
+    );
+
     // 1. 处理队列中的任务
     const now = new Date();
     const tasks = await (prisma as any).processingQueue.findMany({
-      where: { status: "pending", scheduledAt: { lte: now } },
+      where: {
+        ...VIDEO_QUEUE_TASK_TYPE_FILTER,
+        status: "pending",
+        scheduledAt: { lte: now },
+      },
       take: batchSize,
       orderBy: { createdAt: "asc" },
     });
 
     for (const t of tasks) {
+      if (Date.now() + VIDEO_QUEUE_MIN_TASK_WINDOW_MS >= deadlineAt) break;
       // Claim atomically so overlapping cron invocations cannot both submit
       // the same paid provider task.
-      const claimed = await claimVideoQueueItem(
+      const claimedAt = await claimVideoQueueItem(
         {
           id: t.id,
+          taskType: t.taskType,
           scheduledAt: t.scheduledAt,
           retryCount: t.retryCount,
         },
         (args) => (prisma as any).processingQueue.updateMany(args),
       );
-      if (!claimed) continue;
+      if (!claimedAt) continue;
 
+      const lease = {
+        claimedAt,
+        taskType: t.taskType,
+        scheduledAt: t.scheduledAt,
+        retryCount: t.retryCount,
+      };
       const outcome = await dispatchVideoQueueItem(t, {
-        updateQueueItem: async (id, data) => {
-          await (prisma as any).processingQueue.update({
-            where: { id },
+        lease,
+        deadlineAt,
+        updateQueueItem: async (id, data, workerLease) => {
+          const result = await (prisma as any).processingQueue.updateMany({
+            where: {
+              id,
+              status: "running",
+              taskType: workerLease.taskType,
+              retryCount: workerLease.retryCount,
+              scheduledAt: { equals: workerLease.scheduledAt },
+              updatedAt: workerLease.claimedAt,
+            },
             data,
           });
+          return result.count === 1;
         },
         processSora2VideoWatermarkRemoval: (task) =>
-          taskProcessor.processSora2VideoWatermarkRemoval(task),
+          taskProcessor.processSora2VideoWatermarkRemoval(task, deadlineAt),
       });
       if (outcome === "completed") processed++;
     }
@@ -65,36 +111,42 @@ export async function GET(req: NextRequest) {
     const syncThreshold = 10 * 1000; // 10秒后开始同步，更激进
 
     // 同步背景去除任务 - 包括所有非最终状态和成功但缺少结果的任务
-    const backgroundTasks = await prisma.backgroundRemovalTask.findMany({
-      where: {
-        OR: [
-          // 非最终状态的任务
-          {
-            taskStatus: { in: ["pending", "starting", "processing"] },
-            OR: [
-              { executeStartTime: { lt: BigInt(nowMs - syncThreshold) } },
-              { executeStartTime: null },
-            ],
-          },
-          // 成功但缺少结果的任务
-          {
-            taskStatus: "succeeded",
-            outputImageUrl: null,
-          },
-        ],
-      },
-      take: 5,
-      orderBy: { createdAt: "asc" },
-    });
+    const backgroundTasks =
+      Date.now() < hardDeadline
+        ? await prisma.backgroundRemovalTask.findMany({
+            where: {
+              OR: [
+                // 非最终状态的任务
+                {
+                  taskStatus: { in: ["pending", "starting", "processing"] },
+                  OR: [
+                    { executeStartTime: { lt: BigInt(nowMs - syncThreshold) } },
+                    { executeStartTime: null },
+                  ],
+                },
+                // 成功但缺少结果的任务
+                {
+                  taskStatus: "succeeded",
+                  outputImageUrl: null,
+                },
+              ],
+            },
+            take: 5,
+            orderBy: { createdAt: "asc" },
+          })
+        : [];
 
     for (const task of backgroundTasks) {
+      if (Date.now() >= hardDeadline) break;
       try {
         if (!task.replicateId) continue;
 
         console.log(`🔄 同步背景去除任务: ${task.replicateId}`);
 
         // 查询 Replicate 状态
-        const statusResp = await runninghubAPI.getTaskStatus(task.replicateId);
+        const statusResp = await runninghubAPI.getTaskStatus(task.replicateId, {
+          deadlineAt: hardDeadline,
+        });
         let status: string | undefined;
 
         if (typeof (statusResp as any)?.data === "string") {
@@ -113,7 +165,9 @@ export async function GET(req: NextRequest) {
 
         if (status === "SUCCESS" || status === "succeeded") {
           // 获取结果
-          const result = await runninghubAPI.getTaskResult(task.replicateId);
+          const result = await runninghubAPI.getTaskResult(task.replicateId, {
+            deadlineAt: hardDeadline,
+          });
 
           if (result.code === 804 && result.msg === "APIKEY_TASK_IS_RUNNING") {
             console.log(`ℹ️ 背景去除任务仍在运行: ${task.replicateId}`);
@@ -203,29 +257,33 @@ export async function GET(req: NextRequest) {
     }
 
     // 同步去水印任务 - 包括所有非最终状态和成功但缺少结果的任务
-    const watermarkTasks = await prisma.watermarkRemovalTask.findMany({
-      where: {
-        OR: [
-          // 非最终状态的任务
-          {
-            taskStatus: { in: ["pending", "starting", "processing"] },
-            OR: [
-              { executeStartTime: { lt: BigInt(nowMs - syncThreshold) } },
-              { executeStartTime: null },
-            ],
-          },
-          // 成功但缺少结果的任务
-          {
-            taskStatus: "succeeded",
-            outputZipUrl: null,
-          },
-        ],
-      },
-      take: 5,
-      orderBy: { createdAt: "asc" },
-    });
+    const watermarkTasks =
+      Date.now() < hardDeadline
+        ? await prisma.watermarkRemovalTask.findMany({
+            where: {
+              OR: [
+                // 非最终状态的任务
+                {
+                  taskStatus: { in: ["pending", "starting", "processing"] },
+                  OR: [
+                    { executeStartTime: { lt: BigInt(nowMs - syncThreshold) } },
+                    { executeStartTime: null },
+                  ],
+                },
+                // 成功但缺少结果的任务
+                {
+                  taskStatus: "succeeded",
+                  outputZipUrl: null,
+                },
+              ],
+            },
+            take: 5,
+            orderBy: { createdAt: "asc" },
+          })
+        : [];
 
     for (const task of watermarkTasks) {
+      if (Date.now() >= hardDeadline) break;
       try {
         if (!task.runninghubTaskId) continue;
 
@@ -234,6 +292,7 @@ export async function GET(req: NextRequest) {
         // 查询 RunningHub 状态
         const statusResp = await runninghubAPI.getTaskStatus(
           task.runninghubTaskId,
+          { deadlineAt: hardDeadline },
         );
         let status: string | undefined;
 
@@ -255,6 +314,7 @@ export async function GET(req: NextRequest) {
           // 获取结果
           const result = await runninghubAPI.getTaskResult(
             task.runninghubTaskId,
+            { deadlineAt: hardDeadline },
           );
 
           if (result.code === 804 && result.msg === "APIKEY_TASK_IS_RUNNING") {
@@ -348,7 +408,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       processed,
       synced,
-      message: `Processed ${processed} queue tasks, synced ${synced} RunningHub tasks`,
+      recovered,
+      message: `Processed ${processed} queue tasks, recovered ${recovered} stale queue leases, synced ${synced} RunningHub tasks`,
     });
   } catch (error) {
     clearTimeout(timeoutId);

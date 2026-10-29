@@ -1,37 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
-import { generateR2PresignedDownloadUrl } from "@/lib/r2-upload";
+export const dynamic = "force-dynamic";
 
-export const dynamic = 'force-dynamic';
-
-export async function POST(req: NextRequest) {
-  try {
-    const { key } = await req.json();
-    
-    if (!key) {
-      return NextResponse.json({ 
-        error: "Missing key parameter" 
-      }, { status: 400 });
-    }
-
-    console.log("🔗 生成 R2 预签名下载 URL:", key);
-    
-    const downloadUrl = await generateR2PresignedDownloadUrl(key);
-    
-    return NextResponse.json({
-      success: true,
-      downloadUrl,
-      message: "Presigned download URL generated successfully"
-    });
-
-  } catch (error) {
-    console.error("❌ 生成预签名下载 URL 失败:", error);
-    
-    return NextResponse.json(
-      { 
-        error: "Failed to generate presigned download URL",
-        details: error instanceof Error ? error.message : "Unknown error"
+function retiredResponse() {
+  return new Response(
+    JSON.stringify({
+      error: "Endpoint retired",
+      code: "ENDPOINT_RETIRED",
+    }),
+    {
+      status: 410,
+      headers: {
+        "Cache-Control": "no-store",
+        "Content-Type": "application/json; charset=utf-8",
       },
-      { status: 500 }
-    );
-  }
+    },
+  );
+}
+
+/** This legacy signer accepted caller-controlled R2 keys and has been retired. */
+export async function POST(_request: Request) {
+  return retiredResponse();
 }

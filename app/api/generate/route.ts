@@ -17,6 +17,7 @@ import {
   reserveImageTask,
 } from "@/lib/image-task-reservation";
 import { kv, KVRateLimit } from "@/lib/kv";
+import { getR2ObjectKey } from "@/lib/r2-object-key";
 import { createR2S3Service } from "@/lib/r2-s3";
 import {
   anonymousPrincipalCookie,
@@ -248,12 +249,25 @@ export async function POST(req: NextRequest) {
     const workflowId = "1977998138864795650";
     const uploadNodeId = "233"; // image node
 
+    // R2 input objects are private in staging and production. Keep the stable
+    // object URL in the task record, but give RunningHub a short-lived signed
+    // GET URL so its worker can fetch the bytes without bucket credentials.
+    const providerImageUrl = (() => {
+      const key = getR2ObjectKey(imageUrl, env.R2_URL_BASE);
+      if (!key) return Promise.resolve(imageUrl);
+      return createR2S3Service().getSignedUrl(key, env.R2_BUCKET, 60 * 60);
+    })();
+
     let runninghubTaskId: string;
     try {
       runninghubTaskId = await rh.createTaskGeneric({
         workflowId,
         nodeInfoList: [
-          { nodeId: uploadNodeId, fieldName: "image", fieldValue: imageUrl },
+          {
+            nodeId: uploadNodeId,
+            fieldName: "image",
+            fieldValue: await providerImageUrl,
+          },
         ],
         taskRecordId: taskRecord.id,
       });
