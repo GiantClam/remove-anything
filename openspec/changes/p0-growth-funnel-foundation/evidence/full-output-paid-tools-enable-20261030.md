@@ -12,4 +12,4 @@ t39u「全部需要验证，允许所有的预算」— approvedBy=liulanggoukk@
 Focused growth tests for registry / entitlements / download-object / batch-paid-gate / low-resolution-output: **PASS**.
 
 ## Production canary
-Filled after deploy (authenticated `output=full` vs preview edge headers).
+**PASS** — see `production-full-output-canary-20261030.md` (`dpl_9xyTgTo…`, task `2115852669305446401`, full 1600×1200 vs preview 1024×768).
