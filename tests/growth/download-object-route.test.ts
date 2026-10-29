@@ -96,12 +96,39 @@ test("object download rejects another account before signing or fetching", async
   assert.deepEqual(fetchCalls, []);
 });
 
-test("object full output stays disabled before signing or fetching", async () => {
-  const response = await GET(request("taskId=task-17&output=full"));
-  assert.equal(response.status, 402);
-  assert.equal((await response.json()).code, "FULL_OUTPUT_NOT_ENABLED");
+test("object full output requires authentication before signing or fetching", async () => {
+  const token = createAnonymousPrincipal();
+  state.user = null;
+  state.task = {
+    ...state.task!,
+    userId: null,
+    principalId: verifyAnonymousPrincipal(token),
+  };
+  const cookie = `${ANONYMOUS_PRINCIPAL_COOKIE}=${token}`;
+  const response = await GET(request("taskId=task-17&output=full", cookie));
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).code, "FULL_OUTPUT_REQUIRES_AUTHENTICATION");
   assert.deepEqual(state.signedRequests, []);
   assert.deepEqual(fetchCalls, []);
+});
+
+test("object full output delivers uncapped owner bytes after entitlement", async () => {
+  const response = await GET(request("taskId=task-17&output=full"));
+  assert.equal(response.status, 200);
+  assert.deepEqual(state.signedRequests, [
+    {
+      key: "object/results folder/output.webp",
+      bucket: "unit-test-bucket",
+      expiresIn: 60,
+    },
+  ]);
+  const downloaded = new Uint8Array(await response.arrayBuffer());
+  const metadata = await sharp(downloaded).metadata();
+  // Stub source is already within limits; full tier must not force 1024 cap header.
+  assert.equal(response.headers.get("x-output-max-edge-px"), null);
+  assert.equal(response.headers.get("x-output-tier"), "full");
+  assert.ok(metadata.width);
+  assert.ok(metadata.height);
 });
 
 test("object download accepts the owner, signs only its R2 key, and caps the image edge", async () => {

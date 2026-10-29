@@ -33,9 +33,8 @@ function imageFormat(contentType: string): SupportedImageContentType {
 }
 
 /**
- * Produce the only image output tier currently enabled by the tool registry.
- * This runs at the protected result boundary, so raw provider dimensions are
- * never sent to a browser through either preview or attachment downloads.
+ * Produce the bounded preview image tier. Free and anonymous downloads must
+ * go through this path so raw provider dimensions never reach the browser.
  */
 export async function createLowResolutionImage(
   input: Uint8Array,
@@ -183,4 +182,118 @@ export async function createLowResolutionImageZip(
   if (!preview)
     throw new UnsupportedOutputFormatError("ZIP contains no image files");
   return { bytes, preview };
+}
+
+/**
+ * Deliver the stored result bytes without downscaling. Callers must already
+ * have passed `assertOutputEntitlement` for tier "full". Still enforces the
+ * registry maxOutputBytes and supported image MIME types.
+ */
+export async function createFullResolutionImage(
+  input: Uint8Array,
+  contentType: string,
+  maxOutputBytes: number,
+) {
+  const format = imageFormat(contentType);
+  if (input.byteLength > maxOutputBytes) {
+    throw new ResultSizeLimitError(maxOutputBytes);
+  }
+  const metadata = await sharp(Buffer.from(input), {
+    limitInputPixels: MAX_OUTPUT_PIXELS,
+    failOn: "error",
+  }).metadata();
+  if (!metadata.width || !metadata.height) {
+    throw new UnsupportedOutputFormatError(
+      "Result image dimensions are missing",
+    );
+  }
+  return {
+    bytes: input,
+    contentType: format,
+    width: metadata.width,
+    height: metadata.height,
+  };
+}
+
+/**
+ * Deliver a ZIP without downscaling members. Validates ZIP structure and that
+ * members are supported images, then returns the original archive bytes.
+ */
+export async function createFullResolutionImageZip(
+  input: Uint8Array,
+  maxOutputBytes: number,
+) {
+  if (input.byteLength > maxOutputBytes) {
+    throw new ResultSizeLimitError(maxOutputBytes);
+  }
+  const JSZip = (await import("jszip")).default;
+  let source: InstanceType<typeof JSZip>;
+  try {
+    source = await JSZip.loadAsync(input, { checkCRC32: false });
+  } catch {
+    throw new UnsupportedOutputFormatError("Result is not a valid ZIP archive");
+  }
+
+  const entries = Object.values(source.files).filter((entry) => !entry.dir);
+  if (entries.length === 0) {
+    throw new UnsupportedOutputFormatError("ZIP contains no image files");
+  }
+
+  let expandedBytes = 0;
+  let preview:
+    | { bytes: Uint8Array; contentType: SupportedImageContentType }
+    | undefined;
+  for (const entry of entries) {
+    const size = zipEntryExpandedSize(entry);
+    expandedBytes += size;
+    if (expandedBytes > MAX_ZIP_EXPANDED_BYTES) {
+      throw new UnsupportedOutputFormatError(
+        "ZIP expands beyond the supported size",
+      );
+    }
+    const contentType = zipEntryType(entry.name);
+    if (!preview) {
+      const member = await entry.async("uint8array");
+      if (member.byteLength !== size) {
+        throw new UnsupportedOutputFormatError(
+          "ZIP member size does not match its directory",
+        );
+      }
+      preview = { bytes: member, contentType };
+    }
+  }
+  if (!preview)
+    throw new UnsupportedOutputFormatError("ZIP contains no image files");
+  return { bytes: input, preview };
+}
+
+export async function materializeImageOutput(args: {
+  tier: "preview" | "full";
+  input: Uint8Array;
+  contentType: string;
+  maxOutputBytes: number;
+}) {
+  if (args.tier === "full") {
+    return createFullResolutionImage(
+      args.input,
+      args.contentType,
+      args.maxOutputBytes,
+    );
+  }
+  return createLowResolutionImage(
+    args.input,
+    args.contentType,
+    args.maxOutputBytes,
+  );
+}
+
+export async function materializeImageZipOutput(args: {
+  tier: "preview" | "full";
+  input: Uint8Array;
+  maxOutputBytes: number;
+}) {
+  if (args.tier === "full") {
+    return createFullResolutionImageZip(args.input, args.maxOutputBytes);
+  }
+  return createLowResolutionImageZip(args.input, args.maxOutputBytes);
 }

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   assertOutputEntitlement,
   getRequestedOutputTier,
+  isFullOutputImplementationEnabled,
   OutputEntitlementError,
 } from "../../lib/output-entitlements";
 
@@ -36,11 +37,23 @@ test("anonymous full output is rejected before storage access", () => {
   );
 });
 
-test("full output stays blocked until a recorded cost approval enables it", () => {
+test("approved authenticated tools unlock full output when implementation is enabled", () => {
+  assert.equal(isFullOutputImplementationEnabled(), true);
+  const result = assertOutputEntitlement({
+    toolSlug: "remove-background",
+    requestedTier: "full",
+    userId: "user-1",
+  });
+  assert.equal(result.tier, "full");
+  assert.equal(result.tool.slug, "remove-background");
+});
+
+test("tools without cost approval stay blocked for full output", () => {
+  // Free converters keep creditCost 0 / paidEnabled false.
   assert.throws(
     () =>
       assertOutputEntitlement({
-        toolSlug: "remove-background",
+        toolSlug: "png-to-jpg",
         requestedTier: "full",
         userId: "user-1",
       }),

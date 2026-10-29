@@ -20,8 +20,8 @@ import {
   ResultSizeLimitError,
 } from "@/lib/limited-response";
 import {
-  createLowResolutionImage,
   LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX,
+  materializeImageOutput,
   UnsupportedOutputFormatError,
 } from "@/lib/low-resolution-output";
 import { getR2ObjectKey } from "@/lib/r2-object-key";
@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
       throw error;
     }
 
-    assertOutputEntitlement({
+    const entitlement = assertOutputEntitlement({
       toolSlug: "remove-background",
       requestedTier: outputTier,
       userId,
@@ -171,11 +171,12 @@ export async function GET(req: NextRequest) {
       imageResponse,
       maxOutputBytes,
     );
-    const image = await createLowResolutionImage(
-      sourceImage,
+    const image = await materializeImageOutput({
+      tier: entitlement.tier,
+      input: sourceImage,
       contentType,
       maxOutputBytes,
-    );
+    });
 
     // 增加下载计数
     if (!preview) {
@@ -208,7 +209,11 @@ export async function GET(req: NextRequest) {
         "Content-Disposition": `${preview ? "inline" : "attachment"}; filename="background-removed-${taskId.replace(/[^a-zA-Z0-9_-]/g, "_")}.png"`,
         "Cache-Control": "private, no-store, max-age=0",
         "X-Content-Type-Options": "nosniff",
-        "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
+        ...(entitlement.tier === "preview"
+          ? {
+              "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
+            }
+          : { "X-Output-Tier": "full" }),
         Vary: "Cookie, Authorization",
       },
     });
