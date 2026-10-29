@@ -36,8 +36,18 @@ test("registry entries have unique identity and complete release metadata", () =
 });
 
 test("a positive baseline cannot enable paid output without a recorded cost decision", () => {
-  const baseline = getToolRegistryEntry("remove-background")!;
-  assert.equal(baseline.creditCost, 2);
+  const removeBackground = getToolRegistryEntry("remove-background")!;
+  assert.equal(removeBackground.creditCost, 2);
+  assert.equal(hasApprovedCreditCost(removeBackground), true);
+  assert.equal(isPaidToolEnabled(removeBackground), true);
+  assert.equal(assertPaidToolEnabled(removeBackground).slug, "remove-background");
+
+  // Strip the recorded approval to prove paidEnabled alone is insufficient.
+  const { costApproval: _ignored, ...withoutApproval } = removeBackground;
+  const baseline: ToolRegistryEntry = {
+    ...withoutApproval,
+    paidEnabled: false,
+  };
   assert.equal(hasApprovedCreditCost(baseline), false);
   assert.equal(isPaidToolEnabled({ ...baseline, paidEnabled: true }), false);
   assert.throws(() => assertPaidToolEnabled(baseline), /approved credit cost/);
