@@ -57,4 +57,4 @@ Tonight’s free canaries (same window as `production-bg-object-postpersist-cana
 
 ## Stripe note (same turn)
 
-Production still has **no** `STRIPE_WEBHOOK_SECRET` env (Preview/Development only). Live Stripe CLI: `your live mode API key needs to be re-configured. Run stripe login`. No secret invented or written. See `evidence/stripe-production-webhook-blocker-20261029.md`.
+Production `STRIPE_WEBHOOK_SECRET` was later configured on 2026-10-29 (Asia/Shanghai); see `evidence/stripe-production-webhook-20261029.md` (supersedes `evidence/stripe-production-webhook-blocker-20261029.md`). Preview/Development remain on test-mode secrets. No secret values recorded here.

@@ -39,3 +39,4 @@ docs/
 .secrets-staging/
 
 .agent-secrets/
+.agent-private/
