@@ -50,8 +50,9 @@ OpenSpec multi-tool cost item remains open for **other** tools; remove-backgroun
 ## Separately still blocked (not part of this enable)
 
 1. Full-resolution delivery: `FULL_OUTPUT_IMPLEMENTATION_ENABLED` remains `false` in `lib/output-entitlements.ts`. Cost approval / `paidEnabled` alone does **not** deliver full output; leave that flag false until a separate full-output implementation review.
-2. Stripe (independent blocker; **not** authorized to change keys):
-   - Preview still audited with live-mode `sk_live_` prefix and missing `STRIPE_WEBHOOK_SECRET` (`evidence/external-gate-audit-20261026.md`). Staging purchase reconciliation needs `sk_test_` + test webhook secret before paid checkout canaries. No secrets recorded or changed in this work.
+2. Stripe (later same day, after owner authorization t32u–t38u):
+   - Preview cut over to `sk_test_` + `whsec_` (`evidence/stripe-preview-test-keys-20261029.md`); sandbox Price IDs set (`evidence/stripe-sandbox-plan-ids-20261029.md`); Preview credit-purchase canary PASS (`evidence/stripe-preview-credit-purchase-canary-20261029.md`).
+   - Production live webhook secret configured (`evidence/stripe-production-webhook-20261029.md`). **No** Production live Checkout canary yet.
 3. Keep `TASK_RETENTION_EXECUTE=false` (unchanged).
 4. Other tools remain `paidEnabled: false` with no `costApproval`.
 
