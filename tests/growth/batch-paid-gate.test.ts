@@ -2,8 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { NextRequest } from "next/server.js";
 import { batchRouteState } from "../support/batch-route-stubs";
+import { isPaidToolEnabled } from "../../lib/tool-registry";
 
-test("batch route returns a stable paid gate before provider, credit, storage, or network work", async () => {
+test("batch-remove-background paid gate is open after cost approval", () => {
+  assert.equal(isPaidToolEnabled("batch-remove-background"), true);
+});
+
+test("batch route proceeds past the paid gate and rate-limits before provider work", async () => {
   const originalFetch = globalThis.fetch;
   let fetchCalls = 0;
   globalThis.fetch = async () => {
@@ -18,16 +23,12 @@ test("batch route returns a stable paid gate before provider, credit, storage, o
       body: JSON.stringify({ imageUrls: ["https://images.example.test/input.png"] }),
     }));
 
-    assert.equal(response.status, 402);
-    assert.equal((await response.json()).code, "PAID_OUTPUT_UNAVAILABLE");
-    assert.equal(fetchCalls, 0);
-    assert.deepEqual(batchRouteState, {
-      providerCalls: 0,
-      creditReads: 0,
-      taskCreates: 0,
-      transactionCalls: 0,
-      rateLimitCalls: 0,
-    });
+    // Authenticated stub user + paidEnabled: true → past 402 gate.
+    // Invalid/unreachable URL HEAD or later work may fail; must not be PAID_OUTPUT_UNAVAILABLE.
+    assert.notEqual(response.status, 402);
+    const body = await response.json().catch(() => ({}));
+    assert.notEqual(body.code, "PAID_OUTPUT_UNAVAILABLE");
+    assert.ok(batchRouteState.rateLimitCalls >= 1);
   } finally {
     globalThis.fetch = originalFetch;
   }

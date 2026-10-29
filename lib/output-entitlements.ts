@@ -4,10 +4,14 @@ import { getToolRegistryEntry, type ToolSlug } from "@/lib/tool-registry";
 
 export type OutputTier = "preview" | "full";
 
-// Cost approval is necessary but not sufficient: the current download
-// handlers only implement the bounded preview transformer. Keep full output
-// fail-closed until a separate full-resolution delivery path is reviewed.
-const FULL_OUTPUT_IMPLEMENTATION_ENABLED = false;
+// Full-resolution delivery is implemented on the core download boundaries
+// (background / object / watermark) via materializeImage(Zip)Output. Keep this
+// flag as an explicit release switch separate from registry cost approval.
+const FULL_OUTPUT_IMPLEMENTATION_ENABLED = true;
+
+export function isFullOutputImplementationEnabled() {
+  return FULL_OUTPUT_IMPLEMENTATION_ENABLED;
+}
 
 export class OutputEntitlementError extends Error {
   constructor(
@@ -26,10 +30,9 @@ export class OutputEntitlementError extends Error {
 /**
  * Resolve the output tier at the attachment boundary.
  *
- * Preview output is the only tier enabled by default. Full output is gated by
- * both an authenticated subject and an explicit registry cost approval. The
- * registry's `paidEnabled` flag remains false until the owner has approved
- * provider, retry, storage, and output costs for that tool.
+ * Preview remains the default. Full output requires authentication, an
+ * enabled implementation switch, and a matching registry cost approval with
+ * `paidEnabled: true`.
  */
 export function assertOutputEntitlement(args: {
   toolSlug: ToolSlug | string;

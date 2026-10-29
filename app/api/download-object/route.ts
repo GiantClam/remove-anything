@@ -14,7 +14,7 @@ import {
   ResultSizeLimitError,
 } from "@/lib/limited-response";
 import {
-  createLowResolutionImage,
+  materializeImageOutput,
   LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX,
   UnsupportedOutputFormatError,
 } from "@/lib/low-resolution-output";
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
       throw error;
     }
 
-    assertOutputEntitlement({
+    const entitlement = assertOutputEntitlement({
       toolSlug: "remove-objects",
       requestedTier: outputTier,
       userId,
@@ -134,11 +134,12 @@ export async function GET(req: NextRequest) {
       1024 *
       1024;
     const sourceImage = await readLimitedResponse(response, maxOutputBytes);
-    const image = await createLowResolutionImage(
-      sourceImage,
+    const image = await materializeImageOutput({
+      tier: entitlement.tier,
+      input: sourceImage,
       contentType,
       maxOutputBytes,
-    );
+    });
     if (!preview) {
       try {
         await emitServerAnalyticsEvent(
@@ -158,7 +159,11 @@ export async function GET(req: NextRequest) {
         "Content-Disposition": `${preview ? "inline" : "attachment"}; filename="${filename}"`,
         "Cache-Control": "private, no-store, max-age=0",
         "X-Content-Type-Options": "nosniff",
-        "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
+        ...(entitlement.tier === "preview"
+          ? {
+              "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
+            }
+          : { "X-Output-Tier": "full" }),
         Vary: "Cookie, Authorization",
       },
     });

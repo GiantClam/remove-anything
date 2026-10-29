@@ -18,9 +18,9 @@ import {
   ResultSizeLimitError,
 } from "@/lib/limited-response";
 import {
-  createLowResolutionImage,
-  createLowResolutionImageZip,
   LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX,
+  materializeImageOutput,
+  materializeImageZipOutput,
   UnsupportedOutputFormatError,
 } from "@/lib/low-resolution-output";
 import { getR2ObjectKey } from "@/lib/r2-object-key";
@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
         return new Response("Not found", { status: 404 });
       }
 
-      assertOutputEntitlement({
+      const entitlement = assertOutputEntitlement({
         toolSlug: "remove-watermark",
         requestedTier: outputTier,
         userId,
@@ -237,38 +237,46 @@ export async function GET(req: NextRequest) {
             { error: "Result is not a valid ZIP archive" },
             { status: 502 },
           );
-        const lowResolution = await createLowResolutionImageZip(
-          uint8,
+        const packaged = await materializeImageZipOutput({
+          tier: entitlement.tier,
+          input: uint8,
           maxOutputBytes,
-        );
+        });
         if (!preview)
           await emitResultDownloaded(
             watermarkTask.id,
             "remove-watermark",
             Boolean(userId),
           );
-        return new Response(lowResolution.bytes, {
+        return new Response(packaged.bytes, {
           headers: {
             "Content-Type": "application/zip",
             "Content-Disposition": `attachment; filename="watermark-removed-${taskId.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip"`,
             "Cache-Control": "private, no-store, max-age=0",
             "X-Content-Type-Options": "nosniff",
-            "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
+            ...(entitlement.tier === "preview"
+              ? {
+                  "X-Output-Max-Edge-Px": String(
+                    LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX,
+                  ),
+                }
+              : { "X-Output-Tier": "full" }),
             Vary: "Cookie, Authorization",
           },
         });
       }
 
-      // Otherwise, resize the image before wrapping it into the promised ZIP.
-      const lowResolution = await createLowResolutionImage(
-        uint8,
+      // Otherwise, materialize the image (preview downscale or full) then ZIP.
+      const rendered = await materializeImageOutput({
+        tier: entitlement.tier,
+        input: uint8,
         contentType,
         maxOutputBytes,
-      );
+      });
       const JSZip = (await import("jszip")).default;
       const zip = new JSZip();
-      const ext = lowResolution.contentType.split("/")[1];
-      zip.file(`image_1.${ext}`, lowResolution.bytes);
+      const ext = rendered.contentType.split("/")[1];
+      zip.file(`image_1.${ext}`, rendered.bytes);
       const zipped = await zip.generateAsync({ type: "arraybuffer" });
       if (zipped.byteLength > maxOutputBytes)
         throw new ResultSizeLimitError(maxOutputBytes);
@@ -286,7 +294,11 @@ export async function GET(req: NextRequest) {
           "Content-Disposition": `attachment; filename="watermark-removed-${taskId.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip"`,
           "Cache-Control": "private, no-store, max-age=0",
           "X-Content-Type-Options": "nosniff",
-          "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
+          ...(entitlement.tier === "preview"
+            ? {
+                "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
+              }
+            : { "X-Output-Tier": "full" }),
           Vary: "Cookie, Authorization",
         },
       });
@@ -316,7 +328,7 @@ export async function GET(req: NextRequest) {
         throw error;
       }
 
-      assertOutputEntitlement({
+      const entitlement = assertOutputEntitlement({
         toolSlug: "sora2-video-watermark-removal",
         requestedTier: outputTier,
         userId,
@@ -394,6 +406,7 @@ export async function GET(req: NextRequest) {
           "Content-Disposition": `${preview ? "inline" : "attachment"}; filename="sora2-video-watermark-removed-${safeTaskId}.${extension}"`,
           "Cache-Control": "private, no-store, max-age=0",
           "X-Content-Type-Options": "nosniff",
+          ...(entitlement.tier === "full" ? { "X-Output-Tier": "full" } : {}),
           Vary: "Cookie, Authorization",
         },
       });
@@ -433,7 +446,7 @@ export async function GET(req: NextRequest) {
       throw error;
     }
 
-    assertOutputEntitlement({
+    const entitlement = assertOutputEntitlement({
       toolSlug: "remove-background",
       requestedTier: outputTier,
       userId,
@@ -489,11 +502,12 @@ export async function GET(req: NextRequest) {
       imageResponse,
       maxOutputBytes,
     );
-    const image = await createLowResolutionImage(
-      sourceImage,
+    const image = await materializeImageOutput({
+      tier: entitlement.tier,
+      input: sourceImage,
       contentType,
       maxOutputBytes,
-    );
+    });
 
     // Guess extension from content-type or URL
     const ext =
@@ -516,7 +530,11 @@ export async function GET(req: NextRequest) {
         "Content-Disposition": `${preview ? "inline" : "attachment"}; filename="image-${safeTaskId}.${ext}"`,
         "Cache-Control": "private, no-store, max-age=0",
         "X-Content-Type-Options": "nosniff",
-        "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
+        ...(entitlement.tier === "preview"
+          ? {
+              "X-Output-Max-Edge-Px": String(LOW_RESOLUTION_OUTPUT_MAX_EDGE_PX),
+            }
+          : { "X-Output-Tier": "full" }),
         Vary: "Cookie, Authorization",
       },
     });
