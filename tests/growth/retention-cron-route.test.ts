@@ -18,6 +18,7 @@ const envKeys = [
   "R2_URL_BASE",
   "TASK_RETENTION_EXECUTE",
   "TASK_RETENTION_BATCH_SIZE",
+  "TASK_RETENTION_CRON_ENABLED",
 ] as const;
 const originalEnv = Object.fromEntries(
   envKeys.map((key) => [key, process.env[key]]),
@@ -29,6 +30,7 @@ beforeEach(() => {
   process.env.R2_URL_BASE = "https://retention.example.test";
   delete process.env.TASK_RETENTION_EXECUTE;
   delete process.env.TASK_RETENTION_BATCH_SIZE;
+  delete process.env.TASK_RETENTION_CRON_ENABLED;
 });
 after(() => {
   for (const key of envKeys) {
@@ -80,7 +82,19 @@ test("cleanup cron rejects absent or incorrect authentication before data access
   }
 });
 
-test("authenticated cleanup defaults to a real runner dry-run without storage or row mutation", async () => {
+test("authenticated cleanup skips dry-run by default to protect session pool", async () => {
+  const { GET } = await routePromise;
+  const response = await GET(request());
+  const report = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(report.skipped, true);
+  assert.equal(report.code, "RETENTION_CRON_DISABLED");
+  assert.equal(report.executionEnabled, false);
+  assertNoBoundariesCalled();
+});
+
+test("authenticated cleanup dry-run runs only when TASK_RETENTION_CRON_ENABLED=true", async () => {
+  process.env.TASK_RETENTION_CRON_ENABLED = "true";
   const { GET } = await routePromise;
   const response = await GET(request());
   const report = await response.json();
@@ -98,6 +112,7 @@ test("authenticated cleanup defaults to a real runner dry-run without storage or
 });
 
 test("query parameters cannot enable cleanup execution or override batch size", async () => {
+  process.env.TASK_RETENTION_CRON_ENABLED = "true";
   const { GET } = await routePromise;
   const response = await GET(
     request(
@@ -114,6 +129,7 @@ test("query parameters cannot enable cleanup execution or override batch size", 
 
 test("execution opt-in fails closed until cleanup claims and reference writes are coordinated", async () => {
   const { GET } = await routePromise;
+  process.env.TASK_RETENTION_CRON_ENABLED = "true";
   process.env.TASK_RETENTION_EXECUTE = "true";
   process.env.TASK_RETENTION_BATCH_SIZE = "9999";
   const response = await GET(request());
@@ -125,6 +141,7 @@ test("execution opt-in fails closed until cleanup claims and reference writes ar
 });
 
 test("batch sizes clamp to one and malformed values use the default", async () => {
+  process.env.TASK_RETENTION_CRON_ENABLED = "true";
   const { GET } = await routePromise;
   process.env.TASK_RETENTION_BATCH_SIZE = "-9";
   assert.equal((await (await GET(request())).json()).batchSize, 1);
@@ -135,6 +152,7 @@ test("batch sizes clamp to one and malformed values use the default", async () =
 });
 
 test("missing R2 URL configuration returns unavailable before the runner is called", async () => {
+  process.env.TASK_RETENTION_CRON_ENABLED = "true";
   const { GET } = await routePromise;
   delete process.env.R2_URL_BASE;
   const response = await GET(request());
