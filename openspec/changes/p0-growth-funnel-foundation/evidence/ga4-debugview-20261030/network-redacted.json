@@ -1,0 +1,23 @@
+{
+  "observed_at_asia_shanghai": "2026-10-30 ~01:33\u201301:35 CST",
+  "measurement_id": "G-VD6F0YDBQ5",
+  "property": "559043519",
+  "url_param": "debug_mode=1",
+  "dataLayer_config_debug_mode": true,
+  "collect_hits_with__dbg_1": 0,
+  "collect_hits_with_ep_debug_mode": 3,
+  "client_event_names_observed": {
+    "page_view": 5,
+    "tool_view": 2,
+    "upload_started": 1,
+    "upload_completed": 1,
+    "paywall_viewed": 1
+  },
+  "pages_visited": [
+    "https://www.remove-anything.com/remove-background?debug_mode=1",
+    "https://www.remove-anything.com/pricing?debug_mode=1",
+    "https://www.remove-anything.com/remove-watermark?debug_mode=1"
+  ],
+  "admin_debugview_ui_screenshot": false,
+  "blocker": "gtag emits ep.debug_mode=true on collect hits but not _dbg=1; Admin DebugView UI not captured (no interactive GA4 console session in this executor). Signup/paywall/checkout UI chain not driven end-to-end in browser (synthetic gtag events only for tool_view + funnel names)."
+}
