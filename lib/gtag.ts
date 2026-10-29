@@ -14,6 +14,25 @@ declare global {
   }
 }
 
+type SearchParamsLike = {
+  get(name: string): string | null;
+} | null | undefined;
+
+/** True when the URL asks for GA4 DebugView (`?debug_mode=1` or `true`). */
+export function isGaDebugMode(searchParams?: SearchParamsLike): boolean {
+  if (typeof window !== "undefined") {
+    const fromWindow = new URLSearchParams(window.location.search).get(
+      "debug_mode",
+    );
+    if (fromWindow === "1" || fromWindow === "true") {
+      return true;
+    }
+  }
+
+  const fromParams = searchParams?.get("debug_mode");
+  return fromParams === "1" || fromParams === "true";
+}
+
 export function pageview(url: string, title?: string) {
   if (typeof window === "undefined" || typeof window.gtag !== "function") {
     return;
