@@ -462,6 +462,17 @@ export async function resolve(specifier, context, nextResolve) {
     }
   }
   if (
+    parentPath === path.join(root, "lib/private-r2-image-input.ts") &&
+    new Set(["@/env.mjs", "@/lib/r2-s3"]).has(specifier)
+  ) {
+    return {
+      url: pathToFileURL(
+        path.join(root, "tests/support/private-r2-image-input-stubs.ts"),
+      ).href,
+      shortCircuit: true,
+    };
+  }
+  if (
     parentPath === path.join(root, "lib/remove-objects/input-image.ts") &&
     new Set(["@/env.mjs", "@/lib/r2-s3", "@/lib/runninghub-output"]).has(
       specifier,

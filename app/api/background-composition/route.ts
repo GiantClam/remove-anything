@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/db/prisma";
 import { getCurrentUser } from "@/lib/auth-utils";
@@ -17,7 +18,8 @@ import {
   uploadBackgroundCompositionResult,
 } from "@/lib/background-composition-result-storage";
 import { getErrorMessage } from "@/lib/handle-error";
-import { ImageInputError, readTrustedRemoteImage } from "@/lib/image-input";
+import { ImageInputError } from "@/lib/image-input";
+import { readTrustedImageAllowingPrivateR2 } from "@/lib/private-r2-image-input";
 import { getToolRegistryEntry } from "@/lib/tool-registry";
 
 export const dynamic = "force-dynamic";
@@ -103,12 +105,87 @@ function parseCompositionId(rawValue: string | null) {
 
 const COMPOSITION_RESULT_RETENTION_MS = 24 * 60 * 60 * 1000;
 
+function trustedAppOrigins(environment: Record<string, string | undefined>) {
+  const origins = new Set<string>();
+  for (const value of [
+    environment.NEXT_PUBLIC_APP_URL,
+    environment.NEXT_PUBLIC_SITE_URL,
+    environment.NEXTAUTH_URL,
+    environment.VERCEL_URL
+      ? environment.VERCEL_URL.startsWith("http")
+        ? environment.VERCEL_URL
+        : `https://${environment.VERCEL_URL}`
+      : undefined,
+  ]) {
+    if (!value) continue;
+    try {
+      const parsed = new URL(value);
+      if (
+        parsed.protocol === "https:" &&
+        !parsed.username &&
+        !parsed.password &&
+        !parsed.hash
+      ) {
+        origins.add(parsed.origin);
+      }
+    } catch {
+      // Invalid configuration never widens the trusted app origin set.
+    }
+  }
+  return origins;
+}
+
+/**
+ * Map owner-facing preview download URLs back to the durable private R2 URL
+ * stored on the owned task. Status APIs never expose the private object URL.
+ */
+function parseBackgroundPreviewTaskId(
+  sourceUrl: string,
+  environment: Record<string, string | undefined>,
+): string | null {
+  let pathname: string;
+  let search: string;
+  if (sourceUrl.startsWith("/")) {
+    if (sourceUrl.startsWith("//")) return null;
+    try {
+      const parsed = new URL(sourceUrl, "https://composition.invalid");
+      pathname = parsed.pathname;
+      search = parsed.search;
+    } catch {
+      return null;
+    }
+  } else {
+    try {
+      const parsed = new URL(sourceUrl);
+      if (
+        parsed.protocol !== "https:" ||
+        parsed.username ||
+        parsed.password ||
+        parsed.hash ||
+        !trustedAppOrigins(environment).has(parsed.origin)
+      ) {
+        return null;
+      }
+      pathname = parsed.pathname;
+      search = parsed.search;
+    } catch {
+      return null;
+    }
+  }
+  if (pathname !== "/api/download-background") return null;
+  const taskId = new URLSearchParams(search).get("taskId")?.trim();
+  return taskId || null;
+}
+
 async function assertOwnedCompositionSources(
   userId: string,
   foregroundImageUrl: string,
   backgroundType: string,
   backgroundData: unknown,
-) {
+): Promise<{
+  foregroundImageUrl: string;
+  backgroundData: Prisma.InputJsonValue;
+}> {
   const now = new Date();
   const cutoff = new Date(now.getTime() - COMPOSITION_RESULT_RETENTION_MS);
   const activeOwnedTask = {
@@ -117,6 +194,11 @@ async function assertOwnedCompositionSources(
     retentionCleanedAt: null,
     createdAt: { gte: cutoff },
     OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+  };
+  const sourceEnvironment = {
+    ...process.env,
+    NEXT_PUBLIC_APP_URL:
+      process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL,
   };
   const findOwnedSource = async (sourceUrl: string) => {
     const lookups = await Promise.all([
@@ -135,7 +217,31 @@ async function assertOwnedCompositionSources(
     ]);
     return lookups.some(Boolean);
   };
-  if (!(await findOwnedSource(foregroundImageUrl))) {
+  const resolveOwnedForegroundUrl = async (sourceUrl: string) => {
+    const previewTaskId = parseBackgroundPreviewTaskId(
+      sourceUrl,
+      sourceEnvironment,
+    );
+    if (previewTaskId) {
+      const ownedTask = await prisma.backgroundRemovalTask.findFirst({
+        where: { ...activeOwnedTask, replicateId: previewTaskId },
+        select: { outputImageUrl: true },
+      });
+      if (!ownedTask?.outputImageUrl) {
+        throw new CompositionInputError(
+          "COMPOSITION_SOURCE_UNAVAILABLE",
+          "Composition source is unavailable",
+          404,
+        );
+      }
+      return ownedTask.outputImageUrl;
+    }
+    return sourceUrl;
+  };
+
+  const resolvedForegroundUrl =
+    await resolveOwnedForegroundUrl(foregroundImageUrl);
+  if (!(await findOwnedSource(resolvedForegroundUrl))) {
     throw new CompositionInputError(
       "COMPOSITION_SOURCE_UNAVAILABLE",
       "Composition source is unavailable",
@@ -143,7 +249,7 @@ async function assertOwnedCompositionSources(
     );
   }
 
-  if (foregroundImageUrl.startsWith("/")) {
+  if (resolvedForegroundUrl.startsWith("/")) {
     throw new CompositionInputError(
       "COMPOSITION_SOURCE_UNAVAILABLE",
       "Composition source is unavailable",
@@ -163,15 +269,14 @@ async function assertOwnedCompositionSources(
     allowedMimeTypes: tool.inputFormats,
     maxPixels: tool.limits.maxPixels,
   };
-  const sourceEnvironment = {
-    ...process.env,
-    NEXT_PUBLIC_APP_URL:
-      process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL,
-  };
-  await readTrustedRemoteImage(foregroundImageUrl, imageOptions, {
-    environment: sourceEnvironment,
-  });
+  // Private R2 cutouts are owner-scoped; bare GET returns 400 Authorization.
+  await readTrustedImageAllowingPrivateR2(
+    resolvedForegroundUrl,
+    imageOptions,
+    { environment: sourceEnvironment },
+  );
 
+  let resolvedBackgroundData = backgroundData;
   if (backgroundType === "image") {
     const imageUrl =
       backgroundData && typeof backgroundData === "object"
@@ -184,11 +289,13 @@ async function assertOwnedCompositionSources(
         404,
       );
     }
+    const resolvedBackgroundUrl = await resolveOwnedForegroundUrl(imageUrl);
     const publicImage = await prisma.backgroundImage.findFirst({
-      where: { imageUrl, isPublic: true },
+      where: { imageUrl: resolvedBackgroundUrl, isPublic: true },
       select: { id: true },
     });
-    const ownedImage = await findOwnedSource(imageUrl);
+    // Catalog rows keep their public URL; owned cutouts resolve to private R2.
+    const ownedImage = await findOwnedSource(resolvedBackgroundUrl);
     if (!publicImage && !ownedImage) {
       throw new CompositionInputError(
         "COMPOSITION_SOURCE_UNAVAILABLE",
@@ -196,15 +303,27 @@ async function assertOwnedCompositionSources(
         404,
       );
     }
-    if (imageUrl.startsWith("/"))
+    if (resolvedBackgroundUrl.startsWith("/"))
       throw new CompositionInputError(
         "COMPOSITION_SOURCE_UNAVAILABLE",
         "Composition source is unavailable",
         404,
       );
-    await readTrustedRemoteImage(imageUrl, imageOptions, {
-      environment: sourceEnvironment,
-    });
+    await readTrustedImageAllowingPrivateR2(
+      resolvedBackgroundUrl,
+      imageOptions,
+      { environment: sourceEnvironment },
+    );
+    if (
+      backgroundData &&
+      typeof backgroundData === "object" &&
+      resolvedBackgroundUrl !== imageUrl
+    ) {
+      resolvedBackgroundData = {
+        ...(backgroundData as Record<string, unknown>),
+        imageUrl: resolvedBackgroundUrl,
+      };
+    }
   }
 
   if (backgroundType === "template") {
@@ -235,6 +354,11 @@ async function assertOwnedCompositionSources(
       );
     }
   }
+
+  return {
+    foregroundImageUrl: resolvedForegroundUrl,
+    backgroundData: resolvedBackgroundData as Prisma.InputJsonValue,
+  };
 }
 
 function compositionDeadline(composition: {
@@ -265,7 +389,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = validateCreateCompositionInput(await readCompositionJson(req));
-    await assertOwnedCompositionSources(
+    const ownedSources = await assertOwnedCompositionSources(
       userId,
       data.foregroundImageUrl,
       data.backgroundType,
@@ -276,9 +400,9 @@ export async function POST(req: NextRequest) {
     const composition = await prisma.backgroundComposition.create({
       data: {
         userId,
-        foregroundImageUrl: data.foregroundImageUrl,
+        foregroundImageUrl: ownedSources.foregroundImageUrl,
         backgroundType: data.backgroundType,
-        backgroundData: data.backgroundData,
+        backgroundData: ownedSources.backgroundData,
         compositionParams: data.compositionParams,
         status: "pending",
       },

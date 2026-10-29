@@ -10,9 +10,13 @@ import {
   compositionRouteState as state,
 } from "../support/background-composition-route-stubs";
 import { TINY_PNG_BYTES } from "../support/image-fixtures";
+import { privateR2ImageState } from "../support/private-r2-image-input-stubs";
 
 const previousAllowedOrigins = process.env.IMAGE_INPUT_ALLOWED_ORIGINS;
 const originalFetch = globalThis.fetch;
+
+const previousR2UrlBase = process.env.R2_URL_BASE;
+const previousR2Bucket = process.env.R2_BUCKET;
 
 beforeEach(() => {
   globalThis.fetch = async () =>
@@ -20,6 +24,11 @@ beforeEach(() => {
       headers: { "content-type": "image/png" },
     });
   process.env.IMAGE_INPUT_ALLOWED_ORIGINS = "https://files.example.test";
+  // Keep default R2 base off the allowlisted fixture host so ordinary tests
+  // continue to exercise the public trusted-origin path.
+  delete process.env.R2_URL_BASE;
+  delete process.env.R2_BUCKET;
+  privateR2ImageState.reset();
   resetCompositionRouteState();
 });
 
@@ -28,6 +37,10 @@ after(() => {
   if (previousAllowedOrigins === undefined)
     delete process.env.IMAGE_INPUT_ALLOWED_ORIGINS;
   else process.env.IMAGE_INPUT_ALLOWED_ORIGINS = previousAllowedOrigins;
+  if (previousR2UrlBase === undefined) delete process.env.R2_URL_BASE;
+  else process.env.R2_URL_BASE = previousR2UrlBase;
+  if (previousR2Bucket === undefined) delete process.env.R2_BUCKET;
+  else process.env.R2_BUCKET = previousR2Bucket;
 });
 
 const createBody = {
@@ -387,6 +400,89 @@ test("POST accepts configured HTTPS foreground and background references", async
   );
   assert.equal(response.status, 200);
   assert.equal(state.creates.length, 1);
+});
+
+test("POST reads owned private R2 cutouts through a short-lived signed URL", async () => {
+  process.env.R2_URL_BASE = "https://files.example.test";
+  process.env.R2_BUCKET = "remove-anything-test";
+  const fetchUrls: string[] = [];
+  globalThis.fetch = async (input) => {
+    fetchUrls.push(String(input));
+    return new Response(TINY_PNG_BYTES, {
+      headers: { "content-type": "image/png" },
+    });
+  };
+  const foregroundImageUrl =
+    "https://files.example.test/background-removal/processed/cutout.png";
+  const response = await POST(
+    request("POST", { ...createBody, foregroundImageUrl }),
+  );
+  assert.equal(response.status, 200);
+  assert.equal(state.creates[0].foregroundImageUrl, foregroundImageUrl);
+  assert.deepEqual(privateR2ImageState.signedCalls, [
+    {
+      key: "background-removal/processed/cutout.png",
+      bucket: "remove-anything-test",
+      expiresIn: 60,
+    },
+  ]);
+  assert.equal(fetchUrls.length, 1);
+  assert.equal(fetchUrls[0].includes("signature=test"), true);
+});
+
+test("POST resolves owner preview download URLs to the durable private R2 cutout", async () => {
+  process.env.R2_URL_BASE = "https://files.example.test";
+  process.env.R2_BUCKET = "remove-anything-test";
+  const fetchUrls: string[] = [];
+  globalThis.fetch = async (input) => {
+    fetchUrls.push(String(input));
+    return new Response(TINY_PNG_BYTES, {
+      headers: { "content-type": "image/png" },
+    });
+  };
+  const response = await POST(
+    request("POST", {
+      ...createBody,
+      foregroundImageUrl:
+        "/api/download-background?taskId=task-owned-1&preview=1",
+    }),
+  );
+  assert.equal(response.status, 200);
+  assert.equal(
+    state.creates[0].foregroundImageUrl,
+    "https://files.example.test/background-removal/processed/cutout.png",
+  );
+  assert.equal(
+    state.sourceLookups.some(
+      (lookup) =>
+        lookup.model === "backgroundRemovalTask" &&
+        lookup.where.replicateId === "task-owned-1",
+    ),
+    true,
+  );
+  assert.deepEqual(privateR2ImageState.signedCalls, [
+    {
+      key: "background-removal/processed/cutout.png",
+      bucket: "remove-anything-test",
+      expiresIn: 60,
+    },
+  ]);
+  assert.equal(fetchUrls[0].includes("signature=test"), true);
+});
+
+test("POST rejects another owner's preview download URL before creating", async () => {
+  state.sourceOwner = "other-owner";
+  const response = await POST(
+    request("POST", {
+      ...createBody,
+      foregroundImageUrl:
+        "/api/download-background?taskId=task-owned-1&preview=1",
+    }),
+  );
+  assert.equal(response.status, 404);
+  assert.equal((await response.json()).code, "COMPOSITION_SOURCE_UNAVAILABLE");
+  assert.deepEqual(state.creates, []);
+  assert.deepEqual(privateR2ImageState.signedCalls, []);
 });
 
 for (const missing of [false, true]) {
