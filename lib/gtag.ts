@@ -33,27 +33,15 @@ export function isGaDebugMode(searchParams?: SearchParamsLike): boolean {
   return fromParams === "1" || fromParams === "true";
 }
 
-function withDebugMode(
-  params?: Record<string, string | number | boolean | undefined>,
-) {
-  if (!isGaDebugMode()) {
-    return params;
-  }
-  return { ...params, debug_mode: true };
-}
-
 export function pageview(url: string, title?: string) {
   if (typeof window === "undefined" || typeof window.gtag !== "function") {
     return;
   }
 
-  const event = createAnalyticsEvent(
-    "page_view",
-    withDebugMode({
-      page_location: url,
-      page_title: title,
-    }),
-  );
+  const event = createAnalyticsEvent("page_view", {
+    page_location: url,
+    page_title: title,
+  });
   window.gtag("event", event.name, event.params);
 }
 
@@ -65,7 +53,7 @@ export function trackEvent(
     return;
   }
 
-  const event = createAnalyticsEvent(eventName, withDebugMode(params));
+  const event = createAnalyticsEvent(eventName, params);
   window.gtag("event", event.name, event.params);
 }
 

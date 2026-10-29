@@ -21,13 +21,21 @@ export function Analytics() {
     const url = `${window.location.origin}${pathname}${query ? `?${query}` : ""}`;
 
     const sendPageView = () => {
-      if (typeof window.gtag === "function" && debugMode) {
+      if (typeof window.gtag !== "function") {
+        return;
+      }
+
+      // Config/set debug_mode is what adds `_dbg=1` for GA4 DebugView.
+      // Putting debug_mode only on event params becomes `ep.debug_mode` and is ignored.
+      if (debugMode) {
+        window.gtag("set", { debug_mode: true });
         window.gtag("config", gaId, {
           send_page_view: false,
           anonymize_ip: true,
           debug_mode: true,
         });
       }
+
       pageview(url, document.title);
     };
 
@@ -44,6 +52,8 @@ export function Analytics() {
     return null;
   }
 
+  // Read location.search inside the inline script so the first gtag config
+  // gets debug_mode even before React searchParams hydrate.
   return (
     <>
       <Script
@@ -56,10 +66,15 @@ export function Analytics() {
           function gtag(){dataLayer.push(arguments);}
           window.gtag = gtag;
           gtag('js', new Date());
-          gtag('config', '${gaId}', {
-            send_page_view: false,
-            anonymize_ip: true,${debugMode ? "\n            debug_mode: true," : ""}
-          });
+          (function () {
+            var debug = /(?:^|[?&])debug_mode=(?:1|true)(?:&|$)/.test(location.search);
+            var cfg = { send_page_view: false, anonymize_ip: true };
+            if (debug) {
+              cfg.debug_mode = true;
+              gtag('set', { debug_mode: true });
+            }
+            gtag('config', '${gaId}', cfg);
+          })();
         `}
       </Script>
     </>
