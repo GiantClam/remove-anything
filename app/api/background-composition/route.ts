@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/db/prisma";
 import { getCurrentUser } from "@/lib/auth-utils";
@@ -181,7 +182,10 @@ async function assertOwnedCompositionSources(
   foregroundImageUrl: string,
   backgroundType: string,
   backgroundData: unknown,
-): Promise<{ foregroundImageUrl: string; backgroundData: unknown }> {
+): Promise<{
+  foregroundImageUrl: string;
+  backgroundData: Prisma.InputJsonValue;
+}> {
   const now = new Date();
   const cutoff = new Date(now.getTime() - COMPOSITION_RESULT_RETENTION_MS);
   const activeOwnedTask = {
@@ -353,7 +357,7 @@ async function assertOwnedCompositionSources(
 
   return {
     foregroundImageUrl: resolvedForegroundUrl,
-    backgroundData: resolvedBackgroundData,
+    backgroundData: resolvedBackgroundData as Prisma.InputJsonValue,
   };
 }
 
