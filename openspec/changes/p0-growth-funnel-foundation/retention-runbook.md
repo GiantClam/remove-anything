@@ -8,7 +8,7 @@ The local implementation does not prove the complete retention policy is satisfi
 
 `GET /api/cron/cleanup-tasks` requires `Authorization: Bearer $CRON_SECRET`. An empty or missing secret returns `503`; a wrong secret returns `401`.
 
-Execution is blocked in code. `TASK_RETENTION_EXECUTE=true` returns HTTP `503` with `RETENTION_EXECUTION_BLOCKED` before database or storage access. With execution unset or false, the endpoint returns a dry-run report without object or database mutation; request parameters cannot enable execution. `TASK_RETENTION_BATCH_SIZE` defaults to 100 and is clamped to 1–500. The deployment schedule invokes the route every 15 minutes with a 60-second function limit.
+Execution requires `TASK_RETENTION_EXECUTE=true` and `TASK_RETENTION_CRON_ENABLED=true`. The worker uses claim-then-delete: CAS `retentionCheckedAt` under `retentionCleanedAt=null`, re-check shared keys, delete unreferenced R2 objects, then CAS-scrub URLs + set `retentionCleanedAt` only when no blockers remain. With execute unset/false, dry-run reports without mutation (when cron is enabled). Request parameters cannot enable execution. `TASK_RETENTION_BATCH_SIZE` defaults to 100 and is clamped to 1–500.
 
 The 2026-10-15 offline concurrency probe reproduced a reference added after the shared-reference count and a concurrent status/expiry change. The internal runner still deleted the object and updated the row by ID. A final compare-and-set alone cannot restore a deleted shared file. Cleanup claims must coordinate with every reference creator and task updater before the endpoint's execution block can be removed. The mock runner tests demonstrate individual paths, not that concurrency guarantee.
 

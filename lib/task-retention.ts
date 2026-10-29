@@ -544,13 +544,10 @@ export async function runTaskRetention(
         continue;
       }
       report.due++;
+      const artifacts = artifactUrls(model, record, options.configuredR2Url);
       let blocked = false;
-      const deletedKeys = new Set<string>();
-      for (const artifact of artifactUrls(
-        model,
-        record,
-        options.configuredR2Url,
-      )) {
+      const candidateKeys = new Set<string>();
+      for (const artifact of artifacts) {
         if (!artifact.key) {
           blocked = true;
           report.unresolvedExternal.push({
@@ -578,9 +575,55 @@ export async function runTaskRetention(
           });
           continue;
         }
-        if (dryRun) {
-          if (!deletedKeys.has(artifact.key)) report.filesWouldDelete++;
-          deletedKeys.add(artifact.key);
+        candidateKeys.add(artifact.key);
+      }
+      if (dryRun) {
+        report.filesWouldDelete += candidateKeys.size;
+        if (!blocked) report.wouldExpire++;
+        continue;
+      }
+      if (!delegate.update)
+        throw new Error(`Retention update delegate is unavailable: ${model}`);
+
+      // Claim the row before storage deletes so concurrent workers skip it.
+      // URLs stay intact until every candidate key is deleted or confirmed
+      // shared; that preserves retryable delete failures.
+      try {
+        await delegate.update({
+          where: {
+            id: record.id,
+            retentionCleanedAt: null,
+            taskStatus: { notIn: ACTIVE_STATUS_VALUES },
+          },
+          data: { retentionCheckedAt: now, updatedAt: now },
+        });
+      } catch {
+        // Another worker claimed or the row left the eligible set.
+        continue;
+      }
+
+      const deletedKeys = new Set<string>();
+      let deleteBlocked = false;
+      for (const artifact of artifacts) {
+        if (!artifact.key || !candidateKeys.has(artifact.key)) continue;
+        let sharedAfter: boolean;
+        let sharedError: string | undefined;
+        try {
+          sharedAfter = await sharedCheck(artifact);
+        } catch (error) {
+          sharedAfter = true;
+          sharedError = `post-claim reference check failed: ${String(error)}`;
+        }
+        if (sharedAfter) {
+          deleteBlocked = true;
+          report.sharedReferences.push({
+            ...artifact,
+            key: artifact.key,
+            reason: "shared_reference",
+            ...(sharedError
+              ? { error: sharedError }
+              : { error: "reference appeared after claim; R2 delete skipped" }),
+          });
           continue;
         }
         try {
@@ -595,7 +638,7 @@ export async function runTaskRetention(
             deletedKeys.add(artifact.key);
           }
         } catch (error) {
-          blocked = true;
+          deleteBlocked = true;
           report.failures.push({
             ...artifact,
             key: artifact.key,
@@ -607,72 +650,62 @@ export async function runTaskRetention(
           });
         }
       }
-      if (dryRun) {
-        if (!blocked) report.wouldExpire++;
-        continue;
-      }
-      if (!delegate.update)
-        throw new Error(`Retention update delegate is unavailable: ${model}`);
-      const data: Record<string, unknown> = { retentionCheckedAt: now };
-      // Leave URLs intact while unresolved so the next supported attempt has
-      // its exact original references. Successful whole-row cleanup can clear
-      // source/result metadata after all known artifacts are safely cleaned.
-      if (!blocked) {
-        const previousStatus = String(record.taskStatus || "").toLowerCase();
-        // A failed/canceled free task returned its allowance. Preserve that
-        // evidence when files expire so monthly quota cannot charge it again.
-        data.taskStatus = ["failed", "canceled", "cancelled"].includes(
-          previousStatus,
-        )
+
+      if (blocked || deleteBlocked) continue;
+
+      const previousStatus = String(record.taskStatus || "").toLowerCase();
+      const data: Record<string, unknown> = {
+        retentionCheckedAt: now,
+        updatedAt: now,
+        retentionCleanedAt: now,
+        taskStatus: ["failed", "canceled", "cancelled"].includes(previousStatus)
           ? previousStatus
-          : "expired";
-        data.retentionCleanedAt = now;
-        data.updatedAt = now;
-        // Keep only subject/lifecycle/authorization evidence after local
-        // cleanup; URLs, prompts, logs, and provider output metadata are not
-        // needed for the minimal task audit. Required source columns use an
-        // empty string until a future schema makes them nullable.
-        if (model === "taskData")
-          Object.assign(data, {
-            inputImageUrl: null,
-            imageUrl: null,
-            r2Url: null,
-            inputPrompt: null,
-            executePrompt: null,
-            prompt: null,
-            errorMsg: null,
-            runninghubFileName: null,
-            replicateStatus: null,
-            replicateUrls: [],
-            replicateLogs: [],
-            // Empty JSON is accepted by the generated client and contains no
-            // retained provider payload. Prisma JSON fields distinguish SQL
-            // NULL/JSON null, so do not write an untyped plain null here.
-            replicateMetrics: {},
-          } satisfies Prisma.TaskDataUpdateInput);
-        if (model === "backgroundRemovalTask")
-          Object.assign(data, {
-            inputImageUrl: "",
-            outputImageUrl: null,
-            errorMsg: null,
-          });
-        if (model === "watermarkRemovalTask")
-          Object.assign(data, {
-            inputZipUrl: "",
-            outputZipUrl: null,
-            errorMsg: null,
-          });
-        if (model === "objectRemovalTask")
-          Object.assign(data, {
-            inputImageUrl: "",
-            inputMaskUrl: "",
-            outputImageUrl: null,
-            detectPrompt: null,
-            errorMsg: null,
-          });
-        report.expired++;
-      }
-      await delegate.update({ where: { id: record.id }, data });
+          : "expired",
+      };
+      if (model === "taskData")
+        Object.assign(data, {
+          inputImageUrl: null,
+          imageUrl: null,
+          r2Url: null,
+          inputPrompt: null,
+          executePrompt: null,
+          prompt: null,
+          errorMsg: null,
+          runninghubFileName: null,
+          replicateStatus: null,
+          replicateUrls: [],
+          replicateLogs: [],
+          replicateMetrics: {},
+        } satisfies Prisma.TaskDataUpdateInput);
+      if (model === "backgroundRemovalTask")
+        Object.assign(data, {
+          inputImageUrl: "",
+          outputImageUrl: null,
+          errorMsg: null,
+        });
+      if (model === "watermarkRemovalTask")
+        Object.assign(data, {
+          inputZipUrl: "",
+          outputZipUrl: null,
+          errorMsg: null,
+        });
+      if (model === "objectRemovalTask")
+        Object.assign(data, {
+          inputImageUrl: "",
+          inputMaskUrl: "",
+          outputImageUrl: null,
+          detectPrompt: null,
+          errorMsg: null,
+        });
+      await delegate.update({
+        where: {
+          id: record.id,
+          retentionCleanedAt: null,
+          taskStatus: { notIn: ACTIVE_STATUS_VALUES },
+        },
+        data,
+      });
+      report.expired++;
     }
   }
   await trimAuditRows(options.db, now, dryRun, batchSize, report);
