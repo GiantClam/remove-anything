@@ -631,3 +631,41 @@ test("cleaning failed and canceled tasks preserves their returned quota and perm
   assert.ok(trimmed);
   assert.deepEqual(trimmed.args.where.id.in, [2]);
 });
+
+test("post-claim shared reference skips R2 delete and preserves URLs", async () => {
+  const { runTaskRetention } = await retentionPromise;
+  const rows = emptyRows();
+  rows.backgroundRemovalTask.push(
+    dueTask(42, {
+      inputImageUrl: `${BASE}/tasks/42/input.png`,
+      outputImageUrl: `${BASE}/tasks/42/output.png`,
+    }),
+  );
+  const calls: AnyRecord[] = [];
+  const deleted: string[] = [];
+  let checks = 0;
+  const report = await runTaskRetention({
+    db: makeDb(rows, calls),
+    storage: {
+      deleteItemInBucket: async (key) => {
+        deleted.push(key);
+      },
+    },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
+    isSharedAsset: async () => {
+      checks++;
+      // First pass (pre-claim) unshared; post-claim reports shared.
+      return checks > 2;
+    },
+  });
+  assert.equal(report.expired, 0);
+  assert.equal(deleted.length, 0);
+  assert.ok(report.sharedReferences.length >= 1);
+  assert.equal(
+    rows.backgroundRemovalTask[0].outputImageUrl,
+    `${BASE}/tasks/42/output.png`,
+  );
+  assert.equal(rows.backgroundRemovalTask[0].retentionCleanedAt, undefined);
+});

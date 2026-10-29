@@ -50,20 +50,9 @@ export async function GET(req: NextRequest) {
   }
 
   const execute = process.env[RETENTION_EXECUTE_ENV] === "true";
-  // A reference can be created after the worker's shared-object check. Keep
-  // deletion unreachable until cleanup claims coordinate with every writer;
-  // an environment flag alone cannot establish that concurrency guarantee.
-  if (execute) {
-    return NextResponse.json(
-      {
-        error:
-          "retention execution requires coordinated cleanup claims and reference writes",
-        code: "RETENTION_EXECUTION_BLOCKED",
-        executionEnabled: false,
-      },
-      { status: 503 },
-    );
-  }
+  // Execution uses scrub-first CAS in `runTaskRetention` (clear URL refs under
+  // retentionCleanedAt=null, re-check shared keys, then delete). Still requires
+  // the explicit TASK_RETENTION_EXECUTE=true env; request params cannot enable it.
   const configuredR2Url = process.env.R2_URL_BASE;
   if (!configuredR2Url) {
     return NextResponse.json(

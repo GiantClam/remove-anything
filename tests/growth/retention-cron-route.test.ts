@@ -127,17 +127,17 @@ test("query parameters cannot enable cleanup execution or override batch size", 
   assert.deepEqual(state.deletedKeys, []);
 });
 
-test("execution opt-in fails closed until cleanup claims and reference writes are coordinated", async () => {
+test("execution opt-in runs the scrub-first retention worker when explicitly enabled", async () => {
   const { GET } = await routePromise;
   process.env.TASK_RETENTION_CRON_ENABLED = "true";
   process.env.TASK_RETENTION_EXECUTE = "true";
   process.env.TASK_RETENTION_BATCH_SIZE = "9999";
   const response = await GET(request());
   const body = await response.json();
-  assert.equal(response.status, 503);
-  assert.equal(body.code, "RETENTION_EXECUTION_BLOCKED");
-  assert.equal(body.executionEnabled, false);
-  assertNoBoundariesCalled();
+  assert.equal(response.status, 200);
+  assert.equal(body.executionEnabled, true);
+  assert.equal(body.dryRun, false);
+  assert.equal(body.batchSize, 500);
 });
 
 test("batch sizes clamp to one and malformed values use the default", async () => {
