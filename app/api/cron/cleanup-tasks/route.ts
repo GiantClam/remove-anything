@@ -36,6 +36,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  // Incident hotfix 2026-10-29: dry-run retention hammers session-mode pool
+  // (EMAXCONNSESSION / pool_size:15). Keep the route callable for auth checks,
+  // but skip Prisma/R2 unless explicitly re-enabled. Execution remains blocked.
+  if (process.env.TASK_RETENTION_CRON_ENABLED !== "true") {
+    return NextResponse.json({
+      skipped: true,
+      reason:
+        "TASK_RETENTION_CRON_ENABLED is not true; dry-run disabled to protect session pool",
+      code: "RETENTION_CRON_DISABLED",
+      executionEnabled: false,
+    });
+  }
+
   const execute = process.env[RETENTION_EXECUTE_ENV] === "true";
   // A reference can be created after the worker's shared-object check. Keep
   // deletion unreachable until cleanup claims coordinate with every writer;
