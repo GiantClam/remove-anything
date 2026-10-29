@@ -29,7 +29,11 @@ export const compositionRouteState = {
   ownedSourceUrls: new Set([
     "https://files.example.test/foreground.png",
     "https://files.example.test/foreground.png?sig=1",
+    "https://files.example.test/background-removal/processed/cutout.png",
   ]),
+  sourceTaskId: "task-owned-1",
+  sourceOutputUrl:
+    "https://files.example.test/background-removal/processed/cutout.png",
   sourceOwner: "owner-1",
   sourceStatus: "succeeded",
   sourceCreatedAt: new Date(),
@@ -68,7 +72,11 @@ export function resetCompositionRouteState() {
   compositionRouteState.ownedSourceUrls = new Set([
     "https://files.example.test/foreground.png",
     "https://files.example.test/foreground.png?sig=1",
+    "https://files.example.test/background-removal/processed/cutout.png",
   ]);
+  compositionRouteState.sourceTaskId = "task-owned-1";
+  compositionRouteState.sourceOutputUrl =
+    "https://files.example.test/background-removal/processed/cutout.png";
   compositionRouteState.sourceOwner = "owner-1";
   compositionRouteState.sourceStatus = "succeeded";
   compositionRouteState.sourceCreatedAt = new Date();
@@ -231,8 +239,31 @@ export const prisma = {
         model: "backgroundRemovalTask",
         where,
       });
+      if (typeof where.replicateId === "string") {
+        if (
+          where.replicateId !== compositionRouteState.sourceTaskId ||
+          where.userId !== compositionRouteState.sourceOwner ||
+          where.taskStatus !== compositionRouteState.sourceStatus ||
+          where.retentionCleanedAt !==
+            compositionRouteState.sourceRetentionCleanedAt
+        ) {
+          return null;
+        }
+        const createdAt = where.createdAt as { gte?: Date } | undefined;
+        if (
+          createdAt?.gte &&
+          compositionRouteState.sourceCreatedAt.getTime() <
+            createdAt.gte.getTime()
+        ) {
+          return null;
+        }
+        return {
+          id: 72,
+          outputImageUrl: compositionRouteState.sourceOutputUrl,
+        };
+      }
       return matchesOwnedSource(where.outputImageUrl, where)
-        ? { id: 72 }
+        ? { id: 72, outputImageUrl: where.outputImageUrl as string }
         : null;
     },
   },
