@@ -18,6 +18,7 @@ import {
 import { runninghubAPI } from "@/modules/runninghub";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 function usableStatus(task: {
   taskStatus: string;
@@ -52,7 +53,7 @@ export async function GET(
     if (!dbOnly && ["queued", "processing"].includes(taskStatus)) {
       try {
         let nextStatus = taskStatus;
-        let nextOutput: string | undefined;
+        let nextOutput: string | null | undefined;
         let nextError: string | null = null;
         let nextStart = task.executeStartTime;
         let nextEnd = task.executeEndTime;
@@ -118,11 +119,15 @@ export async function GET(
             }
           } catch (error) {
             nextStatus = "processing";
-            nextOutput = undefined;
+            // Clear non-R2 outputs so provider URLs cannot linger after a failed migration.
+            nextOutput = null;
             nextEnd = null;
             nextError =
               "The result could not be stored yet. Please retry shortly.";
-            console.warn("Object result could not be persisted", error);
+            console.warn(
+              "Object result could not be persisted",
+              error instanceof Error ? error.name : "unknown",
+            );
           }
         } else if (providerStatus === "processing") {
           nextStart = task.executeStartTime || BigInt(Date.now());
@@ -141,7 +146,9 @@ export async function GET(
           },
           data: {
             taskStatus: nextStatus,
-            ...(nextOutput ? { outputImageUrl: nextOutput } : {}),
+            ...(nextOutput !== undefined
+              ? { outputImageUrl: nextOutput }
+              : {}),
             errorMsg: nextError,
             ...(nextStart != null ? { executeStartTime: nextStart } : {}),
             executeEndTime: nextEnd,

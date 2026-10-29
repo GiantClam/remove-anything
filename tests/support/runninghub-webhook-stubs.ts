@@ -38,7 +38,7 @@ export const runninghubWebhookState = {
   uploads: [] as Array<{
     filename: string;
     bytes: Buffer;
-    options: { path: string; ContentType?: string; acl?: string };
+    options: { path?: string; ContentType?: string; acl?: string; key?: string };
   }>,
   stopped: [] as string[],
   analyticsEvents: [] as AnalyticsEvent[],
@@ -144,5 +144,18 @@ export const createR2S3Service = () => ({
     options: { path: string; ContentType?: string; acl?: string },
   ) => {
     runninghubWebhookState.uploads.push({ filename, bytes, options });
+  },
+  putPrivateItemInBucket: async (
+    key: string,
+    bytes: Buffer,
+    contentType?: string,
+  ) => {
+    const filename = key.split("/").pop() || key;
+    const path = key.includes("/") ? key.split("/").slice(0, -1).join("/") : "";
+    runninghubWebhookState.uploads.push({
+      filename,
+      bytes,
+      options: { path, ContentType: contentType, key },
+    });
   },
 });

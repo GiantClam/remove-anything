@@ -174,10 +174,8 @@ test("legacy success with a raw provider URL is not published until private migr
   const body = await (await getStatus()).json();
   assert.equal(body.taskStatus, "processing");
   assert.equal(body.outputImageUrl, undefined);
-  assert.equal(
-    state.task!.outputImageUrl,
-    "https://provider.example.test/results/legacy.png",
-  );
+  // Failed private migration must clear raw provider URLs from output_*.
+  assert.equal(state.task!.outputImageUrl, null);
   assert.deepEqual(state.statusCalls, []);
   assert.equal(
     (await (await getStatus("?dbOnly=true")).json()).outputImageUrl,

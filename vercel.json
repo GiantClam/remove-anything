@@ -10,26 +10,44 @@
       "maxDuration": 60
     },
     "app/api/task/[id]/route.ts": {
-      "maxDuration": 15
+      "maxDuration": 60
     },
     "app/api/webhooks/runninghub/route.ts": {
       "maxDuration": 30
     },
     "app/api/task-status-stream/[taskId]/route.ts": {
-      "maxDuration": 30
+      "maxDuration": 60
+    },
+    "app/api/watermark-removal/[id]/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/remove-objects/[id]/route.ts": {
+      "maxDuration": 60
     }
   },
   "headers": [
     {
       "source": "/api/sora2-video-watermark-removal",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
       ]
     }
   ],
   "crons": [
-    { "path": "/api/cron/process-queue", "schedule": "*/1 * * * *" }
+    {
+      "path": "/api/cron/process-queue",
+      "schedule": "*/1 * * * *"
+    }
   ]
 }

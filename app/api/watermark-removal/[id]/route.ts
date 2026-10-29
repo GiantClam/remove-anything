@@ -16,6 +16,7 @@ import {
 import { runninghubAPI } from "@/modules/runninghub";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 function usableStatus(task: {
   taskStatus: string;
@@ -118,11 +119,17 @@ export async function GET(
             }
           } catch (error) {
             nextStatus = "processing";
-            nextOutput = task.outputZipUrl;
+            // Never leave a raw provider URL in output_* after a failed migration.
+            nextOutput = getR2ObjectKey(task.outputZipUrl, env.R2_URL_BASE)
+              ? task.outputZipUrl
+              : null;
             nextEnd = null;
             nextError =
               "The result could not be stored yet. Please retry shortly.";
-            console.warn("Watermark result could not be persisted");
+            console.warn(
+              "Watermark result could not be persisted",
+              error instanceof Error ? error.name : "unknown",
+            );
           }
         } else if (providerStatus === "processing") {
           nextStart = task.executeStartTime || BigInt(Date.now());
@@ -150,7 +157,7 @@ export async function GET(
           },
           data: {
             taskStatus: nextStatus,
-            ...(nextOutput ? { outputZipUrl: nextOutput } : {}),
+            outputZipUrl: nextOutput,
             errorMsg: nextError,
             ...(nextStart != null ? { executeStartTime: nextStart } : {}),
             executeEndTime: nextEnd,

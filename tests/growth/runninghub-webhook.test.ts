@@ -128,7 +128,7 @@ test("object callback fetches only its approved source with timeout, no redirect
     /^https:\/\/r2\.example\.test\/assets\/object-removal\/processed\/23-callback-[a-f0-9]{64}\.png$/,
   );
   assert.equal(state.uploads.length, 1);
-  assert.equal(state.uploads[0].options.acl, "private");
+  assert.equal(Object.hasOwn(state.uploads[0].options, "acl"), false);
   assert.equal(state.uploads[0].options.ContentType, "image/png");
   assert.deepEqual(state.uploads[0].bytes, Buffer.from(png));
   const body = await response.text();
@@ -150,7 +150,7 @@ test("watermark callback wraps a supported image into a bounded private ZIP", as
     /watermark-removal\/processed\/23-callback-[a-f0-9]{64}\.zip$/,
   );
   assert.equal(state.uploads[0].options.ContentType, "application/zip");
-  assert.equal(state.uploads[0].options.acl, "private");
+  assert.equal(Object.hasOwn(state.uploads[0].options, "acl"), false);
   assert.equal(state.uploads[0].bytes.subarray(0, 2).toString(), "PK");
 });
 
