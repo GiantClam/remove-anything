@@ -89,7 +89,14 @@ export const toolRegistry = [
     outputFormats: ["image/png"],
     limits: singleImageLimits,
     creditCost: 2,
-    paidEnabled: false,
+    costApproval: {
+      creditCost: 2,
+      approvedBy: "liulanggoukk@gmail.com",
+      approvedAt: "2026-10-29",
+      evidenceReference:
+        "openspec/changes/p0-growth-funnel-foundation/evidence/cost-approval-20261029.md",
+    },
+    paidEnabled: true,
     primaryCta: "Upload an image",
     lastModified: "2026-10-14",
     resultExpiryHours: 24,

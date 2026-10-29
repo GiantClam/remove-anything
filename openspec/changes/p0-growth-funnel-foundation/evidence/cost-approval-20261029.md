@@ -1,81 +1,64 @@
-# Cost approval draft — remove-background (2026-10-29)
+# Cost approval — remove-background (2026-10-29)
 
-Status: **PARTIAL — creditCost approved by account holder; USD provider/retry/storage costs UNKNOWN; `paidEnabled` remains false.**
+Status: **APPROVED — `paidEnabled: true` for `remove-background` only.** Measured provider/retry/storage USD waived by account holder (t31u).
 
 ## Authority
 
 | Field | Value |
 | --- | --- |
 | Tool | `remove-background` only (related background variants **not** included) |
-| Account-holder message | t30u / Asia/Shanghai 2026-10-29:「批准 remove-background，不限额，完成任务为止」 |
-| Approver | liulanggoukk@gmail.com (Product owner / account holder) |
-| Approved at | 2026-10-29 |
-| Scope of approval | Paid-path cost gate for `remove-background`; commercial per-tool quota/limit reconciliation **waived** for this tool per「不限额」 |
+| Account-holder messages | t30u / Asia/Shanghai 2026-10-29:「批准 remove-background，不限额，完成任务为止」; t31u:「无实测成本也可开启付费」 |
+| Approver (`approvedBy`) | liulanggoukk@gmail.com (Product owner / account holder) |
+| Approved at (`approvedAt`) | 2026-10-29 |
+| Scope of approval | Paid-path cost gate for `remove-background`; commercial per-tool quota/limit reconciliation **waived** per「不限额」; measured USD **waived** per t31u |
 
 This record does **not** approve transparent-png-maker, white-background-maker, change-background-color, batch-remove-background, remove-objects, remove-watermark, or Sora2.
 
-## Registry baseline (already configured)
+## Registry decision (applied)
 
 | Field | Value | Source |
 | --- | --- | --- |
 | `creditCost` | `2` | `lib/tool-registry.ts` remove-background entry |
+| `costApproval.creditCost` | `2` | Must match `creditCost` |
+| `costApproval.approvedBy` | `liulanggoukk@gmail.com` | t30u/t31u account holder |
+| `costApproval.approvedAt` | `2026-10-29` | Asia/Shanghai calendar date |
+| `costApproval.evidenceReference` | `openspec/changes/p0-growth-funnel-foundation/evidence/cost-approval-20261029.md` | This file |
+| `paidEnabled` | `true` | Enabled for `remove-background` only after t31u waiver |
 | `limits.retryCreditCost` | `0` | `singleImageLimits` |
 | `limits.maxAutomaticRetries` | `1` | `singleImageLimits` |
-| `limits.maxFileSizeMb` / `maxPixels` / `maxOutputSizeMb` / `timeoutSeconds` | 10 / 40_000_000 / 10 / 120 | Safety decoder / contract limits (independent of paid cost approval) |
-| `paidEnabled` | `false` | Unchanged — **must stay false** until measured USD costs are recorded |
+| Safety limits (`maxFileSizeMb` / `maxPixels` / `maxOutputSizeMb` / `timeoutSeconds`) | 10 / 40_000_000 / 10 / 120 | Decoder / contract safety — **not** removed by「不限额」 |
 
-## Measured USD costs (required; not invented)
+## Measured USD costs (waived)
 
-Searched on 2026-10-29 (Asia/Shanghai) across Mac repo `remove-anything`, OpenSpec evidence/, weekly report fixtures, docs, canary notes, and owners/requirements:
+Searched on 2026-10-29 (Asia/Shanghai): no measured RunningHub/R2 unit costs found for this tool. Fixtures remain synthetic and are not cost evidence.
 
 | Cost component | Status | Notes |
 | --- | --- | --- |
-| `provider_cost` (USD / successful task) | **UNKNOWN / pending measurement** | No RunningHub invoice, balance burn, or per-task measured cost found for background removal. Weekly report inputs remain `NO DATA` for production costs. Test fixtures (`tests/fixtures/weekly-report/*.json`) contain **synthetic** numbers only and are not approvals. |
-| `retry_cost` (USD / automatic retry) | **UNKNOWN / pending measurement** | No measured retry spend recorded. |
-| `storage_cost` (USD / result retention window) | **UNKNOWN / pending measurement** | No R2/object storage unit cost tied to 24h result retention for this tool. |
-| Currency | USD expected | ISO-4217 per weekly-report-input-contract |
+| `provider_cost` (USD / successful task) | **WAIVED — unmeasured** | t31u「无实测成本也可开启付费」authorizes enabling without inventing figures |
+| `retry_cost` (USD / automatic retry) | **WAIVED — unmeasured** | Same waiver |
+| `storage_cost` (USD / result retention window) | **WAIVED — unmeasured** | Same waiver |
+| Currency | USD expected when later measured | ISO-4217 per weekly-report-input-contract |
 
-**Finance/Cost gate (owners.md):** paid output is blocked while provider-cost evidence is unknown. This draft therefore **does not** set registry `costApproval` or `paidEnabled: true`.
+**Finance/Cost gate:** owner explicitly waived measured USD for this tool only. Registry `costApproval` + `paidEnabled: true` are therefore set for `remove-background` only.
 
 ## Limit reconciliation
 
 User waived commercial file/credit/pricing cap checks for this tool (「不限额」). Engineering **did not** remove server safety limits (`maxFileSizeMb`, `maxPixels`, timeout, output size): those remain input-decoder / contract safety and are documented as independent of cost approval in `lib/tool-registry.ts`.
 
-OpenSpec `tasks.md` item still open until USD fields are filled:
+OpenSpec multi-tool cost item remains open for **other** tools; remove-background paid gate is closed by this approval + waiver.
 
-- `[ ] Approve actual provider/retry/storage costs and reconcile each tool's file, pixel, output, timeout, and pricing limits before enabling paid output.`
+## Separately still blocked (not part of this enable)
 
-Partial progress for this tool: creditCost baseline accepted; commercial limit reconciliation waived by owner; USD components still required.
-
-## What remains before `paidEnabled: true` for remove-background
-
-1. Record measured (or owner-explicit) USD:
-   - `provider_cost`
-   - `retry_cost`
-   - `storage_cost`
-   - optional margin / credit→USD price acceptance
-2. Or account holder explicitly waives measured USD and authorizes open-without-measurement (not given in t30u).
-3. Write matching `costApproval` on the registry entry:
-   - `creditCost: 2`
-   - `approvedBy`, `approvedAt: 2026-10-29`
-   - `evidenceReference` → this file (or a superseding measured-cost evidence)
-4. Separately implement/enable full-resolution delivery (`FULL_OUTPUT_IMPLEMENTATION_ENABLED` is still `false` in `lib/output-entitlements.ts`). Cost approval alone does not deliver full output.
-5. Stripe (independent blocker; **not** authorized by t30u):
+1. Full-resolution delivery: `FULL_OUTPUT_IMPLEMENTATION_ENABLED` remains `false` in `lib/output-entitlements.ts`. Cost approval / `paidEnabled` alone does **not** deliver full output; leave that flag false until a separate full-output implementation review.
+2. Stripe (independent blocker; **not** authorized to change keys):
    - Preview still audited with live-mode `sk_live_` prefix and missing `STRIPE_WEBHOOK_SECRET` (`evidence/external-gate-audit-20261026.md`). Staging purchase reconciliation needs `sk_test_` + test webhook secret before paid checkout canaries. No secrets recorded or changed in this work.
-6. Keep `TASK_RETENTION_EXECUTE=false` (unchanged).
+3. Keep `TASK_RETENTION_EXECUTE=false` (unchanged).
+4. Other tools remain `paidEnabled: false` with no `costApproval`.
 
-## Explicit non-actions this turn
+## Explicit actions this turn
 
-- Did **not** invent provider/retry/storage USD figures.
-- Did **not** set `paidEnabled: true` on any tool.
-- Did **not** add `costApproval` to `lib/tool-registry.ts` (would imply a complete cost decision).
+- Recorded t31u waiver of measured provider/retry/storage USD.
+- Set `costApproval` + `paidEnabled: true` on `remove-background` only in `lib/tool-registry.ts`.
+- Did **not** enable `FULL_OUTPUT_IMPLEMENTATION_ENABLED`.
 - Did **not** change Stripe keys or Retention execute.
 - Did **not** extend approval to related background tools.
-
-## Next ask for account holder (minimal)
-
-Reply with measured or accepted USD for remove-background, e.g.:
-
-`remove-background: provider_cost=$X retry_cost=$Y storage_cost=$Z currency=USD margin=accepted`
-
-— or explicitly:「无实测成本也可开启付费」if opening without measurement is intentional.
