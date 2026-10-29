@@ -401,6 +401,9 @@
     "backgroundRemoved": "Background removed successfully!",
     "taskCreated": "Background removal task created! Processing in the background...",
     "processingFailed": "Failed to remove background. Please try again.",
+    "anonymousQuotaExceeded": "Your free anonymous allowance is used up. Anonymous users can process 1 image every 24 hours. Sign in for 5 free images per month.",
+    "monthlyQuotaExceeded": "Your free image allowance for this month is used up. It resets at the start of the next UTC calendar month.",
+    "signInForMore": "Sign in for more free images",
     "taskFailed": "Task failed",
     "addBackground": "Add Background",
     "backgroundSelector": {

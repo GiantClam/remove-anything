@@ -397,6 +397,9 @@
     "backgroundRemoved": "背景去除成功！",
     "taskCreated": "背景去除任務已創建！正在後台處理...",
     "processingFailed": "去除背景失敗，請重試。",
+    "anonymousQuotaExceeded": "匿名免費額度已用完。匿名用戶每 24 小時可免費處理 1 張圖片；登入後每月可免費處理 5 張。",
+    "monthlyQuotaExceeded": "本月免費圖片額度已用完，將於下一個 UTC 月初恢復。",
+    "signInForMore": "登入以取得更多免費額度",
     "taskFailed": "任務失敗",
     "addBackground": "添加背景",
     "backgroundSelector": {

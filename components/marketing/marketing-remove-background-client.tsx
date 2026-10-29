@@ -24,6 +24,7 @@ import {
   type BackgroundToolVariant,
 } from '@/lib/background-tool-variants';
 import { buildLocalizedPath, buildLocalizedUrl } from '@/lib/seo';
+import { Link } from '@/lib/navigation';
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -64,6 +65,7 @@ export default function MarketingRemoveBackground({
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [hasError, setHasError] = useState<string | false>(false);
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [queuedFiles, setQueuedFiles] = useState<File[]>([]);
@@ -138,6 +140,7 @@ export default function MarketingRemoveBackground({
     setOriginalImage(selectedSample.before);
     setProcessedImage(selectedSample.after);
     setHasError(false);
+    setQuotaExceeded(false);
     setCurrentTaskId(null);
   }, [isProcessing, originalImage, sampleImageMap, searchParams, uploadedFile]);
   
@@ -323,6 +326,7 @@ export default function MarketingRemoveBackground({
       return false;
     }
   }, [session?.user]);
+  const hasAuthenticatedSession = Boolean(session?.user);
 
   // URL 输入与处理
   const [urlInput, setUrlInput] = useState('');
@@ -484,6 +488,7 @@ export default function MarketingRemoveBackground({
     // 重置之前的状态，并进入处理中的不可编辑态
     setProcessedImage(null);
     setHasError(false);
+    setQuotaExceeded(false);
     setCurrentTaskId(null);
     idempotencyKeyRef.current = createClientIdempotencyKey();
     setIsProcessing(true);
@@ -525,10 +530,26 @@ export default function MarketingRemoveBackground({
     }
   }
 
+  const readTaskCreationError = async (response: Response) => {
+    const payload = (await response.json().catch(() => null)) as { code?: string } | null;
+
+    if (payload?.code === 'QUOTA_EXCEEDED') {
+      setQuotaExceeded(true);
+      return new Error(
+        hasAuthenticatedSession
+          ? tPage('monthlyQuotaExceeded')
+          : tPage('anonymousQuotaExceeded'),
+      );
+    }
+
+    return new Error(tPage('processingFailed'));
+  };
+
   const processImage = async (file: File) => {
     setIsProcessing(true);
     setProcessedImage(null);
     setHasError(false);
+    setQuotaExceeded(false);
     setCurrentTaskId(null);
     const idempotencyKey = idempotencyKeyRef.current || createClientIdempotencyKey();
     idempotencyKeyRef.current = idempotencyKey;
@@ -546,7 +567,7 @@ export default function MarketingRemoveBackground({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create background removal task');
+        throw await readTaskCreationError(response);
       }
 
       const result = await response.json();
@@ -576,6 +597,7 @@ export default function MarketingRemoveBackground({
     setIsProcessing(true);
     setProcessedImage(null);
     setHasError(false);
+    setQuotaExceeded(false);
     setCurrentTaskId(null);
     const idempotencyKey = idempotencyKeyRef.current || createClientIdempotencyKey();
     idempotencyKeyRef.current = idempotencyKey;
@@ -585,7 +607,7 @@ export default function MarketingRemoveBackground({
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
         body: JSON.stringify({ image: imageUrl }),
       });
-      if (!response.ok) throw new Error('Failed to create background removal task');
+      if (!response.ok) throw await readTaskCreationError(response);
       const result = await response.json();
       if (result.success && result.taskId) {
         setCurrentTaskId(result.taskId);
@@ -1362,6 +1384,7 @@ export default function MarketingRemoveBackground({
                       setOriginalImage(sample.url);
                       setProcessedImage(null);
                       setHasError(false);
+                      setQuotaExceeded(false);
                       setCurrentTaskId(null);
                       setIsProcessing(true);
                       // 记录到最近图片
@@ -1615,7 +1638,11 @@ export default function MarketingRemoveBackground({
                 {hasError && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                     <p className="text-sm text-red-600">{hasError}</p>
-                    {uploadedFile && (
+                    {quotaExceeded && !hasAuthenticatedSession ? (
+                      <Button asChild size="sm" className="mt-3">
+                        <Link href="/signin">{tPage('signInForMore')}</Link>
+                      </Button>
+                    ) : uploadedFile && !quotaExceeded ? (
                       <Button
                         type="button"
                         variant="outline"
@@ -1624,9 +1651,9 @@ export default function MarketingRemoveBackground({
                         onClick={() => { void processImage(uploadedFile); }}
                         disabled={isProcessing}
                       >
-                        Try again
+                        {tPage('tryAgain')}
                       </Button>
-                    )}
+                    ) : null}
                   </div>
                 )}
                 
@@ -1654,6 +1681,7 @@ export default function MarketingRemoveBackground({
                     setProcessedImage(null);
                     setCurrentTaskId(null);
                     setHasError(false);
+                    setQuotaExceeded(false);
                     setIsProcessing(false);
                   }}
                   className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-transparent hover:ring-primary transition-all"
