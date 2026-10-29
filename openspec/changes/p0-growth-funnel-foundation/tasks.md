@@ -1,11 +1,11 @@
 # Implementation Tasks
 
-Status reviewed on 2026-10-21. OpenSpec reports 39/56 tasks complete. This change is in progress and must not be archived or used to start the 28-day baseline. See `implementation-evidence.md` for current verification scope and remaining release gates.
+Status reviewed on 2026-10-29. OpenSpec reports 40/56 tasks complete after GSC authenticated receipt. This change is in progress and must not be archived or used to start the 28-day baseline. See `implementation-evidence.md` for current verification scope and remaining release gates.
 
 ## Account and release prerequisites
 
 - [x] Confirm the target GA4 property and create the Remove Anything web stream.
-- [ ] Create/verify the GSC domain. DNS TXT visibility was checked from three resolvers on 2026-10-21, but an authenticated Search Console property-verification receipt is still missing; see `evidence/gsc-domain-dns-20261021.md`.
+- [x] Create/verify the GSC domain. DNS TXT remains published; authenticated property receipt attached from account-holder Gmail (`sc-noreply@google.com` impressions-started + September digest). See `evidence/gsc-authenticated-property-20261029.md` (DNS baseline: `evidence/gsc-domain-dns-20261021.md`).
 - [x] Configure production `NEXT_PUBLIC_GA_ID` and verify the deployed GA4 script and a collection request.
 - [ ] Capture production GA4 DebugView/realtime ingestion of the required event chain.
 - [x] Define operating roles for weekly funnel review, reliability review, and per-tool cost approval in `owners.md`.
@@ -47,7 +47,7 @@ Account evidence records GA4 account `29849090`, property `559043519`, stream `1
 - [x] Add selected server lifecycle/payment fact hooks and idempotent Stripe fulfillment with route-level tests.
 - [x] Provide the review template (`weekly-funnel-review.md`) and an export helper that reports unavailable input as `NO DATA`.
 - [ ] Wire and verify the complete required behavioral event chain across all six tools, signup, paywall, and checkout.
-- [ ] Deliver server facts durably to the chosen analytics destination and verify receipt/recovery. A server-only `analytics_events` sink and production table are deployed with stable `event_id` uniqueness, RLS, and client ACL revocation; the schema duplicate-ID probe passed, but runtime delivery, retry/recovery, and event-chain receipt remain unverified.
+- [ ] Deliver server facts durably to the chosen analytics destination and verify receipt/recovery. A server-only `analytics_events` sink and production table are deployed with stable `event_id` uniqueness, RLS, and client ACL revocation; schema duplicate-ID probe passed. Runtime delivery for `processing_completed` / `processing_failed` / `result_downloaded` is now observed in production (20 rows; see `evidence/analytics-events-runtime-20261029.md`); P2002 idempotent redelivery is unit-tested. Full signup→checkout→purchase chain and automatic outage retry/recovery remain open.
 - [ ] Implement and validate weekly page/tool/locale/auth funnels plus GSC, latency, retry, cost, repeat-purchase, and missing-event metrics. The offline helper now supports explicit grouping, supported reliability/cost/GSC slices, deduplication, and `NO DATA`, but production exports and receipt remain unverified.
 
 ## Core tool experience and retention
