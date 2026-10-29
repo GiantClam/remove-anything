@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/db/prisma";
+import { env } from "@/env.mjs";
+import { getR2ObjectKey } from "@/lib/r2-object-key";
+import { persistRunningHubOutput } from "@/lib/runninghub-output";
 import { taskProcessor } from "@/lib/task-processor";
 import {
   claimVideoQueueItem,
@@ -174,39 +177,75 @@ export async function GET(req: NextRequest) {
             continue;
           }
 
-          let updateData: any = {
-            taskStatus: "succeeded",
-            executeEndTime: BigInt(nowMs),
-          };
-
-          if (
+          const rawOutput =
             result?.data &&
             Array.isArray(result.data) &&
-            result.data.length > 0
-          ) {
-            const outputFile = result.data[0];
-            updateData.outputImageUrl = outputFile.fileUrl;
-            console.log(`📦 获取到结果URL: ${outputFile.fileUrl}`);
+            result.data.length > 0 &&
+            typeof result.data[0]?.fileUrl === "string"
+              ? result.data[0].fileUrl.trim()
+              : "";
+
+          // Never persist provider URLs. Success requires private R2 migration.
+          if (!rawOutput) {
+            console.log(
+              `ℹ️ Background provider success without output yet: ${task.replicateId}`,
+            );
+            continue;
+          }
+          if (getR2ObjectKey(task.outputImageUrl, env.R2_URL_BASE)) {
+            console.log(`ℹ️ Background already on private R2: ${task.replicateId}`);
+            continue;
           }
 
-          // 只有当结果发生变化时才更新数据库
-          const needsUpdate =
-            task.taskStatus !== "succeeded" ||
-            (result?.data &&
-              Array.isArray(result.data) &&
-              result.data.length > 0 &&
-              !task.outputImageUrl);
-
-          if (needsUpdate) {
-            await prisma.backgroundRemovalTask.update({
-              where: { replicateId: task.replicateId },
-              data: updateData,
-            });
-            console.log(`✅ 背景去除任务同步成功: ${task.replicateId}`);
-            synced++;
-          } else {
-            console.log(`ℹ️ 背景去除任务已是最新状态: ${task.replicateId}`);
+          let updateData: {
+            taskStatus: string;
+            executeEndTime: bigint;
+            outputImageUrl?: string | null;
+            errorMsg?: string | null;
+          } = {
+            taskStatus: "processing",
+            executeEndTime: BigInt(nowMs),
+          };
+          try {
+            const persisted = await persistRunningHubOutput(
+              rawOutput,
+              "background",
+              task.id,
+            );
+            if (!getR2ObjectKey(persisted, env.R2_URL_BASE)) {
+              throw new Error("Private result storage is unavailable");
+            }
+            updateData = {
+              taskStatus: "succeeded",
+              executeEndTime: BigInt(nowMs),
+              outputImageUrl: persisted,
+              errorMsg: null,
+            };
+          } catch (error) {
+            updateData = {
+              taskStatus: "processing",
+              executeEndTime: BigInt(nowMs),
+              // Explicitly clear any legacy provider URL.
+              outputImageUrl: null,
+              errorMsg:
+                "The result could not be stored yet. Please retry shortly.",
+            };
+            console.warn(
+              "Background queue sync could not persist provider output",
+              error instanceof Error ? error.name : "unknown",
+            );
           }
+
+          await prisma.backgroundRemovalTask.update({
+            where: { replicateId: task.replicateId },
+            data: updateData,
+          });
+          console.log(
+            updateData.taskStatus === "succeeded"
+              ? `✅ Background sync persisted to private R2: ${task.replicateId}`
+              : `⏳ Background sync waiting on private persistence: ${task.replicateId}`,
+          );
+          synced++;
         } else if (status === "FAILED" || status === "failed") {
           await prisma.backgroundRemovalTask.update({
             where: { replicateId: task.replicateId },
@@ -322,39 +361,76 @@ export async function GET(req: NextRequest) {
             continue;
           }
 
-          let updateData: any = {
-            taskStatus: "succeeded",
-            executeEndTime: BigInt(nowMs),
-          };
-
-          if (
+          const rawOutput =
             result?.data &&
             Array.isArray(result.data) &&
-            result.data.length > 0
-          ) {
-            const outputFile = result.data[0];
-            updateData.outputZipUrl = outputFile.fileUrl;
-            console.log(`📦 获取到结果URL: ${outputFile.fileUrl}`);
+            result.data.length > 0 &&
+            typeof result.data[0]?.fileUrl === "string"
+              ? result.data[0].fileUrl.trim()
+              : "";
+
+          // Never persist provider URLs. Success requires private R2 migration.
+          if (!rawOutput) {
+            console.log(
+              `ℹ️ Watermark provider success without output yet: ${task.runninghubTaskId}`,
+            );
+            continue;
+          }
+          if (getR2ObjectKey(task.outputZipUrl, env.R2_URL_BASE)) {
+            console.log(
+              `ℹ️ Watermark already on private R2: ${task.runninghubTaskId}`,
+            );
+            continue;
           }
 
-          // 只有当结果发生变化时才更新数据库
-          const needsUpdate =
-            task.taskStatus !== "succeeded" ||
-            (result?.data &&
-              Array.isArray(result.data) &&
-              result.data.length > 0 &&
-              !task.outputZipUrl);
-
-          if (needsUpdate) {
-            await prisma.watermarkRemovalTask.update({
-              where: { id: task.id },
-              data: updateData,
-            });
-            console.log(`✅ 去水印任务同步成功: ${task.runninghubTaskId}`);
-            synced++;
-          } else {
-            console.log(`ℹ️ 去水印任务已是最新状态: ${task.runninghubTaskId}`);
+          let updateData: {
+            taskStatus: string;
+            executeEndTime: bigint;
+            outputZipUrl?: string | null;
+            errorMsg?: string | null;
+          } = {
+            taskStatus: "processing",
+            executeEndTime: BigInt(nowMs),
+          };
+          try {
+            const persisted = await persistRunningHubOutput(
+              rawOutput,
+              "watermark",
+              task.id,
+            );
+            if (!getR2ObjectKey(persisted, env.R2_URL_BASE)) {
+              throw new Error("Private result storage is unavailable");
+            }
+            updateData = {
+              taskStatus: "succeeded",
+              executeEndTime: BigInt(nowMs),
+              outputZipUrl: persisted,
+              errorMsg: null,
+            };
+          } catch (error) {
+            updateData = {
+              taskStatus: "processing",
+              executeEndTime: BigInt(nowMs),
+              outputZipUrl: null,
+              errorMsg:
+                "The result could not be stored yet. Please retry shortly.",
+            };
+            console.warn(
+              "Watermark queue sync could not persist provider output",
+              error instanceof Error ? error.name : "unknown",
+            );
           }
+
+          await prisma.watermarkRemovalTask.update({
+            where: { id: task.id },
+            data: updateData,
+          });
+          console.log(
+            updateData.taskStatus === "succeeded"
+              ? `✅ Watermark sync persisted to private R2: ${task.runninghubTaskId}`
+              : `⏳ Watermark sync waiting on private persistence: ${task.runninghubTaskId}`,
+          );
+          synced++;
         } else if (status === "FAILED" || status === "failed") {
           await prisma.watermarkRemovalTask.update({
             where: { id: task.id },

@@ -156,10 +156,12 @@ export async function persistRunningHubOutput(
         : kind === "video"
           ? "sora2-video-watermark-removal/processed"
           : "watermark-removal/processed";
-  await createR2S3Service().putItemInBucket(filename, Buffer.from(bytes), {
-    path,
-    ContentType: contentType,
-    acl: "private",
-  });
-  return `${env.R2_URL_BASE.replace(/\/$/, "")}/${path}/${filename}`;
+  // Omit ACL headers: R2 buckets with object-ownership / private defaults reject canned ACLs.
+  const key = `${path}/${filename}`;
+  await createR2S3Service().putPrivateItemInBucket(
+    key,
+    Buffer.from(bytes),
+    contentType,
+  );
+  return `${env.R2_URL_BASE.replace(/\/$/, "")}/${key}`;
 }

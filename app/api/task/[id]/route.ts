@@ -15,6 +15,7 @@ import {
 } from "@/lib/task-lifecycle";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const responseHeaders = {
   "Cache-Control": "private, no-store, max-age=0",
