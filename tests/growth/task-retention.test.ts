@@ -814,17 +814,14 @@ test("cancelActiveOverdue cancels past-grace provider jobs and marks canceled", 
     },
   });
   assert.deepEqual(cancelCalls, ["2115733518440169474"]);
-  assert.equal(report.canceledActive, 1);
+  // Watermark cancel + local force-cancel of taskData missing provider id.
+  assert.equal(report.canceledActive, 2);
   assert.equal(report.wouldCancelActive, 0);
   assert.equal(report.cancelFailures.length, 0);
   assert.equal(rows.watermarkRemovalTask[0].taskStatus, "canceled");
   assert.equal(rows.watermarkRemovalTask[0].inputZipUrl, `${BASE}/in.zip`);
   assert.equal(rows.watermarkRemovalTask[0].retentionCleanedAt, undefined);
-  assert.ok(
-    report.activeBlockers.some(
-      (issue) => issue.reason === "active_overdue_missing_provider_id",
-    ),
-  );
+  assert.equal(report.activeBlockers.length, 0);
   const statusUpdate = calls.find(
     (call) =>
       call.op === "update" &&
