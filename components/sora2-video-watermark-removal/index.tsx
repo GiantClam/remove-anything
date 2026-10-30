@@ -41,6 +41,8 @@ import {
 } from "@/db/type";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
+import { trackAnalyticsEvent } from "@/lib/gtag";
 
 import { DownloadAction } from "../history/download-action";
 import { WebhookHandler } from "../marketing/webhook-handler";
@@ -174,6 +176,13 @@ export default function Sora2VideoWatermarkRemoval({
       } else if (rid) {
         setPollMode("record");
         setTaskId(String(rid));
+      }
+      const analyticsTaskId = rhId || rid;
+      if (analyticsTaskId) {
+        trackAnalyticsEvent(ANALYTICS_EVENTS.taskCreated, {
+          tool_slug: "sora2-video-watermark-removal",
+          task_id: String(analyticsTaskId),
+        });
       }
     },
   });
@@ -324,6 +333,12 @@ export default function Sora2VideoWatermarkRemoval({
         setEstimatedProgress(100);
         // 设置一次时间戳用于避免视频播放器缓存
         setVideoSrcTs(Date.now());
+        if (taskId) {
+          trackAnalyticsEvent(ANALYTICS_EVENTS.taskSucceeded, {
+            tool_slug: "sora2-video-watermark-removal",
+            task_id: String(taskId),
+          });
+        }
         toast.success("Sora2 video watermark removal completed!");
       } else if (
         queryTask.data.taskStatus ===
@@ -332,6 +347,12 @@ export default function Sora2VideoWatermarkRemoval({
         setLoading(false);
         setProcessingStartTime(null);
         setEstimatedProgress(0);
+        if (taskId) {
+          trackAnalyticsEvent(ANALYTICS_EVENTS.taskFailed, {
+            tool_slug: "sora2-video-watermark-removal",
+            task_id: String(taskId),
+          });
+        }
         toast.error("Sora2 video watermark removal failed. Please try again.");
       } else if (
         ["pending", "starting", "processing", "Processing"].includes(

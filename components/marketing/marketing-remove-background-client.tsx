@@ -23,6 +23,12 @@ import {
   shouldAutoOpenBackgroundPanel,
   type BackgroundToolVariant,
 } from '@/lib/background-tool-variants';
+import { getBackgroundToolAnalyticsSlug } from '@/lib/background-tool-analytics';
+import {
+  ANALYTICS_EVENTS,
+  getFileAnalyticsFields,
+} from '@/lib/analytics-events';
+import { trackAnalyticsEvent } from '@/lib/gtag';
 import { buildLocalizedPath, buildLocalizedUrl } from '@/lib/seo';
 import { Link } from '@/lib/navigation';
 
@@ -54,6 +60,7 @@ export default function MarketingRemoveBackground({
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const toolCopy = useMemo(() => getBackgroundToolCopy(locale, variant), [locale, variant]);
+  const toolSlug = useMemo(() => getBackgroundToolAnalyticsSlug(variant), [variant]);
   const defaultSelectedBackground = useMemo(
     () => getBackgroundToolDefaultBackground(variant),
     [variant],
@@ -494,6 +501,16 @@ export default function MarketingRemoveBackground({
     setIsProcessing(true);
 
     setUploadedFile(file);
+    trackAnalyticsEvent(ANALYTICS_EVENTS.uploadStarted, {
+      tool_slug: toolSlug,
+      locale,
+      ...getFileAnalyticsFields(file, status === 'authenticated'),
+    });
+    trackAnalyticsEvent(ANALYTICS_EVENTS.uploadCompleted, {
+      tool_slug: toolSlug,
+      locale,
+      ...getFileAnalyticsFields(file, status === 'authenticated'),
+    });
 
     // 显示原始图片
     const reader = new FileReader();
@@ -575,6 +592,12 @@ export default function MarketingRemoveBackground({
       if (result.success && result.taskId) {
         console.log("✅ 任务创建成功，任务ID:", result.taskId);
         setCurrentTaskId(result.taskId);
+        trackAnalyticsEvent(ANALYTICS_EVENTS.taskCreated, {
+          tool_slug: toolSlug,
+          locale,
+          task_id: String(result.taskId),
+          is_authenticated: status === 'authenticated',
+        });
         
         // 开始轮询任务状态
         await pollTaskStatus(result.taskId);
@@ -611,6 +634,12 @@ export default function MarketingRemoveBackground({
       const result = await response.json();
       if (result.success && result.taskId) {
         setCurrentTaskId(result.taskId);
+        trackAnalyticsEvent(ANALYTICS_EVENTS.taskCreated, {
+          tool_slug: toolSlug,
+          locale,
+          task_id: String(result.taskId),
+          is_authenticated: status === 'authenticated',
+        });
         await pollTaskStatus(result.taskId);
       } else {
         throw new Error('No task ID received');
@@ -664,6 +693,12 @@ export default function MarketingRemoveBackground({
             console.log("✅ 任务完成，输出:", data.output);
             setProcessedImage(data.output);
             setIsProcessing(false);
+            trackAnalyticsEvent(ANALYTICS_EVENTS.taskSucceeded, {
+              tool_slug: toolSlug,
+              locale,
+              task_id: String(taskId),
+              is_authenticated: status === 'authenticated',
+            });
             toast.success(tPage('backgroundRemoved'));
             
             // 保存到localStorage历史记录
@@ -681,6 +716,12 @@ export default function MarketingRemoveBackground({
             console.log("❌ 任务失败:", data.error);
             setHasError(data.error || 'Task failed');
             setIsProcessing(false);
+            trackAnalyticsEvent(ANALYTICS_EVENTS.taskFailed, {
+              tool_slug: toolSlug,
+              locale,
+              task_id: String(taskId),
+              is_authenticated: status === 'authenticated',
+            });
             toast.error(data.error || 'Task failed');
             eventSource.close();
           } else if (data.status === 'expired' || data.status === 'timeout') {
@@ -771,6 +812,12 @@ export default function MarketingRemoveBackground({
             if (taskStatus.output) {
               setProcessedImage(taskStatus.output);
               setIsProcessing(false);
+              trackAnalyticsEvent(ANALYTICS_EVENTS.taskSucceeded, {
+                tool_slug: toolSlug,
+                locale,
+                task_id: String(taskId),
+                is_authenticated: status === 'authenticated',
+              });
               toast.success(tPage('backgroundRemoved'));
               
               // 保存到localStorage历史记录
@@ -791,6 +838,12 @@ export default function MarketingRemoveBackground({
               clearTimeout(pollTimeout);
               pollTimeout = null;
             }
+            trackAnalyticsEvent(ANALYTICS_EVENTS.taskFailed, {
+              tool_slug: toolSlug,
+              locale,
+              task_id: String(taskId),
+              is_authenticated: status === 'authenticated',
+            });
             throw new Error(taskStatus.error || (taskStatus.status === 'expired' ? 'Task has expired' : 'Task failed'));
             
           default:
@@ -830,6 +883,12 @@ export default function MarketingRemoveBackground({
       // 如果有任务ID，使用API下载（支持统计和权限控制）
       if (currentTaskId) {
         console.log(`🔍 开始API下载: ${currentTaskId}`);
+        trackAnalyticsEvent(ANALYTICS_EVENTS.downloadClicked, {
+          tool_slug: toolSlug,
+          locale,
+          task_id: String(currentTaskId),
+          is_authenticated: status === 'authenticated',
+        });
         const response = await fetch(`/api/download-background?taskId=${encodeURIComponent(currentTaskId)}`, {
           credentials: 'include',
         });
