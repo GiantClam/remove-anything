@@ -1,0 +1,19 @@
+{
+  "deployId": "dpl_28X8dPVFAyRbQ6LT99yUcVDTppWP",
+  "previewHost": "https://remove-anything-4lq4nhrvk-giantclams-projects.vercel.app",
+  "probedAtAsiaShanghai": "2026-10-30T12:24:17+08:00",
+  "upload_status": 200,
+  "locator_redacted": null,
+  "locator_host": "9630806d5a588fc350ee64c395005cfa.r2.cloudflarestorage.com",
+  "locator_path_has_staging_bucket": true,
+  "locator_is_prod_s_domain": false,
+  "object_key_prefix": "uploads",
+  "object_key": "uploads/C6sqH8Y_kz0B.png",
+  "head_checks": {
+    "staging_private": 200,
+    "staging_public": 404,
+    "prod_public": 404,
+    "prod_private": 404
+  },
+  "verdict": "PASS"
+}
