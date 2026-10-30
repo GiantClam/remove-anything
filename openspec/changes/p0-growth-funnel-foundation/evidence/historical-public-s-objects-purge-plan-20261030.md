@@ -70,5 +70,5 @@ Deliverable: CSV/JSON inventory checked into evidence (no secret credentials; ke
 | Item | Status |
 | --- | --- |
 | Plan written | **DONE** (this file) |
-| Inventory export | **NOT STARTED** |
+| Inventory export | **PARTIAL** — object count + prefix rollup in `historical-public-s-objects-inventory-count-20261030.json` (no DB reference join yet) |
 | Any historical public delete | **NOT DONE** (forbidden until Phase 2 gates pass) |

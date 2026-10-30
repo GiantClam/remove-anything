@@ -1,0 +1,18 @@
+{
+  "bucket": "remove-anything",
+  "listedAtAsiaShanghai": "2026-10-30T12:19:56+08:00",
+  "objectCount": 937,
+  "bytesTotal": 2298691434,
+  "pages": 1,
+  "topLevelPrefixCounts": {
+    "background-removal": 495,
+    "uploads": 369,
+    "watermark-removal": 29,
+    "examples": 21,
+    "sample": 13,
+    "sora2-videos": 8,
+    "object-removal": 1,
+    "sora2-video-watermark-removal": 1
+  },
+  "note": "READ-ONLY inventory; no deletes performed"
+}
