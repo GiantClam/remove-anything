@@ -1,6 +1,7 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { Metadata } from "next";
 import dynamic from "next/dynamic";
+import { ToolViewTracker } from "@/components/analytics/tool-view-tracker";
 import { constructAlternates } from "@/lib/seo";
 import { getMetadataBase } from "@/lib/utils";
 
@@ -39,6 +40,7 @@ export default async function Sora2VideoWatermarkRemovalPage({
 
   return (
     <div>
+      <ToolViewTracker toolSlug="sora2-video-watermark-removal" locale={locale} />
       <Sora2VideoWatermarkRemoval locale={locale} chargeProduct={chargeProduct} />
     </div>
   );

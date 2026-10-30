@@ -38,6 +38,8 @@ import { Locale } from "@/config";
 import { ChargeProductSelectDto, TaskSelectDto, TaskStatus } from "@/db/type";
 import { Link } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
+import { trackAnalyticsEvent } from "@/lib/gtag";
 
 import { DownloadAction } from "../history/download-action";
 import { WebhookHandler } from "../marketing/webhook-handler";
@@ -238,6 +240,12 @@ export default function WatermarkRemoval({
       setTaskData(queryTask.data);
       if (queryTask.data.taskStatus === WatermarkRemovalTaskStatus.Succeeded) {
         setLoading(false);
+        if (taskId) {
+          trackAnalyticsEvent(ANALYTICS_EVENTS.taskSucceeded, {
+            tool_slug: "remove-watermark",
+            task_id: String(taskId),
+          });
+        }
         toast.success("Watermark removal completed!");
       } else if (
         queryTask.data.taskStatus === WatermarkRemovalTaskStatus.Expired
@@ -250,6 +258,12 @@ export default function WatermarkRemoval({
         queryTask.data.taskStatus === WatermarkRemovalTaskStatus.Failed
       ) {
         setLoading(false);
+        if (taskId) {
+          trackAnalyticsEvent(ANALYTICS_EVENTS.taskFailed, {
+            tool_slug: "remove-watermark",
+            task_id: String(taskId),
+          });
+        }
         toast.error("Watermark removal failed. Please try again.");
       } else if (
         ["queued", "pending", "starting", "processing"].includes(
@@ -407,6 +421,10 @@ export default function WatermarkRemoval({
       }
 
       setTaskId(result.taskId || result.id);
+      trackAnalyticsEvent(ANALYTICS_EVENTS.taskCreated, {
+        tool_slug: "remove-watermark",
+        task_id: String(result.taskId || result.id),
+      });
       toast.success("Watermark removal started!");
     } catch (error) {
       console.error("Watermark removal error:", error);

@@ -244,6 +244,12 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
     ) {
       setOutputImageUrl(taskQuery.data.outputImageUrl);
       setTaskPhase("succeeded");
+      if (taskRecordId != null || taskId) {
+        trackAnalyticsEvent(ANALYTICS_EVENTS.taskSucceeded, {
+          tool_slug: "remove-objects",
+          task_id: String(taskRecordId ?? taskId),
+        });
+      }
       toast.success("Object removal completed.");
       return;
     }
@@ -261,6 +267,12 @@ export default function RemoveObjects({ locale: _locale }: { locale: string }) {
         taskQuery.data.errorMsg || "Object removal failed. Please try again.",
       );
       setTaskPhase("failed");
+      if (taskRecordId != null || taskId) {
+        trackAnalyticsEvent(ANALYTICS_EVENTS.taskFailed, {
+          tool_slug: "remove-objects",
+          task_id: String(taskRecordId ?? taskId),
+        });
+      }
       toast.error(
         taskQuery.data.errorMsg || "Object removal failed. Please try again.",
       );
