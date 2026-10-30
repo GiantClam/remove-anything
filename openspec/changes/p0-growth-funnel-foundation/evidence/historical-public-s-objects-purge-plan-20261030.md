@@ -72,5 +72,5 @@ Deliverable: CSV/JSON inventory checked into evidence (no secret credentials; ke
 | Plan written | **DONE** (this file) |
 | Inventory export | **DONE** — full key listing + DB join classify in `historical-public-s-objects-classify-pass-20261030.md` (t49u) |
 | Orphan candidate report | **DONE** — 813 keys / ~2.22 GB; see classify-pass + `*-orphan-candidates-20261030.json` |
-| User approval for Phase 3 delete | **PENDING** — checklist in classify-pass |
-| Any historical public delete | **NOT DONE** (forbidden until Phase 2 gates + explicit approval) |
+| User approval for Phase 3 delete | **DONE** — t49u widget「批准删除（含 sora2）」 |
+| Any historical public delete | **DONE** — 813 orphans deleted; see `historical-public-s-objects-purge-pass-20261030.md` |

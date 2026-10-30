@@ -1,0 +1,26 @@
+{
+  "mode": "sample",
+  "at": "2026-10-30T12:39:31+08:00",
+  "sampleKeys": [
+    {
+      "key": "sora2-videos/dCvARHfpx7oo-test-video.mp4",
+      "size": 18
+    },
+    {
+      "key": "sora2-videos/fSc_yohIf1UE-test-video.mp4",
+      "size": 18
+    }
+  ],
+  "before": {
+    "objectCount": 937,
+    "bytesTotal": 2298691434
+  },
+  "after": {
+    "objectCount": 935,
+    "bytesTotal": 2298691398
+  },
+  "deletedCount": 2,
+  "bytesDeleted": 36,
+  "failed": [],
+  "skipped": []
+}

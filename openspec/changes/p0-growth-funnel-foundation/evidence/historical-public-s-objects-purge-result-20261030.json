@@ -1,0 +1,88 @@
+{
+  "note": "Phase 3 public orphan purge; private bucket untouched; no secrets",
+  "authority": "t49u widget approve delete including sora2",
+  "atAsiaShanghai": "2026-10-30T13:03:14+08:00",
+  "bucket": "remove-anything",
+  "plannedOrphans": 813,
+  "alreadyAbsentBeforeFull": 2,
+  "targeted": 811,
+  "deletedCount": 811,
+  "bytesDeleted": 2223456657,
+  "failedCount": 0,
+  "skippedCount": 0,
+  "skippedByReason": {},
+  "before": {
+    "objectCount": 935,
+    "bytesTotal": 2298691398,
+    "byPrefix": {
+      "background-removal": {
+        "count": 495,
+        "bytes": 588233599
+      },
+      "examples": {
+        "count": 21,
+        "bytes": 3938052
+      },
+      "object-removal": {
+        "count": 1,
+        "bytes": 270860
+      },
+      "sample": {
+        "count": 13,
+        "bytes": 5500550
+      },
+      "sora2-video-watermark-removal": {
+        "count": 1,
+        "bytes": 1621363
+      },
+      "sora2-videos": {
+        "count": 6,
+        "bytes": 63343266
+      },
+      "uploads": {
+        "count": 369,
+        "bytes": 1591554145
+      },
+      "watermark-removal": {
+        "count": 29,
+        "bytes": 44229563
+      }
+    }
+  },
+  "after": {
+    "objectCount": 124,
+    "bytesTotal": 75234741,
+    "byPrefix": {
+      "background-removal": {
+        "count": 71,
+        "bytes": 44297029
+      },
+      "examples": {
+        "count": 21,
+        "bytes": 3938052
+      },
+      "object-removal": {
+        "count": 1,
+        "bytes": 270860
+      },
+      "sample": {
+        "count": 13,
+        "bytes": 5500550
+      },
+      "sora2-video-watermark-removal": {
+        "count": 1,
+        "bytes": 1621363
+      },
+      "uploads": {
+        "count": 14,
+        "bytes": 18940220
+      },
+      "watermark-removal": {
+        "count": 3,
+        "bytes": 666667
+      }
+    }
+  },
+  "remainingShouldBeKeepAndReferenced": true,
+  "failed": []
+}

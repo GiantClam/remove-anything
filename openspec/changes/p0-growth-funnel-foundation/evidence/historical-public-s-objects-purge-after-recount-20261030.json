@@ -1,0 +1,37 @@
+{
+  "listedAtAsiaShanghai": "2026-10-30T13:04:14+08:00",
+  "bucket": "remove-anything",
+  "objectCount": 124,
+  "bytesTotal": 75234741,
+  "pages": 1,
+  "byPrefix": {
+    "background-removal": {
+      "count": 71,
+      "bytes": 44297029
+    },
+    "examples": {
+      "count": 21,
+      "bytes": 3938052
+    },
+    "object-removal": {
+      "count": 1,
+      "bytes": 270860
+    },
+    "sample": {
+      "count": 13,
+      "bytes": 5500550
+    },
+    "sora2-video-watermark-removal": {
+      "count": 1,
+      "bytes": 1621363
+    },
+    "uploads": {
+      "count": 14,
+      "bytes": 18940220
+    },
+    "watermark-removal": {
+      "count": 3,
+      "bytes": 666667
+    }
+  }
+}
