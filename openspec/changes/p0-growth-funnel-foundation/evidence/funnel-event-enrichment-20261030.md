@@ -22,7 +22,7 @@ Already wired (unchanged): `tool_view` on five image tools; `signup_started`; `p
 | Unit: variant → slug | covered by `tests/growth/background-tool-analytics.test.ts` |
 | Production deploy | **READY** `dpl_fCMBMv4D6R6LPt26g1V6BWcLRzqt` (main `359ac1e`, aliases www) |
 | Production JS contains `tool_view` / `task_created` / `upload_started` / `download_clicked` / `sora2-video-watermark-removal` | **PASS** (chunk grep after deploy) |
-| Production DebugView UI screenshot of custom events | **OPEN** for Monday funnel routine / interactive DebugView session |
+| Production DebugView UI screenshot of custom events | **PASS** — property `559043519`, 58 events/30m incl. `tool_view` 7, `task_created` 1, `homepage_tool_card_clicked` 1 (`evidence/ga4-debugview-custom-funnel-pass-20261030.md`) |
 | Full signup→paywall→checkout→purchase GA4 export | remains open inside 28-day baseline + weekly funnel routine |
 
 ## Does not close
