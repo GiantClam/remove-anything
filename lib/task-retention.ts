@@ -606,18 +606,9 @@ export async function runTaskRetention(
       }
 
       const providerTaskId = providerTaskIdForRetention(model, row);
-      if (!providerTaskId) {
-        report.activeBlockers.push({
-          model,
-          recordId: row.id,
-          field: "taskStatus",
-          reason: "active_overdue_missing_provider_id",
-          error: "No provider task id available for cancel",
-        });
-        continue;
-      }
-
-      const plausibleRhId = isRunningHubProviderTaskId(providerTaskId);
+      const plausibleRhId = providerTaskId
+        ? isRunningHubProviderTaskId(providerTaskId)
+        : false;
 
       if (dryRun) {
         report.wouldCancelActive++;
@@ -641,8 +632,8 @@ export async function runTaskRetention(
       let cancelError: string | undefined;
       let reconciledStatus: string | undefined;
 
-      // Legacy/non-RH ids cannot be canceled at the provider; force local terminal.
-      if (!plausibleRhId) {
+      // Missing or legacy/non-RH ids cannot be canceled at the provider; force local terminal.
+      if (!providerTaskId || !plausibleRhId) {
         canceledOk = true;
         reconciledStatus = "canceled";
         cancelError = undefined;
@@ -722,9 +713,11 @@ export async function runTaskRetention(
             taskStatus: nextStatus,
             retentionCheckedAt: now,
             updatedAt: now,
-            errorMsg: plausibleRhId
+            errorMsg: providerTaskId && plausibleRhId
               ? `retention: active overdue reconciled (${nextStatus}) after grace`
-              : "retention: active overdue with non-RunningHub provider id force-canceled after grace",
+              : providerTaskId
+                ? "retention: active overdue with non-RunningHub provider id force-canceled after grace"
+                : "retention: active overdue with missing provider id force-canceled after grace",
           },
         });
         report.canceledActive++;

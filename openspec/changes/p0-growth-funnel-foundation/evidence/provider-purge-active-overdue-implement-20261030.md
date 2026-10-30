@@ -50,3 +50,28 @@ Observed at 2026-10-30 ~10:51 Asia/Shanghai.
 - **PARTIAL** until reconcile follow-up ships for legacy/invalid ids and SUCCESS-stuck rows.
 - Provider object purge: **open / blocked on vendor API**.
 - Do **not** start 28-day baseline until GA4 DebugView gate is also closed (still needs Google sign-in).
+
+
+## Canary 2 (post-reconcile #32–#34) — `dpl_9LJAbYABB7CuFhyPYg5zV5mTf2JD`
+
+Observed at 2026-10-30 11:01 Asia/Shanghai via deployment URL (CF 1010 on apex from operator IP).
+
+| Field | Value |
+| --- | --- |
+| cancelActiveOverdueEnabled | **true** |
+| expired / filesDeleted | **26 / 48** |
+| **canceledActive** | **14** |
+| **cancelFailures** | **0** |
+| failures (R2) | **0** |
+| unresolvedExternal | 34 (provider hosts; purge still N/A) |
+| activeBlockers | 10 (`active_overdue_missing_provider_id` only) |
+
+Follow-up in same gate: force-cancel missing provider ids after grace (same local terminal path as legacy ids).
+
+## Final verdict for this gate
+
+- **PASS** overdue active cancel/reconcile (flag on, grace 6h).
+- Provider `rh-images.*` purge: **still blocked** (no vendor delete API).
+- Private R2 cutover: **not reversed**.
+- GA4 DebugView: **still blocked** on Google sign-in.
+- 28-day baseline: **do not start** until GA4 DebugView evidence lands.
