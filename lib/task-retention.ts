@@ -65,6 +65,7 @@ export type RetentionIssue = {
     | "active_overdue"
     | "active_overdue_grace"
     | "active_overdue_missing_provider_id"
+    | "active_overdue_invalid_provider_id"
     | "active_overdue_cancel_failed"
     | "financial_history"
     | "audit_state_changed";
@@ -200,6 +201,11 @@ export function providerTaskIdForRetention(
   if (typeof raw !== "string") return null;
   const id = raw.trim();
   return id.length > 0 ? id : null;
+}
+
+/** RunningHub openapi task ids are long decimal strings; reject legacy Replicate ids. */
+export function isRunningHubProviderTaskId(taskId: string): boolean {
+  return /^\d{10,}$/.test(taskId.trim());
 }
 
 /** Resolve only the exact configured HTTP(S) origin and path boundary. */
@@ -509,6 +515,10 @@ export type RunTaskRetentionOptions = {
   cancelActiveOverdue?: boolean;
   activeOverdueGraceMs?: number;
   cancelProviderTask?: (providerTaskId: string) => Promise<boolean>;
+  /** Optional status probe used to reconcile already-terminal provider jobs. */
+  getProviderTaskStatus?: (
+    providerTaskId: string,
+  ) => Promise<string | null | undefined>;
 };
 
 /** Bounded per-table processing; all object and row mutation defaults off. */
@@ -607,45 +617,10 @@ export async function runTaskRetention(
         continue;
       }
 
+      const plausibleRhId = isRunningHubProviderTaskId(providerTaskId);
+
       if (dryRun) {
         report.wouldCancelActive++;
-        continue;
-      }
-
-      if (!options.cancelProviderTask) {
-        const issue: RetentionIssue = {
-          model,
-          recordId: row.id,
-          field: "taskStatus",
-          reason: "active_overdue_cancel_failed",
-          error: "cancelProviderTask is not configured",
-        };
-        report.cancelFailures.push(issue);
-        report.activeBlockers.push(issue);
-        continue;
-      }
-
-      let canceledOk = false;
-      let cancelError: string | undefined;
-      try {
-        canceledOk = await options.cancelProviderTask(providerTaskId);
-        if (!canceledOk) {
-          cancelError = "provider cancel returned false";
-        }
-      } catch (error) {
-        cancelError = String(error);
-      }
-
-      if (!canceledOk) {
-        const issue: RetentionIssue = {
-          model,
-          recordId: row.id,
-          field: "taskStatus",
-          reason: "active_overdue_cancel_failed",
-          error: cancelError,
-        };
-        report.cancelFailures.push(issue);
-        report.activeBlockers.push(issue);
         continue;
       }
 
@@ -662,6 +637,78 @@ export async function runTaskRetention(
         continue;
       }
 
+      let canceledOk = false;
+      let cancelError: string | undefined;
+      let reconciledStatus: string | undefined;
+
+      // Legacy/non-RH ids cannot be canceled at the provider; force local terminal.
+      if (!plausibleRhId) {
+        canceledOk = true;
+        reconciledStatus = "canceled";
+        cancelError = undefined;
+      } else {
+        // Prefer status reconcile when the provider already finished.
+        if (options.getProviderTaskStatus) {
+          try {
+            const providerStatus = String(
+              (await options.getProviderTaskStatus(providerTaskId)) || "",
+            )
+              .trim()
+              .toUpperCase();
+            if (["SUCCESS", "SUCCEED", "SUCCEEDED", "COMPLETED"].includes(providerStatus)) {
+              canceledOk = true;
+              reconciledStatus = "succeeded";
+            } else if (["FAILED", "FAIL", "ERROR"].includes(providerStatus)) {
+              canceledOk = true;
+              reconciledStatus = "failed";
+            } else if (
+              ["CANCEL", "CANCELED", "CANCELLED"].includes(providerStatus)
+            ) {
+              canceledOk = true;
+              reconciledStatus = "canceled";
+            }
+          } catch (error) {
+            cancelError = `provider status probe failed: ${String(error)}`;
+          }
+        }
+
+        if (!canceledOk) {
+          if (!options.cancelProviderTask) {
+            cancelError =
+              cancelError || "cancelProviderTask is not configured";
+          } else {
+            try {
+              canceledOk = await options.cancelProviderTask(providerTaskId);
+              if (!canceledOk) {
+                cancelError =
+                  cancelError || "provider cancel returned false";
+              } else {
+                reconciledStatus = "canceled";
+              }
+            } catch (error) {
+              cancelError = String(error);
+            }
+          }
+        }
+      }
+
+      if (!canceledOk) {
+        const issue: RetentionIssue = {
+          model,
+          recordId: row.id,
+          field: "taskStatus",
+          reason: plausibleRhId
+            ? "active_overdue_cancel_failed"
+            : "active_overdue_invalid_provider_id",
+          error: cancelError,
+        };
+        report.cancelFailures.push(issue);
+        report.activeBlockers.push(issue);
+        continue;
+      }
+
+      const nextStatus = reconciledStatus || "canceled";
+
       // CAS: only leave active if still non-terminal and not already cleaned.
       // URLs stay intact so a later terminal retention batch can scrub R2.
       try {
@@ -672,10 +719,12 @@ export async function runTaskRetention(
             taskStatus: { in: ACTIVE_STATUS_VALUES },
           },
           data: {
-            taskStatus: "canceled",
+            taskStatus: nextStatus,
             retentionCheckedAt: now,
             updatedAt: now,
-            errorMsg: "retention: active overdue canceled after grace",
+            errorMsg: plausibleRhId
+              ? `retention: active overdue reconciled (${nextStatus}) after grace`
+              : "retention: active overdue with non-RunningHub provider id force-canceled after grace",
           },
         });
         report.canceledActive++;
@@ -691,6 +740,7 @@ export async function runTaskRetention(
         report.activeBlockers.push(issue);
       }
     }
+
     const records = await delegate.findMany({
       where: {
         ...dueWhere(now),

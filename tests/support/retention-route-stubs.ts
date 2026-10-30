@@ -70,6 +70,7 @@ export function createRetentionR2Storage() {
 
 export const runninghubAPI = {
   cancelTask: async (_taskId: string) => true,
+  getTaskStatus: async (_taskId: string) => ({ code: 0, data: "SUCCESS" }),
 };
 
 export function resetRetentionRouteState() {
