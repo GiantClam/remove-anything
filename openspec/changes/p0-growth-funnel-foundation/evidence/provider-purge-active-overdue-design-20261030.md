@@ -35,3 +35,9 @@ Per active_overdue record with `runninghubTaskId`:
 ## Immediate ops posture
 
 Keep bounded R2 execute batches; leave provider URLs + active_overdue as reported blockers; do not start 28-day baseline from this note.
+
+
+## Implementation status (follow-up)
+
+- Active overdue cancel: implemented behind `TASK_RETENTION_CANCEL_ACTIVE_OVERDUE` (default off) + grace; see retention-runbook and evidence `provider-purge-active-overdue-implement-20261030.md`.
+- Provider external purge: still **unavailable** (RunningHub OpenAPI has cancel + upload/status/outputs only; no delete-object for `rh-images.*`).

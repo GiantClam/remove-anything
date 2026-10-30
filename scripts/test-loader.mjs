@@ -310,7 +310,10 @@ export async function resolve(specifier, context, nextResolve) {
   if (parentPath === path.join(root, "app/api/cron/cleanup-tasks/route.ts")) {
     if (specifier === "next/server")
       return nextResolve("next/server.js", context);
-    if (specifier === "@/lib/r2-s3") {
+    if (
+      specifier === "@/lib/r2-s3" ||
+      specifier === "@/modules/runninghub"
+    ) {
       return {
         url: pathToFileURL(
           path.join(root, "tests/support/retention-route-stubs.ts"),

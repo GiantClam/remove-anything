@@ -356,3 +356,25 @@ test("malformed capacity response data is unknown and never retried", async () =
     assert.equal(calls, 1);
   }
 });
+
+
+test("cancelTask treats APIKEY_TASK_NOT_FOUND (807) as success", async () => {
+  let calls = 0;
+  globalThis.fetch = async (url, init) => {
+    calls++;
+    assert.equal(String(url), "https://provider.example.test/task/openapi/cancel");
+    assert.equal(init?.method, "POST");
+    const payload = JSON.parse(String(init?.body));
+    assert.equal(payload.apiKey, "test-key");
+    assert.equal(payload.taskId, "gone-task");
+    return response({ code: 807, msg: "APIKEY_TASK_NOT_FOUND", data: null });
+  };
+  assert.equal(await (await sdk()).cancelTask("gone-task"), true);
+  assert.equal(calls, 1);
+});
+
+test("cancelTask returns false for unexpected non-zero codes", async () => {
+  globalThis.fetch = async () =>
+    response({ code: 500, msg: "INTERNAL", data: null });
+  assert.equal(await (await sdk()).cancelTask("task-x"), false);
+});

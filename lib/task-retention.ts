@@ -7,6 +7,10 @@ export const MINIMAL_AUDIT_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
 export const DEFAULT_RETENTION_BATCH_SIZE = 100;
 export const DEFAULT_DELETE_ATTEMPTS = 3;
 export const RETENTION_EXECUTE_ENV = "TASK_RETENTION_EXECUTE";
+export const RETENTION_CANCEL_ACTIVE_OVERDUE_ENV =
+  "TASK_RETENTION_CANCEL_ACTIVE_OVERDUE";
+/** Extra wait after expiresAt before canceling overdue active provider jobs. */
+export const DEFAULT_ACTIVE_OVERDUE_GRACE_MS = 6 * 60 * 60 * 1000;
 
 export type RetentionModelName =
   | "taskData"
@@ -59,6 +63,9 @@ export type RetentionIssue = {
     | "shared_reference"
     | "delete_failed"
     | "active_overdue"
+    | "active_overdue_grace"
+    | "active_overdue_missing_provider_id"
+    | "active_overdue_cancel_failed"
     | "financial_history"
     | "audit_state_changed";
   error?: string;
@@ -79,6 +86,9 @@ export type RetentionReport = {
   sharedReferences: RetentionIssue[];
   failures: RetentionIssue[];
   activeBlockers: RetentionIssue[];
+  wouldCancelActive: number;
+  canceledActive: number;
+  cancelFailures: RetentionIssue[];
   auditTrimmed: number;
   auditWouldTrim: number;
   auditTrimBlocked: RetentionIssue[];
@@ -154,6 +164,42 @@ export function isRetentionDue(record: RetentionRecord, now = new Date()) {
         )
       : null);
   return Boolean(expiry && expiry.getTime() <= now.getTime());
+}
+
+export function retentionDeadline(record: RetentionRecord): Date | null {
+  return (
+    asDate(record.expiresAt) ||
+    (asDate(record.createdAt)
+      ? new Date(
+          asDate(record.createdAt)!.getTime() + TASK_SOURCE_RESULT_RETENTION_MS,
+        )
+      : null)
+  );
+}
+
+/** True when the retention deadline plus grace has elapsed. */
+export function isActiveOverduePastGrace(
+  record: RetentionRecord,
+  now = new Date(),
+  graceMs = DEFAULT_ACTIVE_OVERDUE_GRACE_MS,
+) {
+  const deadline = retentionDeadline(record);
+  const grace = Number.isFinite(graceMs) && graceMs >= 0 ? graceMs : DEFAULT_ACTIVE_OVERDUE_GRACE_MS;
+  return Boolean(deadline && deadline.getTime() + grace <= now.getTime());
+}
+
+/** Provider task id field differs by model (legacy replicateId vs runninghubTaskId). */
+export function providerTaskIdForRetention(
+  model: RetentionModelName,
+  record: RetentionRecord,
+): string | null {
+  const raw =
+    model === "taskData" || model === "backgroundRemovalTask"
+      ? record.replicateId
+      : record.runninghubTaskId;
+  if (typeof raw !== "string") return null;
+  const id = raw.trim();
+  return id.length > 0 ? id : null;
 }
 
 /** Resolve only the exact configured HTTP(S) origin and path boundary. */
@@ -459,6 +505,10 @@ export type RunTaskRetentionOptions = {
   deleteAttempts?: number;
   sleep?: (ms: number) => Promise<void>;
   isSharedAsset?: (artifact: RetentionArtifact) => Promise<boolean>;
+  /** Default off. When true, cancel provider jobs for active rows past grace. */
+  cancelActiveOverdue?: boolean;
+  activeOverdueGraceMs?: number;
+  cancelProviderTask?: (providerTaskId: string) => Promise<boolean>;
 };
 
 /** Bounded per-table processing; all object and row mutation defaults off. */
@@ -494,11 +544,22 @@ export async function runTaskRetention(
     sharedReferences: [],
     failures: [],
     activeBlockers: [],
+    wouldCancelActive: 0,
+    canceledActive: 0,
+    cancelFailures: [],
     auditTrimmed: 0,
     auditWouldTrim: 0,
     auditTrimBlocked: [],
     auditTrimUnsupported: [],
   };
+
+  const cancelActiveOverdue = options.cancelActiveOverdue === true;
+  const activeOverdueGraceMs =
+    typeof options.activeOverdueGraceMs === "number" &&
+    Number.isFinite(options.activeOverdueGraceMs) &&
+    options.activeOverdueGraceMs >= 0
+      ? options.activeOverdueGraceMs
+      : DEFAULT_ACTIVE_OVERDUE_GRACE_MS;
 
   for (const model of MODEL_NAMES) {
     const delegate = options.db[model];
@@ -511,14 +572,124 @@ export async function runTaskRetention(
     for (const row of (active || [])
       .filter((row) => isActiveRetentionTask(row) && isRetentionDue(row, now))
       .slice(0, batchSize)) {
-      report.activeBlockers.push({
-        model,
-        recordId: row.id,
-        field: "taskStatus",
-        reason: "active_overdue",
-        error:
-          "Provider cancellation or terminal-state reconciliation is required before deleting active work",
-      });
+      if (!cancelActiveOverdue) {
+        report.activeBlockers.push({
+          model,
+          recordId: row.id,
+          field: "taskStatus",
+          reason: "active_overdue",
+          error:
+            "Provider cancellation or terminal-state reconciliation is required before deleting active work",
+        });
+        continue;
+      }
+
+      if (!isActiveOverduePastGrace(row, now, activeOverdueGraceMs)) {
+        report.activeBlockers.push({
+          model,
+          recordId: row.id,
+          field: "taskStatus",
+          reason: "active_overdue_grace",
+          error: `Waiting for active-overdue grace (${activeOverdueGraceMs}ms) before cancel`,
+        });
+        continue;
+      }
+
+      const providerTaskId = providerTaskIdForRetention(model, row);
+      if (!providerTaskId) {
+        report.activeBlockers.push({
+          model,
+          recordId: row.id,
+          field: "taskStatus",
+          reason: "active_overdue_missing_provider_id",
+          error: "No provider task id available for cancel",
+        });
+        continue;
+      }
+
+      if (dryRun) {
+        report.wouldCancelActive++;
+        continue;
+      }
+
+      if (!options.cancelProviderTask) {
+        const issue: RetentionIssue = {
+          model,
+          recordId: row.id,
+          field: "taskStatus",
+          reason: "active_overdue_cancel_failed",
+          error: "cancelProviderTask is not configured",
+        };
+        report.cancelFailures.push(issue);
+        report.activeBlockers.push(issue);
+        continue;
+      }
+
+      let canceledOk = false;
+      let cancelError: string | undefined;
+      try {
+        canceledOk = await options.cancelProviderTask(providerTaskId);
+        if (!canceledOk) {
+          cancelError = "provider cancel returned false";
+        }
+      } catch (error) {
+        cancelError = String(error);
+      }
+
+      if (!canceledOk) {
+        const issue: RetentionIssue = {
+          model,
+          recordId: row.id,
+          field: "taskStatus",
+          reason: "active_overdue_cancel_failed",
+          error: cancelError,
+        };
+        report.cancelFailures.push(issue);
+        report.activeBlockers.push(issue);
+        continue;
+      }
+
+      if (!delegate.update) {
+        const issue: RetentionIssue = {
+          model,
+          recordId: row.id,
+          field: "taskStatus",
+          reason: "active_overdue_cancel_failed",
+          error: `Retention update delegate is unavailable: ${model}`,
+        };
+        report.cancelFailures.push(issue);
+        report.activeBlockers.push(issue);
+        continue;
+      }
+
+      // CAS: only leave active if still non-terminal and not already cleaned.
+      // URLs stay intact so a later terminal retention batch can scrub R2.
+      try {
+        await delegate.update({
+          where: {
+            id: row.id,
+            retentionCleanedAt: null,
+            taskStatus: { in: ACTIVE_STATUS_VALUES },
+          },
+          data: {
+            taskStatus: "canceled",
+            retentionCheckedAt: now,
+            updatedAt: now,
+            errorMsg: "retention: active overdue canceled after grace",
+          },
+        });
+        report.canceledActive++;
+      } catch (error) {
+        const issue: RetentionIssue = {
+          model,
+          recordId: row.id,
+          field: "taskStatus",
+          reason: "active_overdue_cancel_failed",
+          error: `CAS status update failed after provider cancel: ${String(error)}`,
+        };
+        report.cancelFailures.push(issue);
+        report.activeBlockers.push(issue);
+      }
     }
     const records = await delegate.findMany({
       where: {

@@ -64,6 +64,14 @@ export function createR2S3Service() {
   };
 }
 
+export function createRetentionR2Storage() {
+  return createR2S3Service();
+}
+
+export const runninghubAPI = {
+  cancelTask: async (_taskId: string) => true,
+};
+
 export function resetRetentionRouteState() {
   retentionRouteState.rows = [
     {
