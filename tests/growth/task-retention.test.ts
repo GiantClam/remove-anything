@@ -943,3 +943,41 @@ test("reconciles SUCCESS provider status without requiring cancel", async () => 
   assert.equal(report.canceledActive, 1);
   assert.equal(rows.backgroundRemovalTask[0].taskStatus, "succeeded");
 });
+
+
+test("missing provider ids are force-canceled locally after grace", async () => {
+  const { runTaskRetention } = await retentionPromise;
+  const rows = emptyRows();
+  rows.taskData.push(
+    dueTask(60, {
+      taskStatus: "processing",
+      expiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
+      auditExpiresAt: new Date("2027-01-01T00:00:00.000Z"),
+      inputImageUrl: `${BASE}/missing-provider.png`,
+    }),
+  );
+  const calls: AnyRecord[] = [];
+  const report = await runTaskRetention({
+    db: makeDb(rows, calls),
+    storage: { deleteItemInBucket: async () => {} },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
+    cancelActiveOverdue: true,
+    activeOverdueGraceMs: 6 * 60 * 60 * 1000,
+    isSharedAsset: async () => false,
+    cancelProviderTask: async () => {
+      assert.fail("must not call provider without id");
+      return false;
+    },
+  });
+  assert.equal(report.canceledActive, 1);
+  assert.ok(
+    calls.some(
+      (call) =>
+        call.op === "update" &&
+        call.model === "taskData" &&
+        call.args.data.taskStatus === "canceled",
+    ),
+  );
+});
