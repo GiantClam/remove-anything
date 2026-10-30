@@ -92,8 +92,16 @@ export async function GET(req: NextRequest) {
       getProviderTaskStatus: cancelActiveOverdue
         ? async (providerTaskId) => {
             const response = await runninghubAPI.getTaskStatus(providerTaskId);
-            const status = response?.data?.status;
-            return typeof status === "string" ? status : null;
+            const data = (response as { data?: unknown } | null | undefined)?.data;
+            if (typeof data === "string") return data;
+            if (
+              data &&
+              typeof data === "object" &&
+              typeof (data as { status?: unknown }).status === "string"
+            ) {
+              return (data as { status: string }).status;
+            }
+            return null;
           }
         : undefined,
     });
