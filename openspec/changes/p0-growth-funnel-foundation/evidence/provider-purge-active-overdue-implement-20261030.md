@@ -75,3 +75,21 @@ Follow-up in same gate: force-cancel missing provider ids after grace (same loca
 - Private R2 cutover: **not reversed**.
 - GA4 DebugView: **still blocked** on Google sign-in.
 - 28-day baseline: **do not start** until GA4 DebugView evidence lands.
+
+
+## Canary 3 (missing-id force-cancel #35) — `dpl_6pfuL42vrEyWdL1DKuNwcBFHyNBB`
+
+Observed at 2026-10-30 ~11:04 Asia/Shanghai.
+
+| Field | Value |
+| --- | --- |
+| cancelActiveOverdueEnabled | **True** |
+| expired / filesDeleted | **22 / 44** |
+| **canceledActive** | **20** |
+| **cancelFailures** | **0** |
+| failures (R2) | **0** |
+| unresolvedExternal | 39 ({'f.fluxkreafree.com': 18, 'rh-images-tos.xiaoyaoyou.com': 2, 'rh-images.xiaoyaoyou.com': 19}) |
+| activeBlockers | 0 ({}) |
+| observedAt | 2026-10-30T11:05:04.654305+08:00 |
+
+**PASS** for overdue cancel gate (provider file purge still unavailable).
