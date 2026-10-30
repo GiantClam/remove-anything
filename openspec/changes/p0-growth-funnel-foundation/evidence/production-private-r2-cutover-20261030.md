@@ -63,3 +63,6 @@ Documented residual risk: anonymous GETs to existing keys on `s.remove-anything.
 
 Account holder must expand the Production R2 API token (or mint a new Object Read & Write token) to include **`remove-anything-private`**, then set Production `R2_PRIVATE_BUCKET=remove-anything-private` and redeploy. Do not re-enable until a tiny upload returns 200 and anonymous CDN GET of the new key is 404 while `/api/download*` works.
 
+## Follow-up (same day)
+
+After RH coin top-up (t46u) and generate canary PASS on public, Production `R2_PRIVATE_BUCKET` was re-enabled. Full PASS evidence: `production-private-r2-cutover-pass-20261030.md` / deploy `dpl_8MP5aZETAgx2erNfVTNHr8fFL82G`.
