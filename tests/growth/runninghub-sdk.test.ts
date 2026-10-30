@@ -226,6 +226,45 @@ test("explicit capacity rejection stops after one automatic retry", async () => 
   assert.equal(calls, 2);
 });
 
+test("balance insufficiency is an explicit rejection and is not retried", async () => {
+  for (const msg of [
+    "NOT_ENOUGH_BALANCE",
+    "TASK_CREATE_FAILED_BY_NOT_ENOUGH_WALLET",
+    "CORPAPIKEY_INSUFFICIENT_FUNDS",
+  ]) {
+    let calls = 0;
+    globalThis.fetch = async () => {
+      calls++;
+      return response({ code: 605, msg, data: null });
+    };
+    await assert.rejects(
+      (await sdk()).createTaskGeneric(options),
+      (error: any) =>
+        error.code === "TASK_CREATION_REJECTED" &&
+        error.taskWasNotCreated === true &&
+        String(error.message).includes(msg),
+    );
+    assert.equal(calls, 1);
+  }
+});
+
+test("balance response with a task id stays unknown and is not retried", async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return response({
+      code: 605,
+      msg: "NOT_ENOUGH_BALANCE",
+      data: { taskId: "possibly-created" },
+    });
+  };
+  await assert.rejects(
+    (await sdk()).createTaskGeneric(options),
+    (error: any) => error.code === "TASK_CREATION_OUTCOME_UNKNOWN",
+  );
+  assert.equal(calls, 1);
+});
+
 test("network failure leaves creation outcome unknown and never replays create", async () => {
   let calls = 0;
   globalThis.fetch = async () => {

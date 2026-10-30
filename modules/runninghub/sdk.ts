@@ -77,15 +77,30 @@ export class TaskCreationRejectedError extends Error {
   }
 }
 
-function isExplicitCapacityRejection(result: RunningHubCreateTaskResponse) {
+function hasNoProviderTaskId(result: RunningHubCreateTaskResponse) {
   const data = result.data;
   if (data != null && (typeof data !== "object" || Array.isArray(data)))
     return false;
   const taskId = data?.taskId;
+  return taskId == null || taskId === "";
+}
+
+function isExplicitCapacityRejection(result: RunningHubCreateTaskResponse) {
   return (
     result.code !== 0 &&
-    (taskId == null || taskId === "") &&
+    hasNoProviderTaskId(result) &&
     /^(TASK_QUEUE_MAXED|TASK_INSTANCE_MAXED)(?:\b|$)/.test(result.msg || "")
+  );
+}
+
+// Balance / wallet refusals prove the provider did not accept a paid job.
+function isExplicitBalanceRejection(result: RunningHubCreateTaskResponse) {
+  return (
+    result.code !== 0 &&
+    hasNoProviderTaskId(result) &&
+    /^(NOT_ENOUGH_BALANCE|TASK_CREATE_FAILED_BY_NOT_ENOUGH_WALLET|CORPAPIKEY_INSUFFICIENT_FUNDS)(?:\b|$)/.test(
+      result.msg || "",
+    )
   );
 }
 
@@ -271,6 +286,10 @@ export class RunningHubAPI {
         continue;
       }
       if (isExplicitCapacityRejection(result))
+        throw new TaskCreationRejectedError(
+          redactCallbackSecret(`Create task failed (api): ${result.msg}`),
+        );
+      if (isExplicitBalanceRejection(result))
         throw new TaskCreationRejectedError(
           redactCallbackSecret(`Create task failed (api): ${result.msg}`),
         );
