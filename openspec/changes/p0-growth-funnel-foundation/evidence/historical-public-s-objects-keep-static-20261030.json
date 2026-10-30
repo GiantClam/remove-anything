@@ -1,0 +1,178 @@
+{
+  "listedAtAsiaShanghai": "2026-10-30T12:36:40+08:00",
+  "bucket": "remove-anything",
+  "count": 34,
+  "bytes": 9438602,
+  "keys": [
+    {
+      "key": "examples/",
+      "size": 0,
+      "lastModified": "2025-11-03T15:06:00.839Z"
+    },
+    {
+      "key": "examples/complex_background_after.webp",
+      "size": 507074,
+      "lastModified": "2025-11-03T15:08:53.208Z"
+    },
+    {
+      "key": "examples/complex_background_before.webp",
+      "size": 743414,
+      "lastModified": "2025-11-03T15:12:27.552Z"
+    },
+    {
+      "key": "examples/furniture_after.webp",
+      "size": 44044,
+      "lastModified": "2025-11-03T15:08:53.188Z"
+    },
+    {
+      "key": "examples/furniture_before.webp",
+      "size": 32004,
+      "lastModified": "2025-11-03T15:08:49.536Z"
+    },
+    {
+      "key": "examples/glass_after.webp",
+      "size": 27734,
+      "lastModified": "2025-11-03T15:08:57.588Z"
+    },
+    {
+      "key": "examples/glass_before.webp",
+      "size": 18160,
+      "lastModified": "2025-11-03T15:08:50.674Z"
+    },
+    {
+      "key": "examples/logo_after.webp",
+      "size": 21446,
+      "lastModified": "2025-11-03T15:08:52.596Z"
+    },
+    {
+      "key": "examples/logo_before.webp",
+      "size": 18792,
+      "lastModified": "2025-11-03T15:08:45.082Z"
+    },
+    {
+      "key": "examples/metal_after.webp",
+      "size": 30140,
+      "lastModified": "2025-11-03T15:08:52.528Z"
+    },
+    {
+      "key": "examples/metal_before.webp",
+      "size": 24810,
+      "lastModified": "2025-11-03T15:08:47.940Z"
+    },
+    {
+      "key": "examples/model_after.png",
+      "size": 1882178,
+      "lastModified": "2025-11-03T15:08:56.383Z"
+    },
+    {
+      "key": "examples/model_before.webp",
+      "size": 25510,
+      "lastModified": "2025-11-03T15:08:48.727Z"
+    },
+    {
+      "key": "examples/object_after.webp",
+      "size": 31806,
+      "lastModified": "2025-11-03T15:08:54.074Z"
+    },
+    {
+      "key": "examples/object_before.webp",
+      "size": 24770,
+      "lastModified": "2025-11-03T15:08:45.658Z"
+    },
+    {
+      "key": "examples/pet_after.webp",
+      "size": 120750,
+      "lastModified": "2025-11-03T15:08:55.104Z"
+    },
+    {
+      "key": "examples/pet_before.webp",
+      "size": 84668,
+      "lastModified": "2025-11-03T15:08:47.272Z"
+    },
+    {
+      "key": "examples/portrait_after.webp",
+      "size": 124324,
+      "lastModified": "2025-11-03T15:08:54.874Z"
+    },
+    {
+      "key": "examples/portrait_before.webp",
+      "size": 56148,
+      "lastModified": "2025-11-03T15:08:45.795Z"
+    },
+    {
+      "key": "examples/product_after.webp",
+      "size": 75410,
+      "lastModified": "2025-11-03T15:08:55.918Z"
+    },
+    {
+      "key": "examples/product_before.webp",
+      "size": 44870,
+      "lastModified": "2025-11-03T15:08:45.371Z"
+    },
+    {
+      "key": "sample/",
+      "size": 0,
+      "lastModified": "2025-10-20T07:38:20.161Z"
+    },
+    {
+      "key": "sample/1.png",
+      "size": 172198,
+      "lastModified": "2025-10-20T07:39:18.084Z"
+    },
+    {
+      "key": "sample/2.png",
+      "size": 318663,
+      "lastModified": "2025-10-20T07:39:18.735Z"
+    },
+    {
+      "key": "sample/3.png",
+      "size": 298442,
+      "lastModified": "2025-10-20T07:39:17.782Z"
+    },
+    {
+      "key": "sample/4.png",
+      "size": 300385,
+      "lastModified": "2025-10-20T07:39:18.432Z"
+    },
+    {
+      "key": "sample/5.png",
+      "size": 296264,
+      "lastModified": "2025-10-20T07:39:16.746Z"
+    },
+    {
+      "key": "sample/6.png",
+      "size": 263958,
+      "lastModified": "2025-10-20T07:39:16.465Z"
+    },
+    {
+      "key": "sample/7.png",
+      "size": 226689,
+      "lastModified": "2025-10-20T07:39:16.729Z"
+    },
+    {
+      "key": "sample/8.png",
+      "size": 270875,
+      "lastModified": "2025-10-20T07:39:18.205Z"
+    },
+    {
+      "key": "sample/ai-background-removal-guide.webp",
+      "size": 871908,
+      "lastModified": "2025-10-24T13:44:41.238Z"
+    },
+    {
+      "key": "sample/batch-image-processing-guide.webp",
+      "size": 769144,
+      "lastModified": "2025-10-24T13:44:40.471Z"
+    },
+    {
+      "key": "sample/birefnet-ai-background-removal-revolution.webp",
+      "size": 1014608,
+      "lastModified": "2025-10-24T13:44:42.781Z"
+    },
+    {
+      "key": "sample/watermark-removal-guide.webp",
+      "size": 697416,
+      "lastModified": "2025-10-24T13:44:38.955Z"
+    }
+  ]
+}

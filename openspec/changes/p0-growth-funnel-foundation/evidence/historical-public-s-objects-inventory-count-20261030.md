@@ -1,12 +1,13 @@
 # Historical public `s.` object inventory count — 2026-10-30 (Asia/Shanghai)
 
-Authority: t48u. **READ-ONLY. No deletes.**
+Authority: t48u count; t49u DB join. **READ-ONLY. No deletes.**
 
 Source: S3 `ListObjectsV2` against production public bucket `remove-anything` using Production object credentials. Secrets not recorded.
 
 | Metric | Value |
 | --- | --- |
-| Listed at | 2026-10-30T12:19:56+08:00 (Asia/Shanghai) |
+| Listed at (count) | 2026-10-30T12:19:56+08:00 (Asia/Shanghai) |
+| Listed at (classify join) | see `historical-public-s-objects-classify-summary-20261030.json` |
 | Object count | **937** |
 | Bytes total | 2298691434 (~2.30 GB) |
 | List pages | 1 |
@@ -24,6 +25,6 @@ Source: S3 `ListObjectsV2` against production public bucket `remove-anything` us
 | `object-removal` | 1 |
 | `sora2-video-watermark-removal` | 1 |
 
-## Next
+## Classification (Phase 1 complete)
 
-Classify against DB references per `historical-public-s-objects-purge-plan-20261030.md` Phase 1 before any purge PR.
+See `historical-public-s-objects-classify-pass-20261030.md` and companion JSON. **No purge executed.**
