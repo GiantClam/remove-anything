@@ -20,7 +20,9 @@ Already wired (unchanged): `tool_view` on five image tools; `signup_started`; `p
 | Check | Status |
 | --- | --- |
 | Unit: variant → slug | covered by `tests/growth/background-tool-analytics.test.ts` |
-| Production DebugView custom-event receipt after deploy | **pending deploy of this PR** — re-check `tool_view` / `task_created` with `?debug_mode=1` |
+| Production deploy | **READY** `dpl_fCMBMv4D6R6LPt26g1V6BWcLRzqt` (main `359ac1e`, aliases www) |
+| Production JS contains `tool_view` / `task_created` / `upload_started` / `download_clicked` / `sora2-video-watermark-removal` | **PASS** (chunk grep after deploy) |
+| Production DebugView UI screenshot of custom events | **OPEN** for Monday funnel routine / interactive DebugView session |
 | Full signup→paywall→checkout→purchase GA4 export | remains open inside 28-day baseline + weekly funnel routine |
 
 ## Does not close
