@@ -324,6 +324,27 @@ export async function POST(req: NextRequest) {
         { status: 503 },
       );
     }
+    if (
+      (error as { code?: string; taskWasNotCreated?: boolean })?.code ===
+        "TASK_CREATION_REJECTED" &&
+      (error as { taskWasNotCreated?: boolean }).taskWasNotCreated === true
+    ) {
+      if (reservationId)
+        await markImageTaskReservationFailed(
+          "backgroundRemovalTask",
+          reservationId,
+          error,
+        ).catch(() => null);
+      return json(
+        {
+          error:
+            "The provider refused to create this task. Check RunningHub RH coin / wallet balance before retrying.",
+          code: "TASK_CREATION_REJECTED",
+          taskRecordId: reservationId,
+        },
+        { status: 502 },
+      );
+    }
     if (providerTaskId)
       await createRunningHubClient()
         .cancelTask?.(providerTaskId)
