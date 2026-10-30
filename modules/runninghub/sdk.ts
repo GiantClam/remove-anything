@@ -319,8 +319,9 @@ export class RunningHubAPI {
       );
     }
     const result = (await response.json()) as { code: number; msg?: string };
-    // 0 = canceled; 807 = APIKEY_TASK_NOT_FOUND (already gone / terminal).
-    if (result.code === 0 || result.code === 807) return true;
+    // 0 = canceled; 807 = not found; 817 = cancel not allowed (usually already terminal).
+    if (result.code === 0 || result.code === 807 || result.code === 817)
+      return true;
     return false;
   }
 

@@ -783,7 +783,7 @@ test("cancelActiveOverdue cancels past-grace provider jobs and marks canceled", 
   rows.watermarkRemovalTask.push(
     dueTask(4, {
       taskStatus: "processing",
-      runninghubTaskId: "rh-wm-4",
+      runninghubTaskId: "2115733518440169474",
       inputZipUrl: `${BASE}/in.zip`,
       expiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
     }),
@@ -813,7 +813,7 @@ test("cancelActiveOverdue cancels past-grace provider jobs and marks canceled", 
       return true;
     },
   });
-  assert.deepEqual(cancelCalls, ["rh-wm-4"]);
+  assert.deepEqual(cancelCalls, ["2115733518440169474"]);
   assert.equal(report.canceledActive, 1);
   assert.equal(report.wouldCancelActive, 0);
   assert.equal(report.cancelFailures.length, 0);
@@ -840,7 +840,7 @@ test("cancelActiveOverdue records cancel failure and leaves row active", async (
   rows.objectRemovalTask.push(
     dueTask(6, {
       taskStatus: "processing",
-      runninghubTaskId: "rh-obj-6",
+      runninghubTaskId: "2115733518440169999",
       inputImageUrl: `${BASE}/in.png`,
       inputMaskUrl: `${BASE}/mask.png`,
       expiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
@@ -865,4 +865,81 @@ test("cancelActiveOverdue records cancel failure and leaves row active", async (
   assert.equal(report.cancelFailures.length, 1);
   assert.equal(report.cancelFailures[0].reason, "active_overdue_cancel_failed");
   assert.equal(rows.objectRemovalTask[0].taskStatus, "processing");
+});
+
+
+test("invalid legacy provider ids are force-canceled locally after grace", async () => {
+  const { runTaskRetention } = await retentionPromise;
+  const rows = emptyRows();
+  rows.taskData.push(
+    dueTask(50, {
+      taskStatus: "Processing",
+      replicateId: "7vadlegacyreplicatetaskid01",
+      expiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
+      // Keep audit far away so this test isolates cancel reconcile.
+      auditExpiresAt: new Date("2027-01-01T00:00:00.000Z"),
+      inputImageUrl: `${BASE}/legacy.png`,
+    }),
+  );
+  const calls: AnyRecord[] = [];
+  const cancelCalls: string[] = [];
+  const report = await runTaskRetention({
+    db: makeDb(rows, calls),
+    storage: {
+      deleteItemInBucket: async () => {},
+    },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
+    cancelActiveOverdue: true,
+    activeOverdueGraceMs: 6 * 60 * 60 * 1000,
+    isSharedAsset: async () => false,
+    cancelProviderTask: async (id) => {
+      cancelCalls.push(id);
+      return true;
+    },
+  });
+  assert.deepEqual(cancelCalls, []);
+  assert.equal(report.canceledActive, 1);
+  const statusUpdate = calls.find(
+    (call) =>
+      call.op === "update" &&
+      call.model === "taskData" &&
+      call.args.data.taskStatus === "canceled",
+  );
+  assert.ok(statusUpdate);
+});
+
+test("reconciles SUCCESS provider status without requiring cancel", async () => {
+  const { runTaskRetention } = await retentionPromise;
+  const rows = emptyRows();
+  rows.backgroundRemovalTask.push(
+    dueTask(51, {
+      taskStatus: "processing",
+      replicateId: "2115733518440169474",
+      outputImageUrl: `${BASE}/bg.png`,
+      expiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
+    }),
+  );
+  const cancelCalls: string[] = [];
+  const report = await runTaskRetention({
+    db: makeDb(rows, []),
+    storage: {
+      deleteItemInBucket: async () => assert.fail("must not delete"),
+    },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
+    cancelActiveOverdue: true,
+    activeOverdueGraceMs: 0,
+    isSharedAsset: async () => false,
+    getProviderTaskStatus: async () => "SUCCESS",
+    cancelProviderTask: async (id) => {
+      cancelCalls.push(id);
+      return false;
+    },
+  });
+  assert.deepEqual(cancelCalls, []);
+  assert.equal(report.canceledActive, 1);
+  assert.equal(rows.backgroundRemovalTask[0].taskStatus, "succeeded");
 });

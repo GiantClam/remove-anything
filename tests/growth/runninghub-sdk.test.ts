@@ -378,3 +378,10 @@ test("cancelTask returns false for unexpected non-zero codes", async () => {
     response({ code: 500, msg: "INTERNAL", data: null });
   assert.equal(await (await sdk()).cancelTask("task-x"), false);
 });
+
+
+test("cancelTask treats APIKEY_TASK_CANCEL_NOT_ALLOWED (817) as success", async () => {
+  globalThis.fetch = async () =>
+    response({ code: 817, msg: "APIKEY_TASK_CANCEL_NOT_ALLOWED", data: null });
+  assert.equal(await (await sdk()).cancelTask("finished-task"), true);
+});
