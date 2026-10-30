@@ -19,6 +19,8 @@ const envKeys = [
   "TASK_RETENTION_EXECUTE",
   "TASK_RETENTION_BATCH_SIZE",
   "TASK_RETENTION_CRON_ENABLED",
+  "TASK_RETENTION_CANCEL_ACTIVE_OVERDUE",
+  "TASK_RETENTION_ACTIVE_OVERDUE_GRACE_MS",
 ] as const;
 const originalEnv = Object.fromEntries(
   envKeys.map((key) => [key, process.env[key]]),
@@ -31,6 +33,8 @@ beforeEach(() => {
   delete process.env.TASK_RETENTION_EXECUTE;
   delete process.env.TASK_RETENTION_BATCH_SIZE;
   delete process.env.TASK_RETENTION_CRON_ENABLED;
+  delete process.env.TASK_RETENTION_CANCEL_ACTIVE_OVERDUE;
+  delete process.env.TASK_RETENTION_ACTIVE_OVERDUE_GRACE_MS;
 });
 after(() => {
   for (const key of envKeys) {
@@ -159,4 +163,31 @@ test("missing R2 URL configuration returns unavailable before the runner is call
   assert.equal(response.status, 503);
   assert.equal((await response.json()).error, "R2_URL_BASE is not configured");
   assertNoBoundariesCalled();
+});
+
+
+test("cancelActiveOverdueEnabled defaults false and ignores query params", async () => {
+  process.env.TASK_RETENTION_CRON_ENABLED = "true";
+  const { GET } = await routePromise;
+  const response = await GET(
+    request("?cancelActiveOverdue=true&TASK_RETENTION_CANCEL_ACTIVE_OVERDUE=true"),
+  );
+  const report = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(report.cancelActiveOverdueEnabled, false);
+  assert.equal(report.canceledActive, 0);
+});
+
+test("TASK_RETENTION_CANCEL_ACTIVE_OVERDUE env enables cancel reporting fields", async () => {
+  process.env.TASK_RETENTION_CRON_ENABLED = "true";
+  process.env.TASK_RETENTION_CANCEL_ACTIVE_OVERDUE = "true";
+  process.env.TASK_RETENTION_ACTIVE_OVERDUE_GRACE_MS = "3600000";
+  const { GET } = await routePromise;
+  const response = await GET(request());
+  const report = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(report.cancelActiveOverdueEnabled, true);
+  assert.equal(report.activeOverdueGraceMs, 3600000);
+  assert.equal(typeof report.wouldCancelActive, "number");
+  assert.equal(typeof report.canceledActive, "number");
 });

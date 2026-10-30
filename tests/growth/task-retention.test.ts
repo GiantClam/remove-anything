@@ -669,3 +669,200 @@ test("post-claim shared reference skips R2 delete and preserves URLs", async () 
   );
   assert.equal(rows.backgroundRemovalTask[0].retentionCleanedAt, undefined);
 });
+
+
+test("active overdue cancel stays off by default and still reports blockers", async () => {
+  const { runTaskRetention } = await retentionPromise;
+  const rows = emptyRows();
+  rows.taskData.push(
+    dueTask(1, {
+      taskStatus: "processing",
+      replicateId: "rh-1",
+      imageUrl: `${BASE}/active.png`,
+      expiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
+    }),
+  );
+  const cancelCalls: string[] = [];
+  const report = await runTaskRetention({
+    db: makeDb(rows, []),
+    storage: {
+      deleteItemInBucket: async () => assert.fail("must not delete"),
+    },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
+    isSharedAsset: async () => false,
+    cancelProviderTask: async (id) => {
+      cancelCalls.push(id);
+      return true;
+    },
+  });
+  assert.equal(report.activeBlockers.length, 1);
+  assert.equal(report.activeBlockers[0].reason, "active_overdue");
+  assert.equal(report.canceledActive, 0);
+  assert.equal(report.wouldCancelActive, 0);
+  assert.deepEqual(cancelCalls, []);
+  assert.equal(rows.taskData[0].taskStatus, "processing");
+});
+
+test("cancelActiveOverdue waits for grace before canceling", async () => {
+  const { runTaskRetention, DEFAULT_ACTIVE_OVERDUE_GRACE_MS } =
+    await retentionPromise;
+  const rows = emptyRows();
+  rows.backgroundRemovalTask.push(
+    dueTask(2, {
+      taskStatus: "processing",
+      replicateId: "rh-bg-2",
+      outputImageUrl: `${BASE}/bg.png`,
+      // Due, but inside the 6h grace window.
+      expiresAt: new Date(NOW.getTime() - 60 * 60 * 1000),
+    }),
+  );
+  const cancelCalls: string[] = [];
+  const report = await runTaskRetention({
+    db: makeDb(rows, []),
+    storage: {
+      deleteItemInBucket: async () => assert.fail("must not delete"),
+    },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
+    cancelActiveOverdue: true,
+    activeOverdueGraceMs: DEFAULT_ACTIVE_OVERDUE_GRACE_MS,
+    isSharedAsset: async () => false,
+    cancelProviderTask: async (id) => {
+      cancelCalls.push(id);
+      return true;
+    },
+  });
+  assert.equal(report.activeBlockers.length, 1);
+  assert.equal(report.activeBlockers[0].reason, "active_overdue_grace");
+  assert.equal(report.canceledActive, 0);
+  assert.deepEqual(cancelCalls, []);
+});
+
+test("cancelActiveOverdue dry-run counts wouldCancel without mutating", async () => {
+  const { runTaskRetention } = await retentionPromise;
+  const rows = emptyRows();
+  rows.objectRemovalTask.push(
+    dueTask(3, {
+      taskStatus: "queued",
+      runninghubTaskId: "rh-obj-3",
+      inputImageUrl: `${BASE}/in.png`,
+      inputMaskUrl: `${BASE}/mask.png`,
+      expiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
+    }),
+  );
+  const before = JSON.stringify(rows);
+  const cancelCalls: string[] = [];
+  const report = await runTaskRetention({
+    db: makeDb(rows, []),
+    storage: {
+      deleteItemInBucket: async () => assert.fail("must not delete"),
+    },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: true,
+    cancelActiveOverdue: true,
+    activeOverdueGraceMs: 6 * 60 * 60 * 1000,
+    isSharedAsset: async () => false,
+    cancelProviderTask: async (id) => {
+      cancelCalls.push(id);
+      return true;
+    },
+  });
+  assert.equal(report.wouldCancelActive, 1);
+  assert.equal(report.canceledActive, 0);
+  assert.deepEqual(cancelCalls, []);
+  assert.equal(JSON.stringify(rows), before);
+});
+
+test("cancelActiveOverdue cancels past-grace provider jobs and marks canceled", async () => {
+  const { runTaskRetention } = await retentionPromise;
+  const rows = emptyRows();
+  rows.watermarkRemovalTask.push(
+    dueTask(4, {
+      taskStatus: "processing",
+      runninghubTaskId: "rh-wm-4",
+      inputZipUrl: `${BASE}/in.zip`,
+      expiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
+    }),
+  );
+  rows.taskData.push(
+    dueTask(5, {
+      taskStatus: "processing",
+      // Missing provider id → blocker, not cancel.
+      expiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
+    }),
+  );
+  const calls: AnyRecord[] = [];
+  const cancelCalls: string[] = [];
+  const report = await runTaskRetention({
+    db: makeDb(rows, calls),
+    storage: {
+      deleteItemInBucket: async () => assert.fail("must not delete yet"),
+    },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
+    cancelActiveOverdue: true,
+    activeOverdueGraceMs: 6 * 60 * 60 * 1000,
+    isSharedAsset: async () => false,
+    cancelProviderTask: async (id) => {
+      cancelCalls.push(id);
+      return true;
+    },
+  });
+  assert.deepEqual(cancelCalls, ["rh-wm-4"]);
+  assert.equal(report.canceledActive, 1);
+  assert.equal(report.wouldCancelActive, 0);
+  assert.equal(report.cancelFailures.length, 0);
+  assert.equal(rows.watermarkRemovalTask[0].taskStatus, "canceled");
+  assert.equal(rows.watermarkRemovalTask[0].inputZipUrl, `${BASE}/in.zip`);
+  assert.equal(rows.watermarkRemovalTask[0].retentionCleanedAt, undefined);
+  assert.ok(
+    report.activeBlockers.some(
+      (issue) => issue.reason === "active_overdue_missing_provider_id",
+    ),
+  );
+  const statusUpdate = calls.find(
+    (call) =>
+      call.op === "update" &&
+      call.model === "watermarkRemovalTask" &&
+      call.args.data.taskStatus === "canceled",
+  );
+  assert.ok(statusUpdate);
+});
+
+test("cancelActiveOverdue records cancel failure and leaves row active", async () => {
+  const { runTaskRetention } = await retentionPromise;
+  const rows = emptyRows();
+  rows.objectRemovalTask.push(
+    dueTask(6, {
+      taskStatus: "processing",
+      runninghubTaskId: "rh-obj-6",
+      inputImageUrl: `${BASE}/in.png`,
+      inputMaskUrl: `${BASE}/mask.png`,
+      expiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
+    }),
+  );
+  const report = await runTaskRetention({
+    db: makeDb(rows, []),
+    storage: {
+      deleteItemInBucket: async () => assert.fail("must not delete"),
+    },
+    configuredR2Url: BASE,
+    now: NOW,
+    dryRun: false,
+    cancelActiveOverdue: true,
+    activeOverdueGraceMs: 0,
+    isSharedAsset: async () => false,
+    cancelProviderTask: async () => {
+      throw new Error("provider down");
+    },
+  });
+  assert.equal(report.canceledActive, 0);
+  assert.equal(report.cancelFailures.length, 1);
+  assert.equal(report.cancelFailures[0].reason, "active_overdue_cancel_failed");
+  assert.equal(rows.objectRemovalTask[0].taskStatus, "processing");
+});

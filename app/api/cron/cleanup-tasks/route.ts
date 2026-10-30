@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/db/prisma";
 import { createRetentionR2Storage } from "@/lib/r2-s3";
-import { RETENTION_EXECUTE_ENV, runTaskRetention } from "@/lib/task-retention";
+import {
+  DEFAULT_ACTIVE_OVERDUE_GRACE_MS,
+  RETENTION_CANCEL_ACTIVE_OVERDUE_ENV,
+  RETENTION_EXECUTE_ENV,
+  runTaskRetention,
+} from "@/lib/task-retention";
+import { runninghubAPI } from "@/modules/runninghub";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +59,16 @@ export async function GET(req: NextRequest) {
   // Execution uses scrub-first CAS in `runTaskRetention` (clear URL refs under
   // retentionCleanedAt=null, re-check shared keys, then delete). Still requires
   // the explicit TASK_RETENTION_EXECUTE=true env; request params cannot enable it.
+  const cancelActiveOverdue =
+    process.env[RETENTION_CANCEL_ACTIVE_OVERDUE_ENV] === "true";
+  const graceRaw = Number(
+    process.env.TASK_RETENTION_ACTIVE_OVERDUE_GRACE_MS ||
+      DEFAULT_ACTIVE_OVERDUE_GRACE_MS,
+  );
+  const activeOverdueGraceMs =
+    Number.isFinite(graceRaw) && graceRaw >= 0
+      ? graceRaw
+      : DEFAULT_ACTIVE_OVERDUE_GRACE_MS;
   const configuredR2Url = process.env.R2_URL_BASE;
   if (!configuredR2Url) {
     return NextResponse.json(
@@ -68,8 +84,18 @@ export async function GET(req: NextRequest) {
       configuredR2Url,
       dryRun: !execute,
       batchSize: configuredBatchSize(),
+      cancelActiveOverdue,
+      activeOverdueGraceMs,
+      cancelProviderTask: cancelActiveOverdue
+        ? (providerTaskId) => runninghubAPI.cancelTask(providerTaskId)
+        : undefined,
     });
-    return NextResponse.json({ ...report, executionEnabled: execute });
+    return NextResponse.json({
+      ...report,
+      executionEnabled: execute,
+      cancelActiveOverdueEnabled: cancelActiveOverdue,
+      activeOverdueGraceMs,
+    });
   } catch (error) {
     console.error("Task retention cleanup failed", error);
     return NextResponse.json(

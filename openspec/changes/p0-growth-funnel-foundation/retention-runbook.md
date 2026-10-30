@@ -37,7 +37,11 @@ Each exact R2 key gets up to three short retries. A deletion failure preserves t
 
 Shared or provider URL blockers also preserve original URL fields and cannot mark a row cleaned. Shared references are intentionally protected even if another task is due; asset ownership must be reconciled before deleting shared data. This conservative behavior may leave local objects past their deadline, which is reported rather than presented as successful policy fulfillment.
 
-An active task past its deadline appears in `activeBlockers`. The runner does not delete assets while a provider may be using/writing them; provider cancellation or terminal-state reconciliation must be implemented before this gap is closed.
+An active task past its deadline appears in `activeBlockers`. The runner does not delete assets while a provider may be using/writing them.
+
+Optional overdue cancel (default **off**): set `TASK_RETENTION_CANCEL_ACTIVE_OVERDUE=true`. After `expiresAt` plus `TASK_RETENTION_ACTIVE_OVERDUE_GRACE_MS` (default 6h), the worker calls RunningHub `cancelTask` once, then CAS-updates the row to `canceled` when still active. URLs are left intact so a later terminal retention batch can scrub R2. Request query params cannot enable cancel. Rows still inside grace report `active_overdue_grace`; rows missing a provider task id report `active_overdue_missing_provider_id`.
+
+Provider file purge for `rh-images.*` URLs is **not** available in the RunningHub OpenAPI surface (cancel does not delete stored artifacts). Those URLs remain `unresolvedExternal` until the provider documents a purge endpoint or they expire on the provider side. Do not attempt unauthenticated DELETE against provider CDNs.
 
 Successful whole-row cleanup also clears source/result URL fields, prompts, and provider log/output metadata so those payloads do not remain in the minimal task audit. Required source URL columns use an empty string after verified deletion; unresolved rows retain their original URLs for safe retry.
 
