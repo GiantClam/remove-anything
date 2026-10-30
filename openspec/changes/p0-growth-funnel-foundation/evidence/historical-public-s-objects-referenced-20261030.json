@@ -1,0 +1,998 @@
+{
+  "listedAtAsiaShanghai": "2026-10-30T12:36:40+08:00",
+  "bucket": "remove-anything",
+  "count": 90,
+  "bytes": 65796139,
+  "keys": [
+    {
+      "key": "background-removal/-rJR2XA1mcNt.png",
+      "size": 10445,
+      "lastModified": "2026-10-12T01:52:11.303Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/06C7v1uCxglJ.jpg",
+      "size": 279695,
+      "lastModified": "2026-10-19T13:38:54.786Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/0FOEH7qOHFpj.jpg",
+      "size": 103342,
+      "lastModified": "2026-10-19T21:45:34.745Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/36K49aKCAiBB.png",
+      "size": 254139,
+      "lastModified": "2026-10-30T02:10:31.372Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/6AMS0ZliWUDu.jpg",
+      "size": 700927,
+      "lastModified": "2026-10-09T00:37:33.946Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/6ozn-ZYs_wZB.png",
+      "size": 254139,
+      "lastModified": "2026-10-29T15:28:04.179Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/7KQuWDj_JQ5k.webp",
+      "size": 148778,
+      "lastModified": "2026-10-09T05:04:26.035Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/8sS6ZhXf3bFE.jpg",
+      "size": 85558,
+      "lastModified": "2026-10-14T15:38:10.090Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/8WJvbjwQPaP4.png",
+      "size": 69,
+      "lastModified": "2026-10-29T18:01:36.929Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/a-UIV5SmTQ2Z.webp",
+      "size": 8868,
+      "lastModified": "2026-10-25T18:40:29.777Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/AAxQQjRLD7mx.jpg",
+      "size": 1591088,
+      "lastModified": "2026-10-27T15:41:04.824Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/ajBVzXe_xgCp.jpeg",
+      "size": 35269,
+      "lastModified": "2026-10-13T02:10:02.743Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/bDXV_ATiiWHC.png",
+      "size": 1911428,
+      "lastModified": "2026-10-29T07:22:43.300Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/by7tgbntmrC7.png",
+      "size": 1816139,
+      "lastModified": "2026-10-11T15:24:53.248Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/BYItzXafk7CN.jpg",
+      "size": 489396,
+      "lastModified": "2026-10-25T11:38:01.672Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/dijEhS92JpTd.png",
+      "size": 254139,
+      "lastModified": "2026-10-29T09:12:33.194Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/DnVftwNpxBya.jpg",
+      "size": 85558,
+      "lastModified": "2026-10-14T15:36:52.352Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/dXwWtXlpBrEG.png",
+      "size": 6400,
+      "lastModified": "2026-10-12T19:15:14.084Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/dZXXwf4IsqmI.png",
+      "size": 1811987,
+      "lastModified": "2026-10-13T07:19:10.351Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/e17dPp9iF9ac.jpg",
+      "size": 3218989,
+      "lastModified": "2026-10-23T06:03:09.181Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/EfNZD0mhJn3S.png",
+      "size": 254139,
+      "lastModified": "2026-10-29T09:14:54.735Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/Gr3NawTrm9EO.png",
+      "size": 254139,
+      "lastModified": "2026-10-29T16:01:30.658Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/h0FeDMbBsxcJ.jpg",
+      "size": 34747,
+      "lastModified": "2026-10-14T21:00:41.549Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/h4IeilZb2mco.jpg",
+      "size": 135137,
+      "lastModified": "2026-10-25T11:54:59.894Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/hDbbCnmmiakD.jpg",
+      "size": 887954,
+      "lastModified": "2026-10-29T06:21:50.503Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/hOyCOGW8vsYa.jpg",
+      "size": 254925,
+      "lastModified": "2026-07-11T04:23:22.567Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/i2ohWDYAwE-7.jpg",
+      "size": 304988,
+      "lastModified": "2026-10-12T12:36:02.638Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/icLzMj9VOtrT.png",
+      "size": 1911428,
+      "lastModified": "2026-10-29T07:17:47.536Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/iwQIJLbzk2Wt.webp",
+      "size": 138040,
+      "lastModified": "2026-10-28T23:42:46.435Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/Iy_Dn5Rc1_8W.png",
+      "size": 167239,
+      "lastModified": "2026-10-17T22:05:41.119Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/jvuJFCkkNPCC.png",
+      "size": 254139,
+      "lastModified": "2026-10-29T16:02:11.977Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/KZzqXjad5S9J.png",
+      "size": 254139,
+      "lastModified": "2026-10-29T16:00:52.689Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/l3Gz0agoZk8t.jpg",
+      "size": 700927,
+      "lastModified": "2026-10-09T00:38:59.778Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/ldMD8yR_wzik.png",
+      "size": 275113,
+      "lastModified": "2026-10-21T17:23:01.410Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/LmLZq_qo4ya5.jpg",
+      "size": 281233,
+      "lastModified": "2026-10-27T00:30:10.977Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/mD1KnEs2V3lQ.jpg",
+      "size": 104763,
+      "lastModified": "2026-10-16T11:36:17.838Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/MMuFFghtQzdy.png",
+      "size": 254139,
+      "lastModified": "2026-10-29T03:45:47.226Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/Mw_4rTTrdFug.jpeg",
+      "size": 83348,
+      "lastModified": "2026-10-13T11:09:39.865Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/N6XXhx31d1Vy.jpg",
+      "size": 159548,
+      "lastModified": "2026-10-10T17:08:23.357Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/Nf85wH3otXVH.jpg",
+      "size": 211270,
+      "lastModified": "2026-10-08T02:39:29.922Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/nz0wd56coT-H.jpg",
+      "size": 3218989,
+      "lastModified": "2026-10-23T06:05:22.933Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/OzOZtaRL65nJ.png",
+      "size": 1516155,
+      "lastModified": "2026-10-14T14:09:38.737Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/P0EmILujWCPh.jpg",
+      "size": 118000,
+      "lastModified": "2026-10-23T02:17:32.290Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/P0sKotyUnH-l.jpeg",
+      "size": 2141070,
+      "lastModified": "2026-07-24T06:25:09.083Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/pfgIHOif_cBA.jpeg",
+      "size": 100103,
+      "lastModified": "2026-10-11T14:41:47.536Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/pm_NGWbZCoCP.jpg",
+      "size": 33678,
+      "lastModified": "2026-10-26T12:00:44.020Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/polE5-m7A3hh.jpg",
+      "size": 328500,
+      "lastModified": "2026-10-29T18:07:21.066Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/processed/272-callback-08721ab6cd6f2e4b4e553a64a9086bb41cb32b0eb7d7b66ad9a88f895c709386.png",
+      "size": 308157,
+      "lastModified": "2026-10-29T03:46:34.520Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/processed/274-callback-2f6d7d4b2e95840534954e840a6b94520a503c750177ec144bd1c6e8d1688e9d.png",
+      "size": 338642,
+      "lastModified": "2026-10-29T07:14:03.484Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/processed/276-callback-0c187ea03050ea442b37fc45916d29489bec06383a97b81a669454439bb5f932.png",
+      "size": 1944146,
+      "lastModified": "2026-10-29T07:23:44.411Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/processed/281-callback-d89005f7cb42cb842e45f4100bc8ccc874cee29a79f7ecc334a6c8ca23b7436d.png",
+      "size": 187627,
+      "lastModified": "2026-10-29T11:27:38.751Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/processed/282-callback-5875ac98384f9008ffa06e6e18c7cd486f79f6ae6f798da4159483bdfc474093.png",
+      "size": 308157,
+      "lastModified": "2026-10-29T15:28:37.311Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/processed/283-callback-99c1d2e44ab01ad62cf22c60e05bbd7466c069d0f071bfd5212b06aaa6dea3ff.png",
+      "size": 308157,
+      "lastModified": "2026-10-29T16:01:20.360Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/processed/284-callback-a1ae102e4120f882a78b2c2e735fd79d65d6b5116fa9f6bc68ba4c5904b7c515.png",
+      "size": 308157,
+      "lastModified": "2026-10-29T16:02:01.192Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/processed/285-callback-bb80cc48cc1853da3c417dea35bdb85599ce640b901d3cdc83c0d8f715ce66e3.png",
+      "size": 308157,
+      "lastModified": "2026-10-29T16:02:46.764Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/processed/286-callback-2675bae5b7f2780957cff0b6267f3ec9d2e367e71fe02389fdb8143a053c8226.png",
+      "size": 41623,
+      "lastModified": "2026-10-29T17:06:31.813Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/processed/294-callback-8fc4a13a29ca49b761c1f4d274efaec617426009aecc6802ff40e86116ef7bcd.png",
+      "size": 308157,
+      "lastModified": "2026-10-30T02:24:13.950Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/Q-zwPQqXOIXS.jpg",
+      "size": 93250,
+      "lastModified": "2026-10-08T22:04:23.201Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/QpYyn1vA3eQf.jpg",
+      "size": 118000,
+      "lastModified": "2026-10-23T02:16:53.315Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/qqKP95j2-2GA.jpg",
+      "size": 2831667,
+      "lastModified": "2026-07-09T17:21:22.705Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/rkwiMaTqY16l.png",
+      "size": 254139,
+      "lastModified": "2026-10-30T02:23:42.758Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/U1OfvB4sRYl6.png",
+      "size": 10445,
+      "lastModified": "2026-10-12T01:47:10.351Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/utK3FUyyQrls.jpg",
+      "size": 700927,
+      "lastModified": "2026-10-09T00:36:11.733Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/vhsB8JyrzHLl.jpg",
+      "size": 234327,
+      "lastModified": "2026-10-24T18:10:28.006Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/VVLJi-Df5156.png",
+      "size": 1050060,
+      "lastModified": "2026-10-10T18:46:38.950Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/WUEFtZOmZZLW.jpeg",
+      "size": 35269,
+      "lastModified": "2026-10-13T02:09:37.604Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/xI0aH2vso28u.jpg",
+      "size": 1591088,
+      "lastModified": "2026-10-27T15:37:51.484Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/XzGnQDqV5Ons.jpg",
+      "size": 2793140,
+      "lastModified": "2026-10-21T17:24:53.383Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/yiYf99t-Tnag.jpeg",
+      "size": 861026,
+      "lastModified": "2026-10-16T02:05:15.696Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "background-removal/ZuTj9UjKUv-a.png",
+      "size": 9899,
+      "lastModified": "2026-10-29T17:06:01.032Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "background-removal/ZXgJLSG5wbQw.png",
+      "size": 1908609,
+      "lastModified": "2026-10-08T09:57:49.986Z",
+      "refCount": 1,
+      "tables": [
+        "background_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "object-removal/processed/47-callback-764fbed48a7bd9ad1b1d1d60e1f788080eed256f4ad34a2c93760508ceeb83b8.png",
+      "size": 270860,
+      "lastModified": "2026-10-29T15:30:57.078Z",
+      "refCount": 1,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "sora2-video-watermark-removal/processed/272-callback-e4e683fc324b434ed70b0f9e058932af8927cfa928d77bb83467206c36bcd2bd.mp4",
+      "size": 1621363,
+      "lastModified": "2026-10-29T16:05:18.014Z",
+      "refCount": 1,
+      "tables": [
+        "task_data"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "uploads/-WWOPa1t0u8M.png",
+      "size": 2183,
+      "lastModified": "2026-10-29T09:22:04.369Z",
+      "refCount": 1,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "uploads/08sENyG4gH9-.png",
+      "size": 3049042,
+      "lastModified": "2026-06-08T08:40:32.524Z",
+      "refCount": 3,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "uploads/0jl1MHA3rZ6G.mp4",
+      "size": 2040974,
+      "lastModified": "2026-10-29T16:03:05.485Z",
+      "refCount": 1,
+      "tables": [
+        "task_data"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "uploads/6ccGTyb5ys0M.png",
+      "size": 644432,
+      "lastModified": "2026-08-19T03:43:54.198Z",
+      "refCount": 3,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "uploads/6p1gWKp0V4uS.png",
+      "size": 3049042,
+      "lastModified": "2026-06-08T04:22:24.406Z",
+      "refCount": 2,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "uploads/C0Q0ZaWyYc6s.png",
+      "size": 254139,
+      "lastModified": "2026-10-29T15:28:54.252Z",
+      "refCount": 1,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "uploads/drcjNw45zxAZ.zip",
+      "size": 304,
+      "lastModified": "2026-10-29T09:51:36.616Z",
+      "refCount": 1,
+      "tables": [
+        "watermark_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "uploads/EXRYwdvEovWH.png",
+      "size": 292947,
+      "lastModified": "2026-10-29T09:22:03.260Z",
+      "refCount": 1,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "uploads/f0qdsoAsagJO.png",
+      "size": 3049042,
+      "lastModified": "2026-06-08T09:36:36.822Z",
+      "refCount": 2,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "uploads/opRbyo_YKWAy.jpg",
+      "size": 3218788,
+      "lastModified": "2026-10-02T06:03:55.161Z",
+      "refCount": 2,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "uploads/QoxhxFAfc0dD.zip",
+      "size": 254259,
+      "lastModified": "2026-10-29T10:31:36.749Z",
+      "refCount": 1,
+      "tables": [
+        "watermark_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "uploads/umzvfavi1que.png",
+      "size": 3049042,
+      "lastModified": "2026-06-08T11:07:17.559Z",
+      "refCount": 2,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": false
+    },
+    {
+      "key": "uploads/WUdJQZnYPtLg.zip",
+      "size": 35402,
+      "lastModified": "2026-10-29T09:17:12.626Z",
+      "refCount": 1,
+      "tables": [
+        "watermark_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "uploads/zyY-uwV5I8iy.png",
+      "size": 624,
+      "lastModified": "2026-10-29T15:28:55.398Z",
+      "refCount": 1,
+      "tables": [
+        "object_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "watermark-removal/processed/5-callback-fc22ff66348b59f2fe28afc6a55a36b3b2bcb730a7c68d838aadabb8d68d4c31.zip",
+      "size": 303057,
+      "lastModified": "2026-10-29T09:41:05.035Z",
+      "refCount": 1,
+      "tables": [
+        "watermark_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "watermark-removal/processed/6-callback-51ba10a033d1a1e8392cffd7b223b4a661e64e953f155d21ec9c5a12cde34674.zip",
+      "size": 53587,
+      "lastModified": "2026-10-29T09:52:47.074Z",
+      "refCount": 1,
+      "tables": [
+        "watermark_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    },
+    {
+      "key": "watermark-removal/processed/7-callback-4496648e091cb0f9424cd74977359b87e86ddf4d4bd11cdf48775afa90f0c575.zip",
+      "size": 310023,
+      "lastModified": "2026-10-29T10:32:24.149Z",
+      "refCount": 1,
+      "tables": [
+        "watermark_removal_tasks"
+      ],
+      "anyUncleanedRetention": true,
+      "anyActiveExpiry": true
+    }
+  ]
+}

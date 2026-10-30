@@ -1,0 +1,724 @@
+{
+  "note": "READ-ONLY inventory + DB join classification; NO deletes performed",
+  "authority": "t49u residual #1",
+  "listedAtAsiaShanghai": "2026-10-30T12:36:40+08:00",
+  "bucket": "remove-anything",
+  "r2UrlHost": "s.remove-anything.com",
+  "objectCount": 937,
+  "bytesTotal": 2298691434,
+  "pages": 1,
+  "topLevelPrefixCounts": {
+    "background-removal": 495,
+    "examples": 21,
+    "object-removal": 1,
+    "sample": 13,
+    "sora2-video-watermark-removal": 1,
+    "sora2-videos": 8,
+    "uploads": 369,
+    "watermark-removal": 29
+  },
+  "topLevelPrefixBytes": {
+    "background-removal": 588233599,
+    "examples": 3938052,
+    "object-removal": 270860,
+    "sample": 5500550,
+    "sora2-video-watermark-removal": 1621363,
+    "sora2-videos": 63343302,
+    "uploads": 1591554145,
+    "watermark-removal": 44229563
+  },
+  "db": {
+    "urlFieldValuesScanned": 791,
+    "urlsMappedToR2Keys": 182,
+    "urlsNotOnConfiguredR2Host": 609,
+    "distinctReferencedKeys": 161,
+    "referencedKeysMissingFromPublicBucket": 67
+  },
+  "classes": {
+    "keep_static": {
+      "count": 34,
+      "bytes": 9438602,
+      "byPrefix": {
+        "examples": {
+          "count": 21,
+          "bytes": 3938052
+        },
+        "sample": {
+          "count": 13,
+          "bytes": 5500550
+        }
+      },
+      "sampleKeys": [
+        {
+          "key": "examples/model_after.png",
+          "size": 1882178,
+          "lastModified": "2025-11-03T15:08:56.383Z",
+          "refTables": []
+        },
+        {
+          "key": "sample/birefnet-ai-background-removal-revolution.webp",
+          "size": 1014608,
+          "lastModified": "2025-10-24T13:44:42.781Z",
+          "refTables": []
+        },
+        {
+          "key": "sample/ai-background-removal-guide.webp",
+          "size": 871908,
+          "lastModified": "2025-10-24T13:44:41.238Z",
+          "refTables": []
+        },
+        {
+          "key": "sample/batch-image-processing-guide.webp",
+          "size": 769144,
+          "lastModified": "2025-10-24T13:44:40.471Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/complex_background_before.webp",
+          "size": 743414,
+          "lastModified": "2025-11-03T15:12:27.552Z",
+          "refTables": []
+        },
+        {
+          "key": "sample/watermark-removal-guide.webp",
+          "size": 697416,
+          "lastModified": "2025-10-24T13:44:38.955Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/complex_background_after.webp",
+          "size": 507074,
+          "lastModified": "2025-11-03T15:08:53.208Z",
+          "refTables": []
+        },
+        {
+          "key": "sample/2.png",
+          "size": 318663,
+          "lastModified": "2025-10-20T07:39:18.735Z",
+          "refTables": [
+            "background_removal_tasks"
+          ]
+        },
+        {
+          "key": "sample/4.png",
+          "size": 300385,
+          "lastModified": "2025-10-20T07:39:18.432Z",
+          "refTables": [
+            "background_removal_tasks"
+          ]
+        },
+        {
+          "key": "sample/3.png",
+          "size": 298442,
+          "lastModified": "2025-10-20T07:39:17.782Z",
+          "refTables": [
+            "background_removal_tasks"
+          ]
+        },
+        {
+          "key": "sample/5.png",
+          "size": 296264,
+          "lastModified": "2025-10-20T07:39:16.746Z",
+          "refTables": []
+        },
+        {
+          "key": "sample/8.png",
+          "size": 270875,
+          "lastModified": "2025-10-20T07:39:18.205Z",
+          "refTables": []
+        },
+        {
+          "key": "sample/6.png",
+          "size": 263958,
+          "lastModified": "2025-10-20T07:39:16.465Z",
+          "refTables": []
+        },
+        {
+          "key": "sample/7.png",
+          "size": 226689,
+          "lastModified": "2025-10-20T07:39:16.729Z",
+          "refTables": []
+        },
+        {
+          "key": "sample/1.png",
+          "size": 172198,
+          "lastModified": "2025-10-20T07:39:18.084Z",
+          "refTables": [
+            "background_removal_tasks"
+          ]
+        },
+        {
+          "key": "examples/portrait_after.webp",
+          "size": 124324,
+          "lastModified": "2025-11-03T15:08:54.874Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/pet_after.webp",
+          "size": 120750,
+          "lastModified": "2025-11-03T15:08:55.104Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/pet_before.webp",
+          "size": 84668,
+          "lastModified": "2025-11-03T15:08:47.272Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/product_after.webp",
+          "size": 75410,
+          "lastModified": "2025-11-03T15:08:55.918Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/portrait_before.webp",
+          "size": 56148,
+          "lastModified": "2025-11-03T15:08:45.795Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/product_before.webp",
+          "size": 44870,
+          "lastModified": "2025-11-03T15:08:45.371Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/furniture_after.webp",
+          "size": 44044,
+          "lastModified": "2025-11-03T15:08:53.188Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/furniture_before.webp",
+          "size": 32004,
+          "lastModified": "2025-11-03T15:08:49.536Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/object_after.webp",
+          "size": 31806,
+          "lastModified": "2025-11-03T15:08:54.074Z",
+          "refTables": []
+        },
+        {
+          "key": "examples/metal_after.webp",
+          "size": 30140,
+          "lastModified": "2025-11-03T15:08:52.528Z",
+          "refTables": []
+        }
+      ]
+    },
+    "referenced": {
+      "count": 90,
+      "bytes": 65796139,
+      "byPrefix": {
+        "background-removal": {
+          "count": 71,
+          "bytes": 44297029
+        },
+        "object-removal": {
+          "count": 1,
+          "bytes": 270860
+        },
+        "sora2-video-watermark-removal": {
+          "count": 1,
+          "bytes": 1621363
+        },
+        "uploads": {
+          "count": 14,
+          "bytes": 18940220
+        },
+        "watermark-removal": {
+          "count": 3,
+          "bytes": 666667
+        }
+      },
+      "sampleKeys": [
+        {
+          "key": "background-removal/e17dPp9iF9ac.jpg",
+          "size": 3218989,
+          "lastModified": "2026-10-23T06:03:09.181Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/nz0wd56coT-H.jpg",
+          "size": 3218989,
+          "lastModified": "2026-10-23T06:05:22.933Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "uploads/opRbyo_YKWAy.jpg",
+          "size": 3218788,
+          "lastModified": "2026-10-02T06:03:55.161Z",
+          "refTables": [
+            "object_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "uploads/08sENyG4gH9-.png",
+          "size": 3049042,
+          "lastModified": "2026-06-08T08:40:32.524Z",
+          "refTables": [
+            "object_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "uploads/6p1gWKp0V4uS.png",
+          "size": 3049042,
+          "lastModified": "2026-06-08T04:22:24.406Z",
+          "refTables": [
+            "object_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "uploads/f0qdsoAsagJO.png",
+          "size": 3049042,
+          "lastModified": "2026-06-08T09:36:36.822Z",
+          "refTables": [
+            "object_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "uploads/umzvfavi1que.png",
+          "size": 3049042,
+          "lastModified": "2026-06-08T11:07:17.559Z",
+          "refTables": [
+            "object_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/qqKP95j2-2GA.jpg",
+          "size": 2831667,
+          "lastModified": "2026-07-09T17:21:22.705Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/XzGnQDqV5Ons.jpg",
+          "size": 2793140,
+          "lastModified": "2026-10-21T17:24:53.383Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/P0sKotyUnH-l.jpeg",
+          "size": 2141070,
+          "lastModified": "2026-07-24T06:25:09.083Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "uploads/0jl1MHA3rZ6G.mp4",
+          "size": 2040974,
+          "lastModified": "2026-10-29T16:03:05.485Z",
+          "refTables": [
+            "task_data"
+          ],
+          "flags": {
+            "anyActiveExpiry": true,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/processed/276-callback-0c187ea03050ea442b37fc45916d29489bec06383a97b81a669454439bb5f932.png",
+          "size": 1944146,
+          "lastModified": "2026-10-29T07:23:44.411Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": true,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/bDXV_ATiiWHC.png",
+          "size": 1911428,
+          "lastModified": "2026-10-29T07:22:43.300Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": true,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/icLzMj9VOtrT.png",
+          "size": 1911428,
+          "lastModified": "2026-10-29T07:17:47.536Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": true,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/ZXgJLSG5wbQw.png",
+          "size": 1908609,
+          "lastModified": "2026-10-08T09:57:49.986Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/by7tgbntmrC7.png",
+          "size": 1816139,
+          "lastModified": "2026-10-11T15:24:53.248Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/dZXXwf4IsqmI.png",
+          "size": 1811987,
+          "lastModified": "2026-10-13T07:19:10.351Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "sora2-video-watermark-removal/processed/272-callback-e4e683fc324b434ed70b0f9e058932af8927cfa928d77bb83467206c36bcd2bd.mp4",
+          "size": 1621363,
+          "lastModified": "2026-10-29T16:05:18.014Z",
+          "refTables": [
+            "task_data"
+          ],
+          "flags": {
+            "anyActiveExpiry": true,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/AAxQQjRLD7mx.jpg",
+          "size": 1591088,
+          "lastModified": "2026-10-27T15:41:04.824Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/xI0aH2vso28u.jpg",
+          "size": 1591088,
+          "lastModified": "2026-10-27T15:37:51.484Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/OzOZtaRL65nJ.png",
+          "size": 1516155,
+          "lastModified": "2026-10-14T14:09:38.737Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/VVLJi-Df5156.png",
+          "size": 1050060,
+          "lastModified": "2026-10-10T18:46:38.950Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/hDbbCnmmiakD.jpg",
+          "size": 887954,
+          "lastModified": "2026-10-29T06:21:50.503Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": true,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/yiYf99t-Tnag.jpeg",
+          "size": 861026,
+          "lastModified": "2026-10-16T02:05:15.696Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        },
+        {
+          "key": "background-removal/6AMS0ZliWUDu.jpg",
+          "size": 700927,
+          "lastModified": "2026-10-09T00:37:33.946Z",
+          "refTables": [
+            "background_removal_tasks"
+          ],
+          "flags": {
+            "anyActiveExpiry": false,
+            "anyUncleanedRetention": true
+          }
+        }
+      ]
+    },
+    "orphan_candidate": {
+      "count": 813,
+      "bytes": 2223456693,
+      "byPrefix": {
+        "background-removal": {
+          "count": 424,
+          "bytes": 543936570
+        },
+        "sora2-videos": {
+          "count": 8,
+          "bytes": 63343302
+        },
+        "uploads": {
+          "count": 355,
+          "bytes": 1572613925
+        },
+        "watermark-removal": {
+          "count": 26,
+          "bytes": 43562896
+        }
+      },
+      "sampleKeys": [
+        {
+          "key": "uploads/RaQCHK2vYxNRrp9jRm2sA.mp4",
+          "size": 71025151,
+          "lastModified": "2025-10-08T10:24:59.106Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/Marlboro Fox-5-02aad602-296b-41be-a60d-72fcf9faa210.mp4",
+          "size": 36051628,
+          "lastModified": "2025-10-08T10:27:11.642Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/rH9nM5_0d3ZHVeRcwArse.mp4",
+          "size": 36051628,
+          "lastModified": "2025-10-08T10:26:45.771Z",
+          "refTables": []
+        },
+        {
+          "key": "background-removal/processed/bjxk9979ahrj40cs5rhvh2mec8-JCZzie7g.png",
+          "size": 21905640,
+          "lastModified": "2025-09-09T11:02:18.723Z",
+          "refTables": []
+        },
+        {
+          "key": "background-removal/processed/yh7ffmmbwdrj00cs5rrvx8ck7m-g7gZEaVF.png",
+          "size": 20041179,
+          "lastModified": "2025-09-09T11:17:10.160Z",
+          "refTables": []
+        },
+        {
+          "key": "background-removal/processed/2062526790940983297-2Qfq0N1h.png",
+          "size": 15731729,
+          "lastModified": "2026-06-04T13:32:41.724Z",
+          "refTables": []
+        },
+        {
+          "key": "background-removal/processed/2062526790940983297-3Kb7dmGZ.png",
+          "size": 15731729,
+          "lastModified": "2026-06-04T13:32:41.867Z",
+          "refTables": []
+        },
+        {
+          "key": "background-removal/processed/2062526790940983297-72AB7RV1.png",
+          "size": 15731729,
+          "lastModified": "2026-06-04T13:32:40.548Z",
+          "refTables": []
+        },
+        {
+          "key": "background-removal/processed/2062526790940983297-NAnBnDyh.png",
+          "size": 15731729,
+          "lastModified": "2026-06-04T13:32:37.795Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/20251009_1025_01k726anssebrtyfwf1sn5k1rm-127e0968-76ca-4741-b651-41fde053792b.mp4",
+          "size": 14779577,
+          "lastModified": "2025-10-09T01:28:38.276Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/iDx9iZH0WayC70CfIBMC9.mp4",
+          "size": 14779577,
+          "lastModified": "2025-10-09T01:28:27.908Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/q4_pCsxiL8KGyRKUA5s4d.mp4",
+          "size": 14779577,
+          "lastModified": "2025-10-09T01:27:46.144Z",
+          "refTables": []
+        },
+        {
+          "key": "background-removal/processed/1983582625606651905-9HEdfzYg.png",
+          "size": 10779774,
+          "lastModified": "2025-10-29T17:13:35.131Z",
+          "refTables": []
+        },
+        {
+          "key": "background-removal/processed/1983582625606651905-evQVqZvg.png",
+          "size": 10779774,
+          "lastModified": "2025-10-29T17:14:33.221Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/ID7TG4IYn5V9mifaej0RD.mp4",
+          "size": 10642376,
+          "lastModified": "2025-10-06T02:08:34.874Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/JhVUhi-6dz_5KQu5K40ax.mp4",
+          "size": 10642376,
+          "lastModified": "2025-10-05T06:25:32.583Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/j3TKsYTu0eY2d4oLTN2yO.mp4",
+          "size": 10642376,
+          "lastModified": "2025-10-06T02:17:23.603Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/2KNBJOGv95aHkDIJaq--k.mp4",
+          "size": 10625034,
+          "lastModified": "2025-10-05T18:03:05.226Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/65P-5X46fqd5A1ax4hzzF.mp4",
+          "size": 10625034,
+          "lastModified": "2025-10-05T17:38:40.221Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/9xVaoXAOTwrQ.mp4",
+          "size": 10625034,
+          "lastModified": "2025-10-05T18:03:33.956Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/HjdauCLXt4cJwQXh9aNwX.mp4",
+          "size": 10625034,
+          "lastModified": "2025-10-06T16:18:12.157Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/Nh6R7CCf5pAy.mp4",
+          "size": 10625034,
+          "lastModified": "2025-10-05T17:39:14.063Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/O5l2eZSVXJ5F.mp4",
+          "size": 10625034,
+          "lastModified": "2025-10-05T18:07:19.414Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/QYoBmCYya2TCgOQAgfm8B.mp4",
+          "size": 10625034,
+          "lastModified": "2025-10-05T18:35:17.193Z",
+          "refTables": []
+        },
+        {
+          "key": "uploads/UIewYoOvaD-UfIchuRy3U.mp4",
+          "size": 10625034,
+          "lastModified": "2025-10-05T18:26:20.984Z",
+          "refTables": []
+        }
+      ]
+    }
+  },
+  "keepPrefixes": [
+    "examples/",
+    "sample/"
+  ],
+  "safety": {
+    "productionPrivateBucketUntouched": true,
+    "deletesPerformed": false,
+    "deletesProposedOnly": true
+  }
+}

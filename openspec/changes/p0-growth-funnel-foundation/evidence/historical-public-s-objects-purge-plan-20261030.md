@@ -70,5 +70,7 @@ Deliverable: CSV/JSON inventory checked into evidence (no secret credentials; ke
 | Item | Status |
 | --- | --- |
 | Plan written | **DONE** (this file) |
-| Inventory export | **PARTIAL** — object count + prefix rollup in `historical-public-s-objects-inventory-count-20261030.json` (no DB reference join yet) |
-| Any historical public delete | **NOT DONE** (forbidden until Phase 2 gates pass) |
+| Inventory export | **DONE** — full key listing + DB join classify in `historical-public-s-objects-classify-pass-20261030.md` (t49u) |
+| Orphan candidate report | **DONE** — 813 keys / ~2.22 GB; see classify-pass + `*-orphan-candidates-20261030.json` |
+| User approval for Phase 3 delete | **PENDING** — checklist in classify-pass |
+| Any historical public delete | **NOT DONE** (forbidden until Phase 2 gates + explicit approval) |

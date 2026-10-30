@@ -1,0 +1,288 @@
+{
+  "listedAtAsiaShanghai": "2026-10-30T12:36:40+08:00",
+  "note": "DB locators on s.remove-anything.com whose keys are NOT in the public bucket (expected after private cutover for new objects)",
+  "count": 67,
+  "sample": [
+    {
+      "key": "background-removal/gAQCQ1qpMPQe.png",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/processed/295-callback-95aed8b17c7f13e8c8cbb3827e88df1e667e724b1c1affd6d7ae987ce23ceffa.png",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/Ebqzk59ucz6w.png",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/processed/296-callback-310048fc70e1f04b8999d8ec9d739f1d03836ea6927425eb8ccf770b5efb745c.png",
+      "refCount": 4,
+      "sampleTables": [
+        "background_removal_tasks",
+        "background_compositions"
+      ]
+    },
+    {
+      "key": "background-removal/NgwUYZAYQHSw.jpg",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/NLqevx5VXads.jpg",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/5i0TbjratRVo.jpeg",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/rsgU8zKVi-ee.png",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/processed/297-callback-5b9c2f4b418f50fd95c725c0e0654438284c53586035812a4bd64fe97c949439.png",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/kIOeAZTFNhOF.png",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/eOfh13EkiGaF.jpg",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/oNnWqBBnyBr3.webp",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/k1uhf4Mf2KI4.png",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/1f_zFT3gqq-G.png",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "background-removal/c6LRmThvvd1O.jpg",
+      "refCount": 1,
+      "sampleTables": [
+        "background_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/hdb8_d3QzjBg.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/gcd1G70j_eyV.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/6JpQnZNXOosn.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/wER-jgJejxfD.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/NRjuf1I-1jty.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/TjtNjPbxgHP3.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/g9jmVXLeup8s.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/OefoIxSBUY-4.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/whCwtlYYnLDw.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/zJrW058R7Pak.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/aOepQAXwEUVj.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "object-removal/processed/2063969492551303170-VydzkCZb.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/6ayWH9oCMRYQ.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "object-removal/processed/2063971470165630978-h1ZQjRNl.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/D8_miLr0VBJs.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/lzXEit293TWD.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "object-removal/processed/2063980347749785602-Vhxa8y1Q.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/RoeJH7GNOiNP.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "object-removal/processed/2063981936078192641-jvi2CNna.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/q_DsNx_ARVPR.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "object-removal/processed/2063982533070245890-rUrrUaUn.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/0Rq7PSkgVcbA.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "object-removal/processed/2063988238745559042-jSRUMmho.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "uploads/l3mgEfTfb50g.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    },
+    {
+      "key": "object-removal/processed/2063996865808125954-BX2LS5EQ.png",
+      "refCount": 1,
+      "sampleTables": [
+        "object_removal_tasks"
+      ]
+    }
+  ]
+}
